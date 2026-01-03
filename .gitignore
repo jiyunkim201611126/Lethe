@@ -1,8 +1,10 @@
 # ignore all files in the directory
+.idea/
 .vs/
 Binaries/
 DerivedDataCache/
 InterMediate/
 Saved/
 
+*.vsconfig
 *.sln

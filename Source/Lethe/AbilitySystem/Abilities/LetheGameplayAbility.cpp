@@ -25,11 +25,6 @@ FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const TSubc
 	return FGameplayEffectContextHandle();
 }
 
-FText ULetheGameplayAbility::GetDescription_Implementation(const int32 Level)
-{
-	return FText();
-}
-
 void ULetheGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	for (const auto EffectApplier : EffectAppliers)

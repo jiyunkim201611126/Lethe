@@ -1,0 +1,24 @@
+﻿// Copyright JETBLU, Inc. All Rights Reserved.
+
+#include "LetheAssetManager.h"
+
+#include "AbilitySystemGlobals.h"
+#include "LetheGameplayTags.h"
+
+ULetheAssetManager& ULetheAssetManager::Get()
+{
+	check(GEngine);
+	ULetheAssetManager* AuraAssetManager = Cast<ULetheAssetManager>(GEngine->AssetManager);
+	return *AuraAssetManager;
+}
+
+void ULetheAssetManager::StartInitialLoading()
+{
+	Super::StartInitialLoading();
+
+	// 전역으로 선언되어있는 GameplayTags 인스턴스를 초기화합니다.
+	FLetheGameplayTags::InitializeNativeGameplayTags();
+
+	// 커스텀 Context를 사용하기 위해 반드시 호출해줘야 하는 함수입니다.
+	UAbilitySystemGlobals::Get().InitGlobalData();
+}

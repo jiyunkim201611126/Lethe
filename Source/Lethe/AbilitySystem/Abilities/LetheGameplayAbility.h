@@ -20,10 +20,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void ApplyAllEffects(AActor* TargetActor);
 
-	// Ability에 대한 설명을 반환하는 함수로, 블루프린트 클래스에서 정의합니다.
-	UFUNCTION(BlueprintNativeEvent, Category = "Description")
-	FText GetDescription(const int32 Level);
-
 protected:
 	template<typename T>
 	T* GetEffectApplier() const

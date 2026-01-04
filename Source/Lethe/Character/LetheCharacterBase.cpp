@@ -33,7 +33,6 @@ void ALetheCharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	InitAbilityActorInfo();
-	GASManagerComponent->AddCharacterStartupAbilities();
 }
 
 void ALetheCharacterBase::InitAbilityActorInfo() const

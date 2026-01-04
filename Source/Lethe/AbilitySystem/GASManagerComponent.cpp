@@ -3,9 +3,12 @@
 #include "GASManagerComponent.h"
 
 #include "AbilitySystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/UI/HUD/LetheHUD.h"
 
-UGASManagerComponent::UGASManagerComponent()
+UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
@@ -28,17 +31,30 @@ UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 void UGASManagerComponent::InitAbilityActorInfo()
 {
 	AActor* OwnerActor = GetOwner();
-	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(OwnerActor);
 	
-	AbilitySystemComponent = AbilitySystemInterface->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(OwnerActor, OwnerActor);
+	ApplyEffectToSelf(DefaultAttributes, 1.f);
+
+	// 플레이어블 캐릭터인 경우만 HUD쪽으로 넘겨줍니다.
+	if (TeamSide == ETeamSide::Player)
+	{
+		// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (ALetheHUD* LetheHUD = PlayerController->GetHUD<ALetheHUD>())
+			{
+				LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
+			}
+		}
+	}
+	
+	AddCharacterAbilities(TestAbilities);
 }
 
-void UGASManagerComponent::AddCharacterStartupAbilities() const
+void UGASManagerComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const
 {
 	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
-	ASC->AddCharacterAbilities(StartupAbilities);
-	ASC->AddCharacterAbilitiesWithActive(StartupPassiveAbilities);
+	ASC->AddCharacterAbilities(InAbilities);
 }
 
 void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const

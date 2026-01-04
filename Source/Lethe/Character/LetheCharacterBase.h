@@ -8,6 +8,7 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "LetheCharacterBase.generated.h"
 
+class UGameplayAbility;
 class UAttributeSet;
 class UGASManagerComponent;
 

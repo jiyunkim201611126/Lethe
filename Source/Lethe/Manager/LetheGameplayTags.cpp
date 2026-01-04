@@ -17,6 +17,9 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.DamageTypeTags.Emplace(GameplayTags.Damage_Normal);
 	
+	GameplayTags.Abilities_Test = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Abilities.Test"), FString(""));
+	
 	GameplayTags.Abilities_Types_Active = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Abilities.Types.Active"), FString(""));
 	GameplayTags.Abilities_Types_Passive = UGameplayTagsManager::Get().AddNativeGameplayTag(

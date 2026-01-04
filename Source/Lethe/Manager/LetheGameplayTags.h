@@ -21,7 +21,8 @@ struct FLetheGameplayTags
 	TArray<FGameplayTag> DamageTypeTags;
 	//~ End of Damage Types
 	
-	//~ Begin Abilities	
+	//~ Begin Abilities
+	FGameplayTag Abilities_Test;
 	//~ End of Abilities
 	
 	//~ Begin Ability Types

@@ -5,4 +5,4 @@
 #include "CoreMinimal.h"
 
 #define PLAYABLE_CHARACTER_NUMBER 4
-#define CARD_SIZE FVector2D(276.f, 400.f)
+#define CARD_SIZE FVector2D(220.f, 330.f)

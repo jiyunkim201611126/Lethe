@@ -10,7 +10,7 @@ class UCardViewData;
 struct FGameplayTag;
 struct FCardViewInfo;
 
-DECLARE_DELEGATE_TwoParams(FOnAbilityUpdatedSignature, UAbilitySystemComponent*, const FCardViewInfo*)
+DECLARE_DELEGATE_TwoParams(FOnAbilityUpdatedSignature, ULetheAbilitySystemComponent*, const FCardViewInfo*)
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -23,7 +23,7 @@ public:
 	//~ End of ULetheWidgetController Interface
 
 private:
-	void OnGiveAbility(UAbilitySystemComponent* OwnerASC, const FGameplayTag& InAbilityTag) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& InAbilityTag) const;
 
 public:
 	FOnAbilityUpdatedSignature OnAbilityUpdatedDelegate;

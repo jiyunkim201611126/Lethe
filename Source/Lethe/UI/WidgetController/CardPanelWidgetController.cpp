@@ -13,7 +13,7 @@ void UCardPanelWidgetController::BindCallbacksToDependencies()
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(UAbilitySystemComponent* OwnerASC, const FGameplayTag& InAbilityTag) const
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& InAbilityTag) const
 {
 	const FCardViewInfo* CardViewInfo = CardViewData->FindCardInfoByTag(InAbilityTag);
 	OnAbilityUpdatedDelegate.ExecuteIfBound(OwnerASC, CardViewInfo);

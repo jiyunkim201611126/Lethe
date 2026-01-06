@@ -7,20 +7,26 @@
 #include "Lethe/UI/WidgetController/LetheWidgetController.h"
 #include "CardPanelWidget.generated.h"
 
-class UCanvasPanel;
-class UCardWidget;
-class UAbilitySystemComponent;
-class ULetheAbilitySystemComponent;
+enum class ECardAction : uint8;
 struct FCardViewInfo;
+class UCardWidget;
+class UCanvasPanel;
+class UCanvasPanelSlot;
+class ULetheAbilitySystemComponent;
 
-// TMap 안에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다.
+// TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다.
 USTRUCT(BlueprintType)
-struct FCardWidgets
+struct FDeck
 {
 	GENERATED_BODY()
 
+	// CardWidget은 CanvasPanel 내부에 소속되므로, 이를 용이하게 컨트롤하기 위해 UCanvasPanelSlot 배열로 선언합니다.
 	UPROPERTY()
-	TArray<TObjectPtr<UCardWidget>> CardWidgets;
+	TArray<TObjectPtr<UCanvasPanelSlot>> DeckSlots;
+
+	uint8 bIsHovered : 1 = false;
+
+	// Hand와 Grave는 분류할 필요가 없어 멤버변수로 따로 선언합니다.
 };
 
 UCLASS()
@@ -36,18 +42,20 @@ public:
 
 	virtual void WidgetControllerSet_Implementation() override;
 	
-	void CreateCard(UAbilitySystemComponent* OwnerASC, const FCardViewInfo* InCardInfo);
+	void CreateCard(ULetheAbilitySystemComponent* OwnerASC, const FCardViewInfo* InCardInfo);
+
+private:
+	void UpdateDeckPosition(const float InDeltaTime);
+	void UpdateHandPosition(const float InDeltaTime);
+	
+	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
+
+	void DeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
+	void Draw(UCardWidget* InCardWidget);
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
 	TSubclassOf<UUserWidget> CardWidgetClass;
-
-	// Key를 OwnerASC로, Value로 Card를 매핑한 변수입니다.
-	UPROPERTY()
-	TMap<UAbilitySystemComponent*, FCardWidgets> AbilitySystemComponentToCards;
-
-	// AbilitySystemComponent를 순서대로 참조하기 위해 선언된 변수입니다.
-	TArray<FAbilitySystemReference>* AbilitySystemReferences;
 	
 	/**
 	 * 덱 위치들입니다. 정확히 4개여야 합니다.
@@ -59,8 +67,26 @@ protected:
 	TArray<FVector2D> DeckPositions;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	float DeckYPosGap = 10.f;
+	float DeckYPosGap = 3.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	float CardMoveSpeed = 5.f;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
+
+private:
+	// Key를 OwnerASC로, Value로 CardWidget(Deck)을 매핑한 변수입니다.
+	// 이미 CardWidget도 OwnerASC를 멤버 변수로 갖고 있으나, CardPanelWidget도 정렬 및 접근 효율을 위해 매핑해두는 편이 좋습니다.
+	UPROPERTY()
+	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FDeck> AbilitySystemComponentToCards;
+
+	// AbilitySystemComponent를 순서대로 참조하기 위해 선언된 변수입니다.
+	TArray<FAbilitySystemReference>* AbilitySystemReferences;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UCanvasPanelSlot>> Hands;
+	
+	UPROPERTY()
+	TArray<TObjectPtr<UCanvasPanelSlot>> Graves;
 };

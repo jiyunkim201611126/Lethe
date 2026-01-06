@@ -13,24 +13,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Game/LetheGameMode.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Game/LetheGameMode.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/HUD/LetheHUD.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/HUD/LetheHUD.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheUserWidget.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheUserWidget.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/OverlayWidget.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/OverlayWidget.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/OverlayWidgetController.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/OverlayWidgetController.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Lethe.uproject" beforeDir="false" afterPath="$PROJECT_DIR$/Lethe.uproject" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/BP_LetheGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Game/BP_LetheGameMode.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_Card.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_Card.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_CardPanel.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_CardPanel.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Overlay/WBP_Overlay.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Overlay/WBP_Overlay.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Lethe.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Lethe.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,18 +42,53 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://1" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://10" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbilityTargetActor.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemCheatManagerExtension.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemCheatManagerExtension.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent_Abilities.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayAbilitiesModule.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Tests/AbilitySystemComponentTests.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Tests/GameplayEffectTests.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Tests/GameplayTagCountContainerTests.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Tests/GameplayTagQueryTests.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AttributeSet.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/VirtualProduction/VirtualCameraCore/Source/VCamCore/Private/Output/ViewTargetPolicy/FocusFirstPlayerViewTargetPolicy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/CQTest/Private/Components/MapTestSpawner.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/FunctionalTesting/Private/FunctionalTestingManager.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/BehaviorTreeEditor/Private/BehaviorTreeDebugger.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/Experimental/EditorInteractiveToolsFramework/Private/EditorGizmos/TransformGizmo.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/Experimental/EditorInteractiveToolsFramework/Public/EditorGizmos/TransformGizmo.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/UnrealEd/Classes/ActorFactories/ActorFactoryRuntimeVirtualTextureVolume.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.BuildGraph/Expressions/BgInt.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/UnrealBuildTool/Preprocessor/TokenReader.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Containers/AllowShrinking.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Containers/Array.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Containers/Map.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Containers/Set.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Experimental/Containers/RobinHoodHashTable.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Math/UnrealMathUtility.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/Templates/UnrealTypeTraits.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Public/UObject/WeakObjectPtrTemplates.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Private/UObject/Class.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Public/Templates/Casts.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBase.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Datasmith/CADKernel/Base/Private/Geo/Surfaces/Surface.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerController.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/GameViewportClient.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/PlayerController.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/PrimitiveSceneProxy.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Public/PrimitiveSceneProxy.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/InteractiveToolsFramework/Private/BaseBehaviors/MouseHoverBehavior.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/SlateCore/Public/Input/Events.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/StorageServerClient/Private/BuiltInHttpClient/BuiltInHttpClient.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/UMG/Private/Components/CanvasPanel.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/UMG/Private/Components/CanvasPanelSlot.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/UMG/Public/Blueprint/UserWidget.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/ThirdParty/AMD/Amf/AdvancedMediaFramework_(AMF)_SDK.tps" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -70,26 +103,40 @@
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemGlobals.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemGlobals.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemLibrary.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemLibrary.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAttributeSet.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAttributeSet.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Character/LethePawn.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/CardViewData.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Game/LetheGameMode.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Game/LetheGameMode.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/CombatInterface.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/CombatInterface.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/LetheAbilityTypes.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/LetheAbilityTypes.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheAssetManager.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheAssetManager.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/HUD/LetheHUD.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/HUD/LetheHUD.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheUserWidget.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheUserWidget.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/OverlayWidget.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/Widget/OverlayWidget.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/WidgetController/LetheWidgetController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/WidgetController/OverlayWidgetController.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -243,7 +290,10 @@
       <workItem from="1767446246706" duration="68000" />
       <workItem from="1767446826724" duration="489000" />
       <workItem from="1767447524801" duration="6939000" />
-      <workItem from="1767506924948" duration="5969000" />
+      <workItem from="1767506924948" duration="30263000" />
+      <workItem from="1767543951012" duration="46000" />
+      <workItem from="1767625825569" duration="3551000" />
+      <workItem from="1767704256629" duration="11722000" />
     </task>
     <servers />
   </component>

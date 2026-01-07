@@ -71,6 +71,7 @@ public:
 	void SetOwnerASC(UAbilitySystemComponent* InOwnerASC);
 	UAbilitySystemComponent* GetOwnerASC() const;
 	void SetCardContainer(const ECardContainer InCardPosition);
+	bool ShouldHandHighlight() const;
 
 private:
 	ECardAction GetCardActionForEvent(const ECardMouseEvent InMouseEvent);
@@ -95,5 +96,6 @@ private:
 	TObjectPtr<UAbilitySystemComponent> OwnerASC;
 
 	uint8 bReadyToDraw : 1 = false;
+	uint8 bHandHighlight : 1 = false;
 	uint8 bReadyToUse : 1 = false;
 };

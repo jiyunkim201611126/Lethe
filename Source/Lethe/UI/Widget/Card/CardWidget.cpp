@@ -90,6 +90,11 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardPosition)
 	}
 }
 
+bool UCardWidget::ShouldHandHighlight() const
+{
+	return bHandHighlight;
+}
+
 ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEvent)
 {
 	ECardAction CardAction = ECardAction::None;
@@ -148,12 +153,21 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 			{
 				// 핸드 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
 				CardAction = ECardAction::HandHovered;
+				bHandHighlight = true;
 			}
 			break;
 		case ECardMouseEvent::MouseLeave:
 			{
 				// 핸드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
-				CardAction = bReadyToUse ? ECardAction::None : ECardAction::HandUnhovered;
+				if (bReadyToUse)
+				{
+					CardAction = ECardAction::None;
+				}
+				else
+				{
+					CardAction = ECardAction::HandUnhovered;
+					bHandHighlight = false;
+				}
 			}
 			break;
 		case ECardMouseEvent::MouseButtonDown:
@@ -169,6 +183,7 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 				{
 					CardAction = ECardAction::Use;
 					bReadyToUse = false;
+					bHandHighlight = false;
 				}
 			}
 			break;
@@ -179,6 +194,7 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 				{
 					CardAction = ECardAction::HandUnhovered;
 					bReadyToUse = false;
+					bHandHighlight = false;
 				}
 			}
 			break;

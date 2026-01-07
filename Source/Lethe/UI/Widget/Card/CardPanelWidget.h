@@ -47,10 +47,11 @@ public:
 private:
 	void UpdateDeckPosition(const float InDeltaTime);
 	void UpdateHandPosition(const float InDeltaTime);
+	void UpdateHandScale(UWidget* InCardWidget, const float InDeltaTime);
 	
 	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
 
-	void DeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
+	void OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
 	void Draw(UCardWidget* InCardWidget);
 	
 protected:
@@ -66,10 +67,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Card")
 	TArray<FVector2D> DeckPositions;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	float DeckYPosGap = 3.f;
+	UPROPERTY(EditAnywhere, Category = "Card")
+	float DeckYPosGap;
+
+	UPROPERTY(EditAnywhere, Category = "Card")
+	FVector2D HandPosGap;
+
+	UPROPERTY(EditAnywhere, Category = "Card")
+	float HandRotationStepAmount;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	UPROPERTY(EditAnywhere, Category = "Card")
 	float CardMoveSpeed = 5.f;
 
 	UPROPERTY(meta = (BindWidget))
@@ -89,4 +96,7 @@ private:
 	
 	UPROPERTY()
 	TArray<TObjectPtr<UCanvasPanelSlot>> Graves;
+
+	int32 DeckZOrder = 100;
+	int32 HandZOrder = 200;
 };

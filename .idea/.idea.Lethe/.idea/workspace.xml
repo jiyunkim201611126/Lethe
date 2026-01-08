@@ -13,14 +13,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
+      <change afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheTextManager.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheTextManager.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_Card.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_Card.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_CardPanel.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_CardPanel.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Overlay/WBP_Overlay.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI/Widget/Overlay/WBP_Overlay.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/AbilitySystem/Abilities/BP_TestAbility.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/AbilitySystem/Effects/GE_DefaultAttributes.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Character/BP_DefaultPawn.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Character/Playable/BP_TestCharacter.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Data/DA_CardView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Data/DA_CardView.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Game/BP_LetheGameMode.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Maps/TestLevel.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/TestLevel.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Player/BP_LethePlayerController.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/HUD/BP_LetheHUD.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_Card.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Card/WBP_CardPanel.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/Widget/Overlay/WBP_Overlay.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/WidgetController/BP_CardPanelWidgetController.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI/WidgetController/BP_OverlayWidgetController.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Lethe.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Lethe.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardPanelWidget.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +57,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbilityTargetActor.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemCheatManagerExtension.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -67,6 +91,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Public/Templates/Casts.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBase.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBaseUtility.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Datasmith/CADKernel/Base/Private/Geo/Surfaces/Surface.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/GameViewportClient.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -74,6 +99,8 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/PrimitiveSceneProxy.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Public/PrimitiveSceneProxy.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/InteractiveToolsFramework/Private/BaseBehaviors/MouseHoverBehavior.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Slate/Private/Framework/Text/SlateTextUnderlineLineHighlighter.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Slate/Public/Widgets/Layout/Anchors.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/SlateCore/Public/Input/Events.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/StorageServerClient/Private/BuiltInHttpClient/BuiltInHttpClient.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/UMG/Private/Components/CanvasPanel.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -116,6 +143,8 @@
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheAssetManager.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheTextManager.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/LetheTextManager.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Player/LethePlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/UI/HUD/LetheHUD.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -288,6 +317,7 @@
       <workItem from="1767625825569" duration="3551000" />
       <workItem from="1767704256629" duration="11722000" />
       <workItem from="1767797077528" duration="9467000" />
+      <workItem from="1767879397986" duration="15257000" />
     </task>
     <servers />
   </component>

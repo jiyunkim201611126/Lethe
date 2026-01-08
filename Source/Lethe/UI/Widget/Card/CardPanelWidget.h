@@ -20,9 +20,8 @@ struct FDeck
 {
 	GENERATED_BODY()
 
-	// CardWidget은 CanvasPanel 내부에 소속되므로, 이를 용이하게 컨트롤하기 위해 UCanvasPanelSlot 배열로 선언합니다.
 	UPROPERTY()
-	TArray<TObjectPtr<UCanvasPanelSlot>> DeckSlots;
+	TArray<TObjectPtr<UCardWidget>> Deck;
 
 	uint8 bIsHovered : 1 = false;
 
@@ -41,16 +40,15 @@ public:
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
-	
-	void CreateCard(ULetheAbilitySystemComponent* OwnerASC, const FCardViewInfo* InCardInfo);
 
 private:
-	void UpdateDeckPosition(const float InDeltaTime);
-	void UpdateHandPosition(const float InDeltaTime);
-	void UpdateHandScale(UWidget* InCardWidget, const float InDeltaTime);
+	void UpdateDeckTranslation(const float InDeltaTime);
+	void UpdateHandTransform(const float InDeltaTime);
+	void UpdateHandScale(UCardWidget* InCardWidget, const float InDeltaTime) const;
 	
 	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
-
+	
+	void CreateCard(ULetheAbilitySystemComponent* OwnerASC, const FCardViewInfo* InCardInfo);
 	void OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
 	void Draw(UCardWidget* InCardWidget);
 	
@@ -65,16 +63,25 @@ protected:
 	 * 수정 시 OverlayWidget에서도 함께 수정해 주시길 바랍니다.
 	 */
 	UPROPERTY(EditAnywhere, Category = "Card")
-	TArray<FVector2D> DeckPositions;
+	TArray<FVector2D> DeckTranslations;
 	
 	UPROPERTY(EditAnywhere, Category = "Card")
-	float DeckYPosGap;
+	float DeckYTranslationGap;
+	
+	UPROPERTY(EditAnywhere, Category = "Card")
+	float HandYTranslation;
 
 	UPROPERTY(EditAnywhere, Category = "Card")
-	FVector2D HandPosGap;
+	FVector2D HandTranslationGap;
 
 	UPROPERTY(EditAnywhere, Category = "Card")
 	float HandRotationStepAmount;
+	
+	UPROPERTY(EditAnywhere, Category = "Card")
+	FVector2D HandUnhighlightScale = FVector2D(0.66f, 0.66f);
+
+	UPROPERTY(EditAnywhere, Category = "Card")
+	float HandPushAmount = 50.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Card")
 	float CardMoveSpeed = 5.f;
@@ -92,11 +99,12 @@ private:
 	TArray<FAbilitySystemReference>* AbilitySystemReferences;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UCanvasPanelSlot>> Hands;
+	TArray<TObjectPtr<UCardWidget>> Hands;
 	
 	UPROPERTY()
-	TArray<TObjectPtr<UCanvasPanelSlot>> Graves;
+	TArray<TObjectPtr<UCardWidget>> Graves;
 
 	int32 DeckZOrder = 100;
 	int32 HandZOrder = 200;
+	FVector2D CardSize;
 };

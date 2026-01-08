@@ -2,6 +2,8 @@
 
 #include "LetheGameplayAbility.h"
 
+#include "Lethe/Manager/LetheTextManager.h"
+
 void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 {
 	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
@@ -11,6 +13,11 @@ void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 			EffectApplier->ApplyEffect(this, TargetActor);
 		}
 	}
+}
+
+FText ULetheGameplayAbility::GetCardName() const
+{
+	return FLetheTextManager::GetText(EStringTableType::Card, CardNameTextKey);
 }
 
 FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const

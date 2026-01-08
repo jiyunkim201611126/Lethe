@@ -6,7 +6,9 @@
 #include "AbilitySystemComponent.h"
 #include "LetheAbilitySystemComponent.generated.h"
 
-DECLARE_DELEGATE_TwoParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag&);
+class ULetheGameplayAbility;
+
+DECLARE_DELEGATE_ThreeParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, ULetheGameplayAbility*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent

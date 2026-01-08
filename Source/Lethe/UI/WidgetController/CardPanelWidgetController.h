@@ -6,6 +6,7 @@
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
+class ULetheGameplayAbility;
 class UCardViewData;
 struct FGameplayTag;
 struct FCardViewInfo;
@@ -22,8 +23,10 @@ public:
 	virtual void BindCallbacksToDependencies() override;
 	//~ End of ULetheWidgetController Interface
 
+	FVector2D GetCardSize() const;
+
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& InAbilityTag) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const;
 
 public:
 	FOnAbilityUpdatedSignature OnAbilityUpdatedDelegate;

@@ -6,6 +6,7 @@
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
+class URichTextBlock;
 struct FCardViewInfo;
 class UImage;
 class UAbilitySystemComponent;
@@ -82,6 +83,12 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> CardImage;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<URichTextBlock> CardNameTextBlock;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<URichTextBlock> CardDescriptionTextBlock;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	TObjectPtr<UWidgetAnimation> ShowFrontAnimation;
@@ -92,10 +99,10 @@ protected:
 private:
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 
-	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> OwnerASC;
+	TWeakObjectPtr<UAbilitySystemComponent> OwnerASC;
 
 	uint8 bReadyToDraw : 1 = false;
-	uint8 bHandHighlight : 1 = false;
+	uint8 bBlockHandHighlight : 1 = false;
+	uint8 bShouldHandHighlight : 1 = false;
 	uint8 bReadyToUse : 1 = false;
 };

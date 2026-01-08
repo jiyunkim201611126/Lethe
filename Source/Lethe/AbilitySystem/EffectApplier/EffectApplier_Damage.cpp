@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/LetheTextManager.h"
 
 void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
@@ -32,7 +33,7 @@ TArray<FGameplayEffectSpecHandle> UEffectApplier_Damage::MakeDamageSpecHandle(co
 	MakeEffectContextHandle(OwningAbility);
 	
 	TArray<FGameplayEffectSpecHandle> DamageSpecs;
-	for (TPair<FGameplayTag, FScalableFloat>& Pair : DamageTypes)
+	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageTypes)
 	{
 		if (Pair.Value.IsValid())
 		{
@@ -74,4 +75,21 @@ void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 			}
 		}
 	}
+}
+
+FText UEffectApplier_Damage::GetDamageText(const int32 Level) const
+{
+	TArray<FText> TextLines;
+	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageTypes)
+	{
+		if (Pair.Value.IsValid())
+		{
+			const float ScaledDamage = Pair.Value.GetValueAtLevel(Level);
+			FText DamageTypeText = FLetheTextManager::GetText(EStringTableType::Card, Pair.Key.ToString(), ScaledDamage);
+			TextLines.Emplace(DamageTypeText);
+		}
+	}
+	
+	FText ResultText = FText::Join(FText::FromString(TEXT("\n")), TextLines);
+	return ResultText;
 }

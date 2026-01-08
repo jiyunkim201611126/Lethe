@@ -4,6 +4,8 @@
 
 #include "Components/Image.h"
 #include "Lethe/Data/CardViewData.h"
+#include "AbilitySystemComponent.h"
+#include "Components/RichTextBlock.h"
 
 void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -55,6 +57,8 @@ void UCardWidget::UpdateCardView(const FCardViewInfo* InCardInfo) const
 	if (InCardInfo)
 	{
 		CardImage->SetBrushFromTexture(InCardInfo->CardTexture);
+		CardNameTextBlock->SetText(InCardInfo->CardNameText);
+		CardDescriptionTextBlock->SetText(InCardInfo->CardDescriptionText);
 	}
 }
 
@@ -65,7 +69,12 @@ void UCardWidget::SetOwnerASC(UAbilitySystemComponent* InOwnerASC)
 
 UAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 {
-	return OwnerASC.Get();
+	if (OwnerASC.IsValid())
+	{
+		return OwnerASC.Get();
+	}
+	
+	return nullptr;
 }
 
 void UCardWidget::SetCardContainer(const ECardContainer InCardPosition)
@@ -92,7 +101,7 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardPosition)
 
 bool UCardWidget::ShouldHandHighlight() const
 {
-	return bHandHighlight;
+	return bShouldHandHighlight;
 }
 
 ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEvent)
@@ -130,6 +139,19 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 				{
 					CardAction = ECardAction::Draw;
 					bReadyToDraw = false;
+
+					// 드로우 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
+					// 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생합니다.
+					bBlockHandHighlight = true;
+					FTimerHandle TimerHandle;
+					TWeakObjectPtr<UCardWidget> WeakThis = this;
+					GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
+					{
+						if (WeakThis.IsValid())
+						{
+							WeakThis->bBlockHandHighlight = false;
+						}
+					}, 0.2f, false, 0.2f);
 				}
 			}
 			break;
@@ -152,21 +174,27 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 		case ECardMouseEvent::MouseEnter:
 			{
 				// 핸드 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
-				CardAction = ECardAction::HandHovered;
-				bHandHighlight = true;
+				if (!bBlockHandHighlight)
+				{
+					CardAction = ECardAction::HandHovered;
+					bShouldHandHighlight = true;
+				}
 			}
 			break;
 		case ECardMouseEvent::MouseLeave:
 			{
 				// 핸드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
-				if (bReadyToUse)
+				if (!bBlockHandHighlight)
 				{
-					CardAction = ECardAction::None;
-				}
-				else
-				{
-					CardAction = ECardAction::HandUnhovered;
-					bHandHighlight = false;
+					if (bReadyToUse)
+					{
+						CardAction = ECardAction::None;
+					}
+					else
+					{
+						CardAction = ECardAction::HandUnhovered;
+						bShouldHandHighlight = false;
+					}
 				}
 			}
 			break;
@@ -183,7 +211,7 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 				{
 					CardAction = ECardAction::Use;
 					bReadyToUse = false;
-					bHandHighlight = false;
+					bShouldHandHighlight = false;
 				}
 			}
 			break;
@@ -194,7 +222,7 @@ ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEven
 				{
 					CardAction = ECardAction::HandUnhovered;
 					bReadyToUse = false;
-					bHandHighlight = false;
+					bShouldHandHighlight = false;
 				}
 			}
 			break;

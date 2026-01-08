@@ -19,6 +19,13 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void ApplyAllEffects(AActor* TargetActor);
+	
+	// Ability(Card)에 대한 이름을 반환하는 함수로, 멤버변수로 선언된 CardNameTextKey를 설정해주면 즉시 작동합니다.
+	FText GetCardName() const;
+	
+	// Ability(Card)에 대한 설명을 반환하는 함수로, 블루프린트 클래스에서 정의해야 합니다.
+	UFUNCTION(BlueprintImplementableEvent, Category = "Text")
+	FText GetCardDescription(const int32 Level);
 
 protected:
 	template<typename T>
@@ -56,6 +63,9 @@ protected:
 	// Composite 패턴으로 조합해 사용할 수 있으며, 클래스 내부의 ApplyEffect나 ApplyAllEffects를 호출해 사용합니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
 	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Text")
+	FString CardNameTextKey;
 
 protected:
 	//~ Begin UGameplayAbility Interface

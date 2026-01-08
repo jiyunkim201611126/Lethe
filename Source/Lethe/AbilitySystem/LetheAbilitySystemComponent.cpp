@@ -26,8 +26,8 @@ void ULetheAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySp
 {
 	Super::OnGiveAbility(AbilitySpec);
 
-	if (const ULetheGameplayAbility* Ability = Cast<ULetheGameplayAbility>(AbilitySpec.Ability))
+	if (ULetheGameplayAbility* Ability = Cast<ULetheGameplayAbility>(AbilitySpec.Ability))
 	{
-		OnAbilityGivenDelegate.ExecuteIfBound(this, Ability->AbilityTag);
+		OnAbilityGivenDelegate.ExecuteIfBound(this, Ability);
 	}
 }

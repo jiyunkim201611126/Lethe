@@ -4,26 +4,104 @@
 
 #include "Components/Image.h"
 #include "Lethe/Data/CardViewData.h"
-#include "AbilitySystemComponent.h"
 #include "Components/RichTextBlock.h"
+#include "Components/TimelineComponent.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+
+void UCardWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	// 타임라인에 맞춰 카드가 움직일 수 있도록 함수들을 바인드합니다.
+	FOnTimelineFloat OnUpdateFunction;
+	OnUpdateFunction.BindDynamic(this, &ThisClass::OnUpdatedTimeline);
+	MovementTimeline.AddInterpFloat(MovementCurve, OnUpdateFunction);
+
+	FOnTimelineEvent OnFinishedFunction;
+	OnFinishedFunction.BindDynamic(this, &ThisClass::OnFinishedTimeline);
+	MovementTimeline.SetTimelineFinishedFunc(OnFinishedFunction);
+}
+
+void UCardWidget::SetCardContainer(const ECardContainer InCardContainer)
+{
+	// 처리할 필요가 없는 경우 조기 return합니다.
+	if (CurrentCardContainer == InCardContainer)
+	{
+		return;
+	}
+	
+	CurrentCardContainer = InCardContainer;
+	switch (InCardContainer)
+	{
+	case ECardContainer::Deck:
+		break;
+	case ECardContainer::Hand:
+		PlayAnimation(ShowFrontAnimation);
+		break;
+	case ECardContainer::Grave:
+		PlayAnimation(ShowBackAnimation);
+		break;
+	}
+}
+
+void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
+{
+	StartTransform = GetRenderTransform();
+	TargetTransform = InTransform;
+	bShouldMove = true;
+	MovementTimeline.PlayFromStart();
+}
+
+void UCardWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	
+	if (!bShouldMove)
+	{
+		return;
+	}
+	
+	MovementTimeline.TickTimeline(InDeltaTime);
+}
+
+void UCardWidget::OnUpdatedTimeline(float InValue)
+{
+	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation, InValue);
+	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
+	const FVector2D LerpedScale = FMath::Lerp(StartTransform.Scale, TargetTransform.Scale, InValue);
+
+	FWidgetTransform NewTransform;
+	NewTransform.Translation = LerpedTranslation;
+	NewTransform.Angle = LerpedAngle;
+	NewTransform.Scale = LerpedScale;
+	NewTransform.Shear = FVector2D::Zero();
+
+	SetRenderTransform(NewTransform);
+}
+
+void UCardWidget::OnFinishedTimeline()
+{
+	bShouldMove = false;
+	SetRenderTransform(TargetTransform);
+}
 
 void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, GetCardActionForEvent(ECardMouseEvent::MouseEnter));
+	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseEnter));
 }
 
 void UCardWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseLeave(InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, GetCardActionForEvent(ECardMouseEvent::MouseLeave));
+	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseLeave));
 }
 
 FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	GetCardActionForEvent(ECardMouseEvent::MouseButtonDown);
+	OnCardActionForEvent(ECardMouseEvent::MouseButtonDown);
 	
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -40,14 +118,14 @@ FReply UCardWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointe
 
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnCardMouseEventDelegate.Execute(this, GetCardActionForEvent(ECardMouseEvent::MouseButtonUp));
+	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseButtonUp));
 	
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
 void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {	
-	OnCardMouseEventDelegate.Execute(this, GetCardActionForEvent(ECardMouseEvent::MouseCaptureLost));
+	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseCaptureLost));
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
@@ -62,12 +140,12 @@ void UCardWidget::UpdateCardView(const FCardViewInfo* InCardInfo) const
 	}
 }
 
-void UCardWidget::SetOwnerASC(UAbilitySystemComponent* InOwnerASC)
+void UCardWidget::SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC)
 {
 	OwnerASC = InOwnerASC;
 }
 
-UAbilitySystemComponent* UCardWidget::GetOwnerASC() const
+ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 {
 	if (OwnerASC.IsValid())
 	{
@@ -77,34 +155,12 @@ UAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 	return nullptr;
 }
 
-void UCardWidget::SetCardContainer(const ECardContainer InCardPosition)
-{
-	// 처리할 필요가 없는 경우 조기 return합니다.
-	if (CurrentCardContainer == InCardPosition)
-	{
-		return;
-	}
-	
-	CurrentCardContainer = InCardPosition;
-	switch (InCardPosition)
-	{
-	case ECardContainer::Deck:
-		break;
-	case ECardContainer::Hand:
-		PlayAnimation(ShowFrontAnimation);
-		break;
-	case ECardContainer::Grave:
-		PlayAnimation(ShowBackAnimation);
-		break;
-	}
-}
-
-bool UCardWidget::ShouldHandHighlight() const
+bool UCardWidget::GetHandHighlightState() const
 {
 	return bShouldHandHighlight;
 }
 
-ECardAction UCardWidget::GetCardActionForEvent(const ECardMouseEvent InMouseEvent)
+ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent)
 {
 	ECardAction CardAction = ECardAction::None;
 

@@ -8,7 +8,7 @@
 
 class ULetheGameplayAbility;
 
-DECLARE_DELEGATE_ThreeParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, ULetheGameplayAbility*);
+DECLARE_DELEGATE_TwoParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, ULetheGameplayAbility*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent

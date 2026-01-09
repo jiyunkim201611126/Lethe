@@ -22,9 +22,7 @@ struct FDeck
 
 	UPROPERTY()
 	TArray<TObjectPtr<UCardWidget>> Deck;
-
-	uint8 bIsHovered : 1 = false;
-
+	
 	// Hand와 Grave는 분류할 필요가 없어 멤버변수로 따로 선언합니다.
 };
 
@@ -36,21 +34,19 @@ class LETHE_API UCardPanelWidget : public ULetheUserWidget
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
 
 private:
-	void UpdateDeckTranslation(const float InDeltaTime);
-	void UpdateHandTransform(const float InDeltaTime);
-	void UpdateHandScale(UCardWidget* InCardWidget, const float InDeltaTime) const;
-	
 	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
 	
 	void CreateCard(ULetheAbilitySystemComponent* OwnerASC, const FCardViewInfo* InCardInfo);
+	void UpdateAllDeckTranslation();
+	void UpdateDeckTranslation(const ULetheAbilitySystemComponent* OwnerASC);
 	void OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
 	void Draw(UCardWidget* InCardWidget);
+	void UpdateHandsTransform();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -78,13 +74,10 @@ protected:
 	float HandRotationStepAmount;
 	
 	UPROPERTY(EditAnywhere, Category = "Card")
-	FVector2D HandUnhighlightScale = FVector2D(0.66f, 0.66f);
+	FVector2D UnhighlightScale = FVector2D(0.66f, 0.66f);
 
 	UPROPERTY(EditAnywhere, Category = "Card")
 	float HandPushAmount = 50.f;
-	
-	UPROPERTY(EditAnywhere, Category = "Card")
-	float CardMoveSpeed = 5.f;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
@@ -94,6 +87,9 @@ private:
 	// 이미 CardWidget도 OwnerASC를 멤버 변수로 갖고 있으나, CardPanelWidget도 정렬 및 접근 효율을 위해 매핑해두는 편이 좋습니다.
 	UPROPERTY()
 	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FDeck> AbilitySystemComponentToCards;
+
+	// SetWidgetController 시점에 사용 편의성과 성능을 위해 OwnerASC와 Deck의 위치를 매핑해놓는 변수입니다.
+	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FVector2D> CachedDeckTranslations;
 
 	// AbilitySystemComponent를 순서대로 참조하기 위해 선언된 변수입니다.
 	TArray<FAbilitySystemReference>* AbilitySystemReferences;
@@ -107,4 +103,6 @@ private:
 	int32 DeckZOrder = 100;
 	int32 HandZOrder = 200;
 	FVector2D CardSize;
+
+	uint8 bCardSizeInitialized : 1 = false;
 };

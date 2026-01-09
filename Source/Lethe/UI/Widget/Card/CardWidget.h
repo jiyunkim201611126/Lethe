@@ -3,13 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
 class URichTextBlock;
 struct FCardViewInfo;
 class UImage;
-class UAbilitySystemComponent;
+class ULetheAbilitySystemComponent;
 
 // CardWidget이 현재 어디에 속해있는지 나타내는 Enum입니다.
 // 이미 CardPanelWidget이 이를 알고는 있으나, CardWidget이 알고 있어야 스스로 어떤 CardAction이 발생했는지 판별한 후 CardPanelWidget에게 알려줄 수 있습니다.
@@ -59,6 +60,8 @@ class LETHE_API UCardWidget : public ULetheUserWidget
 
 public:
 	//~ Begin UUserWidget Interface
+	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -69,13 +72,21 @@ public:
 	
 	void UpdateCardView(const FCardViewInfo* InCardInfo) const;
 
-	void SetOwnerASC(UAbilitySystemComponent* InOwnerASC);
-	UAbilitySystemComponent* GetOwnerASC() const;
-	void SetCardContainer(const ECardContainer InCardPosition);
-	bool ShouldHandHighlight() const;
+	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
+	ULetheAbilitySystemComponent* GetOwnerASC() const;
+	
+	void SetCardContainer(const ECardContainer InCardContainer);
+	void SetTargetTransform(const FWidgetTransform& InTransform);
+	bool GetHandHighlightState() const;
 
 private:
-	ECardAction GetCardActionForEvent(const ECardMouseEvent InMouseEvent);
+	UFUNCTION()
+	void OnUpdatedTimeline(float InValue);
+	
+	UFUNCTION()
+	void OnFinishedTimeline();
+
+	ECardAction OnCardActionForEvent(const ECardMouseEvent InMouseEvent);
 
 public:
 	FOnCardMouseEventSignature OnCardMouseEventDelegate;
@@ -97,10 +108,19 @@ protected:
 	TObjectPtr<UWidgetAnimation> ShowBackAnimation;
 
 private:
-	ECardContainer CurrentCardContainer = ECardContainer::Deck;
+	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 
-	TWeakObjectPtr<UAbilitySystemComponent> OwnerASC;
+	FTimeline MovementTimeline;
+	
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UCurveFloat> MovementCurve;
 
+	FWidgetTransform StartTransform;
+	FWidgetTransform TargetTransform;
+	
+	ECardContainer CurrentCardContainer = ECardContainer::Deck;	
+
+	uint8 bShouldMove : 1 = false;
 	uint8 bReadyToDraw : 1 = false;
 	uint8 bBlockHandHighlight : 1 = false;
 	uint8 bShouldHandHighlight : 1 = false;

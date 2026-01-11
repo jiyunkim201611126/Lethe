@@ -44,6 +44,8 @@ class LETHE_API UCardPanelWidget : public ULetheUserWidget
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
@@ -56,6 +58,7 @@ private:
 	void OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
 	void Draw(const UCardWidget* InCardWidget);
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
+	void StartDrag(UCardWidget* InCardWidget);
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -77,6 +80,7 @@ private:
 	int32 HandZOrder = 200;
 	
 	uint8 bControllerInitialized : 1 = false;
+	uint8 bIsBattlePhase : 1 = false;
 
 	FVector2D FirstCardTranslation = FVector2D(80.f, -40.f);
 	FVector2D NextCardTranslation = FVector2D(80.f, -40.f);
@@ -86,4 +90,9 @@ private:
 
 	uint8 CurrentHandsNum = 0;
 	uint8 MaxHandsNum = 8;
+
+	TWeakObjectPtr<UCardWidget> CurrentDraggingCard;
+
+	FVector2D DefaultPivot = FVector2D(0.f, 1.f);
+	FVector2D DraggingPivot = FVector2D(-0.5f, 1.5f);
 };

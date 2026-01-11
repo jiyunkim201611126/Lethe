@@ -3,6 +3,7 @@
 #include "CardPanelWidget.h"
 
 #include "CardWidget.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
@@ -15,6 +16,50 @@ void UCardPanelWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	AbilitySystemComponentToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
+}
+
+void UCardPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (CurrentDraggingCard.IsValid())
+	{
+		if (const APlayerController* PlayerController = GetOwningPlayer())
+		{
+			FVector2D MousePosition;
+			if (PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y))
+			{
+				// CardPanel의 Geometry를 가져옵니다.
+				const FGeometry CardPanelGeometry = GetCachedGeometry();
+
+				// 마우스 스크린 좌표를 CardPanel의 로컬 좌표로 변환합니다.
+				FVector2D LocalMousePosition;
+				USlateBlueprintLibrary::ScreenToWidgetLocal(GetWorld(), CardPanelGeometry, MousePosition, LocalMousePosition);
+
+				// 앵커가 (0, 1)이므로, Y 위치를 CardPanel의 높이만큼 빼주면 딱 맞습니다.
+				const FVector2D CardPanelSize = CardPanelGeometry.GetLocalSize();
+				FVector2D FinalTranslation;
+				FinalTranslation.X = LocalMousePosition.X;
+				FinalTranslation.Y = LocalMousePosition.Y - CardPanelSize.Y;
+
+				CurrentDraggingCard->SetRenderTranslation(FinalTranslation);
+			}
+		}
+	}
+}
+
+FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (CurrentDraggingCard.IsValid())
+	{
+		// TODO: 사용 성공 판별 및 그 여부에 따라 처리하는 로직이 필요합니다.
+		// 현재는 무조건 실패하도록 되어 있습니다.
+		CurrentDraggingCard->SetCardContainer(ECardContainer::Hand, false);
+		CurrentDraggingCard.Reset();
+		UpdateAllCardTranslation();
+	}
+	
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()
@@ -31,7 +76,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			PaddingHandAndHand += CardPanelWidgetController->GetCardSize().X;
 			
 			// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
-			// 그렇다고 CanvasPanelSlot의 SetSize를 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
+			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
 			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
 			bControllerInitialized = true;
@@ -72,6 +117,12 @@ void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAc
 		if (CurrentHandsNum == MaxHandsNum)
 		{
 			OnHandHovered(InCardWidget, false);
+		}
+		break;
+	case ECardAction::Drag:
+		if (CurrentHandsNum >= 1)
+		{
+			StartDrag(InCardWidget);
 		}
 		break;
 	case ECardAction::Use:
@@ -133,7 +184,7 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 		{
 			FWidgetTransform WidgetTransform = CardInDeck->GetRenderTransform();
 			WidgetTransform.Translation = NextCardTranslation;
-			CardInDeck->SetTargetTransform(WidgetTransform);
+			CardInDeck->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
 			
 			if (UCanvasPanelSlot* LastDeckCardSlot = Cast<UCanvasPanelSlot>(CardInDeck->Slot))
 			{
@@ -158,7 +209,8 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 			{
 				FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
 				WidgetTransform.Translation = NextCardTranslation;
-				CardInHand->SetTargetTransform(WidgetTransform);
+				CardInHand->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
+				
 				// 핸드의 마지막 장이면 DeckAndHand로, 아니라면 HandAndHand로 사이 공간을 띄워줍니다.
 				NextCardTranslation.X += HandIndex == CharacterCards->Hands.Num() - 1 ? PaddingDeckAndHand : PaddingHandAndHand;
 			}
@@ -208,4 +260,14 @@ void UCardPanelWidget::OnHandHovered(UCardWidget* InCardWidget, const bool bInHo
 {
 	// 마우스 Hovered 여부에 따라 카드를 Highlight합니다.
 	InCardWidget->HighlightCard(bInHovered);
+}
+
+void UCardPanelWidget::StartDrag(UCardWidget* InCardWidget)
+{
+	CurrentDraggingCard = InCardWidget;
+	if (CurrentDraggingCard.IsValid())
+	{
+		CurrentDraggingCard->SetCardContainer(ECardContainer::Dragging);
+		CurrentDraggingCard->SetPivot(DraggingPivot);
+	}
 }

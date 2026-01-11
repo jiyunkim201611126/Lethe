@@ -21,7 +21,7 @@ void UCardWidget::NativeConstruct()
 	MovementTimeline.SetTimelineFinishedFunc(OnFinishedFunction);
 }
 
-void UCardWidget::SetCardContainer(const ECardContainer InCardContainer)
+void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldPlayAnimation)
 {
 	// 처리할 필요가 없는 경우 조기 return합니다.
 	if (CurrentCardContainer == InCardContainer)
@@ -37,12 +37,17 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer)
 		break;
 	case ECardContainer::Hand:
 		{
-			PlayAnimation(ShowFrontAnimation);
-
-			// 드로우 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
-			// 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생합니다.
+			if (bShouldPlayAnimation)
+			{
+				// 드로우 직후 들어오는 분기입니다.
+				PlayAnimation(ShowFrontAnimation);
+			}
+			bIsDragging = false;
 			bCardHighlight = false;
 			bBlockHandHighlight = true;
+
+			// Hand가 된 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
+			// 이 처리를 해주지 않으면 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생해 플래그가 꼬입니다.
 			FTimerHandle TimerHandle;
 			TWeakObjectPtr<UCardWidget> WeakThis = this;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
@@ -51,21 +56,41 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer)
 				{
 					WeakThis->bBlockHandHighlight = false;
 				}
-			}, 0.2f, false, 0.2f);
+			}, 0.5f, false, 0.5f);
 		}
 		break;
+	case ECardContainer::Dragging:
+		// 카드 사용 준비 상태인 경우 들어오는 분기입니다.
+		bIsDragging = true;
+		bShouldMove = false;
+		break;
 	case ECardContainer::Grave:
-		PlayAnimation(ShowBackAnimation);
+		// 카드 사용 후 들어오는 분기입니다.
+		if (bShouldPlayAnimation)
+		{
+			PlayAnimation(ShowBackAnimation);
+		}
 		break;
 	}
 }
 
-void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
+void UCardWidget::SetTargetPivotAndTransform(const FVector2D& InPivot, const FWidgetTransform& InTransform)
 {
+	StartPivot = GetRenderTransformPivot();
+	TargetPivot = InPivot;
+
 	StartTransform = GetRenderTransform();
 	TargetTransform = InTransform;
+
 	bShouldMove = true;
 	MovementTimeline.PlayFromStart();
+}
+
+void UCardWidget::SetPivot(const FVector2D& InPivot)
+{
+	StartPivot = InPivot;
+	TargetPivot = InPivot;
+	SetRenderTransformPivot(InPivot);
 }
 
 void UCardWidget::HighlightCard(const bool bInHighlight)
@@ -79,6 +104,11 @@ void UCardWidget::HighlightCard(const bool bInHighlight)
 	bCardHighlight ? AddTranslationY(-20.f) : AddTranslationY(20.f);
 }
 
+bool UCardWidget::IsDragging() const
+{
+	return bIsDragging;
+}
+
 void UCardWidget::AddTranslationY(const float InAddValue)
 {
 	StartTransform = GetRenderTransform();
@@ -87,20 +117,21 @@ void UCardWidget::AddTranslationY(const float InAddValue)
 	MovementTimeline.PlayFromStart();
 }
 
-void UCardWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void UCardWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	
-	if (!bShouldMove)
+	if (bShouldMove)
 	{
-		return;
+		MovementTimeline.TickTimeline(InDeltaTime);
 	}
-	
-	MovementTimeline.TickTimeline(InDeltaTime);
 }
 
-void UCardWidget::OnUpdatedTimeline(float InValue)
+void UCardWidget::OnUpdatedTimeline(const float InValue)
 {
+	const FVector2D LerpedPivot = FMath::Lerp(StartPivot, TargetPivot, InValue);
+	SetRenderTransformPivot(LerpedPivot);
+	
 	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation, InValue);
 	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
 	const FVector2D LerpedScale = FMath::Lerp(StartTransform.Scale, TargetTransform.Scale, InValue);
@@ -117,6 +148,9 @@ void UCardWidget::OnUpdatedTimeline(float InValue)
 void UCardWidget::OnFinishedTimeline()
 {
 	bShouldMove = false;
+	StartPivot = TargetPivot;
+	SetRenderTransformPivot(TargetPivot);
+	StartTransform = TargetTransform;
 	SetRenderTransform(TargetTransform);
 }
 
@@ -124,43 +158,33 @@ void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointer
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseEnter));
+	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseEnter));
 }
 
 void UCardWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseLeave(InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseLeave));
+	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseLeave));
 }
 
 FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnMouseEventForCardAction(ECardMouseEvent::MouseButtonDown);
+	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonDown));
 	
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
-FReply UCardWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	if (bReadyToUse)
-	{
-		// TODO: 카드가 마우스를 따라다녀야 함
-	}
-	
-	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-}
-
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
+	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
 	
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
 void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {	
-	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseCaptureLost));
+	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseCaptureLost));
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
@@ -224,7 +248,7 @@ ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouse
 			break;
 		case ECardMouseEvent::MouseButtonUp:
 			{
-				// 덱에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
+				// 덱 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
 				CardAction = ECardAction::Draw;
 			}
 			break;
@@ -254,41 +278,26 @@ ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouse
 				// 핸드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
 				if (!bBlockHandHighlight)
 				{
-					if (bReadyToUse)
-					{
-						CardAction = ECardAction::None;
-					}
-					else
-					{
-						CardAction = ECardAction::HandUnhovered;
-					}
+					CardAction = bIsDragging ? ECardAction::None : ECardAction::HandUnhovered;
 				}
 			}
 			break;
 		case ECardMouseEvent::MouseButtonDown:
 			{
 				// 핸드 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
-				bReadyToUse = true;
+				CardAction = ECardAction::Drag;
 			}
 			break;
 		case ECardMouseEvent::MouseButtonUp:
 			{
-				// 핸드에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
-				if (bReadyToUse)
-				{
-					CardAction = ECardAction::Use;
-					bReadyToUse = false;
-				}
+				// 핸드 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
 			}
 			break;
 		case ECardMouseEvent::MouseCaptureLost:
 			{
 				// 핸드 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
-				if (bReadyToUse)
-				{
-					CardAction = ECardAction::HandUnhovered;
-					bReadyToUse = false;
-				}
+				CardAction = ECardAction::HandUnhovered;
+				bIsDragging = false;
 			}
 			break;
 		}

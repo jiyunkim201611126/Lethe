@@ -19,6 +19,7 @@ enum class ECardContainer : uint8
 {
 	Deck,
 	Hand,
+	Dragging,
 	Grave,
 };
 
@@ -46,6 +47,7 @@ enum class ECardAction : uint8
 	Draw,
 	HandHovered,
 	HandUnhovered,
+	Drag,
 	Use,
 
 	None,
@@ -61,11 +63,10 @@ class LETHE_API UCardWidget : public ULetheUserWidget
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
@@ -77,18 +78,22 @@ public:
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
 	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.
-	void SetCardContainer(const ECardContainer InCardContainer);
+	void SetCardContainer(const ECardContainer InCardContainer, const bool bShouldPlayAnimation = true);
 	
 	// 마우스 이벤트에 의해 호출되는 함수로, 이동 목표 지점을 결정한 뒤 이동을 시작합니다.
-	void SetTargetTransform(const FWidgetTransform& InTransform);
+	void SetTargetPivotAndTransform(const FVector2D& InPivot, const FWidgetTransform& InTransform);
+	
+	// 드래그에 의해 호출되는 함수로, 애니메이션 재생 없이 즉시 Pivot을 이동시킵니다. 
+	void SetPivot(const FVector2D& InPivot);
 
 	void HighlightCard(const bool bInHighlight);
+	bool IsDragging() const;
 
 private:
 	void AddTranslationY(const float InAddValue);
 	
 	UFUNCTION()
-	void OnUpdatedTimeline(float InValue);
+	void OnUpdatedTimeline(const float InValue);
 	
 	UFUNCTION()
 	void OnFinishedTimeline();
@@ -127,11 +132,14 @@ private:
 
 	FWidgetTransform StartTransform;
 	FWidgetTransform TargetTransform;
+
+	FVector2D StartPivot = FVector2D(0.f, 1.f);
+	FVector2D TargetPivot = FVector2D(0.f, 1.f);
 	
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;	
 
 	uint8 bShouldMove : 1 = false;
 	uint8 bBlockHandHighlight : 1 = false;
 	uint8 bCardHighlight : 1 = false;
-	uint8 bReadyToUse : 1 = false;
+	uint8 bIsDragging : 1 = false;
 };

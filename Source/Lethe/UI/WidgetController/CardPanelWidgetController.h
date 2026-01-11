@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
@@ -11,7 +12,29 @@ class UCardViewData;
 struct FGameplayTag;
 struct FCardViewInfo;
 
-DECLARE_DELEGATE_TwoParams(FOnAbilityUpdatedSignature, ULetheAbilitySystemComponent*, const FCardViewInfo*)
+/**
+ * CardWidget을 생성해 초기화하는 시점에 필요한 데이터입니다.
+ * 편의성을 위해 선언되었으며, 로컬 변수로 생성되어 잠시 사용되고 사라지기 때문에 내부는 원시 포인터로 사용합니다.
+ */
+USTRUCT()
+struct FCardInitParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	ULetheAbilitySystemComponent* OwnerASC;
+	
+	UPROPERTY()
+	UCardViewData* CardViewData;
+	
+	FGameplayTag CardTag;
+	
+	FColor CardFrontsideColor;
+	
+	FColor CardBacksideColor;
+};
+
+DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -20,10 +43,11 @@ class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 
 public:
 	//~ Begin ULetheWidgetController Interface
-	virtual void BindCallbacksToDependencies() override;
+	virtual void BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
 	//~ End of ULetheWidgetController Interface
 
 	FVector2D GetCardSize() const;
+	float GetCardHighlightScale() const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const;

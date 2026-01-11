@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LetheWidgetController.h"
+#include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "OverlayWidgetController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedSignature, const UAbilitySystemComponent*, OwnerASC, float, NewValue);
@@ -15,7 +16,7 @@ class LETHE_API UOverlayWidgetController : public ULetheWidgetController
 
 public:
 	//~ Begin LetheWidgetController Interface
-	virtual void BindCallbacksToDependencies() override;
+	virtual void BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
 	virtual void BroadcastInitialValue() override;
 	//~ End LetheWidgetController Interface
 

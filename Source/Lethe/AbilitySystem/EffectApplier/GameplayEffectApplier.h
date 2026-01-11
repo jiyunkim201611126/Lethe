@@ -28,6 +28,8 @@ public:
 
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
+	virtual FText GetDescriptionText(const int32 InLevel) const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;

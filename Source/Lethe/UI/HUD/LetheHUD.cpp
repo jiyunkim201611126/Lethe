@@ -3,7 +3,9 @@
 #include "LetheHUD.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/UI/Widget/OverlayWidget.h"
+#include "Lethe/UI/Widget/Card/CardPanelWidget.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 #include "Lethe/UI/WidgetController/OverlayWidgetController.h"
 
@@ -15,26 +17,28 @@ void ALetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemC
 
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 
+	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
+	ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
+
 	// WidgetController 객체를 생성합니다.
-	CreateOverlayWidgetController(WidgetControllerParams);
+	CreateOverlayWidgetController();
 	// 총 4쌍의 ASC, AS를 WidgetController에게 넘겨줘야 하기 때문에 생성 시점이 아닌 여기서 호출합니다.
 	OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	OverlayWidgetController->BindCallbacksToDependencies();
+	OverlayWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
 	
-	CreateCardWidgetController(WidgetControllerParams);
+	CreateCardWidgetController();
 	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	CardPanelWidgetController->BindCallbacksToDependencies();
+	CardPanelWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
 
 	if (!OverlayWidget)
 	{
 		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
+		OverlayWidget->SetWidgetController(OverlayWidgetController);
+		OverlayWidget->AddToViewport();
 	}
-
-	OverlayWidget->SetWidgetController(OverlayWidgetController);
-	OverlayWidget->AddToViewport();
 }
 
-UOverlayWidgetController* ALetheHUD::CreateOverlayWidgetController(const FWidgetControllerParams& WidgetControllerParams)
+UOverlayWidgetController* ALetheHUD::CreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
@@ -43,7 +47,7 @@ UOverlayWidgetController* ALetheHUD::CreateOverlayWidgetController(const FWidget
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ALetheHUD::CreateCardWidgetController(const FWidgetControllerParams& WidgetControllerParams)
+UCardPanelWidgetController* ALetheHUD::CreateCardWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{

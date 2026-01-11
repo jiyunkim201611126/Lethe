@@ -2,11 +2,10 @@
 
 #include "CardWidget.h"
 
-#include "Components/Image.h"
 #include "Lethe/Data/CardViewData.h"
-#include "Components/RichTextBlock.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/UI/Core/LetheImage.h"
 
 void UCardWidget::NativeConstruct()
 {
@@ -34,9 +33,26 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer)
 	switch (InCardContainer)
 	{
 	case ECardContainer::Deck:
+		SetRenderScale(FVector2D(0.5f));
 		break;
 	case ECardContainer::Hand:
-		PlayAnimation(ShowFrontAnimation);
+		{
+			PlayAnimation(ShowFrontAnimation);
+
+			// 드로우 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
+			// 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생합니다.
+			bCardHighlight = false;
+			bBlockHandHighlight = true;
+			FTimerHandle TimerHandle;
+			TWeakObjectPtr<UCardWidget> WeakThis = this;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
+			{
+				if (WeakThis.IsValid())
+				{
+					WeakThis->bBlockHandHighlight = false;
+				}
+			}, 0.2f, false, 0.2f);
+		}
 		break;
 	case ECardContainer::Grave:
 		PlayAnimation(ShowBackAnimation);
@@ -48,6 +64,25 @@ void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
 {
 	StartTransform = GetRenderTransform();
 	TargetTransform = InTransform;
+	bShouldMove = true;
+	MovementTimeline.PlayFromStart();
+}
+
+void UCardWidget::HighlightCard(const bool bInHighlight)
+{
+	if (bCardHighlight == bInHighlight)
+	{
+		return;
+	}
+
+	bCardHighlight = bInHighlight;
+	bCardHighlight ? AddTranslationY(-20.f) : AddTranslationY(20.f);
+}
+
+void UCardWidget::AddTranslationY(const float InAddValue)
+{
+	StartTransform = GetRenderTransform();
+	TargetTransform.Translation.Y += InAddValue;
 	bShouldMove = true;
 	MovementTimeline.PlayFromStart();
 }
@@ -89,19 +124,19 @@ void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointer
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseEnter));
+	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseEnter));
 }
 
 void UCardWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseLeave(InMouseEvent);
 	
-	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseLeave));
+	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseLeave));
 }
 
 FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnCardActionForEvent(ECardMouseEvent::MouseButtonDown);
+	OnMouseEventForCardAction(ECardMouseEvent::MouseButtonDown);
 	
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -118,26 +153,32 @@ FReply UCardWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointe
 
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseButtonUp));
+	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
 	
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
 void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {	
-	OnCardMouseEventDelegate.Execute(this, OnCardActionForEvent(ECardMouseEvent::MouseCaptureLost));
+	OnCardMouseEventDelegate.Execute(this, OnMouseEventForCardAction(ECardMouseEvent::MouseCaptureLost));
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
 
-void UCardWidget::UpdateCardView(const FCardViewInfo* InCardInfo) const
+void UCardWidget::SetCardView(const FCardViewInfo* InCardInfo)
 {
 	if (InCardInfo)
 	{
 		CardImage->SetBrushFromTexture(InCardInfo->CardTexture);
-		CardNameTextBlock->SetText(InCardInfo->CardNameText);
-		CardDescriptionTextBlock->SetText(InCardInfo->CardDescriptionText);
+		CardName = InCardInfo->CardNameText;
+		CardDescription = InCardInfo->CardDescriptionText;
 	}
+}
+
+void UCardWidget::SetCardColor(const FColor& InFrontsideColor, const FColor& InBacksideColor) const
+{
+	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InFrontsideColor));
+	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InBacksideColor));
 }
 
 void UCardWidget::SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC)
@@ -155,12 +196,7 @@ ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 	return nullptr;
 }
 
-bool UCardWidget::GetHandHighlightState() const
-{
-	return bShouldHandHighlight;
-}
-
-ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent)
+ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent)
 {
 	ECardAction CardAction = ECardAction::None;
 
@@ -179,46 +215,23 @@ ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent
 			{
 				// 덱 위에서 마우스가 벗어날 때 들어오는 분기입니다.
 				CardAction = ECardAction::DeckUnhovered;
-				bReadyToDraw = false;
 			}
 			break;
 		case ECardMouseEvent::MouseButtonDown:
 			{
 				// 덱 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
-				bReadyToDraw = true;
 			}
 			break;
 		case ECardMouseEvent::MouseButtonUp:
 			{
 				// 덱에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
-				if (bReadyToDraw)
-				{
-					CardAction = ECardAction::Draw;
-					bReadyToDraw = false;
-
-					// 드로우 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
-					// 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생합니다.
-					bBlockHandHighlight = true;
-					FTimerHandle TimerHandle;
-					TWeakObjectPtr<UCardWidget> WeakThis = this;
-					GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
-					{
-						if (WeakThis.IsValid())
-						{
-							WeakThis->bBlockHandHighlight = false;
-						}
-					}, 0.2f, false, 0.2f);
-				}
+				CardAction = ECardAction::Draw;
 			}
 			break;
 		case ECardMouseEvent::MouseCaptureLost:
 			{
 				// 덱 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
-				if (bReadyToDraw)
-				{
-					CardAction = ECardAction::DeckUnhovered;
-					bReadyToDraw = false;
-				}
+				CardAction = ECardAction::DeckUnhovered;
 			}
 			break;
 		}
@@ -233,7 +246,6 @@ ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent
 				if (!bBlockHandHighlight)
 				{
 					CardAction = ECardAction::HandHovered;
-					bShouldHandHighlight = true;
 				}
 			}
 			break;
@@ -249,7 +261,6 @@ ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent
 					else
 					{
 						CardAction = ECardAction::HandUnhovered;
-						bShouldHandHighlight = false;
 					}
 				}
 			}
@@ -267,7 +278,6 @@ ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent
 				{
 					CardAction = ECardAction::Use;
 					bReadyToUse = false;
-					bShouldHandHighlight = false;
 				}
 			}
 			break;
@@ -278,7 +288,6 @@ ECardAction UCardWidget::OnCardActionForEvent(const ECardMouseEvent InMouseEvent
 				{
 					CardAction = ECardAction::HandUnhovered;
 					bReadyToUse = false;
-					bShouldHandHighlight = false;
 				}
 			}
 			break;

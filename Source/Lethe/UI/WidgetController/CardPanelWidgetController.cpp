@@ -5,27 +5,37 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
 #include "Lethe/Data/CardViewData.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
 
-void UCardPanelWidgetController::BindCallbacksToDependencies()
+void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
-	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
-	{
-		AbilitySystemReference.AbilitySystemComponent->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);
-	}
+	ASC->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);
 }
 
 FVector2D UCardPanelWidgetController::GetCardSize() const
 {
-	return CardViewData->CardHighlightSize;
+	return CardViewData->GetCardSize();
+}
+
+float UCardPanelWidgetController::GetCardHighlightScale() const
+{
+	return CardViewData->GetCardHighlightScale();
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const
 {
-	// AbilityTag와 Ability를 통해 Card의 View를 초기화하기 위한 값들을 가져와 델리게이트를 통해 뿌립니다.
-	FCardViewInfo* CardViewInfo = CardViewData->FindCardInfoByTag(InAbility->AbilityTag);
-	const FText CardNameText = InAbility->GetCardName();
-	const FText CardDescriptionText = InAbility->GetCardDescription(InAbility->GetAbilityLevel());
-	CardViewInfo->CardNameText = CardNameText;
-	CardViewInfo->CardDescriptionText = CardDescriptionText;
-	OnAbilityUpdatedDelegate.ExecuteIfBound(OwnerASC, CardViewInfo);
+	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
+	FCardViewInfo* CardViewInfo = CardViewData->FindCardInfoByTag(InAbility->CardTag);
+	if (CardViewInfo)
+	{
+		const FText CardDescriptionText = InAbility->GetCardDescription(InAbility->GetAbilityLevel());
+		CardViewInfo->CardDescriptionText = CardDescriptionText;
+	}
+
+	// 콜백을 받은 CardPanelWidget이 필요한 데이터를 참조할 수 있도록 보내줍니다.
+	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerASC->GetOwner()))
+	{
+		const FCardInitParams InitParams(OwnerASC, CardViewData, InAbility->CardTag, OwnerCharacter->GetCardFrontsideColor(), OwnerCharacter->GetCardBacksideColor());
+		OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
+	}
 }

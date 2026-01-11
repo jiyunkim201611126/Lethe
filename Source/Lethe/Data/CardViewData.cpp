@@ -6,3 +6,13 @@ FCardViewInfo* UCardViewData::FindCardInfoByTag(const FGameplayTag& InAbilityTag
 {
 	return CardViewData.Find(InAbilityTag);
 }
+
+FVector2D UCardViewData::GetCardSize() const
+{
+	return CardSize;
+}
+
+float UCardViewData::GetCardHighlightScale() const
+{
+	return CardHighlightScale;
+}

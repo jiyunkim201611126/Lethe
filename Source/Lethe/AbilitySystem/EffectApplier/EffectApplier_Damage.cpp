@@ -33,7 +33,7 @@ TArray<FGameplayEffectSpecHandle> UEffectApplier_Damage::MakeDamageSpecHandle(co
 	MakeEffectContextHandle(OwningAbility);
 	
 	TArray<FGameplayEffectSpecHandle> DamageSpecs;
-	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageTypes)
+	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())
 		{
@@ -77,19 +77,23 @@ void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 	}
 }
 
-FText UEffectApplier_Damage::GetDamageText(const int32 Level) const
+FText UEffectApplier_Damage::GetDescriptionText(const int32 InLevel) const
 {
-	TArray<FText> TextLines;
-	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageTypes)
+	TArray<FText> DamageTexts;
+	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
-		if (Pair.Value.IsValid())
-		{
-			const float ScaledDamage = Pair.Value.GetValueAtLevel(Level);
-			FText DamageTypeText = FLetheTextManager::GetText(EStringTableType::Card, Pair.Key.ToString(), ScaledDamage);
-			TextLines.Emplace(DamageTypeText);
-		}
+		DamageTexts.Emplace(GetDamageText(InLevel, Pair.Key));
 	}
+
+	return FText::Join(FText::FromString(TEXT(" ")), DamageTexts);
+}
+
+FText UEffectApplier_Damage::GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const
+{
+	const FScalableFloat* DamageValue = DamageValues.Find(InDamageTag);
+	check(DamageValue);
 	
-	FText ResultText = FText::Join(FText::FromString(TEXT("\n")), TextLines);
-	return ResultText;
+	const float ScaledDamage = DamageValue->GetValueAtLevel(InLevel);
+	FText DamageText = FLetheTextManager::GetText(EStringTableType::Card, InDamageTag.ToString(), ScaledDamage);
+	return DamageText;
 }

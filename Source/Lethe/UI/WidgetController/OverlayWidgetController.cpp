@@ -5,21 +5,18 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 
-void UOverlayWidgetController::BindCallbacksToDependencies()
+void UOverlayWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
-	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
-	{
-		// Attribute들에게 변동사항이 있는 경우 Widget Controller가 알 수 있도록 각 AttributeSet에게 함수를 바인드합니다.
-		AbilitySystemReference.AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AbilitySystemReference.AttributeSet->GetHealthAttribute()).AddLambda([this, AbilitySystemReference](const FOnAttributeChangeData& Data)
-			{
-				OnHealthChanged.Broadcast(AbilitySystemReference.AbilitySystemComponent, Data.NewValue);
-			});
-	
-		AbilitySystemReference.AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AbilitySystemReference.AttributeSet->GetMaxHealthAttribute()).AddLambda([this, AbilitySystemReference](const FOnAttributeChangeData& Data)
-			{
-				OnMaxHealthChanged.Broadcast(AbilitySystemReference.AbilitySystemComponent, Data.NewValue);
-			});
-	}
+	// Attribute들에게 변동사항이 있는 경우 Widget Controller가 알 수 있도록 각 AttributeSet에게 함수를 바인드합니다.
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddLambda([this, ASC](const FOnAttributeChangeData& Data)
+		{
+			OnHealthChanged.Broadcast(ASC, Data.NewValue);
+		});
+
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddLambda([this, ASC](const FOnAttributeChangeData& Data)
+		{
+			OnMaxHealthChanged.Broadcast(ASC, Data.NewValue);
+		});
 }
 
 void UOverlayWidgetController::BroadcastInitialValue()

@@ -18,7 +18,7 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	AbilitySystemReferences.Emplace(FAbilitySystemReference(AbilitySystemComponent, AttributeSet));
 }
 
-void ULetheWidgetController::BindCallbacksToDependencies()
+void ULetheWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 }
 

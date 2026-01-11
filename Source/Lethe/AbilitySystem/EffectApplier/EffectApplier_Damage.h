@@ -18,11 +18,13 @@ public:
 	TArray<FGameplayEffectSpecHandle> MakeDamageSpecHandle(const UGameplayAbility* OwningAbility);
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);
 
+	virtual FText GetDescriptionText(const int32 InLevel) const override;
+
 	UFUNCTION(BlueprintPure, Category = "Text")
-	FText GetDamageText(const int32 Level) const;
+	FText GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const;
 
 private:
 	// 데미지 타입과 그 속성 데미지를 정의하는 변수입니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	TMap<FGameplayTag, FScalableFloat> DamageTypes;
+	TMap<FGameplayTag, FScalableFloat> DamageValues;
 };

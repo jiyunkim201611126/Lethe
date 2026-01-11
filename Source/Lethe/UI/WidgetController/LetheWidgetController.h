@@ -67,7 +67,7 @@ class LETHE_API ULetheWidgetController : public UObject
 
 public:
 	void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams);
-	virtual void BindCallbacksToDependencies();
+	virtual void BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS);
 
 	// 객체 생성 직후 값 초기화와 함께 View에 표시해야 한다면 아래 함수를 활용할 수 있습니다.
 	UFUNCTION(BlueprintCallable)

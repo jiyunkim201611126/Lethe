@@ -15,9 +15,15 @@ void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 	}
 }
 
-FText ULetheGameplayAbility::GetCardName() const
+FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel)
 {
-	return FLetheTextManager::GetText(EStringTableType::Card, CardNameTextKey);
+	TArray<FText> ResultTexts;
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	{
+		ResultTexts.Emplace(EffectApplier->GetDescriptionText(InLevel));
+	}
+
+	return FText::Join(FText::FromString(TEXT(" ")), ResultTexts);
 }
 
 FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const
@@ -60,7 +66,7 @@ void ULetheGameplayAbility::PostEditChangeProperty(FPropertyChangedEvent& Proper
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(ULetheGameplayAbility, AbilityTag))
+	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(ULetheGameplayAbility, CardTag))
 	{
 		SyncAbilityTagToAssetTags();
 	}
@@ -79,12 +85,12 @@ void ULetheGameplayAbility::PostInitProperties()
 void ULetheGameplayAbility::SyncAbilityTagToAssetTags()
 {
 	// GetAssetTags를 통해 반환받는 변수인 AbilityTags는 GameplayAbility의 멤버 변수입니다.
-	// 추후 AssetTags라는 이름으로 변경될 예정이며, 메타데이터 역할을 수행하기 때문에 런타임 중 변경되는 것을 금지하고 있습니다.
+	// 추후 에픽게임즈가 AssetTags라는 이름으로 변경될 예정이며, 메타데이터 역할을 수행하기 때문에 런타임 중 변경되는 것을 금지하고 있습니다.
 	// 따라서 해당 함수는 에디터에서만 호출됩니다.
-	if (AbilityTag.IsValid() && !GetAssetTags().HasTag(AbilityTag))
+	if (CardTag.IsValid() && !GetAssetTags().HasTag(CardTag))
 	{
 		FGameplayTagContainer NewAbilityTags;
-		NewAbilityTags.AddTag(AbilityTag);
+		NewAbilityTags.AddTag(CardTag);
 		for (auto AssetTag : GetAssetTags())
 		{
 			NewAbilityTags.AddTag(AssetTag);
@@ -94,6 +100,6 @@ void ULetheGameplayAbility::SyncAbilityTagToAssetTags()
 				// 에디터에서만 호출되기 때문에 안전합니다.
 				AbilityTags = NewAbilityTags;
 		PRAGMA_DISABLE_DEPRECATION_WARNINGS
-			}
+	}
 }
 #endif

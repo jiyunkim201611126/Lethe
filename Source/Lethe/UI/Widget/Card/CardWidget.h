@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
+#include "Lethe/Data/CardViewData.h"
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
-class URichTextBlock;
 struct FCardViewInfo;
-class UImage;
+class ULetheImage;
 class ULetheAbilitySystemComponent;
 
 // CardWidget이 현재 어디에 속해있는지 나타내는 Enum입니다.
@@ -70,36 +70,43 @@ public:
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 	
-	void UpdateCardView(const FCardViewInfo* InCardInfo) const;
+	void SetCardView(const FCardViewInfo* InCardInfo);
+	void SetCardColor(const FColor& InFrontsideColor, const FColor& InBacksideColor) const;
 
 	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
-	
+
+	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.
 	void SetCardContainer(const ECardContainer InCardContainer);
+	
+	// 마우스 이벤트에 의해 호출되는 함수로, 이동 목표 지점을 결정한 뒤 이동을 시작합니다.
 	void SetTargetTransform(const FWidgetTransform& InTransform);
-	bool GetHandHighlightState() const;
+
+	void HighlightCard(const bool bInHighlight);
 
 private:
+	void AddTranslationY(const float InAddValue);
+	
 	UFUNCTION()
 	void OnUpdatedTimeline(float InValue);
 	
 	UFUNCTION()
 	void OnFinishedTimeline();
 
-	ECardAction OnCardActionForEvent(const ECardMouseEvent InMouseEvent);
+	ECardAction OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent);
 
 public:
 	FOnCardMouseEventSignature OnCardMouseEventDelegate;
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> CardImage;
-	
+	TObjectPtr<ULetheImage> CardImage;
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<URichTextBlock> CardNameTextBlock;
-	
+	TObjectPtr<ULetheImage> CardFrontsideBorderImage;
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<URichTextBlock> CardDescriptionTextBlock;
+	TObjectPtr<ULetheImage> CardBacksideBorderImage;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	TObjectPtr<UWidgetAnimation> ShowFrontAnimation;
@@ -108,6 +115,9 @@ protected:
 	TObjectPtr<UWidgetAnimation> ShowBackAnimation;
 
 private:
+	FText CardName;
+	FText CardDescription;
+	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 
 	FTimeline MovementTimeline;
@@ -121,8 +131,7 @@ private:
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;	
 
 	uint8 bShouldMove : 1 = false;
-	uint8 bReadyToDraw : 1 = false;
 	uint8 bBlockHandHighlight : 1 = false;
-	uint8 bShouldHandHighlight : 1 = false;
+	uint8 bCardHighlight : 1 = false;
 	uint8 bReadyToUse : 1 = false;
 };

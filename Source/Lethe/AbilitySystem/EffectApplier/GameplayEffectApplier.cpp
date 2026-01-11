@@ -32,3 +32,8 @@ FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() co
 {
 	return EffectContextHandle;
 }
+
+FText UGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
+{
+	return FText();
+}

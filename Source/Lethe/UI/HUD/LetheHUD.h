@@ -10,6 +10,7 @@ struct FWidgetControllerParams;
 class UAttributeSet;
 class UAbilitySystemComponent;
 class UOverlayWidget;
+class UCardPanelWidget;
 class UOverlayWidgetController;
 class UCardPanelWidgetController;
 
@@ -21,8 +22,8 @@ class LETHE_API ALetheHUD : public AHUD
 public:
 	void InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 	
-	UOverlayWidgetController* CreateOverlayWidgetController(const FWidgetControllerParams& WidgetControllerParams);
-	UCardPanelWidgetController* CreateCardWidgetController(const FWidgetControllerParams& WidgetControllerParams);
+	UOverlayWidgetController* CreateOverlayWidgetController();
+	UCardPanelWidgetController* CreateCardWidgetController();
 	
 	UOverlayWidgetController* GetOverlayWidgetController() const;
 	UCardPanelWidgetController* GetCardPanelWidgetController() const;

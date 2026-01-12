@@ -70,9 +70,8 @@ public:
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
-	
-	void SetCardView(const FCardViewInfo* InCardInfo);
-	void SetCardColor(const FColor& InFrontsideColor, const FColor& InBacksideColor) const;
+
+	void SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor);
 
 	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
@@ -89,16 +88,16 @@ public:
 	void HighlightCard(const bool bInHighlight);
 	bool IsDragging() const;
 
+	FGameplayTag GetCardTag() const;
+
 private:
-	void AddTranslationY(const float InAddValue);
-	
 	UFUNCTION()
 	void OnUpdatedTimeline(const float InValue);
 	
 	UFUNCTION()
 	void OnFinishedTimeline();
 
-	ECardAction OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent);
+	ECardAction OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent) const;
 
 public:
 	FOnCardMouseEventSignature OnCardMouseEventDelegate;
@@ -122,6 +121,7 @@ protected:
 private:
 	FText CardName;
 	FText CardDescription;
+	FGameplayTag CardTag;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 
@@ -135,8 +135,10 @@ private:
 
 	FVector2D StartPivot = FVector2D(0.f, 1.f);
 	FVector2D TargetPivot = FVector2D(0.f, 1.f);
+
+	float AddHighlightTranslation = -10.f;
 	
-	ECardContainer CurrentCardContainer = ECardContainer::Deck;	
+	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 
 	uint8 bShouldMove : 1 = false;
 	uint8 bBlockHandHighlight : 1 = false;

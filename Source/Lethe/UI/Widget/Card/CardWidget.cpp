@@ -101,7 +101,7 @@ void UCardWidget::HighlightCard(const bool bInHighlight)
 	}
 
 	bCardHighlight = bInHighlight;
-	bCardHighlight ? AddTranslationY(-20.f) : AddTranslationY(20.f);
+	SetTargetPivotAndTransform(TargetPivot, TargetTransform);
 }
 
 bool UCardWidget::IsDragging() const
@@ -109,12 +109,9 @@ bool UCardWidget::IsDragging() const
 	return bIsDragging;
 }
 
-void UCardWidget::AddTranslationY(const float InAddValue)
+FGameplayTag UCardWidget::GetCardTag() const
 {
-	StartTransform = GetRenderTransform();
-	TargetTransform.Translation.Y += InAddValue;
-	bShouldMove = true;
-	MovementTimeline.PlayFromStart();
+	return CardTag;
 }
 
 void UCardWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
@@ -131,8 +128,9 @@ void UCardWidget::OnUpdatedTimeline(const float InValue)
 {
 	const FVector2D LerpedPivot = FMath::Lerp(StartPivot, TargetPivot, InValue);
 	SetRenderTransformPivot(LerpedPivot);
-	
-	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation, InValue);
+
+	const FVector2D HighlightTranslation = bCardHighlight ? FVector2D(0.f, AddHighlightTranslation) : FVector2D::ZeroVector;
+	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation + HighlightTranslation, InValue);
 	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
 	const FVector2D LerpedScale = FMath::Lerp(StartTransform.Scale, TargetTransform.Scale, InValue);
 
@@ -152,6 +150,10 @@ void UCardWidget::OnFinishedTimeline()
 	SetRenderTransformPivot(TargetPivot);
 	StartTransform = TargetTransform;
 	SetRenderTransform(TargetTransform);
+	if (bCardHighlight)
+	{
+		SetRenderTranslation(TargetTransform.Translation + FVector2D(0.f, AddHighlightTranslation));
+	}
 }
 
 void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -189,18 +191,15 @@ void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostE
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
 
-void UCardWidget::SetCardView(const FCardViewInfo* InCardInfo)
+void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor)
 {
+	CardTag = InCardTag;
 	if (InCardInfo)
 	{
 		CardImage->SetBrushFromTexture(InCardInfo->CardTexture);
 		CardName = InCardInfo->CardNameText;
 		CardDescription = InCardInfo->CardDescriptionText;
 	}
-}
-
-void UCardWidget::SetCardColor(const FColor& InFrontsideColor, const FColor& InBacksideColor) const
-{
 	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InFrontsideColor));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InBacksideColor));
 }
@@ -220,7 +219,7 @@ ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 	return nullptr;
 }
 
-ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent)
+ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent) const
 {
 	ECardAction CardAction = ECardAction::None;
 
@@ -297,7 +296,6 @@ ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouse
 			{
 				// 핸드 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
 				CardAction = ECardAction::HandUnhovered;
-				bIsDragging = false;
 			}
 			break;
 		}

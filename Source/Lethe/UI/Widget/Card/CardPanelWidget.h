@@ -46,6 +46,7 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
@@ -59,6 +60,8 @@ private:
 	void Draw(const UCardWidget* InCardWidget);
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
 	void StartDrag(UCardWidget* InCardWidget);
+	void SuccessToUseCard();
+	void FailToUseCard();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -78,6 +81,7 @@ private:
 
 	int32 DeckZOrder = 100;
 	int32 HandZOrder = 200;
+	int32 DraggingZOrder = 300;
 	
 	uint8 bControllerInitialized : 1 = false;
 	uint8 bIsBattlePhase : 1 = false;
@@ -87,9 +91,6 @@ private:
 	float PaddingDeckAndHand = 25.f;
 	float PaddingHandAndHand = 10.f;
 	float CardHighlightScale;
-
-	uint8 CurrentHandsNum = 0;
-	uint8 MaxHandsNum = 8;
 
 	TWeakObjectPtr<UCardWidget> CurrentDraggingCard;
 

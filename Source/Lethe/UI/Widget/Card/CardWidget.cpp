@@ -63,6 +63,7 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 		// 카드 사용 준비 상태인 경우 들어오는 분기입니다.
 		bIsDragging = true;
 		bShouldMove = false;
+		bCardHighlight = false;
 		break;
 	case ECardContainer::Grave:
 		// 카드 사용 후 들어오는 분기입니다.
@@ -191,14 +192,14 @@ void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostE
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
 
-void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor)
+void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardViewInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor)
 {
 	CardTag = InCardTag;
-	if (InCardInfo)
+	if (InCardViewInfo)
 	{
-		CardImage->SetBrushFromTexture(InCardInfo->CardTexture);
-		CardName = InCardInfo->CardNameText;
-		CardDescription = InCardInfo->CardDescriptionText;
+		CardImage->SetBrushFromTexture(InCardViewInfo->CardTexture);
+		CardName = InCardViewInfo->CardNameText;
+		CardDescription = InCardViewInfo->CardDescriptionText;
 	}
 	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InFrontsideColor));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InBacksideColor));

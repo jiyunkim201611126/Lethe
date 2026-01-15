@@ -5,11 +5,27 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
 #include "Lethe/Data/CardViewData.h"
+#include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 
 void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 	ASC->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);
+
+	if (!bInitialized)
+	{
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		{
+			LetheGameState->OnChangePlayerTurnStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
+		}
+		
+		bInitialized = true;
+	}
+}
+
+void UCardPanelWidgetController::BroadcastInitialValue()
+{
+	GoDrawPhase();
 }
 
 FVector2D UCardPanelWidgetController::GetCardSize() const
@@ -20,6 +36,22 @@ FVector2D UCardPanelWidgetController::GetCardSize() const
 float UCardPanelWidgetController::GetCardHighlightScale() const
 {
 	return CardViewData->GetCardHighlightScale();
+}
+
+void UCardPanelWidgetController::GoDrawPhase() const
+{
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->GoDrawPhase();
+	}
+}
+
+void UCardPanelWidgetController::GoBattlePhase() const
+{
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->GoBattlePhase();
+	}
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const
@@ -38,4 +70,9 @@ void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* Own
 		const FCardInitParams InitParams(OwnerASC, CardViewData, InAbility->CardTag, OwnerCharacter->GetCardFrontsideColor(), OwnerCharacter->GetCardBacksideColor());
 		OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 	}
+}
+
+void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState InState) const
+{
+	OnPlayerPhaseStateChangedDelegate.Broadcast(InState);
 }

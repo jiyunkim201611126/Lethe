@@ -7,10 +7,11 @@
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
-class ULetheGameplayAbility;
-class UCardViewData;
 struct FGameplayTag;
 struct FCardViewInfo;
+class ULetheGameplayAbility;
+class UCardViewData;
+enum class EPlayerPhaseState : uint8;
 
 /**
  * CardWidget을 생성해 초기화하는 시점에 필요한 데이터입니다.
@@ -36,6 +37,8 @@ struct FCardInitParams
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChangedSignature, const EPlayerPhaseState);
+
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 {
@@ -44,18 +47,27 @@ class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 public:
 	//~ Begin ULetheWidgetController Interface
 	virtual void BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
+	virtual void BroadcastInitialValue() override;
 	//~ End of ULetheWidgetController Interface
 
 	FVector2D GetCardSize() const;
 	float GetCardHighlightScale() const;
 
+	void GoDrawPhase() const;
+	void GoBattlePhase() const;
+
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const;
+	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
 
 public:
 	FOnAbilityUpdatedSignature OnAbilityUpdatedDelegate;
+	FOnPlayerPhaseStateChangedSignature OnPlayerPhaseStateChangedDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
 	TObjectPtr<UCardViewData> CardViewData;
+
+private:
+	uint8 bInitialized : 1 = false;
 };

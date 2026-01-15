@@ -48,7 +48,6 @@ enum class ECardAction : uint8
 	HandHovered,
 	HandUnhovered,
 	Drag,
-	Use,
 
 	None,
 };
@@ -71,7 +70,7 @@ public:
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
-	void SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor);
+	void SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardViewInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor);
 
 	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
 	ULetheAbilitySystemComponent* GetOwnerASC() const;

@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameMode.h"
+#include "GameFramework/GameModeBase.h"
 #include "LetheGameMode.generated.h"
 
 UCLASS()
-class LETHE_API ALetheGameMode : public AGameMode
+class LETHE_API ALetheGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 };

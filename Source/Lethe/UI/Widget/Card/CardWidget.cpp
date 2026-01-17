@@ -2,6 +2,7 @@
 
 #include "CardWidget.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "Lethe/Data/CardViewData.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -21,7 +22,7 @@ void UCardWidget::NativeConstruct()
 	MovementTimeline.SetTimelineFinishedFunc(OnFinishedFunction);
 }
 
-void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldPlayAnimation)
+void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation)
 {
 	// 처리할 필요가 없는 경우 조기 return합니다.
 	if (CurrentCardContainer == InCardContainer)
@@ -37,11 +38,7 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 		break;
 	case ECardContainer::Hand:
 		{
-			if (bShouldPlayAnimation)
-			{
-				// 드로우 직후 들어오는 분기입니다.
-				PlayAnimation(ShowFrontAnimation);
-			}
+			PlayAnimation(ShowFrontAnimation, bShouldSkipAnimation ? ShowFrontAnimation->GetEndTime() : 0.f);
 			bIsDragging = false;
 			bCardHighlight = false;
 			bBlockHandHighlight = true;
@@ -67,10 +64,7 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 		break;
 	case ECardContainer::Grave:
 		// 카드 사용 후 들어오는 분기입니다.
-		if (bShouldPlayAnimation)
-		{
-			PlayAnimation(ShowBackAnimation);
-		}
+		PlayAnimation(ShowBackAnimation, bShouldSkipAnimation ? ShowBackAnimation->GetEndTime() : 0.f);
 		break;
 	}
 }

@@ -3,6 +3,7 @@
 #include "LethePlayerController.h"
 
 #include "Lethe/Lethe.h"
+#include "Lethe/UI/Widget/Card/CardWidget.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -11,7 +12,7 @@ ALethePlayerController::ALethePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
-bool ALethePlayerController::RequestUseCard(const FGameplayTag& InCardTag) const
+bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget) const
 {
 	FHitResult Hit;
 	GetHitResultUnderCursor(ECC_Tile, false, Hit);

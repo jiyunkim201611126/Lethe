@@ -19,6 +19,32 @@ void UCardPanelWidget::NativeConstruct()
 	AbilitySystemComponentToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
 }
 
+void UCardPanelWidget::WidgetControllerSet_Implementation()
+{
+	Super::WidgetControllerSet_Implementation();
+
+	if (UCardPanelWidgetController* CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController))
+	{
+		AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+		if (!bControllerInitialized)
+		{
+			PaddingDeckAndHand += CardPanelWidgetController->GetCardSize().X;
+			PaddingHandAndHand += CardPanelWidgetController->GetCardSize().X;
+			
+			CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
+			CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
+			
+			CardPanelWidgetController->BroadcastInitialValue();
+			
+			// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
+			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
+			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
+			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
+			bControllerInitialized = true;
+		}
+	}
+}
+
 void UCardPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
@@ -58,7 +84,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 		// 드래그 중인 카드가 있을 때만 들어오는 분기입니다.
 		if (const ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 		{
-			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentDraggingCard->GetCardTag());
+			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentDraggingCard.Get());
 			if (bUseCardSuccess)
 			{
 				SuccessToUseCard();
@@ -82,32 +108,6 @@ void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& Capture
 	}
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
-}
-
-void UCardPanelWidget::WidgetControllerSet_Implementation()
-{
-	Super::WidgetControllerSet_Implementation();
-
-	if (UCardPanelWidgetController* CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController))
-	{
-		AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-		if (!bControllerInitialized)
-		{
-			PaddingDeckAndHand += CardPanelWidgetController->GetCardSize().X;
-			PaddingHandAndHand += CardPanelWidgetController->GetCardSize().X;
-			
-			CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
-			CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
-			
-			CardPanelWidgetController->BroadcastInitialValue();
-			
-			// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
-			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
-			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
-			bControllerInitialized = true;
-		}
-	}
 }
 
 void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction)
@@ -265,7 +265,7 @@ void UCardPanelWidget::OnDeckHovered(const UCardWidget* InCardWidget, const bool
 }
 
 void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
-{	
+{
 	if (ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC())
 	{
 		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(OwnerASC))
@@ -332,7 +332,7 @@ void UCardPanelWidget::SuccessToUseCard()
 	FWidgetTransform WidgetTransform = CurrentDraggingCard->GetRenderTransform();
 	WidgetTransform.Translation = GravesCardTranslation;
 	CurrentDraggingCard->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
-	CurrentDraggingCard->SetCardContainer(ECardContainer::Grave, true);
+	CurrentDraggingCard->SetCardContainer(ECardContainer::Grave);
 	CurrentDraggingCard.Reset();
 	UpdateAllCardTranslation();
 }
@@ -340,7 +340,7 @@ void UCardPanelWidget::SuccessToUseCard()
 void UCardPanelWidget::FailToUseCard()
 {
 	// 사용에 실패했으므로 제자리로 되돌립니다.
-	CurrentDraggingCard->SetCardContainer(ECardContainer::Hand, false);
+	CurrentDraggingCard->SetCardContainer(ECardContainer::Hand, true);
 	CurrentDraggingCard.Reset();
 	UpdateAllCardTranslation();
 }

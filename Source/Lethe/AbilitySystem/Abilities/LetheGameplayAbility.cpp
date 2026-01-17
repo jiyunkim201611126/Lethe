@@ -2,8 +2,6 @@
 
 #include "LetheGameplayAbility.h"
 
-#include "Lethe/Manager/LetheTextManager.h"
-
 void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 {
 	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)

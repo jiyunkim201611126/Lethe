@@ -19,4 +19,5 @@ class LETHE_API IPlayableCharacterInterface
 public:
 	virtual FColor GetCardFrontsideColor() = 0;
 	virtual FColor GetCardBacksideColor() = 0;
+	virtual FGameplayTag GetCharacterTag() = 0;
 };

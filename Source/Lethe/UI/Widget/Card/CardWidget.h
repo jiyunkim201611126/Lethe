@@ -76,7 +76,7 @@ public:
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
 	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.
-	void SetCardContainer(const ECardContainer InCardContainer, const bool bShouldPlayAnimation = true);
+	void SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation = false);
 	
 	// 마우스 이벤트에 의해 호출되는 함수로, 이동 목표 지점을 결정한 뒤 이동을 시작합니다.
 	void SetTargetPivotAndTransform(const FVector2D& InPivot, const FWidgetTransform& InTransform);

@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
+class UCardWidget;
 struct FGameplayTag;
 
 UCLASS()
@@ -16,7 +17,7 @@ class LETHE_API ALethePlayerController : public APlayerController
 	ALethePlayerController();
 
 public:
-	bool RequestUseCard(const FGameplayTag& InCardTag) const;
+	bool RequestUseCard(const UCardWidget* InCardWidget) const;
 
 protected:
 	//~ Begin AActor Interface

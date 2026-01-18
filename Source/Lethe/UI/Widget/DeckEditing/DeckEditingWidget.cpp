@@ -2,6 +2,7 @@
 
 #include "DeckEditingWidget.h"
 
+#include "Components/WrapBox.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
 #include "Lethe/Data/CardViewData.h"
 #include "Lethe/Manager/LetheSaveManagerSubsystem.h"
@@ -40,13 +41,14 @@ void UDeckEditingWidget::CreateCard(const FGameplayTag& InCardTag, const FCardSe
 	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
 	{
 		CreatedCard->SetCardInfo(InCardTag, CardSelfViewInfo, CardOwnerViewInfo);
-		CreatedCard->SetSize(CardViewData->GetCardSize() / CardViewData->GetCardHighlightScale());
-		CreatedCard->SetRenderScale(FVector2D(CardViewData->GetCardHighlightScale()));
+		CreatedCard->SetSize(CardViewData->GetCardSize());
 
 		// 실제로 Hand는 아니지만, 애니메이션 재생 등 기존 로직 활용을 위해 Hand로 설정합니다.
-		CreatedCard->SetCardContainer(ECardContainer::Hand, false);
+		CreatedCard->SetCardContainer(ECardContainer::Hand, true);
 		
 		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
+
+		CardWrapBox->AddChild(CreatedCard);
 	}
 }
 
@@ -56,6 +58,7 @@ void UDeckEditingWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECard
 	{
 	case ECardAction::Drag:
 		{
+			// 우선은 MouseButtonDown 시 발생하는 Drag 이벤트를 그대로 이용합니다.
 			
 		}
 		break;

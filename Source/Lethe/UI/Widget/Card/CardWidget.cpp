@@ -104,23 +104,13 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	}
 }
 
-void UCardWidget::SetTargetPivotAndTransform(const FVector2D& InPivot, const FWidgetTransform& InTransform)
+void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
 {
-	StartPivot = GetRenderTransformPivot();
-	TargetPivot = InPivot;
-
 	StartTransform = GetRenderTransform();
 	TargetTransform = InTransform;
 
 	bShouldMove = true;
 	MovementTimeline.PlayFromStart();
-}
-
-void UCardWidget::SetPivot(const FVector2D& InPivot)
-{
-	StartPivot = InPivot;
-	TargetPivot = InPivot;
-	SetRenderTransformPivot(InPivot);
 }
 
 void UCardWidget::HighlightCard(const bool bInHighlight)
@@ -131,7 +121,7 @@ void UCardWidget::HighlightCard(const bool bInHighlight)
 	}
 
 	bCardHighlight = bInHighlight;
-	SetTargetPivotAndTransform(TargetPivot, TargetTransform);
+	SetTargetTransform(TargetTransform);
 }
 
 bool UCardWidget::IsDragging() const
@@ -156,9 +146,6 @@ void UCardWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTim
 
 void UCardWidget::OnUpdatedTimeline(const float InValue)
 {
-	const FVector2D LerpedPivot = FMath::Lerp(StartPivot, TargetPivot, InValue);
-	SetRenderTransformPivot(LerpedPivot);
-
 	const FVector2D HighlightTranslation = bCardHighlight ? FVector2D(0.f, AddHighlightTranslation) : FVector2D::ZeroVector;
 	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation + HighlightTranslation, InValue);
 	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
@@ -176,8 +163,6 @@ void UCardWidget::OnUpdatedTimeline(const float InValue)
 void UCardWidget::OnFinishedTimeline()
 {
 	bShouldMove = false;
-	StartPivot = TargetPivot;
-	SetRenderTransformPivot(TargetPivot);
 	StartTransform = TargetTransform;
 	SetRenderTransform(TargetTransform);
 	if (bCardHighlight)

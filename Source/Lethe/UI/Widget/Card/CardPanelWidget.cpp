@@ -28,8 +28,16 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
 		if (!bControllerInitialized)
 		{
-			PaddingDeckAndHand += CardPanelWidgetController->GetCardSize().X;
-			PaddingHandAndHand += CardPanelWidgetController->GetCardSize().X;
+			// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
+			const FVector2D CardSize = CardPanelWidgetController->GetCardSize();
+			PaddingDeckAndHand += CardSize.X;
+			PaddingHandAndHand += CardSize.X;
+			FirstCardTranslation.X += CardSize.X / 2.f;
+			FirstCardTranslation.Y -= CardSize.Y / 2.f;
+			NextCardTranslation.X += CardSize.X / 2.f;
+			NextCardTranslation.Y -= CardSize.Y / 2.f;
+			GravesCardTranslation.X += CardSize.X / 2.f;
+			GravesCardTranslation.Y -= CardSize.Y / 2.f;
 			
 			CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 			CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
@@ -40,7 +48,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
 			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
-			DraggingPivot *= CardPanelWidgetController->GetCardHighlightScale();
 			bControllerInitialized = true;
 		}
 	}
@@ -172,13 +179,12 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 	
 		// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
 		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardHighlightScale);
-		CreatedCard->SetRenderTransformPivot(FVector2D(0.f, 1.f));
 		CreatedCard->SetRenderScale(FVector2D(CardHighlightScale));
 		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
 			// 앵커를 좌하단에 박습니다.
 			CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-			CardSlot->SetAlignment(FVector2D(0.f, 1.f));
+			CardSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 			CardSlot->SetAutoSize(true);
 			// 덱은 완전히 겹쳐있기 때문에 가장 윗장을 제외하면 ZOrder를 굳이 다르게 할 필요가 없습니다.
 			// 따라서 가능한 경우 언리얼이 DrawCall을 병합시킬 수 있도록 ZOrder를 같게 설정해 최적화를 챙깁니다.
@@ -209,7 +215,7 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 		{
 			FWidgetTransform WidgetTransform = CardInDeck->GetRenderTransform();
 			WidgetTransform.Translation = NextCardTranslation;
-			CardInDeck->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
+			CardInDeck->SetTargetTransform(WidgetTransform);
 			
 			if (UCanvasPanelSlot* LastDeckCardSlot = Cast<UCanvasPanelSlot>(CardInDeck->Slot))
 			{
@@ -234,7 +240,7 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 			{
 				FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
 				WidgetTransform.Translation = NextCardTranslation;
-				CardInHand->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
+				CardInHand->SetTargetTransform(WidgetTransform);
 			
 				if (UCanvasPanelSlot* HandCardSlot = Cast<UCanvasPanelSlot>(CardInHand->Slot))
 				{
@@ -313,7 +319,6 @@ void UCardPanelWidget::StartDrag(UCardWidget* InCardWidget)
 	if (CurrentDraggingCard.IsValid())
 	{
 		CurrentDraggingCard->SetCardContainer(ECardContainer::Dragging);
-		CurrentDraggingCard->SetPivot(DraggingPivot);
 		if (UCanvasPanelSlot* DraggingCardSlot = Cast<UCanvasPanelSlot>(CurrentDraggingCard->Slot))
 		{
 			DraggingCardSlot->SetZOrder(DraggingZOrder);
@@ -333,7 +338,7 @@ void UCardPanelWidget::SuccessToUseCard()
 	// 무덤으로 보낸 뒤 재정렬합니다.
 	FWidgetTransform WidgetTransform = CurrentDraggingCard->GetRenderTransform();
 	WidgetTransform.Translation = GravesCardTranslation;
-	CurrentDraggingCard->SetTargetPivotAndTransform(DefaultPivot, WidgetTransform);
+	CurrentDraggingCard->SetTargetTransform(WidgetTransform);
 	CurrentDraggingCard->SetCardContainer(ECardContainer::Grave);
 	CurrentDraggingCard.Reset();
 	UpdateAllCardTranslation();

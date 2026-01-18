@@ -98,8 +98,4 @@ private:
 	float CardHighlightScale;
 
 	TWeakObjectPtr<UCardWidget> CurrentDraggingCard;
-
-	// 카드 움직임이 자연스럽도록 드래그 시 Pivot 전환을 위해 설정해두는 변수입니다.
-	FVector2D DefaultPivot = FVector2D(0.f, 1.f);
-	FVector2D DraggingPivot = FVector2D(-0.5f, 1.5f);
 };

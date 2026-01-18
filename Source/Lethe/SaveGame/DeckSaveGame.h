@@ -10,12 +10,12 @@
 
 class ULetheGameplayAbility;
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FSavedCard
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ULetheGameplayAbility> CardAbility;
 
 	UPROPERTY()
@@ -26,7 +26,7 @@ struct FSavedCard
  * SaveGame에 사용하기 위해선 UPROPERTY를 반드시 붙여야 하나, TArray는 UPROPERTY로 선언된 TMap 내부 자료형으로 사용할 수 없습니다.
  * 이를 우회하기 위해 선언된 구조체입니다.
  */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FSavedCharacterDeck
 {
 	GENERATED_BODY()
@@ -36,7 +36,7 @@ struct FSavedCharacterDeck
 		Cards.Reserve(MAX_DECK_COUNT);
 	}
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	TArray<FSavedCard> Cards;
 };
 
@@ -46,7 +46,8 @@ class LETHE_API UDeckSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	void SaveDefaultCards();
+	TMap<FGameplayTag, FSavedCharacterDeck> GetDefaultCharacterDecks();
+	TMap<FGameplayTag, FSavedCharacterDeck> GetDefaultUnlockedCards();
 
 public:
 	// Key는 캐릭터 태그, Value는 CardTag 10개 배열로 구성된 TMap입니다.

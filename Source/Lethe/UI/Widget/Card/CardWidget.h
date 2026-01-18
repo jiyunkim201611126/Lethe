@@ -81,11 +81,8 @@ public:
 	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.
 	void SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation = false);
 	
-	// 마우스 이벤트에 의해 호출되는 함수로, 이동 목표 지점을 결정한 뒤 이동을 시작합니다.
-	void SetTargetPivotAndTransform(const FVector2D& InPivot, const FWidgetTransform& InTransform);
-	
-	// 드래그에 의해 호출되는 함수로, 애니메이션 재생 없이 즉시 Pivot을 이동시킵니다. 
-	void SetPivot(const FVector2D& InPivot);
+	// 마우스 이벤트에 의해 호출되는 함수로, 목표 지점을 결정한 뒤 이동을 시작합니다.
+	void SetTargetTransform(const FWidgetTransform& InTransform);
 
 	void HighlightCard(const bool bInHighlight);
 	bool IsDragging() const;
@@ -137,9 +134,6 @@ private:
 
 	FWidgetTransform StartTransform;
 	FWidgetTransform TargetTransform;
-
-	FVector2D StartPivot = FVector2D(0.f, 1.f);
-	FVector2D TargetPivot = FVector2D(0.f, 1.f);
 
 	float AddHighlightTranslation = -10.f;
 	

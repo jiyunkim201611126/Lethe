@@ -12,22 +12,14 @@ void ULetheSaveManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection
 	Super::Initialize(Collection);
 
 	LoadDeck();
-	if (UnlockedCards.IsEmpty() && CharacterDecks.IsEmpty())
-	{
-		if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
-		{
-			DeckSaveGameObject->SaveDefaultCards();
-			LoadDeck();
-		}
-	}
 }
 
 void ULetheSaveManagerSubsystem::SaveDeck() const
 {
 	if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
 	{
-		DeckSaveGameObject->UnlockedCards = UnlockedCards;
 		DeckSaveGameObject->CharacterDecks = CharacterDecks;
+		DeckSaveGameObject->UnlockedCards = UnlockedCards;
 
 		// 여러 개의 세이브 슬롯을 지원할 목적이라면 이 부분을 수정하면 됩니다.
 		const FString SlotName = TEXT("DeckSaveSlot");
@@ -43,10 +35,20 @@ void ULetheSaveManagerSubsystem::LoadDeck()
 		// 세이브 파일이 존재하는 경우 들어오는 분기입니다.
 		if (const UDeckSaveGame* LoadedDeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0)))
 		{
-			UnlockedCards.Reset();
-			UnlockedCards = LoadedDeckSaveGameObject->UnlockedCards;
 			CharacterDecks.Reset();
 			CharacterDecks = LoadedDeckSaveGameObject->CharacterDecks;
+			UnlockedCards.Reset();
+			UnlockedCards = LoadedDeckSaveGameObject->UnlockedCards;
+		}
+	}
+	else
+	{
+		// 세이브파일이 존재하지 않는 경우 들어오는 분기입니다.
+		if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
+		{
+			CharacterDecks = DeckSaveGameObject->GetDefaultCharacterDecks();
+			UnlockedCards = DeckSaveGameObject->GetDefaultUnlockedCards();
+			SaveDeck();
 		}
 	}
 }

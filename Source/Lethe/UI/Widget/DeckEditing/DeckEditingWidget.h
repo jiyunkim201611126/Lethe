@@ -7,6 +7,8 @@
 #include "Lethe/UI/Widget/Card/CardPanelWidget.h"
 #include "DeckEditingWidget.generated.h"
 
+class UButton;
+class UWrapBox;
 struct FGameplayTag;
 struct FCardSelfViewInfo;
 struct FCardOwnerViewInfo;
@@ -39,4 +41,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
 	TSubclassOf<UCardWidget> CardWidgetClass;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UWrapBox> CardWrapBox;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> GoToBattleButton;
 };

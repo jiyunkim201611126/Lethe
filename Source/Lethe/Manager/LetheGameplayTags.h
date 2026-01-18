@@ -9,6 +9,11 @@ struct FLetheGameplayTags
 {
 	static const FLetheGameplayTags& Get() { return GameplayTags; }
 	static void InitializeNativeGameplayTags();
+	
+	//~ Begin Characters
+	FGameplayTag Character_Test0;
+	FGameplayTag Character_Test1;
+	//~ End of Characters
 
 	//~ Begin Attributes
 	FGameplayTag Attributes_Vital_Health;

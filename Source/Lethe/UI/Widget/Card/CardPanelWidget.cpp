@@ -40,6 +40,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
 			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
+			DraggingPivot *= CardPanelWidgetController->GetCardHighlightScale();
 			bControllerInitialized = true;
 		}
 	}
@@ -154,38 +155,39 @@ void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAc
 
 void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 {
-	if (const FCardViewInfo* CardViewInfo = CardInitParams.CardViewData->FindCardInfoByTag(CardInitParams.CardTag))
+	const FCardSelfViewInfo* CardSelfViewInfo = CardInitParams.CardViewData->FindCardSelfViewInfoByTag(CardInitParams.CardTag);
+	const FCardOwnerViewInfo* CardOwnerViewInfo = CardInitParams.CardViewData->FindCardOwnerViewInfoByTag(CardInitParams.CharacterTag);
+	
+	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
 	{
-		if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
+		// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
+		FCharacterCards& CharacterCards = AbilitySystemComponentToCards.FindOrAdd(CardInitParams.OwnerASC);
+		CharacterCards.Deck.Emplace(CreatedCard);
+
+		CreatedCard->SetWidgetController(WidgetController);
+		CreatedCard->SetOwnerASC(CardInitParams.OwnerASC);
+		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
+
+		CreatedCard->SetCardInfo(CardInitParams.CardTag, CardSelfViewInfo, CardOwnerViewInfo);
+	
+		// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
+		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardHighlightScale);
+		CreatedCard->SetRenderTransformPivot(FVector2D(0.f, 1.f));
+		CreatedCard->SetRenderScale(FVector2D(CardHighlightScale));
+		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
-			// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
-			FCharacterCards& CharacterCards = AbilitySystemComponentToCards.FindOrAdd(CardInitParams.OwnerASC);
-			CharacterCards.Deck.Emplace(CreatedCard);
-
-			CreatedCard->SetWidgetController(WidgetController);
-			CreatedCard->SetOwnerASC(CardInitParams.OwnerASC);
-			CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
-
-			CreatedCard->SetCardInfo(CardInitParams.CardTag, CardViewInfo, CardInitParams.CardFrontsideColor, CardInitParams.CardBacksideColor);
-		
-			// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
-			CreatedCard->SetRenderTransformPivot(FVector2D(0.f, 1.f));
-			CreatedCard->SetRenderScale(FVector2D(CardHighlightScale));
-			if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
-			{
-				// 앵커를 좌하단에 박습니다.
-				CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-				CardSlot->SetAlignment(FVector2D(0.f, 1.f));
-				CardSlot->SetSize(CardInitParams.CardViewData->GetCardSize() / CardHighlightScale);
-				// 덱은 완전히 겹쳐있기 때문에 가장 윗장을 제외하면 ZOrder를 굳이 다르게 할 필요가 없습니다.
-				// 따라서 가능한 경우 언리얼이 DrawCall을 병합시킬 수 있도록 ZOrder를 같게 설정해 최적화를 챙깁니다.
-				CardSlot->SetZOrder(DeckZOrder);
-			}
-
-			// 일단 1장 만들어질 때마다 호출하지만,
-			// TODO: 추후 덱의 크기가 40장으로 고정되면 40장이 만들어졌을 때, 혹은 게임 시작 시 등 이벤트를 받아 한 번만 호출하도록 변경합니다.
-			UpdateAllCardTranslation();
+			// 앵커를 좌하단에 박습니다.
+			CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+			CardSlot->SetAlignment(FVector2D(0.f, 1.f));
+			CardSlot->SetAutoSize(true);
+			// 덱은 완전히 겹쳐있기 때문에 가장 윗장을 제외하면 ZOrder를 굳이 다르게 할 필요가 없습니다.
+			// 따라서 가능한 경우 언리얼이 DrawCall을 병합시킬 수 있도록 ZOrder를 같게 설정해 최적화를 챙깁니다.
+			CardSlot->SetZOrder(DeckZOrder);
 		}
+
+		// 일단 1장 만들어질 때마다 호출하지만,
+		// TODO: 추후 덱의 크기가 40장으로 고정되면 40장이 만들어졌을 때, 혹은 게임 시작 시 등 이벤트를 받아 한 번만 호출하도록 변경합니다.
+		UpdateAllCardTranslation();
 	}
 }
 

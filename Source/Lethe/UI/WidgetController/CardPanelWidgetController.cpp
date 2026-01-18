@@ -59,17 +59,17 @@ void UCardPanelWidgetController::GoBattlePhase() const
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const
 {
 	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
-	FCardViewInfo* CardViewInfo = CardViewData->FindCardInfoByTag(InAbility->CardTag);
-	if (CardViewInfo)
+	FCardSelfViewInfo* CardSelfViewInfo = CardViewData->FindCardSelfViewInfoByTag(InAbility->CardTag);
+	if (CardSelfViewInfo->CardDescriptionText.IsEmpty())
 	{
 		const FText CardDescriptionText = InAbility->GetCardDescription(InAbility->GetAbilityLevel());
-		CardViewInfo->CardDescriptionText = CardDescriptionText;
+		CardSelfViewInfo->CardDescriptionText = CardDescriptionText;
 	}
 
 	// 콜백을 받은 CardPanelWidget이 필요한 데이터를 참조할 수 있도록 보내줍니다.
 	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerASC->GetOwner()))
 	{
-		const FCardInitParams InitParams(OwnerASC, CardViewData, InAbility->CardTag, OwnerCharacter->GetCardFrontsideColor(), OwnerCharacter->GetCardBacksideColor());
+		const FCardInitParams InitParams(OwnerASC, CardViewData, InAbility->CardTag, OwnerCharacter->GetCharacterTag());
 		OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 	}
 }

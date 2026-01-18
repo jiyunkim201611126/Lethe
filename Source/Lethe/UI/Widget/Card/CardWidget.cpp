@@ -3,6 +3,7 @@
 #include "CardWidget.h"
 
 #include "Animation/WidgetAnimation.h"
+#include "Components/SizeBox.h"
 #include "Lethe/Data/CardViewData.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -20,6 +21,40 @@ void UCardWidget::NativeConstruct()
 	FOnTimelineEvent OnFinishedFunction;
 	OnFinishedFunction.BindDynamic(this, &ThisClass::OnFinishedTimeline);
 	MovementTimeline.SetTimelineFinishedFunc(OnFinishedFunction);
+}
+
+void UCardWidget::SetSize(const FVector2D& InSize) const
+{
+	RootSizeBox->SetWidthOverride(InSize.X);
+	RootSizeBox->SetHeightOverride(InSize.Y);
+}
+
+void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardSelfViewInfo* InCardViewInfo, const FCardOwnerViewInfo* InCardOwnerViewInfo)
+{
+	CardTag = InCardTag;
+	if (InCardViewInfo)
+	{
+		CardImage->SetBrushFromTexture(InCardViewInfo->CardTexture);
+		CardName = InCardViewInfo->CardNameText;
+		CardDescription = InCardViewInfo->CardDescriptionText;
+	}
+	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InCardOwnerViewInfo->CardFrontsideColor));
+	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InCardOwnerViewInfo->CardBacksideColor));
+}
+
+void UCardWidget::SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC)
+{
+	OwnerASC = InOwnerASC;
+}
+
+ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
+{
+	if (OwnerASC.IsValid())
+	{
+		return OwnerASC.Get();
+	}
+	
+	return nullptr;
 }
 
 void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation)
@@ -184,34 +219,6 @@ void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostE
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseCaptureLost));
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
-}
-
-void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardViewInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor)
-{
-	CardTag = InCardTag;
-	if (InCardViewInfo)
-	{
-		CardImage->SetBrushFromTexture(InCardViewInfo->CardTexture);
-		CardName = InCardViewInfo->CardNameText;
-		CardDescription = InCardViewInfo->CardDescriptionText;
-	}
-	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InFrontsideColor));
-	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InBacksideColor));
-}
-
-void UCardWidget::SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC)
-{
-	OwnerASC = InOwnerASC;
-}
-
-ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
-{
-	if (OwnerASC.IsValid())
-	{
-		return OwnerASC.Get();
-	}
-	
-	return nullptr;
 }
 
 ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent) const

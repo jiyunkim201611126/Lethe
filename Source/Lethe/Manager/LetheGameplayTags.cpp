@@ -6,7 +6,12 @@
 FLetheGameplayTags FLetheGameplayTags::GameplayTags;
 
 void FLetheGameplayTags::InitializeNativeGameplayTags()
-{
+{	
+	GameplayTags.Character_Test0 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.Test0"), FString(""));
+	GameplayTags.Character_Test1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.Test1"), FString(""));
+	
 	GameplayTags.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Vital.Health"), FString(""));
 	GameplayTags.Attributes_Vital_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(

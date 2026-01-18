@@ -8,7 +8,8 @@
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
-struct FCardViewInfo;
+class USizeBox;
+struct FCardSelfViewInfo;
 class ULetheImage;
 class ULetheAbilitySystemComponent;
 
@@ -70,7 +71,9 @@ public:
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
-	void SetCardInfo(const FGameplayTag& InCardTag, const FCardViewInfo* InCardViewInfo, const FColor& InFrontsideColor, const FColor& InBacksideColor);
+	void SetSize(const FVector2D& InSize) const;
+
+	void SetCardInfo(const FGameplayTag& InCardTag, const FCardSelfViewInfo* InCardSelfViewInfo, const FCardOwnerViewInfo* InCardOwnerViewInfo);
 
 	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
@@ -102,6 +105,9 @@ public:
 	FOnCardMouseEventSignature OnCardMouseEventDelegate;
 
 protected:
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<USizeBox> RootSizeBox;
+	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardImage;
 

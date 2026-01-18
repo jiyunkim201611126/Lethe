@@ -2,16 +2,6 @@
 
 #include "PlayerCharacterBase.h"
 
-FColor APlayerCharacterBase::GetCardFrontsideColor()
-{
-	return CardFrontsideColor;
-}
-
-FColor APlayerCharacterBase::GetCardBacksideColor()
-{
-	return CardBacksideColor;
-}
-
 FGameplayTag APlayerCharacterBase::GetCharacterTag()
 {
 	return CharacterTag;

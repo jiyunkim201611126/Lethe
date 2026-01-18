@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "PlayableCharacterInterface.generated.h"
 
+struct FGameplayTag;
+
 UINTERFACE()
 class UPlayableCharacterInterface : public UInterface
 {
@@ -17,7 +19,5 @@ class LETHE_API IPlayableCharacterInterface
 	GENERATED_BODY()
 
 public:
-	virtual FColor GetCardFrontsideColor() = 0;
-	virtual FColor GetCardBacksideColor() = 0;
 	virtual FGameplayTag GetCharacterTag() = 0;
 };

@@ -8,7 +8,7 @@
 #include "CardPanelWidgetController.generated.h"
 
 struct FGameplayTag;
-struct FCardViewInfo;
+struct FCardSelfViewInfo;
 class ULetheGameplayAbility;
 class UCardViewData;
 enum class EPlayerPhaseState : uint8;
@@ -29,10 +29,7 @@ struct FCardInitParams
 	UCardViewData* CardViewData;
 	
 	FGameplayTag CardTag;
-	
-	FColor CardFrontsideColor;
-	
-	FColor CardBacksideColor;
+	FGameplayTag CharacterTag;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)

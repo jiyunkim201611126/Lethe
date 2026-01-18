@@ -6,6 +6,7 @@
 #include "GameFramework/HUD.h"
 #include "LetheHUD.generated.h"
 
+class UCardViewData;
 struct FWidgetControllerParams;
 class UAttributeSet;
 class UAbilitySystemComponent;
@@ -27,23 +28,24 @@ public:
 	
 	UOverlayWidgetController* GetOverlayWidgetController() const;
 	UCardPanelWidgetController* GetCardPanelWidgetController() const;
-	
-private:
-	UPROPERTY()
-	TObjectPtr<UOverlayWidget> OverlayWidget;
-	
+
+protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UOverlayWidget> OverlayWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UOverlayWidgetController> OverlayWidgetController;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
 
-	UPROPERTY()
-	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
-
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCardPanelWidgetController> CardPanelWidgetControllerClass;
+	
+private:
+	UPROPERTY()
+	TObjectPtr<UOverlayWidget> OverlayWidget;
+
+	UPROPERTY()
+	TObjectPtr<UOverlayWidgetController> OverlayWidgetController;
+
+	UPROPERTY()
+	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
 };

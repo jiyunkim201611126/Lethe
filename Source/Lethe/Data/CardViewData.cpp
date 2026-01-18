@@ -2,9 +2,14 @@
 
 #include "CardViewData.h"
 
-FCardViewInfo* UCardViewData::FindCardInfoByTag(const FGameplayTag& InAbilityTag)
+FCardSelfViewInfo* UCardViewData::FindCardSelfViewInfoByTag(const FGameplayTag& InCardTag)
 {
-	return CardViewData.Find(InAbilityTag);
+	return CardSelfViewData.Find(InCardTag);
+}
+
+FCardOwnerViewInfo* UCardViewData::FindCardOwnerViewInfoByTag(const FGameplayTag& InCharacterTag)
+{
+	return CardOwnerViewData.Find(InCharacterTag);
 }
 
 FVector2D UCardViewData::GetCardSize() const

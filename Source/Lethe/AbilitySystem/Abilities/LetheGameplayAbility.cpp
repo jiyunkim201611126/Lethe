@@ -13,7 +13,7 @@ void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 	}
 }
 
-FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel)
+FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel) const
 {
 	TArray<FText> ResultTexts;
 	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)

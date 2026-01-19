@@ -1,20 +1,20 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "LetheSaveManagerSubsystem.h"
+#include "DeckManagerSubsystem.h"
 
 #include "GameplayTagContainer.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/SaveGame/DeckSaveGame.h"
 
-void ULetheSaveManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
 	LoadDeck();
 }
 
-void ULetheSaveManagerSubsystem::SaveDeck() const
+void UDeckManagerSubsystem::SaveDeck() const
 {
 	if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
 	{
@@ -27,7 +27,7 @@ void ULetheSaveManagerSubsystem::SaveDeck() const
 	}
 }
 
-void ULetheSaveManagerSubsystem::LoadDeck()
+void UDeckManagerSubsystem::LoadDeck()
 {
 	const FString SlotName = TEXT("DeckSaveSlot");
 	if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
@@ -53,7 +53,7 @@ void ULetheSaveManagerSubsystem::LoadDeck()
 	}
 }
 
-bool ULetheSaveManagerSubsystem::IsDeckValid()
+bool UDeckManagerSubsystem::IsDeckValid()
 {
 	for (const auto& CharacterDeck : CharacterDecks)
 	{
@@ -67,12 +67,12 @@ bool ULetheSaveManagerSubsystem::IsDeckValid()
 	return true;
 }
 
-TMap<FGameplayTag, FSavedCharacterDeck> ULetheSaveManagerSubsystem::GetCharacterDecks()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetCharacterDecks()
 {
 	return CharacterDecks;
 }
 
-TMap<FGameplayTag, FSavedCharacterDeck> ULetheSaveManagerSubsystem::GetUnlockedCards()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetUnlockedCards()
 {
 	return UnlockedCards;
 }

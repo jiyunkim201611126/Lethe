@@ -26,15 +26,17 @@ struct FLetheGameplayTags
 	TArray<FGameplayTag> DamageTypeTags;
 	//~ End of Damage Types
 	
-	//~ Begin Abilities
-	FGameplayTag Card_Test;
-	//~ End of Abilities
+	//~ Begin Card Ability
+	FGameplayTag Card_Ability_PhysicalTest;
+	FGameplayTag Card_Ability_MagicTest;
+	FGameplayTag Card_Ability_UtilTest;
+	//~ End of Card Ability
 	
-	//~ Begin Ability Types
+	//~ Begin Card Types
 	FGameplayTag Card_Types_Physical;
 	FGameplayTag Card_Types_Magic;
 	FGameplayTag Card_Types_Util;
-	//~ End Ability Types
+	//~ End Card Types
 
 	//~ Begin CharacterState
 	FGameplayTag CharacterState_Dead;

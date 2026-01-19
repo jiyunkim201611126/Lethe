@@ -24,7 +24,7 @@ public:
 	void ApplyAllEffects(AActor* TargetActor);
 
 	// Card에 대한 설명을 반환하는 함수로, 갖고 있는 EffectAppliers를 순회하며 설명을 가져옵니다.
-	FText GetCardDescription(const int32 InLevel);
+	FText GetCardDescription(const int32 InLevel) const;
 
 protected:
 	template<typename T>
@@ -56,6 +56,9 @@ public:
 	// 플레이어 캐릭터가 사용하는 Card는 반드시 Tag 하나와 1:1 대응합니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Tags")
 	FGameplayTag CardTag;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Tags")
+	FGameplayTag CardTypeTag;
 
 protected:
 	// 할당과 동시에 객체화되는 멤버변수입니다.

@@ -3,31 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/UI/Widget/LetheUserWidget.h"
-#include "Lethe/UI/Widget/Card/CardPanelWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "DeckEditingWidget.generated.h"
 
-class UButton;
-class UWrapBox;
 struct FGameplayTag;
 struct FCardSelfViewInfo;
 struct FCardOwnerViewInfo;
+class ULetheGameplayAbility;
 class UCardViewData;
-class UCardWidget;
+class UTileView;
+class UButton;
+enum class ECardAction : uint8;
 
 UCLASS()
-class LETHE_API UDeckEditingWidget : public ULetheUserWidget
+class LETHE_API UDeckEditingWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	//~ End of UUserWidget Interface
 
 private:
-	void CreateCard(const FGameplayTag& InCardTag, const FCardSelfViewInfo* CardSelfViewInfo, const FCardOwnerViewInfo* CardOwnerViewInfo);
-	void OnCardMouseEvent(UCardWidget* InCardWidget, ECardAction InCardAction);
+	void CreateCard(const ULetheGameplayAbility* CardAbilityCDO, const FGameplayTag& InCharacterTag) const;
+
+	void OnItemClicked(UObject* InListObject) const;
 
 protected:
 	/**
@@ -39,12 +41,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
 	TObjectPtr<UCardViewData> CardViewData;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
-	TSubclassOf<UCardWidget> CardWidgetClass;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTileView> EquippedCardTileView;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWrapBox> CardWrapBox;
-	
+	TObjectPtr<UTileView> UnequippedCardTileView;
+
+	// 테스트용으로 선언된 버튼입니다.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> GoToBattleButton;
 };

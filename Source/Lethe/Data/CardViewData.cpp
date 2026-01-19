@@ -21,3 +21,8 @@ float UCardViewData::GetCardHighlightScale() const
 {
 	return CardHighlightScale;
 }
+
+FLinearColor* UCardViewData::FindCardTypeColor(const FGameplayTag& InCardTypeTag)
+{
+	return CardTypeColors.Find(InCardTypeTag);
+}

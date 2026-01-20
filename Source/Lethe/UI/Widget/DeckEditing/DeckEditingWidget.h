@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
 #include "DeckEditingWidget.generated.h"
 
@@ -13,7 +14,17 @@ class ULetheGameplayAbility;
 class UCardViewData;
 class UTileView;
 class UButton;
+class UDeckEditingCardListObject;
 enum class ECardAction : uint8;
+
+USTRUCT()
+struct FDeckListObjects
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<TObjectPtr<UDeckEditingCardListObject>> CardListObjects;
+};
 
 UCLASS()
 class LETHE_API UDeckEditingWidget : public UUserWidget
@@ -27,7 +38,21 @@ public:
 	//~ End of UUserWidget Interface
 
 private:
-	void CreateCard(const ULetheGameplayAbility* CardAbilityCDO, const FGameplayTag& InCharacterTag) const;
+	void CreateCardObject(const ULetheGameplayAbility* CardAbilityCDO, const FGameplayTag& InCharacterTag);
+
+	UFUNCTION()
+	void OnNextPageButtonClicked();
+	
+	UFUNCTION()
+	void OnPreviousPageButtonClicked();
+	
+	UFUNCTION()
+	void OnNextCharacterButtonClicked();
+	
+	UFUNCTION()
+	void OnPreviousCharacterButtonClicked();
+
+	void UpdateCardPage(const int32 NewCharacterIndex, const int32 NewPageIndex);
 
 	void OnItemClicked(UObject* InListObject) const;
 
@@ -46,8 +71,32 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTileView> UnequippedCardTileView;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> NextPageButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> PreviousPageButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> NextCharacterButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> PreviousCharacterButton;
 
 	// 테스트용으로 선언된 버튼입니다.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> GoToBattleButton;
+
+private:
+	// 덱들을 순서대로 순회할 CharacterTags입니다.
+	// TODO: 지금은 직접 내부 요소를 채우지만, 추후에 현재 캐릭터 정보 등을 받아올 예정입니다.
+	TArray<FGameplayTag> CharacterTags;
+	int32 CurrentCharacterIndex = 0;
+	int32 CurrentPageIndex = 0;
+
+	int32 MaxCardCountInOnePage = 14;
+
+	UPROPERTY()
+	TMap<FGameplayTag, FDeckListObjects> CharacterUnequippedCardListObjects;
 };

@@ -13,27 +13,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardWidget.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardWidget.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultGame.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultGame.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter0.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter0.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Card/WBP_Card.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Card/WBP_Card.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/DeckEditing/WBP_DeckEditing.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/DeckEditing/WBP_DeckEditing.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Data/DA_CardView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Data/DA_CardView.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheSaveManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheSaveManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" afterDir="false" />
     </list>
@@ -398,6 +380,7 @@
       <workItem from="1768741607616" duration="8572000" />
       <workItem from="1768752474585" duration="24000" />
       <workItem from="1768827372887" duration="9729000" />
+      <workItem from="1768916871858" duration="7133000" />
     </task>
     <servers />
   </component>

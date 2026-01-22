@@ -4,5 +4,5 @@
 
 FPrimaryAssetId UCardSelfViewData::GetPrimaryAssetId() const
 {
-	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardSelfView")), CardTag.GetTagName());
+	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardSelfView")), GetFName());
 }

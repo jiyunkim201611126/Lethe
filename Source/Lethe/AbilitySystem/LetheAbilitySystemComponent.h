@@ -27,7 +27,7 @@ public:
 
 	void AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags);
 
-	void OnCardViewDataLoadFinished(const ULetheGameplayAbility* Ability, const UCardDefinitionData* CardDefinition, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData, const FGameplayAbilitySpec& AbilitySpec);
 
 protected:
 	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;

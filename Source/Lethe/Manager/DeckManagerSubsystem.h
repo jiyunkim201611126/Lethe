@@ -8,6 +8,9 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DeckManagerSubsystem.generated.h"
 
+/**
+ * USaveGame을 통한 덱 세이브 로드를 담당하는 Subsystem입니다.
+ */
 UCLASS(Config = Game)
 class LETHE_API UDeckManagerSubsystem : public UGameInstanceSubsystem
 {

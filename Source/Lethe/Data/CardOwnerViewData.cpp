@@ -4,5 +4,5 @@
 
 FPrimaryAssetId UCardOwnerViewData::GetPrimaryAssetId() const
 {
-	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardOwnerView")), CharacterTag.GetTagName());
+	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardOwnerView")), GetFName());
 }

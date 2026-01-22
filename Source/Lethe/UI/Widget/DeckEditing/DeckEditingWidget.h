@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayAbilitySpec.h"
 #include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
 #include "Lethe/Data/CardDefinitionData.h"
@@ -42,8 +41,8 @@ public:
 	//~ End of UUserWidget Interface
 
 private:
-	void StartLoadCardViewData(const FGameplayTag& InCharacterTag, const TArray<FPrimaryAssetId>& InPrimaryAssetIds);
-	void OnCardViewDataLoadFinished(const ULetheGameplayAbility* Ability, const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const;
+	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();
@@ -95,13 +94,17 @@ protected:
 
 private:
 	// 덱들을 순서대로 순회할 CharacterTags입니다.
-	// TODO: 지금은 직접 내부 요소를 채우지만, 추후에 현재 캐릭터 정보 등을 받아올 예정입니다.
 	TArray<FGameplayTag> CharacterTags;
 	int32 CurrentCharacterIndex = 0;
 	int32 CurrentPageIndex = 0;
-
 	int32 MaxCardCountInOnePage = 14;
 
+	// 카드 로드 콜백에서 페이지를 표시하기 위해 사용하는 변수들입니다.
+	// 모든 Unequipped 카드 로드가 끝나면 첫 페이지를 표시하도록 조정합니다.
+	int32 ShouldLoadCardCount = 0;
+	int32 LoadedCardCount = 0;
+
+	// Key는 CharacterTag입니다.
 	UPROPERTY()
 	TMap<FGameplayTag, FDeckListObjects> CharacterUnequippedCardListObjects;
 };

@@ -5,11 +5,10 @@
 #include "DeckEditingCardListObject.h"
 #include "Components/Button.h"
 #include "Components/TileView.h"
-#include "Engine/AssetManager.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
-#include "Lethe/Data/CardDataLoader.h"
 #include "Lethe/Data/CardDefinitionData.h"
 #include "Lethe/Data/CardViewData.h"
+#include "Lethe/Manager/CardDataLoadManagerSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 
 void UDeckEditingWidget::NativeConstruct()
@@ -26,27 +25,30 @@ void UDeckEditingWidget::NativeConstruct()
 	NextCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnNextCharacterButtonClicked);
 	PreviousCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnPreviousCharacterButtonClicked);
 
-	if (UDeckManagerSubsystem* SaveManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
+	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
+	UCardDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadManagerSubsystem>();
+	if (DeckManagerSubsystem && CardDataLoadManagerSubsystem)
 	{
-		const TMap<FGameplayTag, FSavedCharacterDeck>& UnlockedCards = SaveManagerSubsystem->GetUnlockedCards();
+		const TMap<FGameplayTag, FSavedCharacterDeck>& UnlockedCards = DeckManagerSubsystem->GetUnlockedCards();
 
-		// 모든 카드를 순회하며 ListView에 들어갈 Object를 미리 만들어둡니다.
 		for (const auto& UnlockedCard : UnlockedCards)
 		{
-			CharacterTags.Emplace(UnlockedCard.Key);
+			FGameplayTag CharacterTag = UnlockedCard.Key;
+			CharacterTags.Emplace(CharacterTag);
 
-			TArray<FPrimaryAssetId> PrimaryAssetIds;
-			for (const auto& Card : UnlockedCard.Value.Cards)
+			TArray<FGameplayTag> CardTags;
+			for (const FSavedCard& SavedCard : UnlockedCard.Value.Cards)
 			{
-				FPrimaryAssetId CardDefinitionAssetId = FPrimaryAssetId(FPrimaryAssetType(TEXT("CardDefinition")), Card.CardTag.GetTagName());
-				PrimaryAssetIds.Emplace(CardDefinitionAssetId);
+				CardTags.Emplace(SavedCard.CardTag);
 			}
-			
-			StartLoadCardViewData(UnlockedCard.Key, PrimaryAssetIds);
-		}
 
-		// 첫 캐릭터의 미장비 카드를 첫 페이지부터 표시합니다.
-		UpdateCardPage(0, 0);
+			ShouldLoadCardCount += UnlockedCard.Value.Cards.Num();
+
+			CardDataLoadManagerSubsystem->LoadCardDefinitionData(CardTags, FOnCardDefinitionsLoaded::CreateWeakLambda(this, [this, CharacterTag](const TArray<UCardDefinitionData*>& CardDefinitionDatas)
+			{
+				OnCardDefinitionDataLoadFinished(CharacterTag, CardDefinitionDatas);
+			}));
+		}
 	}
 }
 
@@ -68,54 +70,48 @@ void UDeckEditingWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UDeckEditingWidget::StartLoadCardViewData(const FGameplayTag& InCharacterTag, const TArray<FPrimaryAssetId>& InPrimaryAssetIds)
-{	
-	UAssetManager& AssetManager = UAssetManager::Get();
-
-	TWeakObjectPtr<UDeckEditingWidget> WeakThis(this);
-
-	AssetManager.LoadPrimaryAssets(InPrimaryAssetIds, TArray<FName>{}, FStreamableDelegate::CreateLambda([WeakThis, InCharacterTag, InPrimaryAssetIds]
+void UDeckEditingWidget::OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas)
+{
+	if (UCardDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadManagerSubsystem>())
 	{
-		if (!WeakThis.IsValid())
+		for (UCardDefinitionData* CardDefinitionData : CardDefinitionDatas)
 		{
-			return;
-		}
-
-		for (const FPrimaryAssetId& PrimaryAssetId : InPrimaryAssetIds)
-		{
-			FSoftObjectPath AssetPath = UAssetManager::Get().GetPrimaryAssetPath(PrimaryAssetId);
-			UE_LOG(LogTemp, Warning, TEXT("AssetPath : %s"), *AssetPath.ToString());
-			
-			UObject* LoadedObject = UAssetManager::Get().GetPrimaryAssetObject(PrimaryAssetId);
-
-			const UCardDefinitionData* CardDefinition = Cast<UCardDefinitionData>(LoadedObject);
-		
-			if (CardDefinition && CardDefinition->AbilityClass)
+			const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData](UCardSelfViewData* SelfViewData, const UCardOwnerViewData* OwnerViewData)
 			{
-				if (UCardDataLoader* Loader = NewObject<UCardDataLoader>(WeakThis.Get()))
-				{
-					Loader->OnLoadFinishedDelegate.BindUObject(WeakThis.Get(), &ThisClass::OnCardViewDataLoadFinished);
-					Loader->Init(InCharacterTag, CardDefinition, CardDefinition->AbilityClass.GetDefaultObject());
-				}
-			}
+				OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, OwnerViewData);
+			});
+			
+			CardDataLoadManagerSubsystem->LoadCardViewData(CardDefinitionData->CardTag, InCharacterTag, OnLoadComplete);
 		}
-	}));
+	}
 }
 
-void UDeckEditingWidget::OnCardViewDataLoadFinished(const ULetheGameplayAbility* Ability, const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const
+void UDeckEditingWidget::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData)
 {
 	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
-	if (Ability && CardSelfViewData && CardSelfViewData->CardDescriptionText.IsEmpty())
+	if (CardDefinitionData && CardSelfViewData)
 	{
-		CardSelfViewData->CardDescriptionText = Ability->GetCardDescription(Ability->GetAbilityLevel());
+		// 덱 편집 중이므로 설명은 Level 1 기준으로 넣어줍니다.
+		const ULetheGameplayAbility* Ability = CardDefinitionData->AbilityClass->GetDefaultObject<ULetheGameplayAbility>();
+		CardSelfViewData->CardDescriptionText = Ability->GetCardDescription(1);
 	}
 
+	// 로드가 완료되면 카드 위젯을 생성하는 데에 필요한 Object를 생성해 캐싱해둡니다.
 	if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>())
 	{
 		CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardDefinitionData->CardTypeTag);
 		CardListObject->CardTexture = CardSelfViewData->CardTexture;
 
-		UnequippedCardTileView->AddItem(CardListObject);
+		FDeckListObjects& DeckListObjects = CharacterUnequippedCardListObjects.FindOrAdd(CardOwnerViewData->CharacterTag);
+		DeckListObjects.CardListObjects.Emplace(CardListObject);
+
+		LoadedCardCount++;
+
+		// 모든 Unequipped 카드 로드가 끝나면 첫 캐릭터의 첫 페이지를 표시하는 로직을 수행합니다.
+		if (LoadedCardCount == ShouldLoadCardCount)
+		{
+			UpdateCardPage(0, 0);
+		}
 	}
 }
 

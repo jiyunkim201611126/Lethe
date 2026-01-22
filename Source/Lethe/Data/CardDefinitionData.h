@@ -20,7 +20,7 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 	
 public:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
 	FGameplayTag CardTag;
 	
 	UPROPERTY(EditDefaultsOnly)

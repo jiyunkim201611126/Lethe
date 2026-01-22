@@ -4,5 +4,5 @@
 
 FPrimaryAssetId UCardDefinitionData::GetPrimaryAssetId() const
 {
-	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardDefinition")), CardTag.GetTagName());
+	return FPrimaryAssetId(FPrimaryAssetType(TEXT("CardDefinition")), GetFName());
 }

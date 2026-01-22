@@ -7,6 +7,11 @@
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
+struct FGameplayAbilitySpecHandle;
+class UCardOwnerViewData;
+class UCardSelfViewData;
+class UCardDefinitionData;
+struct FGameplayAbilitySpec;
 struct FGameplayTag;
 struct FCardSelfViewInfo;
 class ULetheGameplayAbility;
@@ -27,9 +32,15 @@ struct FCardInitParams
 	
 	UPROPERTY()
 	UCardViewData* CardViewData;
-	
-	FGameplayTag CardTag;
-	FGameplayTag CharacterTag;
+
+	UPROPERTY()
+	const UCardDefinitionData* CardDefinition;
+
+	UPROPERTY()
+	const UCardSelfViewData* CardSelfViewData;
+
+	UPROPERTY()
+	const UCardOwnerViewData* CardOwnerViewData;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
@@ -54,7 +65,7 @@ public:
 	void GoBattlePhase() const;
 
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const;
 	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
 
 public:

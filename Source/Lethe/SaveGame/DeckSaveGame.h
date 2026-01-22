@@ -16,7 +16,7 @@ struct FSavedCard
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ULetheGameplayAbility> CardAbility;
+	FGameplayTag CardTag;
 
 	UPROPERTY()
 	int32 CardLevel = 1;

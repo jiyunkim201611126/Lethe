@@ -60,16 +60,6 @@ void ULetheGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 #if WITH_EDITOR
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void ULetheGameplayAbility::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-
-	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(ULetheGameplayAbility, CardTag))
-	{
-		SyncAbilityTagToAssetTags();
-	}
-}
-
 void ULetheGameplayAbility::PostInitProperties()
 {
 	Super::PostInitProperties();
@@ -77,27 +67,6 @@ void ULetheGameplayAbility::PostInitProperties()
 	if (HasAnyFlags(RF_ClassDefaultObject))
 	{
 		ActivationBlockedTags.AddTag(FLetheGameplayTags::Get().CharacterState_Dead);
-	}
-}
-
-void ULetheGameplayAbility::SyncAbilityTagToAssetTags()
-{
-	// GetAssetTags를 통해 반환받는 변수인 AbilityTags는 GameplayAbility의 멤버 변수입니다.
-	// 추후 에픽게임즈가 AssetTags라는 이름으로 변경될 예정이며, 메타데이터 역할을 수행하기 때문에 런타임 중 변경되는 것을 금지하고 있습니다.
-	// 따라서 해당 함수는 에디터에서만 호출됩니다.
-	if (CardTag.IsValid() && !GetAssetTags().HasTag(CardTag))
-	{
-		FGameplayTagContainer NewAbilityTags;
-		NewAbilityTags.AddTag(CardTag);
-		for (auto AssetTag : GetAssetTags())
-		{
-			NewAbilityTags.AddTag(AssetTag);
-		}
-		PRAGMA_DISABLE_DEPRECATION_WARNINGS
-				// AbilityTag에 값을 할당하면 자동으로 AbilityTags(AssetTags)에도 함께 할당해주는 구문입니다.
-				// 에디터에서만 호출되기 때문에 안전합니다.
-				AbilityTags = NewAbilityTags;
-		PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	}
 }
 #endif

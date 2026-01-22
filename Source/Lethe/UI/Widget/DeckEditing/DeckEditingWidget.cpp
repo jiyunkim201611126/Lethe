@@ -5,7 +5,10 @@
 #include "DeckEditingCardListObject.h"
 #include "Components/Button.h"
 #include "Components/TileView.h"
+#include "Engine/AssetManager.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/Data/CardDataLoader.h"
+#include "Lethe/Data/CardDefinitionData.h"
 #include "Lethe/Data/CardViewData.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 
@@ -31,12 +34,15 @@ void UDeckEditingWidget::NativeConstruct()
 		for (const auto& UnlockedCard : UnlockedCards)
 		{
 			CharacterTags.Emplace(UnlockedCard.Key);
-			
+
+			TArray<FPrimaryAssetId> PrimaryAssetIds;
 			for (const auto& Card : UnlockedCard.Value.Cards)
 			{
-				const ULetheGameplayAbility* CardAbilityCDO = Card.CardAbility.GetDefaultObject();
-				CreateCardObject(CardAbilityCDO, UnlockedCard.Key);
+				FPrimaryAssetId CardDefinitionAssetId = FPrimaryAssetId(FPrimaryAssetType(TEXT("CardDefinition")), Card.CardTag.GetTagName());
+				PrimaryAssetIds.Emplace(CardDefinitionAssetId);
 			}
+			
+			StartLoadCardViewData(UnlockedCard.Key, PrimaryAssetIds);
 		}
 
 		// 첫 캐릭터의 미장비 카드를 첫 페이지부터 표시합니다.
@@ -62,25 +68,55 @@ void UDeckEditingWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UDeckEditingWidget::CreateCardObject(const ULetheGameplayAbility* CardAbilityCDO, const FGameplayTag& InCharacterTag)
-{
-	// ListView에 추가할 Object를 생성 후 캐싱해놓습니다.
-	UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>();
-	CardListObject->CardTag = CardAbilityCDO->CardTag;
-	CardListObject->CharacterTag = InCharacterTag;
-	
-	FCardSelfViewInfo* CardSelfViewInfo = CardViewData->FindCardSelfViewInfoByTag(CardAbilityCDO->CardTag);
-	if (CardSelfViewInfo->CardDescriptionText.IsEmpty())
+void UDeckEditingWidget::StartLoadCardViewData(const FGameplayTag& InCharacterTag, const TArray<FPrimaryAssetId>& InPrimaryAssetIds)
+{	
+	UAssetManager& AssetManager = UAssetManager::Get();
+
+	TWeakObjectPtr<UDeckEditingWidget> WeakThis(this);
+
+	AssetManager.LoadPrimaryAssets(InPrimaryAssetIds, TArray<FName>{}, FStreamableDelegate::CreateLambda([WeakThis, InCharacterTag, InPrimaryAssetIds]
 	{
-		const FText CardDescriptionText = CardAbilityCDO->GetCardDescription(CardAbilityCDO->GetAbilityLevel());
-		CardSelfViewInfo->CardDescriptionText = CardDescriptionText;
+		if (!WeakThis.IsValid())
+		{
+			return;
+		}
+
+		for (const FPrimaryAssetId& PrimaryAssetId : InPrimaryAssetIds)
+		{
+			FSoftObjectPath AssetPath = UAssetManager::Get().GetPrimaryAssetPath(PrimaryAssetId);
+			UE_LOG(LogTemp, Warning, TEXT("AssetPath : %s"), *AssetPath.ToString());
+			
+			UObject* LoadedObject = UAssetManager::Get().GetPrimaryAssetObject(PrimaryAssetId);
+
+			const UCardDefinitionData* CardDefinition = Cast<UCardDefinitionData>(LoadedObject);
+		
+			if (CardDefinition && CardDefinition->AbilityClass)
+			{
+				if (UCardDataLoader* Loader = NewObject<UCardDataLoader>(WeakThis.Get()))
+				{
+					Loader->OnLoadFinishedDelegate.BindUObject(WeakThis.Get(), &ThisClass::OnCardViewDataLoadFinished);
+					Loader->Init(InCharacterTag, CardDefinition, CardDefinition->AbilityClass.GetDefaultObject());
+				}
+			}
+		}
+	}));
+}
+
+void UDeckEditingWidget::OnCardViewDataLoadFinished(const ULetheGameplayAbility* Ability, const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const
+{
+	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
+	if (Ability && CardSelfViewData && CardSelfViewData->CardDescriptionText.IsEmpty())
+	{
+		CardSelfViewData->CardDescriptionText = Ability->GetCardDescription(Ability->GetAbilityLevel());
 	}
-	CardListObject->CardSelfViewInfo = CardSelfViewInfo;
 
-	CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardAbilityCDO->CardTypeTag);
+	if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>())
+	{
+		CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardDefinitionData->CardTypeTag);
+		CardListObject->CardTexture = CardSelfViewData->CardTexture;
 
-	FDeckListObjects& CardListObjects = CharacterUnequippedCardListObjects.FindOrAdd(InCharacterTag);
-	CardListObjects.CardListObjects.Emplace(CardListObject);
+		UnequippedCardTileView->AddItem(CardListObject);
+	}
 }
 
 void UDeckEditingWidget::OnNextPageButtonClicked()

@@ -7,7 +7,11 @@
 #include "Lethe/Data/CardViewData.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Data/CardDefinitionData.h"
+#include "Lethe/Data/CardOwnerViewData.h"
+#include "Lethe/Data/CardSelfViewData.h"
 #include "Lethe/UI/Core/LetheImage.h"
+#include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 
 void UCardWidget::NativeConstruct()
 {
@@ -29,22 +33,15 @@ void UCardWidget::SetSize(const FVector2D& InSize) const
 	RootSizeBox->SetHeightOverride(InSize.Y);
 }
 
-void UCardWidget::SetCardInfo(const FGameplayTag& InCardTag, const FCardSelfViewInfo* InCardViewInfo, const FCardOwnerViewInfo* InCardOwnerViewInfo)
+void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 {
-	CardTag = InCardTag;
-	if (InCardViewInfo)
-	{
-		CardImage->SetBrushFromTexture(InCardViewInfo->CardTexture);
-		CardName = InCardViewInfo->CardNameText;
-		CardDescription = InCardViewInfo->CardDescriptionText;
-	}
-	CardFrontsideBorderImage->SetColorAndOpacity(FLinearColor(InCardOwnerViewInfo->CardFrontsideColor));
-	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InCardOwnerViewInfo->CardBacksideColor));
-}
-
-void UCardWidget::SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC)
-{
-	OwnerASC = InOwnerASC;
+	OwnerASC = InitParams.OwnerASC;
+	CardTag = InitParams.CardDefinition->CardTag;
+	CardImage->SetBrushFromTexture(InitParams.CardSelfViewData->CardTexture);
+	CardName = InitParams.CardSelfViewData->CardNameText;
+	CardDescription = InitParams.CardSelfViewData->CardDescriptionText;
+	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
+	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CardOwnerViewData->CardBacksideColor));
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const

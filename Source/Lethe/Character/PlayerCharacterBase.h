@@ -14,7 +14,7 @@ class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlaya
 	GENERATED_BODY()
 
 public:
-	virtual FGameplayTag GetCharacterTag() override;	
+	virtual FGameplayTag GetCharacterTag() const override;	
 
 protected:
 	// 캐릭터 식별을 위해 사용하는 태그입니다.

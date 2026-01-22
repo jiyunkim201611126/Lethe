@@ -162,9 +162,6 @@ void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAc
 
 void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 {
-	const FCardSelfViewInfo* CardSelfViewInfo = CardInitParams.CardViewData->FindCardSelfViewInfoByTag(CardInitParams.CardTag);
-	const FCardOwnerViewInfo* CardOwnerViewInfo = CardInitParams.CardViewData->FindCardOwnerViewInfoByTag(CardInitParams.CharacterTag);
-	
 	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
 	{
 		// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
@@ -172,11 +169,9 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 		CharacterCards.Deck.Emplace(CreatedCard);
 
 		CreatedCard->SetWidgetController(WidgetController);
-		CreatedCard->SetOwnerASC(CardInitParams.OwnerASC);
+		CreatedCard->SetCardInfo(CardInitParams);
 		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
-
-		CreatedCard->SetCardInfo(CardInitParams.CardTag, CardSelfViewInfo, CardOwnerViewInfo);
-	
+		
 		// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
 		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardHighlightScale);
 		CreatedCard->SetRenderScale(FVector2D(CardHighlightScale));

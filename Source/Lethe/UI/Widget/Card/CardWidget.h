@@ -8,6 +8,7 @@
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
+struct FCardInitParams;
 class USizeBox;
 struct FCardSelfViewInfo;
 class ULetheImage;
@@ -73,9 +74,8 @@ public:
 
 	void SetSize(const FVector2D& InSize) const;
 
-	void SetCardInfo(const FGameplayTag& InCardTag, const FCardSelfViewInfo* InCardSelfViewInfo, const FCardOwnerViewInfo* InCardOwnerViewInfo);
+	void SetCardInfo(const FCardInitParams& InitParams);
 
-	void SetOwnerASC(ULetheAbilitySystemComponent* InOwnerASC);
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
 	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.

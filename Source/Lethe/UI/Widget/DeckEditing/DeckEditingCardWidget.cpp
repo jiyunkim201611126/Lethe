@@ -4,13 +4,12 @@
 
 #include "DeckEditingCardListObject.h"
 #include "Components/Image.h"
-#include "Lethe/Data/CardViewData.h"
 
 void UDeckEditingCardWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	if (const UDeckEditingCardListObject* DeckEditingCardListObject = Cast<UDeckEditingCardListObject>(ListItemObject))
 	{
 		CardBorderImage->SetColorAndOpacity(*DeckEditingCardListObject->CardTypeColor);
-		CardImage->SetBrushFromTexture(DeckEditingCardListObject->CardSelfViewInfo->CardTexture);
+		CardImage->SetBrushFromTexture(DeckEditingCardListObject->CardTexture);
 	}
 }

@@ -2,7 +2,7 @@
 
 #include "PlayerCharacterBase.h"
 
-FGameplayTag APlayerCharacterBase::GetCharacterTag()
+FGameplayTag APlayerCharacterBase::GetCharacterTag() const
 {
 	return CharacterTag;
 }

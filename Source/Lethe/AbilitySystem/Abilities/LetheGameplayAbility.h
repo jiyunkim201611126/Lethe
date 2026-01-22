@@ -51,15 +51,6 @@ protected:
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FGameplayEffectContextHandle GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const;
 
-public:
-	// 식별자 역할의 Card 전용 태그입니다.
-	// 플레이어 캐릭터가 사용하는 Card는 반드시 Tag 하나와 1:1 대응합니다.
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
-	FGameplayTag CardTag;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Tags")
-	FGameplayTag CardTypeTag;
-
 protected:
 	// 할당과 동시에 객체화되는 멤버변수입니다.
 	// Composite 패턴으로 조합해 사용할 수 있으며, 클래스 내부의 ApplyEffect나 ApplyAllEffects를 호출해 사용합니다.
@@ -73,11 +64,7 @@ protected:
 	//~ End UGameplayAbility Interface
 
 #if WITH_EDITOR
-	// CardTag로 할당한 Card 전용 태그가 AssetTag(AbilityTags)에도 자동으로 추가되도록 해주는 함수들입니다.
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	// 생성과 동시에 자동으로 ActivationBlockedTags에 CharacterState_Dead를 추가해주는 함수입니다.
 	virtual void PostInitProperties() override;
-
-private:
-	void SyncAbilityTagToAssetTags();
 #endif
 };

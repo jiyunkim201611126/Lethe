@@ -3,10 +3,8 @@
 #include "CardPanelWidgetController.h"
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
 #include "Lethe/Data/CardViewData.h"
 #include "Lethe/Game/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
 
 void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
@@ -56,22 +54,15 @@ void UCardPanelWidgetController::GoBattlePhase() const
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, ULetheGameplayAbility* InAbility) const
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const
 {
-	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
-	FCardSelfViewInfo* CardSelfViewInfo = CardViewData->FindCardSelfViewInfoByTag(InAbility->CardTag);
-	if (CardSelfViewInfo->CardDescriptionText.IsEmpty())
-	{
-		const FText CardDescriptionText = InAbility->GetCardDescription(InAbility->GetAbilityLevel());
-		CardSelfViewInfo->CardDescriptionText = CardDescriptionText;
-	}
-
-	// 콜백을 받은 CardPanelWidget이 필요한 데이터를 참조할 수 있도록 보내줍니다.
-	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerASC->GetOwner()))
-	{
-		const FCardInitParams InitParams(OwnerASC, CardViewData, InAbility->CardTag, OwnerCharacter->GetCharacterTag());
-		OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
-	}
+	FCardInitParams InitParams;
+	InitParams.OwnerASC = OwnerASC;
+	InitParams.CardViewData = CardViewData;
+	InitParams.CardDefinition = CardDefinitionData;
+	InitParams.CardSelfViewData = CardSelfViewData;
+	InitParams.CardOwnerViewData = CardOwnerViewData;
+	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }
 
 void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState InState) const

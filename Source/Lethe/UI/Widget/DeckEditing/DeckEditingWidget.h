@@ -3,8 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpec.h"
 #include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
+#include "Lethe/Data/CardDefinitionData.h"
+#include "Lethe/Data/CardOwnerViewData.h"
+#include "Lethe/Data/CardSelfViewData.h"
 #include "DeckEditingWidget.generated.h"
 
 struct FGameplayTag;
@@ -38,7 +42,8 @@ public:
 	//~ End of UUserWidget Interface
 
 private:
-	void CreateCardObject(const ULetheGameplayAbility* CardAbilityCDO, const FGameplayTag& InCharacterTag);
+	void StartLoadCardViewData(const FGameplayTag& InCharacterTag, const TArray<FPrimaryAssetId>& InPrimaryAssetIds);
+	void OnCardViewDataLoadFinished(const ULetheGameplayAbility* Ability, const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const;
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();

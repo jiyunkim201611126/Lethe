@@ -7,6 +7,7 @@
 #include "Components/PawnComponent.h"
 #include "GASManagerComponent.generated.h"
 
+struct FGameplayTag;
 class UGameplayAbility;
 class UGameplayEffect;
 class UAttributeSet;
@@ -35,6 +36,7 @@ public:
 	virtual void InitAbilityActorInfo();
 	
 	virtual void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
+	virtual void AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags) const;
 
 protected:
 	// GameplayEffect를 본인에게 적용하는 함수입니다.
@@ -54,11 +56,4 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Team")
 	ETeamSide TeamSide;
-
-	// 테스트용 변수입니다.
-	// Ability 부여 후 해당하는 Card Widget이 생성되는 로직을 거쳐야 하기 때문에, 모든 객체 생성 완료 시점에 Ability를 부여해야 합니다.
-	// 해당 Ability 정보는 덱빌딩 시점에 SaveGame에서 들고 있다가, Character가 불러들여와 부여하는 것으로 예상 중입니다.
-	// 현재는 Character에서 직접 수행합니다.
-	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<UGameplayAbility>> TestAbilities;
 };

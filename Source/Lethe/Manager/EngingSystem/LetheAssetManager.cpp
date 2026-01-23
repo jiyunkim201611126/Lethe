@@ -3,13 +3,13 @@
 #include "LetheAssetManager.h"
 
 #include "AbilitySystemGlobals.h"
-#include "LetheGameplayTags.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
 ULetheAssetManager& ULetheAssetManager::Get()
 {
 	check(GEngine);
-	ULetheAssetManager* AuraAssetManager = Cast<ULetheAssetManager>(GEngine->AssetManager);
-	return *AuraAssetManager;
+	ULetheAssetManager* LetheAssetManager = Cast<ULetheAssetManager>(GEngine->AssetManager);
+	return *LetheAssetManager;
 }
 
 void ULetheAssetManager::StartInitialLoading()

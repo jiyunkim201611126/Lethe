@@ -13,11 +13,11 @@
 struct FGameplayTag;
 struct FCardSelfViewInfo;
 struct FCardOwnerViewInfo;
+class UDeckEditingCardListObject;
 class ULetheGameplayAbility;
 class UCardViewData;
 class UTileView;
 class UButton;
-class UDeckEditingCardListObject;
 enum class ECardAction : uint8;
 
 USTRUCT()
@@ -42,7 +42,7 @@ public:
 
 private:
 	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas);
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();
@@ -58,7 +58,12 @@ private:
 
 	void UpdateCardPage(const int32 NewCharacterIndex, const int32 NewPageIndex);
 
-	void OnItemClicked(UObject* InListObject) const;
+	void OnItemClicked(UObject* InListObject);
+
+	bool CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, UDeckEditingCardListObject* InDeckObject) const;
+
+	UFUNCTION()
+	void OnGoToBattleButtonClicked();
 
 protected:
 	/**
@@ -70,6 +75,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
 	TObjectPtr<UCardViewData> CardViewData;
 
+	// 직선 배치지만, ScaleBox 활용을 위해 내부 요소의 Size를 직접 설정할 수 있는 TileView를 사용합니다.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTileView> EquippedCardTileView;
 
@@ -107,4 +113,7 @@ private:
 	// Key는 CharacterTag입니다.
 	UPROPERTY()
 	TMap<FGameplayTag, FDeckListObjects> CharacterUnequippedCardListObjects;
+
+	UPROPERTY()
+	TMap<FGameplayTag, FDeckListObjects> CharacterEquippedCardListObjects;
 };

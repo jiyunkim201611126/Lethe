@@ -25,7 +25,9 @@ void UCardDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collect
 			FGameplayTag CardTag;
 			CardTag.FromExportString(FoundCardTagString);
 			FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CardDefinitionAssetData);
-
+			
+			checkf(!CardDefinitionDataAssetIds.Contains(CardTag), TEXT("CardTag가 중복인 CardDefinition Data Asset이 존재합니다."));
+			
 			CardDefinitionDataAssetIds.Emplace(CardTag, AssetId);
 		}
 	}
@@ -41,6 +43,8 @@ void UCardDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collect
 			CardTag.FromExportString(FoundCardTagString);
 			FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CardSelfViewAssetData);
 
+			checkf(!CardSelfViewDataAssetIds.Contains(CardTag), TEXT("CardTag가 중복인 CardSelfView Data Asset이 존재합니다."));
+
 			CardSelfViewDataAssetIds.Emplace(CardTag, AssetId);
 		}
 	}
@@ -55,6 +59,8 @@ void UCardDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collect
 			FGameplayTag CharacterTag;
 			CharacterTag.FromExportString(FoundCharacterTagString);
 			FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CardOwnerViewAssetData);
+
+			checkf(!CardOwnerViewDataAssetIds.Contains(CharacterTag), TEXT("CharacterTag가 중복인 CardOwnerView Data Asset이 존재합니다."));
 
 			CardOwnerViewDataAssetIds.Emplace(CharacterTag, AssetId);
 		}
@@ -83,7 +89,7 @@ void UCardDataLoadManagerSubsystem::LoadCardDefinitionData(const TArray<FGamepla
 	if (!AssetsToLoad.IsEmpty())
 	{
 		// 로드할 객체가 있다면 로드를 시작합니다.
-		AssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateLambda([this, AssetsToLoad, OnComplete]()
+		AssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, AssetsToLoad, OnComplete]()
 		{
 			OnCardDefinitionDataLoaded(AssetsToLoad, OnComplete);
 		}));
@@ -123,7 +129,7 @@ void UCardDataLoadManagerSubsystem::LoadCardViewData(const FGameplayTag& InCardT
 		AssetsToLoad.Emplace(SelfViewId);
 		AssetsToLoad.Emplace(OwnerViewId);
 		
-		AssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateLambda([this, SelfViewId, OwnerViewId, OnComplete]()
+		AssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, SelfViewId, OwnerViewId, OnComplete]()
 		{
 			OnCardViewDataLoaded(SelfViewId, OwnerViewId, OnComplete);
 		}));
@@ -138,7 +144,7 @@ void UCardDataLoadManagerSubsystem::OnCardViewDataLoaded(const FPrimaryAssetId& 
 {
 	const UAssetManager& AssetManager = UAssetManager::Get();
 	
-	UCardSelfViewData* SelfViewData = Cast<UCardSelfViewData>(AssetManager.GetPrimaryAssetObject(SelfViewId));
+	const UCardSelfViewData* SelfViewData = Cast<UCardSelfViewData>(AssetManager.GetPrimaryAssetObject(SelfViewId));
 	const UCardOwnerViewData* OwnerViewData = Cast<UCardOwnerViewData>(AssetManager.GetPrimaryAssetObject(OwnerViewId));
 	
 	OnComplete.ExecuteIfBound(SelfViewData, OwnerViewData);

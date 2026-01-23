@@ -5,6 +5,8 @@
 #include "AbilitySystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
@@ -47,14 +49,38 @@ void UGASManagerComponent::InitAbilityActorInfo()
 			}
 		}
 	}
-	
-	AddCharacterAbilities(TestAbilities);
+
+	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
+	if (const IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerActor))
+	{
+		const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
+		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
+		{
+			if (FSavedCharacterDeck* CharacterDeck = DeckManagerSubsystem->GetEquippedDecks().Find(CharacterTag))
+			{
+				// Equipped Card들을 실제로 Ability로 부여합니다.
+				TArray<FGameplayTag> EquippedCards;
+				for (const FSavedCard& EquippedCard : CharacterDeck->Cards)
+				{
+					EquippedCards.Emplace(EquippedCard.CardTag);
+				}
+				
+				AddCharacterAbilities(EquippedCards);
+			}			
+		}
+	}
 }
 
 void UGASManagerComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const
 {
 	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
 	ASC->AddCharacterAbilities(InAbilities);
+}
+
+void UGASManagerComponent::AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags) const
+{
+	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
+	ASC->AddCharacterAbilities(InCardTags);
 }
 
 void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const

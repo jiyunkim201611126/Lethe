@@ -2,12 +2,12 @@
 
 #include "DeckSaveGame.h"
 
-TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultCharacterDecks()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultEquippedDecks()
 {
-	return DefaultCharacterDecks;
+	return DefaultEquippedDecks;
 }
 
-TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultUnlockedCards()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultUnequippedDecks()
 {
-	return DefaultUnlockedCards;
+	return DefaultUnequippedDecks;
 }

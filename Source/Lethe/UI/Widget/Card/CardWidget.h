@@ -122,7 +122,6 @@ protected:
 
 private:
 	FText CardName;
-	FText CardDescription;
 	FGameplayTag CardTag;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;

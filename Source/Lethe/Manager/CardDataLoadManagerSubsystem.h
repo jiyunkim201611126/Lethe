@@ -12,7 +12,7 @@ class UCardSelfViewData;
 class UCardOwnerViewData;
 
 DECLARE_DELEGATE_OneParam(FOnCardDefinitionsLoaded, const TArray<UCardDefinitionData*>&)
-DECLARE_DELEGATE_TwoParams(FOnCardViewLoaded, UCardSelfViewData*, const UCardOwnerViewData*)
+DECLARE_DELEGATE_TwoParams(FOnCardViewLoaded, const UCardSelfViewData*, const UCardOwnerViewData*)
 
 /**
  * AssetManager를 통해 카드용 PrimaryDataAsset들을 로드하는 Subsystem입니다.

@@ -18,8 +18,8 @@ void UDeckManagerSubsystem::SaveDeck() const
 {
 	if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
 	{
-		DeckSaveGameObject->CharacterDecks = CharacterDecks;
-		DeckSaveGameObject->UnlockedCards = UnlockedCards;
+		DeckSaveGameObject->EquippedDecks = EquippedDecks;
+		DeckSaveGameObject->UnequippedDecks = UnequippedDecks;
 
 		// 여러 개의 세이브 슬롯을 지원할 목적이라면 이 부분을 수정하면 됩니다.
 		const FString SlotName = TEXT("DeckSaveSlot");
@@ -35,10 +35,10 @@ void UDeckManagerSubsystem::LoadDeck()
 		// 세이브 파일이 존재하는 경우 들어오는 분기입니다.
 		if (const UDeckSaveGame* LoadedDeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0)))
 		{
-			CharacterDecks.Reset();
-			CharacterDecks = LoadedDeckSaveGameObject->CharacterDecks;
-			UnlockedCards.Reset();
-			UnlockedCards = LoadedDeckSaveGameObject->UnlockedCards;
+			EquippedDecks.Reset();
+			EquippedDecks = LoadedDeckSaveGameObject->EquippedDecks;
+			UnequippedDecks.Reset();
+			UnequippedDecks = LoadedDeckSaveGameObject->UnequippedDecks;
 		}
 	}
 	else
@@ -46,8 +46,8 @@ void UDeckManagerSubsystem::LoadDeck()
 		// 세이브파일이 존재하지 않는 경우 들어오는 분기입니다.
 		if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
 		{
-			CharacterDecks = DeckSaveGameObject->GetDefaultCharacterDecks();
-			UnlockedCards = DeckSaveGameObject->GetDefaultUnlockedCards();
+			EquippedDecks = DeckSaveGameObject->GetDefaultEquippedDecks();
+			UnequippedDecks = DeckSaveGameObject->GetDefaultUnequippedDecks();
 			SaveDeck();
 		}
 	}
@@ -55,7 +55,7 @@ void UDeckManagerSubsystem::LoadDeck()
 
 bool UDeckManagerSubsystem::IsDeckValid()
 {
-	for (const auto& CharacterDeck : CharacterDecks)
+	for (const auto& CharacterDeck : EquippedDecks)
 	{
 		if (CharacterDeck.Value.Cards.Num() != MAX_DECK_COUNT)
 		{
@@ -67,12 +67,12 @@ bool UDeckManagerSubsystem::IsDeckValid()
 	return true;
 }
 
-TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetCharacterDecks()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetEquippedDecks()
 {
-	return CharacterDecks;
+	return EquippedDecks;
 }
 
-TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetUnlockedCards()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckManagerSubsystem::GetUnequippedDecks()
 {
-	return UnlockedCards;
+	return UnequippedDecks;
 }

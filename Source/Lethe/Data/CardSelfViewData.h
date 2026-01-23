@@ -27,7 +27,4 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FText CardNameText;
-	
-	// 아래 Text는 런타임 중 Ability를 참조해 동적으로 채워집니다.
-	FText CardDescriptionText;
 };

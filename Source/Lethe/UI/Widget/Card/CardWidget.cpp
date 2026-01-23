@@ -39,7 +39,6 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	CardTag = InitParams.CardDefinition->CardTag;
 	CardImage->SetBrushFromTexture(InitParams.CardSelfViewData->CardTexture);
 	CardName = InitParams.CardSelfViewData->CardNameText;
-	CardDescription = InitParams.CardSelfViewData->CardDescriptionText;
 	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CardOwnerViewData->CardBacksideColor));
 }

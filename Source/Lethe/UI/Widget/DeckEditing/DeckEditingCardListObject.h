@@ -15,6 +15,8 @@ class LETHE_API UDeckEditingCardListObject : public UObject
 	GENERATED_BODY()
 
 public:
+	FGameplayTag CardTag;
+	
 	FLinearColor* CardTypeColor;
 	
 	UPROPERTY()

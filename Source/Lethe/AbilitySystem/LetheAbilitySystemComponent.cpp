@@ -59,14 +59,14 @@ void ULetheAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySp
 	
 	if (CardDataLoadManagerSubsystem && CardDefinitionData && PlayerCharacter)
 	{
-		const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData, AbilitySpec](UCardSelfViewData* SelfViewData, const UCardOwnerViewData* OwnerViewData)
+		const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData](const UCardSelfViewData* SelfViewData, const UCardOwnerViewData* OwnerViewData)
 		{
 			if (!CardDefinitionData)
 			{
 				return;
 			}
 			
-			OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, OwnerViewData, AbilitySpec);
+			OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, OwnerViewData);
 		});
 
 		// CardSelfViewData, CardOwnerViewData Asset 로드를 시작합니다.
@@ -74,15 +74,8 @@ void ULetheAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySp
 	}
 }
 
-void ULetheAbilitySystemComponent::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData, const FGameplayAbilitySpec& AbilitySpec)
+void ULetheAbilitySystemComponent::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData)
 {
-	// Ability에서 CardDescription을 가져와 DataAsset에 넣어줍니다.
-	if (CardSelfViewData)
-	{
-		const ULetheGameplayAbility* Ability = Cast<ULetheGameplayAbility>(AbilitySpec.Ability);
-		CardSelfViewData->CardDescriptionText = Ability->GetCardDescription(Ability->GetAbilityLevel());
-	}
-
 	// 카드 위젯이 생성될 수 있도록 콜백을 호출합니다.
 	OnAbilityGivenDelegate.ExecuteIfBound(this, CardDefinitionData, CardSelfViewData, CardOwnerViewData);
 }

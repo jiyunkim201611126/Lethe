@@ -33,11 +33,11 @@ struct FSavedCharacterDeck
 
 	FSavedCharacterDeck()
 	{
-		Cards.Reserve(MAX_DECK_COUNT);
+		Deck.Reserve(MAX_DECK_COUNT);
 	}
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FSavedCard> Cards;
+	TArray<FSavedCard> Deck;
 };
 
 UCLASS()
@@ -46,8 +46,8 @@ class LETHE_API UDeckSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	TMap<FGameplayTag, FSavedCharacterDeck> GetDefaultEquippedDecks();
-	TMap<FGameplayTag, FSavedCharacterDeck> GetDefaultUnequippedDecks();
+	const TMap<FGameplayTag, FSavedCharacterDeck>& GetDefaultEquippedDecks();
+	const TMap<FGameplayTag, FSavedCharacterDeck>& GetDefaultUnequippedDecks();
 
 public:
 	// Key는 캐릭터 태그, Value는 CardTag 10개 배열로 구성된 TMap입니다.

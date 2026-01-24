@@ -41,8 +41,9 @@ public:
 	//~ End of UUserWidget Interface
 
 private:
-	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas);
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
+	void StartCardsLoad();
+	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas, const bool bEquipped);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData, const bool bEquipped);
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();
@@ -77,10 +78,10 @@ protected:
 
 	// 직선 배치지만, ScaleBox 활용을 위해 내부 요소의 Size를 직접 설정할 수 있는 TileView를 사용합니다.
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTileView> EquippedCardTileView;
+	TObjectPtr<UTileView> EquippedDeckTileView;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTileView> UnequippedCardTileView;
+	TObjectPtr<UTileView> UnequippedDeckTileView;
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> NextPageButton;
@@ -112,8 +113,8 @@ private:
 
 	// Key는 CharacterTag입니다.
 	UPROPERTY()
-	TMap<FGameplayTag, FDeckListObjects> CharacterUnequippedCardListObjects;
+	TMap<FGameplayTag, FDeckListObjects> CharacterUnequippedDeckListObjects;
 
 	UPROPERTY()
-	TMap<FGameplayTag, FDeckListObjects> CharacterEquippedCardListObjects;
+	TMap<FGameplayTag, FDeckListObjects> CharacterEquippedDeckListObjects;
 };

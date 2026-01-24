@@ -15,9 +15,9 @@ void UDeckEditingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (UnequippedCardTileView)
+	if (UnequippedDeckTileView)
 	{
-		UnequippedCardTileView->OnItemClicked().AddUObject(this, &ThisClass::OnItemClicked);
+		UnequippedDeckTileView->OnItemClicked().AddUObject(this, &ThisClass::OnItemClicked);
 	}
 	
 	NextPageButton->OnClicked.AddDynamic(this, &ThisClass::OnNextPageButtonClicked);
@@ -27,42 +27,14 @@ void UDeckEditingWidget::NativeConstruct()
 
 	GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
 
-	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
-	UCardDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadManagerSubsystem>();
-	if (DeckManagerSubsystem && CardDataLoadManagerSubsystem)
-	{
-		const TMap<FGameplayTag, FSavedCharacterDeck>& UnlockedCards = DeckManagerSubsystem->GetUnequippedDecks();
-
-		for (const auto& UnlockedCard : UnlockedCards)
-		{
-			FGameplayTag CharacterTag = UnlockedCard.Key;
-			CharacterTags.Emplace(CharacterTag);
-			CharacterUnequippedCardListObjects.Emplace(CharacterTag);
-			CharacterEquippedCardListObjects.Emplace(CharacterTag);
-
-			TArray<FGameplayTag> CardTags;
-			for (const FSavedCard& SavedCard : UnlockedCard.Value.Cards)
-			{
-				CardTags.Emplace(SavedCard.CardTag);
-			}
-
-			ShouldLoadCardCount += UnlockedCard.Value.Cards.Num();
-
-			const FOnCardDefinitionsLoaded OnCardDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateWeakLambda(this, [this, CharacterTag](const TArray<UCardDefinitionData*>& CardDefinitionDatas)
-			{
-				OnCardDefinitionDataLoadFinished(CharacterTag, CardDefinitionDatas);
-			});
-			
-			CardDataLoadManagerSubsystem->LoadCardDefinitionData(CardTags, OnCardDefinitionsLoaded);
-		}
-	}
+	StartCardsLoad();
 }
 
 void UDeckEditingWidget::NativeDestruct()
 {
-	if (UnequippedCardTileView)
+	if (UnequippedDeckTileView)
 	{
-		UnequippedCardTileView->OnItemClicked().RemoveAll(this);
+		UnequippedDeckTileView->OnItemClicked().RemoveAll(this);
 	}
 
 	NextPageButton->OnClicked.RemoveDynamic(this, &ThisClass::OnNextPageButtonClicked);
@@ -71,20 +43,76 @@ void UDeckEditingWidget::NativeDestruct()
 	PreviousCharacterButton->OnClicked.RemoveDynamic(this, &ThisClass::OnPreviousCharacterButtonClicked);
 
 	CharacterTags.Empty();
-	CharacterUnequippedCardListObjects.Empty();
+	CharacterUnequippedDeckListObjects.Empty();
 	
 	Super::NativeDestruct();
 }
 
-void UDeckEditingWidget::OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas)
+void UDeckEditingWidget::StartCardsLoad()
+{
+	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
+	UCardDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadManagerSubsystem>();
+	if (DeckManagerSubsystem && CardDataLoadManagerSubsystem)
+	{
+		const TMap<FGameplayTag, FSavedCharacterDeck>& UnequippedDecks = DeckManagerSubsystem->GetUnequippedDecks();
+
+		for (const auto& UnequippedDeck : UnequippedDecks)
+		{
+			FGameplayTag CharacterTag = UnequippedDeck.Key;
+			CharacterTags.AddUnique(CharacterTag);
+			CharacterUnequippedDeckListObjects.Emplace(CharacterTag);
+
+			TArray<FGameplayTag> CardTags;
+			for (const FSavedCard& SavedCard : UnequippedDeck.Value.Deck)
+			{
+				CardTags.Emplace(SavedCard.CardTag);
+			}
+
+			ShouldLoadCardCount += UnequippedDeck.Value.Deck.Num();
+
+			const FOnCardDefinitionsLoaded OnCardDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateWeakLambda(this, [this, CharacterTag](const TArray<UCardDefinitionData*>& CardDefinitionDatas)
+			{
+				OnCardDefinitionDataLoadFinished(CharacterTag, CardDefinitionDatas, false);
+			});
+			
+			CardDataLoadManagerSubsystem->LoadCardDefinitionData(CardTags, OnCardDefinitionsLoaded);
+		}
+
+		const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
+
+		for (const auto& EquippedDeck : EquippedDecks)
+		{
+			FGameplayTag CharacterTag = EquippedDeck.Key;
+			CharacterTags.AddUnique(CharacterTag);
+			CharacterEquippedDeckListObjects.Emplace(CharacterTag);
+
+			TArray<FGameplayTag> CardTags;
+			for (const FSavedCard& SavedCard : EquippedDeck.Value.Deck)
+			{
+				CardTags.Emplace(SavedCard.CardTag);
+			}
+
+			ShouldLoadCardCount += EquippedDeck.Value.Deck.Num();
+
+			const FOnCardDefinitionsLoaded OnCardDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateWeakLambda(this, [this, CharacterTag](const TArray<UCardDefinitionData*>& CardDefinitionDatas)
+			{
+				OnCardDefinitionDataLoadFinished(CharacterTag, CardDefinitionDatas, true);
+			});
+			
+			CardDataLoadManagerSubsystem->LoadCardDefinitionData(CardTags, OnCardDefinitionsLoaded);
+		}
+	}
+}
+
+void UDeckEditingWidget::OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas, const bool bEquipped)
 {
 	if (UCardDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadManagerSubsystem>())
 	{
 		for (UCardDefinitionData* CardDefinitionData : CardDefinitionDatas)
 		{
-			const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData](const UCardSelfViewData* SelfViewData, const UCardOwnerViewData* OwnerViewData)
+			const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData, bEquipped](const UCardSelfViewData* SelfViewData, const UCardOwnerViewData* OwnerViewData)
 			{
-				OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, OwnerViewData);
+				OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, OwnerViewData, bEquipped);
 			});
 			
 			CardDataLoadManagerSubsystem->LoadCardViewData(CardDefinitionData->CardTag, InCharacterTag, OnLoadComplete);
@@ -92,16 +120,18 @@ void UDeckEditingWidget::OnCardDefinitionDataLoadFinished(const FGameplayTag& In
 	}
 }
 
-void UDeckEditingWidget::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData)
+void UDeckEditingWidget::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData, const bool bEquipped)
 {
 	// 로드가 완료되면 카드 위젯을 생성하는 데에 필요한 Object를 생성해 캐싱해둡니다.
 	if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>())
 	{
 		CardListObject->CardTag = CardDefinitionData->CardTag;
+		CardListObject->CardLevel = 1;
 		CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardDefinitionData->CardTypeTag);
 		CardListObject->CardTexture = CardSelfViewData->CardTexture;
 
-		if (FDeckListObjects* DeckListObjects = CharacterUnequippedCardListObjects.Find(CardOwnerViewData->CharacterTag))
+		TMap<FGameplayTag, FDeckListObjects>& SelectedDecks = bEquipped ? CharacterEquippedDeckListObjects : CharacterUnequippedDeckListObjects;
+		if (FDeckListObjects* DeckListObjects = SelectedDecks.Find(CardOwnerViewData->CharacterTag))
 		{
 			DeckListObjects->CardListObjects.Emplace(CardListObject);
 
@@ -142,13 +172,13 @@ void UDeckEditingWidget::UpdateCardPage(const int32 NewCharacterIndex, const int
 	CurrentCharacterIndex = FMath::WrapExclusive(NewCharacterIndex, 0, CharacterTags.Num());
 	
 	const FGameplayTag& CurrentCharacterTag = CharacterTags[CurrentCharacterIndex];
-	if (!CharacterUnequippedCardListObjects.Contains(CurrentCharacterTag))
+	if (!CharacterUnequippedDeckListObjects.Contains(CurrentCharacterTag))
 	{
 		return;
 	}
 
 	// 인덱스에 해당하는 캐릭터의 UnequippedListObjects를 가져옵니다.
-	if (const FDeckListObjects* UnequippedDeckListObjects = CharacterUnequippedCardListObjects.Find(CurrentCharacterTag))
+	if (const FDeckListObjects* UnequippedDeckListObjects = CharacterUnequippedDeckListObjects.Find(CurrentCharacterTag))
 	{
 		const TArray<TObjectPtr<UDeckEditingCardListObject>>& UnequippedDeckObjects = UnequippedDeckListObjects->CardListObjects;
 		const int32 TotalCards = UnequippedDeckObjects.Num();
@@ -161,25 +191,25 @@ void UDeckEditingWidget::UpdateCardPage(const int32 NewCharacterIndex, const int
 		const int32 StartDataIndex = CurrentPageIndex * MaxCardCountInOnePage;
 
 		// 미장착 덱 페이지 갱신을 시작합니다.
-		UnequippedCardTileView->ClearListItems();
+		UnequippedDeckTileView->ClearListItems();
 
 		const int32 EndIndex = FMath::Min(StartDataIndex + MaxCardCountInOnePage, TotalCards);
 		for (int32 Index = StartDataIndex; Index < EndIndex; ++Index)
 		{
-			UnequippedCardTileView->AddItem(UnequippedDeckObjects[Index]);
+			UnequippedDeckTileView->AddItem(UnequippedDeckObjects[Index]);
 		}
 	}
 
 	// 인덱스에 해당하는 캐릭터의 EquippedListObjects를 가져옵니다.
-	if (const FDeckListObjects* EquippedDeckListObjects = CharacterEquippedCardListObjects.Find(CurrentCharacterTag))
+	if (const FDeckListObjects* EquippedDeckListObjects = CharacterEquippedDeckListObjects.Find(CurrentCharacterTag))
 	{
 		const TArray<TObjectPtr<UDeckEditingCardListObject>>& EquippedDeckObjects = EquippedDeckListObjects->CardListObjects;
 
 		// 장착 덱 페이지 갱신을 시작합니다.
-		EquippedCardTileView->ClearListItems();
+		EquippedDeckTileView->ClearListItems();
 		for (UDeckEditingCardListObject* EquippedDeckObject : EquippedDeckObjects)
 		{
-			EquippedCardTileView->AddItem(EquippedDeckObject);
+			EquippedDeckTileView->AddItem(EquippedDeckObject);
 		}
 	}
 }
@@ -193,8 +223,8 @@ void UDeckEditingWidget::OnItemClicked(UObject* InListObject)
 			// 현재 표시되고 있는 캐릭터에 해당하는 CardListObjects들을 가져옵니다.
 			const FGameplayTag& CharacterTag = CharacterTags[CurrentCharacterIndex];
 
-			FDeckListObjects* UnequippedDeckListObjects = CharacterUnequippedCardListObjects.Find(CharacterTag);
-			FDeckListObjects* EquippedDeckListObjects = CharacterEquippedCardListObjects.Find(CharacterTag);
+			FDeckListObjects* UnequippedDeckListObjects = CharacterUnequippedDeckListObjects.Find(CharacterTag);
+			FDeckListObjects* EquippedDeckListObjects = CharacterEquippedDeckListObjects.Find(CharacterTag);
 
 			if (UnequippedDeckListObjects && EquippedDeckListObjects)
 			{
@@ -248,6 +278,47 @@ bool UDeckEditingWidget::CanAddCardToEquippedDeck(const FDeckListObjects* Equipp
 
 void UDeckEditingWidget::OnGoToBattleButtonClicked()
 {
+	if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
+	{
+		// 위젯용 UObject를 DeckManagerSubsystem에서 사용하는 구조체로 가공합니다.
+		TMap<FGameplayTag, FSavedCharacterDeck> EquippedDecks;
+		TMap<FGameplayTag, FSavedCharacterDeck> UnequippedDecks;
+
+		for (const auto& EquippedDeckListObjects : CharacterEquippedDeckListObjects)
+		{
+			FSavedCharacterDeck SavedCharacterDeck;
+			for (const auto& CardListObject : EquippedDeckListObjects.Value.CardListObjects)
+			{
+				FSavedCard SavedCard;
+				SavedCard.CardTag = CardListObject->CardTag;
+				SavedCard.CardLevel = CardListObject->CardLevel;
+
+				SavedCharacterDeck.Deck.Emplace(SavedCard);
+			}
+
+			EquippedDecks.Emplace(EquippedDeckListObjects.Key, SavedCharacterDeck);
+		}
+
+		for (const auto& UnequippedDeckListObjects : CharacterUnequippedDeckListObjects)
+		{
+			FSavedCharacterDeck SavedCharacterDeck;
+			for (const auto& CardListObject : UnequippedDeckListObjects.Value.CardListObjects)
+			{
+				FSavedCard SavedCard;
+				SavedCard.CardTag = CardListObject->CardTag;
+				SavedCard.CardLevel = CardListObject->CardLevel;
+
+				SavedCharacterDeck.Deck.Emplace(SavedCard);
+			}
+
+			UnequippedDecks.Emplace(UnequippedDeckListObjects.Key, SavedCharacterDeck);
+		}
+
+		// 미장착 / 장착 상태의 덱들을 저장합니다.
+		DeckManagerSubsystem->SaveDeck(EquippedDecks, UnequippedDecks);
+	}
+
+	// 레벨 이동을 시작합니다.
 	if (ULevelManagerSubsystem* LevelManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>())
 	{
 		LevelManagerSubsystem->ChangeMap(ELevelType::Battle, "FromDeckEditing");

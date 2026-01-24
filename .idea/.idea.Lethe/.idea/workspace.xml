@@ -13,30 +13,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Data/LevelData.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Data/LevelData.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Manager/World/LevelManagerSubsystem.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/Lethe/Manager/World/LevelManagerSubsystem.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultGame.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultGame.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_TestCharacter1_OwnerView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_TestCharacter1_OwnerView.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/DeckEditing/WBP_DeckEditing.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/DeckEditing/WBP_DeckEditing.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardSelfViewData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardSelfViewData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheAssetManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/EngingSystem/LetheAssetManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheAssetManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/EngingSystem/LetheAssetManager.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" afterDir="false" />
@@ -53,6 +37,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="cidr-memory-view://3" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Experimental/StateGraph/Source/StateGraphManager/Private/RegisterServerManager.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbilityTargetActor.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -270,24 +255,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "C/C++ 프로젝트.Lethe.executor": "Debug",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;C/C++ 프로젝트.Lethe.executor&quot;: &quot;Debug&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="C/C++ 프로젝트.Lethe">
     <configuration name="Lethe" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -435,6 +420,7 @@
       <workItem from="1768998477152" duration="15256000" />
       <workItem from="1769087293441" duration="10758000" />
       <workItem from="1769177570869" duration="10289000" />
+      <workItem from="1769250376887" duration="4226000" />
     </task>
     <servers />
   </component>

@@ -16,6 +16,7 @@ class LETHE_API UDeckEditingCardListObject : public UObject
 
 public:
 	FGameplayTag CardTag;
+	int32 CardLevel = 1;
 	
 	FLinearColor* CardTypeColor;
 	

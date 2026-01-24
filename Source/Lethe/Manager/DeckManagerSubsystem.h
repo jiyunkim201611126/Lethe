@@ -18,8 +18,8 @@ class LETHE_API UDeckManagerSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	
-	void SaveDeck() const;
+
+	void SaveDeck(const TMap<FGameplayTag, FSavedCharacterDeck>& InEquippedDecks, const TMap<FGameplayTag, FSavedCharacterDeck>& InUnequippedDecks);
 	void LoadDeck();
 
 	bool IsDeckValid();
@@ -30,6 +30,8 @@ public:
 private:
 	UPROPERTY(Config)
 	TSubclassOf<UDeckSaveGame> DeckSaveGameClass;
+
+	const FString SlotName = TEXT("DeckSaveSlot");
 	
 	// Key는 캐릭터 태그, Value는 CardTag 10개 배열로 구성된 TMap입니다.
 	TMap<FGameplayTag, FSavedCharacterDeck> EquippedDecks;

@@ -58,15 +58,15 @@ void UGASManagerComponent::InitAbilityActorInfo()
 		{
 			if (FSavedCharacterDeck* CharacterDeck = DeckManagerSubsystem->GetEquippedDecks().Find(CharacterTag))
 			{
-				// Equipped Card들을 실제로 Ability로 부여합니다.
-				TArray<FGameplayTag> EquippedCards;
-				for (const FSavedCard& EquippedCard : CharacterDeck->Cards)
+				// Equipped Deck들을 실제로 Ability로 부여합니다.
+				TArray<FGameplayTag> EquippedDeck;
+				for (const FSavedCard& EquippedCard : CharacterDeck->Deck)
 				{
-					EquippedCards.Emplace(EquippedCard.CardTag);
+					EquippedDeck.Emplace(EquippedCard.CardTag);
 				}
 				
-				AddCharacterAbilities(EquippedCards);
-			}			
+				AddCharacterAbilities(EquippedDeck);
+			}
 		}
 	}
 }

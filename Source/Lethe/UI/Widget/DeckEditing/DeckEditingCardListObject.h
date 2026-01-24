@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Lethe/SaveGame/DeckSaveGame.h"
 #include "UObject/Object.h"
 #include "DeckEditingCardListObject.generated.h"
-
-struct FCardSelfViewInfo;
 
 UCLASS()
 class LETHE_API UDeckEditingCardListObject : public UObject
@@ -15,8 +14,7 @@ class LETHE_API UDeckEditingCardListObject : public UObject
 	GENERATED_BODY()
 
 public:
-	FGameplayTag CardTag;
-	int32 CardLevel = 1;
+	FSavedCard CardInfo;
 	
 	FLinearColor* CardTypeColor;
 	

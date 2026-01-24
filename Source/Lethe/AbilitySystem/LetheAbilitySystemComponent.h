@@ -6,12 +6,13 @@
 #include "AbilitySystemComponent.h"
 #include "LetheAbilitySystemComponent.generated.h"
 
+struct FSavedCard;
 class UCardDefinitionData;
 class UCardSelfViewData;
-class UCardOwnerViewData;
+class UCharacterDefinitionData;
 class ULetheGameplayAbility;
 
-DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, const UCardDefinitionData*, const UCardSelfViewData*, const UCardOwnerViewData*);
+DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
@@ -25,9 +26,9 @@ public:
 	// Ability를 부여함과 동시에 한 번 발동하는 함수입니다. 보통 Passive 구현에 사용합니다.
 	void AddCharacterAbilitiesWithActive(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities);
 
-	void AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags);
+	void AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards);
 
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData);
 
 protected:
 	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;

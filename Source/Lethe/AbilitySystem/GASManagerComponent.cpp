@@ -51,21 +51,15 @@ void UGASManagerComponent::InitAbilityActorInfo()
 	}
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-	if (const IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerActor))
+	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerActor))
 	{
 		const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
 		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
 		{
-			if (FSavedCharacterDeck* CharacterDeck = DeckManagerSubsystem->GetEquippedDecks().Find(CharacterTag))
+			if (const FSavedCharacterDeck* CharacterDeck = DeckManagerSubsystem->GetEquippedDecks().Find(CharacterTag))
 			{
-				// Equipped Deck들을 실제로 Ability로 부여합니다.
-				TArray<FGameplayTag> EquippedDeck;
-				for (const FSavedCard& EquippedCard : CharacterDeck->Deck)
-				{
-					EquippedDeck.Emplace(EquippedCard.CardTag);
-				}
-				
-				AddCharacterAbilities(EquippedDeck);
+				// Equipped Deck들을 실제 Ability로 부여합니다.
+				AddCharacterAbilities(CharacterDeck->Deck);
 			}
 		}
 	}
@@ -77,10 +71,10 @@ void UGASManagerComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGamep
 	ASC->AddCharacterAbilities(InAbilities);
 }
 
-void UGASManagerComponent::AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags) const
+void UGASManagerComponent::AddCharacterAbilities(const TArray<FSavedCard>& InCards) const
 {
 	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
-	ASC->AddCharacterAbilities(InCardTags);
+	ASC->AddCharacterAbilities(InCards);
 }
 
 void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const

@@ -54,14 +54,14 @@ void UCardPanelWidgetController::GoBattlePhase() const
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
 {
 	FCardInitParams InitParams;
 	InitParams.OwnerASC = OwnerASC;
 	InitParams.CardViewData = CardViewData;
 	InitParams.CardDefinition = CardDefinitionData;
 	InitParams.CardSelfViewData = CardSelfViewData;
-	InitParams.CardOwnerViewData = CardOwnerViewData;
+	InitParams.CharacterDefinitionData = CharacterDefinitionData;
 	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }
 

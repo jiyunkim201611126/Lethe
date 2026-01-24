@@ -8,7 +8,7 @@
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/CardDefinitionData.h"
-#include "Lethe/Data/CardOwnerViewData.h"
+#include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/CardSelfViewData.h"
 #include "Lethe/UI/Core/LetheImage.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
@@ -40,7 +40,7 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	CardImage->SetBrushFromTexture(InitParams.CardSelfViewData->CardTexture);
 	CardName = InitParams.CardSelfViewData->CardNameText;
 	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
-	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CardOwnerViewData->CardBacksideColor));
+	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->CardBacksideColor));
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const

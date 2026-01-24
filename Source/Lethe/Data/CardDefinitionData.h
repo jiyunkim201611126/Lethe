@@ -8,6 +8,7 @@
 #include "CardDefinitionData.generated.h"
 
 class ULetheGameplayAbility;
+
 /**
  * 카드 태그와 Ability CDO를 매핑하는 데이터 에셋입니다.
  */
@@ -20,6 +21,10 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 	
 public:
+	// Id는 출시 이후 절대 변경되어선 안 됩니다!!
+	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
+	uint64 CardId;
+	
 	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
 	FGameplayTag CardTag;
 	

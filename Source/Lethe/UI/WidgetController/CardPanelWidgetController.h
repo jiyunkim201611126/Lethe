@@ -3,17 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
 struct FGameplayAbilitySpecHandle;
-class UCardOwnerViewData;
+struct FGameplayAbilitySpec;
+struct FCardSelfViewInfo;
+class UCharacterDefinitionData;
 class UCardSelfViewData;
 class UCardDefinitionData;
-struct FGameplayAbilitySpec;
-struct FGameplayTag;
-struct FCardSelfViewInfo;
 class ULetheGameplayAbility;
 class UCardViewData;
 enum class EPlayerPhaseState : uint8;
@@ -40,7 +38,7 @@ struct FCardInitParams
 	const UCardSelfViewData* CardSelfViewData;
 
 	UPROPERTY()
-	const UCardOwnerViewData* CardOwnerViewData;
+	const UCharacterDefinitionData* CharacterDefinitionData;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
@@ -65,7 +63,7 @@ public:
 	void GoBattlePhase() const;
 
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
 	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
 
 public:

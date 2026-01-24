@@ -7,7 +7,7 @@
 #include "Components/PawnComponent.h"
 #include "GASManagerComponent.generated.h"
 
-struct FGameplayTag;
+struct FSavedCard;
 class UGameplayAbility;
 class UGameplayEffect;
 class UAttributeSet;
@@ -36,7 +36,7 @@ public:
 	virtual void InitAbilityActorInfo();
 	
 	virtual void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
-	virtual void AddCharacterAbilities(const TArray<FGameplayTag>& InCardTags) const;
+	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;
 
 protected:
 	// GameplayEffect를 본인에게 적용하는 함수입니다.

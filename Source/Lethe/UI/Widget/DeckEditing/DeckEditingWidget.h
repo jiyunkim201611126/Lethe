@@ -6,13 +6,13 @@
 #include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
 #include "Lethe/Data/CardDefinitionData.h"
-#include "Lethe/Data/CardOwnerViewData.h"
+#include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/CardSelfViewData.h"
 #include "DeckEditingWidget.generated.h"
 
+struct FSavedCharacterDeck;
 struct FGameplayTag;
 struct FCardSelfViewInfo;
-struct FCardOwnerViewInfo;
 class UDeckEditingCardListObject;
 class ULetheGameplayAbility;
 class UCardViewData;
@@ -41,9 +41,10 @@ public:
 	//~ End of UUserWidget Interface
 
 private:
-	void StartCardsLoad();
+	void StartLoadAllCards();
+	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks);
 	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas, const bool bEquipped);
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCardOwnerViewData* CardOwnerViewData, const bool bEquipped);
+	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData, const bool bEquipped);
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();

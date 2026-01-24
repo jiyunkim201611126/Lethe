@@ -32,10 +32,11 @@ private:
 	TSubclassOf<UDeckSaveGame> DeckSaveGameClass;
 
 	const FString SlotName = TEXT("DeckSaveSlot");
-	
+
+	// 아래는 SaveGame과 달리 런타임 중 편의성을 위해 uint64 자료형의 Id 대신 GameplayTag를 Key로 하는 TMap입니다.
 	// Key는 캐릭터 태그, Value는 CardTag 10개 배열로 구성된 TMap입니다.
 	TMap<FGameplayTag, FSavedCharacterDeck> EquippedDecks;
 	
-	// Key와 Value의 구성은 위와 같습니다. 장착하지 않은 상태의 사용할 수 있는 CardTag들입니다.
+	// Key와 Value의 구성은 위와 같습니다. 장착하지 않은 상태의 CardTag들입니다.
 	TMap<FGameplayTag, FSavedCharacterDeck> UnequippedDecks;
 };

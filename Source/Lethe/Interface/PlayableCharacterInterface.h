@@ -19,5 +19,5 @@ class LETHE_API IPlayableCharacterInterface
 	GENERATED_BODY()
 
 public:
-	virtual FGameplayTag GetCharacterTag() const = 0;
+	virtual FGameplayTag GetCharacterTag() = 0;
 };

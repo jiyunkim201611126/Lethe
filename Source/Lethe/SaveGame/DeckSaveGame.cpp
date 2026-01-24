@@ -2,12 +2,12 @@
 
 #include "DeckSaveGame.h"
 
-const TMap<FGameplayTag, FSavedCharacterDeck>& UDeckSaveGame::GetDefaultEquippedDecks()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultEquippedDecks()
 {
 	return DefaultEquippedDecks;
 }
 
-const TMap<FGameplayTag, FSavedCharacterDeck>& UDeckSaveGame::GetDefaultUnequippedDecks()
+TMap<FGameplayTag, FSavedCharacterDeck> UDeckSaveGame::GetDefaultUnequippedDecks()
 {
 	return DefaultUnequippedDecks;
 }

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "CardSelfViewData.generated.h"
 
@@ -19,8 +18,9 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 
 public:
+	// Id는 출시 이후 절대 변경되어선 안 됩니다!!
 	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
-	FGameplayTag CardTag;
+	uint64 CardId;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UTexture2D> CardTexture;

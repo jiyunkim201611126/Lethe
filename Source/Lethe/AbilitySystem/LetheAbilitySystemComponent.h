@@ -12,7 +12,7 @@ class UCardSelfViewData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
 
-DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent*, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
+DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /*this*/, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
@@ -28,10 +28,8 @@ public:
 
 	void AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards);
 
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData);
-
-protected:
-	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
+private:
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<struct FLoadedCardInfo>& LoadedCards, bool bEquipped);
 
 public:
 	FOnAbilityGivenSignature OnAbilityGivenDelegate;

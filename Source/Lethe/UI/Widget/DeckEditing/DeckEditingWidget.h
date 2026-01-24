@@ -5,9 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
-#include "Lethe/Data/CardDefinitionData.h"
-#include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/Data/CardSelfViewData.h"
 #include "DeckEditingWidget.generated.h"
 
 struct FSavedCharacterDeck;
@@ -42,9 +39,8 @@ public:
 
 private:
 	void StartLoadAllCards();
-	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks);
-	void OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas, const bool bEquipped);
-	void OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData, const bool bEquipped);
+	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, bool bEquipped);
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<struct FLoadedCardInfo>& LoadedCards, bool bEquipped);
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();

@@ -14,43 +14,12 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultGame.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultGame.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Magic/DA_TestAbility_Magic_Definition.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Magic/DA_TestAbility_Magic_Definition.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Magic/DA_TestAbility_Magic_SelfView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Magic/DA_TestAbility_Magic_SelfView.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Physical/DA_TestAbility_Physical_Definition.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Physical/DA_TestAbility_Physical_Definition.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Physical/DA_TestAbility_Physical_SelfView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Physical/DA_TestAbility_Physical_SelfView.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Util/DA_TestAbility_Util_Definition.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Util/DA_TestAbility_Util_Definition.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Util/DA_TestAbility_Util_SelfView.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/TestAbility_Util/DA_TestAbility_Util_SelfView.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter0.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter0.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_TestCharacter0_OwnerView.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_TestCharacter1_OwnerView.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/SaveGame/BP_DeckSaveGame.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardDefinitionData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardDefinitionData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardOwnerViewData.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CharacterDefinitionData.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardOwnerViewData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CharacterDefinitionData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/CardSelfViewData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/CardSelfViewData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/CardDataLoadManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/EngingSystem/LetheAssetManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/EngineSystem/LetheAssetManager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/EngingSystem/LetheAssetManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/EngineSystem/LetheAssetManager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/SaveGame/DeckSaveGame.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Card/CardWidget.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingCardListObject.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/DeckEditing/DeckEditingWidget.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/WidgetController/CardPanelWidgetController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,7 +34,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="cidr-memory-view://22" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://29" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Experimental/StateGraph/Source/StateGraphManager/Private/RegisterServerManager.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Experimental/UserToolBoxBasicCommand/Source/UserToolBoxBasicCommand/Private/FillStaticMeshActor.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -144,6 +113,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/Engine/HitResult.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/Engine/LocalPlayer.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/Engine/World.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/GameFramework/Character.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Classes/GameFramework/PlayerController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Engine/Private/AssetManager.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -222,6 +192,8 @@
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/CardViewData.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/CharacterDefinitionData.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/CharacterDefinitionData.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/DataAssetLoader.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/DataAssetLoader.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/LevelData.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Data/LevelData.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Game/LetheGameMode.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -453,7 +425,7 @@
       <workItem from="1768998477152" duration="15256000" />
       <workItem from="1769087293441" duration="10758000" />
       <workItem from="1769177570869" duration="10289000" />
-      <workItem from="1769250376887" duration="18318000" />
+      <workItem from="1769250376887" duration="24258000" />
     </task>
     <servers />
   </component>

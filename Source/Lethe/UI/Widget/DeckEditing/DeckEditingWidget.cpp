@@ -6,9 +6,9 @@
 #include "Components/Button.h"
 #include "Components/TileView.h"
 #include "Lethe/Data/CardDefinitionData.h"
+#include "Lethe/Data/CardSelfViewData.h"
 #include "Lethe/Data/CardViewData.h"
-#include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/Manager/DataLoadManagerSubsystem.h"
+#include "Lethe/Data/DataAssetLoader.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
 
@@ -58,86 +58,69 @@ void UDeckEditingWidget::StartLoadAllCards()
 	{
 		// 로드되어 있는 Deck들을 가져온 뒤, 필요한 카드 관련 에셋 로드를 시작합니다.
 		const TMap<FGameplayTag, FSavedCharacterDeck>& UnequippedDecks = DeckManagerSubsystem->GetUnequippedDecks();
-		StartLoadDecks(UnequippedDecks);
+		StartLoadDecks(UnequippedDecks, false);
 
 		const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
-		StartLoadDecks(EquippedDecks);
+		StartLoadDecks(EquippedDecks, true);
 	}
 }
 
-void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks)
+void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, const bool bEquipped)
 {
-	if (UDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>())
+	for (const auto& Deck : InDecks)
 	{
-		for (const auto& Deck : InDecks)
+		FGameplayTag CharacterTag = Deck.Key;
+
+		CharacterTags.AddUnique(CharacterTag);
+		CharacterEquippedDeckListObjects.FindOrAdd(CharacterTag);
+		CharacterUnequippedDeckListObjects.FindOrAdd(CharacterTag);
+
+		ShouldLoadCardCount += Deck.Value.Deck.Num();
+
+		if (UDataAssetLoader* Loader = UDataAssetLoader::CreateLoader(this))
 		{
-			FGameplayTag CharacterTag = Deck.Key;
-			
-			// Emplace를 사용하면 이미 존재하는 값을 덮어씌우므로 아래와 같은 함수들을 사용합니다.
-			CharacterTags.AddUnique(CharacterTag);
-			CharacterEquippedDeckListObjects.FindOrAdd(CharacterTag);
-			CharacterUnequippedDeckListObjects.FindOrAdd(CharacterTag);
-
-			TArray<FGameplayTag> CardTags;
-			for (const FSavedCard& SavedCard : Deck.Value.Deck)
-			{
-				CardTags.Emplace(SavedCard.CardTag);
-			}
-
-			ShouldLoadCardCount += Deck.Value.Deck.Num();
-
-			const FOnCardDefinitionsLoaded OnCardDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateWeakLambda(this, [this, CharacterTag](const TArray<UCardDefinitionData*>& CardDefinitionDatas)
-			{
-				OnCardDefinitionDataLoadFinished(CharacterTag, CardDefinitionDatas, false);
-			});
-			
-			CardDataLoadManagerSubsystem->LoadCardDefinitionData(CardTags, OnCardDefinitionsLoaded);
+			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &UDeckEditingWidget::OnAllCardsLoaded);
+			Loader->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);
 		}
 	}
 }
 
-void UDeckEditingWidget::OnCardDefinitionDataLoadFinished(const FGameplayTag& InCharacterTag, const TArray<UCardDefinitionData*>& CardDefinitionDatas, const bool bEquipped)
+void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<FLoadedCardInfo>& LoadedCards, const bool bEquipped)
 {
-	if (UDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>())
+	// 장착 상태에 따라 알맞은 위치에 추가될 수 있도록 TMap을 선택합니다.
+	TMap<FGameplayTag, FDeckListObjects>& TargetDeckListObjects = bEquipped ? CharacterEquippedDeckListObjects : CharacterUnequippedDeckListObjects;
+	FDeckListObjects* DeckListObjects = TargetDeckListObjects.Find(CharacterTag);
+
+	if (!DeckListObjects)
 	{
-		for (UCardDefinitionData* CardDefinitionData : CardDefinitionDatas)
-		{
-			const FOnCardViewLoaded OnLoadComplete = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDefinitionData, bEquipped](const UCardSelfViewData* SelfViewData, const UCharacterDefinitionData* CharacterDefinitionData)
-			{
-				OnCardViewDataLoadFinished(CardDefinitionData, SelfViewData, CharacterDefinitionData, bEquipped);
-			});
-			
-			CardDataLoadManagerSubsystem->LoadCardViewData(CardDefinitionData->CardTag, InCharacterTag, OnLoadComplete);
-		}
+		return;
 	}
-}
-
-void UDeckEditingWidget::OnCardViewDataLoadFinished(const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData, const bool bEquipped)
-{
-	// 로드가 완료되면 카드 위젯을 생성하는 데에 필요한 Object를 생성해 캐싱해둡니다.
-	if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>())
+	
+	for (const FLoadedCardInfo& CardInfo : LoadedCards)
 	{
-		// 나중에 저장할 때 편리하도록 구조체로 만들어서 들고 있도록 합니다.
-		FSavedCard CardInfo;
-		CardInfo.CardId = CardDefinitionData->CardId;
-		CardInfo.CardTag = CardDefinitionData->CardTag;
-		CardInfo.CardLevel = 1;
-		CardListObject->CardInfo = CardInfo;
-		CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardDefinitionData->CardTypeTag);
-		CardListObject->CardTexture = CardSelfViewData->CardTexture;
-
-		TMap<FGameplayTag, FDeckListObjects>& SelectedDecks = bEquipped ? CharacterEquippedDeckListObjects : CharacterUnequippedDeckListObjects;
-		if (FDeckListObjects* DeckListObjects = SelectedDecks.Find(CharacterDefinitionData->CharacterTag))
+		// TileView에 추가할 UObject 객체를 생성합니다.
+		if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
 		{
+			// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
+			FSavedCard SavedCard;
+			SavedCard.CardId = CardInfo.CardDefinition->CardId;
+			SavedCard.CardTag = CardInfo.CardDefinition->CardTag;
+			SavedCard.CardLevel = 1;
+			
+			CardListObject->CardInfo = SavedCard;
+			CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
+			CardListObject->CardTexture = CardInfo.SelfViewData->CardTexture;
+
+			// 일단 캐싱해둔 후 유저의 조작에 맞춰 TileView에 추가/제거하면서 업데이트합니다.
 			DeckListObjects->CardListObjects.Emplace(CardListObject);
 
-			// 모든 Unequipped 카드 로드가 끝나면 첫 캐릭터의 첫 페이지를 표시하는 로직을 수행합니다.
 			LoadedCardCount++;
-			if (LoadedCardCount == ShouldLoadCardCount)
-			{
-				UpdateCardPage(0, 0);
-			}
 		}
+	}
+
+	if (LoadedCardCount >= ShouldLoadCardCount)
+	{
+		UpdateCardPage(0, 0);
 	}
 }
 

@@ -159,8 +159,8 @@ void UDataLoadManagerSubsystem::OnCardViewDataLoaded(const FPrimaryAssetId& Self
 {
 	const UAssetManager& AssetManager = UAssetManager::Get();
 	
-	const UCardSelfViewData* SelfViewData = Cast<UCardSelfViewData>(AssetManager.GetPrimaryAssetObject(SelfViewId));
-	const UCharacterDefinitionData* CharacterDefinitionData = Cast<UCharacterDefinitionData>(AssetManager.GetPrimaryAssetObject(CharacterDefinitionId));
+	UCardSelfViewData* SelfViewData = Cast<UCardSelfViewData>(AssetManager.GetPrimaryAssetObject(SelfViewId));
+	UCharacterDefinitionData* CharacterDefinitionData = Cast<UCharacterDefinitionData>(AssetManager.GetPrimaryAssetObject(CharacterDefinitionId));
 	
 	OnComplete.ExecuteIfBound(SelfViewData, CharacterDefinitionData);
 }

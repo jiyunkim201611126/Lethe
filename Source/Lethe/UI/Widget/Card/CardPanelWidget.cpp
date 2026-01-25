@@ -8,7 +8,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/Data/CardViewData.h"
+#include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Player/LethePlayerController.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 

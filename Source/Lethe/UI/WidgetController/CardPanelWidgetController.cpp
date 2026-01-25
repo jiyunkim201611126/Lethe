@@ -3,7 +3,7 @@
 #include "CardPanelWidgetController.h"
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/Data/CardViewData.h"
+#include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/LetheGameState.h"
 
 void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)

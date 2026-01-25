@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/TimelineComponent.h"
-#include "Lethe/Data/CardViewData.h"
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
 struct FCardInitParams;
 class USizeBox;
-struct FCardSelfViewInfo;
 class ULetheImage;
 class ULetheAbilitySystemComponent;
 

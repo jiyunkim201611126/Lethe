@@ -3,9 +3,9 @@
 #include "DataLoadManagerSubsystem.h"
 #include "string"
 #include "Engine/AssetManager.h"
-#include "Lethe/Data/CardDefinitionData.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
+#include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/Data/CardSelfViewData.h"
 #include "Lethe/SaveGame/DeckSaveGame.h"
 
 void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)

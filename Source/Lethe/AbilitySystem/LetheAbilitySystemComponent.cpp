@@ -3,8 +3,8 @@
 #include "LetheAbilitySystemComponent.h"
 
 #include "Abilities/LetheGameplayAbility.h"
-#include "Lethe/Data/CardDefinitionData.h"
-#include "Lethe/Data/DataAssetLoader.h"
+#include "Lethe/Data/CardPrimaryDataAssetLoader.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/SaveGame/DeckSaveGame.h"
 
@@ -32,7 +32,7 @@ void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<FSavedCard
 	
 	if (PlayerCharacter)
 	{
-		if (UDataAssetLoader* Loader = UDataAssetLoader::CreateLoader(this))
+		if (UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this))
 		{
 			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &ULetheAbilitySystemComponent::OnAllCardsLoaded);
 			Loader->LoadCardData(PlayerCharacter->GetCharacterTag(), InSavedCards, true, OnLoadedCallback);

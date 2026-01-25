@@ -4,12 +4,12 @@
 
 #include "Animation/WidgetAnimation.h"
 #include "Components/SizeBox.h"
-#include "Lethe/Data/CardViewData.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/Data/CardDefinitionData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/Data/CardSelfViewData.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
+#include "Lethe/Data/Card/CardSelfViewData.h"
+#include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/UI/Core/LetheImage.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 

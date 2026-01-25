@@ -5,10 +5,10 @@
 #include "DeckEditingCardListObject.h"
 #include "Components/Button.h"
 #include "Components/TileView.h"
-#include "Lethe/Data/CardDefinitionData.h"
-#include "Lethe/Data/CardSelfViewData.h"
-#include "Lethe/Data/CardViewData.h"
-#include "Lethe/Data/DataAssetLoader.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
+#include "Lethe/Data/Card/CardSelfViewData.h"
+#include "Lethe/Data/Card/CardViewData.h"
+#include "Lethe/Data/CardPrimaryDataAssetLoader.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
 
@@ -77,7 +77,7 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 
 		ShouldLoadCardCount += Deck.Value.Deck.Num();
 
-		if (UDataAssetLoader* Loader = UDataAssetLoader::CreateLoader(this))
+		if (UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this))
 		{
 			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &UDeckEditingWidget::OnAllCardsLoaded);
 			Loader->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);

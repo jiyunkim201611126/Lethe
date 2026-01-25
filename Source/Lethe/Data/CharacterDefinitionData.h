@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 #include "CharacterDefinitionData.generated.h"
 
+class APlayerCharacterBase;
 /**
  * 캐릭터의 정의와 관련된 데이터 묶음입니다.
  */
@@ -25,6 +26,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
 	FGameplayTag CharacterTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacterBase> CharacterClass;
 	
 	UPROPERTY(EditDefaultsOnly)
 	FColor CardBacksideColor;

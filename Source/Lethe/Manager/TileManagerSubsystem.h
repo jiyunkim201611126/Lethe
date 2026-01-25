@@ -32,6 +32,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MakeNewTileMap();
 
+	ATile* GetTileActor(const FCubeCoord& InCubeCoord);
+
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
 	TSet<FCubeCoord> TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
 
@@ -50,24 +52,13 @@ private:
 	//크기 만큼의 좌표 영역을 반환
 	void GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, int32 Width, int32 Height) const;
 	//Cube좌표를 World좌표로 전환
-	void CubeCoordToWorldCoord(const FCubeCoord& Coord, FVector& OutVector) const;
+	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord) const;
 	//배열 랜덤 셔플
 	void ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const;
 	
 private:
 	UPROPERTY(Config)
 	TSoftObjectPtr<UDataTable> StageDataTable;
-	
-	//각 방향으로의 오프셋값, ETileDirection과 조합해서 사용
-	FCubeCoord DirectionOffsets[6] =
-	{
-		FCubeCoord(+0, -1), // LeftTop
-		FCubeCoord(-1, +0), // Left
-		FCubeCoord(-1, +1), // LeftBottom
-		FCubeCoord(+0, +1), // RightBottom
-		FCubeCoord(+1, +0), // Right
-		FCubeCoord(+1, -1), // RightTop
-	};
 
 	//타일과 타일 사이의 간격
 	static constexpr float TileWidthInterval = 173.205f;
@@ -128,7 +119,7 @@ TSet<FCubeCoord> UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, co
 		
 		for (int32 Dir = 0; Dir < 6; ++Dir)
 		{
-			const FCubeCoord NextCoord = CurrentCoord + DirectionOffsets[Dir];
+			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Dir);
 			
 			if (Visited.Contains(NextCoord))
 			{
@@ -156,6 +147,7 @@ TSet<FCubeCoord> UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, co
 				break;
 			}
 
+			// TODO: 탐색하지 않는다는 조건에 있어 필요한 매개변수들 여기서 넣어줘야 할 듯? 현재는 단순 true, false로만 해당 타일에서 더 BFS할지 말지 결정하는 중
 			if (!BFSCondition())
 			{
 				continue;

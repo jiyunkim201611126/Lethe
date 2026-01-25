@@ -90,7 +90,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 	if (CurrentDraggingCard.IsValid())
 	{
 		// 드래그 중인 카드가 있을 때만 들어오는 분기입니다.
-		if (const ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 		{
 			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentDraggingCard.Get());
 			if (bUseCardSuccess)
@@ -104,7 +104,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 		}
 	}
 	
-	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	return FReply::Handled();
 }
 
 void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
@@ -317,6 +317,11 @@ void UCardPanelWidget::StartDrag(UCardWidget* InCardWidget)
 		if (UCanvasPanelSlot* DraggingCardSlot = Cast<UCanvasPanelSlot>(CurrentDraggingCard->Slot))
 		{
 			DraggingCardSlot->SetZOrder(DraggingZOrder);
+		}
+		
+		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+		{
+			PlayerController->SetReadyToUseCard(true);
 		}
 	}
 }

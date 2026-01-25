@@ -39,6 +39,21 @@ public:
 	{
 		return Q == Other.Q && R == Other.R && S == Other.S;
 	}
+	
+	//각 방향으로의 오프셋값, ETileDirection과 조합해서 사용
+	static FCubeCoord GetDirection(const int32 DirectionIndex)
+	{
+		static constexpr FCubeCoord DirectionOffsets[6] =
+		{
+			FCubeCoord(+0, -1), // LeftTop
+			FCubeCoord(-1, +0), // Left
+			FCubeCoord(-1, +1), // LeftBottom
+			FCubeCoord(+0, +1), // RightBottom
+			FCubeCoord(+1, +0), // Right
+			FCubeCoord(+1, -1), // RightTop
+		};
+		return DirectionOffsets[DirectionIndex % 6];
+	}
 };
 
 FORCEINLINE uint32 GetTypeHash(const FCubeCoord& Coord)

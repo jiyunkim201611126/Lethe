@@ -98,9 +98,12 @@ protected:
 
 private:
 	// 덱들을 순서대로 순회할 CharacterTags입니다.
+	// TODO: 현재는 SaveGame을 통해 불러온 값을 기반으로 작동하지만, 나중엔 GameInstance에 캐싱한 '전투 참여 캐릭터'를 받아와 사용할 예정입니다.
 	TArray<FGameplayTag> CharacterTags;
 	int32 CurrentCharacterIndex = 0;
 	int32 CurrentPageIndex = 0;
+
+	// TODO: 해상도에 따라 달라지는 로직이 필요합니다.
 	int32 MaxCardCountInOnePage = 14;
 
 	// 카드 로드 콜백에서 페이지를 표시하기 위해 사용하는 변수들입니다.

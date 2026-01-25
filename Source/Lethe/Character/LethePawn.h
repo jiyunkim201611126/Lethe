@@ -6,6 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "LethePawn.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
+class UInputMappingContext;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -21,6 +24,15 @@ public:
 	ALethePawn();
 
 protected:
+	//~ Begin APawn Interface
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	//~ End of APawn Interface
+
+private:
+	void Move(const FInputActionValue& InputActionValue);
+
+protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	TObjectPtr<USceneComponent> RootSceneComponent;
 
@@ -29,4 +41,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	TObjectPtr<UCameraComponent> CameraComponent;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> InputContext;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	float MoveSpeed = 10.f;
 };

@@ -36,6 +36,16 @@ void UTileManagerSubsystem::MakeNewTileMap()
 	MakeTileActor(StageData, StageInitData);
 }
 
+ATile* UTileManagerSubsystem::GetTileActor(const FCubeCoord& InCubeCoord)
+{
+	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
+	{
+		return TileData->TileActor;
+	}
+
+	return nullptr;
+}
+
 const FStageData* UTileManagerSubsystem::GetStageData(const FName& StageName) const
 {
 	return StageDataTable.LoadSynchronous()->FindRow<FStageData>(StageName, TEXT(""));
@@ -156,7 +166,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 			for (int32 Dir = 0; Dir < 6; ++Dir)
 			{
 				FTileData* CurrentTileData = TileDataMap.Find(BoundCoord);
-				FTileData* NextTileData = TileDataMap.Find(BoundCoord + DirectionOffsets[Dir]);
+				FTileData* NextTileData = TileDataMap.Find(BoundCoord + FCubeCoord::GetDirection(Dir));
 
 				if (NextTileData == nullptr)
 				{
@@ -183,8 +193,7 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 {
 	for (auto& Pair : TileDataMap)
 	{
-		FVector WorldPosition;
-		CubeCoordToWorldCoord(Pair.Key, WorldPosition);
+		FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
 		//WorldPosition.Z = pair.Value.Floor * 40;
 		
 		for (int32 Floor = 1; Floor <= Pair.Value.Floor; Floor++)
@@ -207,8 +216,10 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 
 			int32 Index = 0;
 			//테두리 타일의 메쉬 결정을 위한 루프
-			for (auto& Offset : DirectionOffsets)
-			{				
+			for (int32 Dir = 0; Dir < 6; ++Dir)
+			{
+				FCubeCoord Offset = FCubeCoord::GetDirection(Dir);
+				
 				Key = ETileMeshType::Side_Under3; //기본 선택은 막힌 메쉬로, 조건에 부합할 경우 해당 메쉬로 변경
 
 				if (TileDataMap.Contains(Pair.Key + Offset) && TileDataMap[Pair.Key].bConnections[Index])
@@ -239,7 +250,7 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 				++Index;
 			}
 			
-			TileActor->Init(TileMeshes, Pair.Key.Q, Pair.Key.R, Pair.Key.S, Pair.Value.RoomID, Floor == Pair.Value.Floor);
+			TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomID, Floor == Pair.Value.Floor);
 
 			if (Floor == Pair.Value.Floor)
 			{
@@ -252,7 +263,7 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 	}
 }
 
-void UTileManagerSubsystem::GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, int32 Width, int32 Height) const
+void UTileManagerSubsystem::GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, const int32 Width, const int32 Height) const
 {
 	OutCoordList.Reserve(Width * Height);
     
@@ -271,13 +282,13 @@ void UTileManagerSubsystem::GetCoordFromRange(const FCubeCoord& CenterCoord, TAr
 	}
 }
 
-void UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord, FVector& OutVector) const
+FVector UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord) const
 {
 	//언리얼 월드 좌표에서 X축은 위로, Y축은 오른쪽으로 향함.
 	const float WorldX = TileHeightInterval * (-Coord.R);
 	const float WorldY = TileWidthInterval * (Coord.Q + Coord.R * 0.5f);
 
-	OutVector = FVector(WorldX, WorldY, 0.f);
+	return FVector(WorldX, WorldY, 0.f);
 }
 
 void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const

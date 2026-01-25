@@ -8,4 +8,6 @@
 #define MAX_HAND_COUNT 8
 #define MAX_DECK_COUNT 10
 
+#define CUSTOM_DEPTH_RED 250
+
 #define ECC_Tile ECollisionChannel::ECC_GameTraceChannel1

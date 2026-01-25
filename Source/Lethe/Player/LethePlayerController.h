@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
+class IHighlightInterface;
 class UCardWidget;
 struct FGameplayTag;
 
@@ -17,10 +18,18 @@ class LETHE_API ALethePlayerController : public APlayerController
 	ALethePlayerController();
 
 public:
-	bool RequestUseCard(const UCardWidget* InCardWidget) const;
+	void SetReadyToUseCard(const bool bReady);
+	bool RequestUseCard(const UCardWidget* InCardWidget);
 
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
+	virtual void PlayerTick(float DeltaTime) override;
 	//~ End of AActor Interface
+
+private:
+	uint8 bReadyToUseCard : 1 = false;
+	
+	TScriptInterface<IHighlightInterface> LastActor;
+	TScriptInterface<IHighlightInterface> ThisActor;
 };

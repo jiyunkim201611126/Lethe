@@ -2,6 +2,8 @@
 
 #include "LethePawn.h"
 
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -24,5 +26,32 @@ ALethePawn::ALethePawn()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+}
+
+void ALethePawn::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(Cast<APlayerController>(GetController())->GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(InputContext, 0);
+	}
+}
+
+void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+}
+
+void ALethePawn::Move(const FInputActionValue& InputActionValue)
+{
+	FVector InputValue = InputActionValue.Get<FVector>();
+	InputValue.Normalize();
+
+	AddActorLocalOffset(InputValue * MoveSpeed);
 }
 

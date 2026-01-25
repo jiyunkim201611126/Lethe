@@ -185,7 +185,7 @@ FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 {
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonDown));
 	
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	return FReply::Handled();
 }
 
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)

@@ -111,13 +111,13 @@ void UDataLoadManagerSubsystem::LoadCardDefinitionData(const TArray<FGameplayTag
 	}
 }
 
-void UDataLoadManagerSubsystem::OnCardDefinitionDataLoaded(const TArray<FPrimaryAssetId>& AssetsToLoad, const FOnCardDefinitionsLoaded& OnComplete) const
+void UDataLoadManagerSubsystem::OnCardDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCardDefinitionsLoaded& OnComplete) const
 {
 	const UAssetManager& AssetManager = UAssetManager::Get();
 			
 	TArray<UCardDefinitionData*> LoadedAssets;
 
-	for (const FPrimaryAssetId& Id : AssetsToLoad)
+	for (const FPrimaryAssetId& Id : LoadedAssetsId)
 	{
 		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
 		if (UCardDefinitionData* LoadedAsset = Cast<UCardDefinitionData>(AssetManager.GetPrimaryAssetObject(Id)))
@@ -153,6 +153,53 @@ void UDataLoadManagerSubsystem::LoadCardViewData(const FGameplayTag& InCardTag, 
 	{
 		UE_LOG(LogTemp, Error, TEXT("CardTag: %s, 혹은 CharacterTag: %s에 해당하는 CardViewData DataAsset이 없습니다."), *InCardTag.GetTagName().ToString(), *InCharacterTag.GetTagName().ToString());
 	}
+}
+
+void UDataLoadManagerSubsystem::LoadCharacterDefinitionData(const TArray<FGameplayTag>& InCharacterTags, FOnCharacterDefinitionsLoaded OnComplete)
+{
+	UAssetManager& AssetManager = UAssetManager::Get();
+
+	TArray<FPrimaryAssetId> AssetsToLoad;
+
+	for (const FGameplayTag& CharacterTag : InCharacterTags)
+	{
+		if (CharacterDefinitionDataAssetIds.Contains(CharacterTag))
+		{
+			AssetsToLoad.Emplace(CharacterDefinitionDataAssetIds[CharacterTag]);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("CharacterTag: %s에 해당하는 CharacterDefinition DataAsset이 없습니다."), *CharacterTag.GetTagName().ToString());
+		}
+	}
+	
+	if (!AssetsToLoad.IsEmpty())
+	{
+		// 로드할 객체가 있다면 로드를 시작합니다.
+		AssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, AssetsToLoad, OnComplete]()
+		{
+			OnCharacterDefinitionDataLoaded(AssetsToLoad, OnComplete);
+		}));
+	}
+}
+
+void UDataLoadManagerSubsystem::OnCharacterDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCharacterDefinitionsLoaded& OnComplete) const
+{
+	const UAssetManager& AssetManager = UAssetManager::Get();
+			
+	TArray<UCharacterDefinitionData*> LoadedAssets;
+
+	for (const FPrimaryAssetId& Id : LoadedAssetsId)
+	{
+		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
+		if (UCharacterDefinitionData* LoadedAsset = Cast<UCharacterDefinitionData>(AssetManager.GetPrimaryAssetObject(Id)))
+		{
+			LoadedAssets.Emplace(LoadedAsset);
+		}
+	}
+
+	// 로드된 객체를 콜백으로 반환합니다.
+	OnComplete.ExecuteIfBound(LoadedAssets);
 }
 
 void UDataLoadManagerSubsystem::OnCardViewDataLoaded(const FPrimaryAssetId& SelfViewId, const FPrimaryAssetId& CharacterDefinitionId, const FOnCardViewLoaded& OnComplete) const

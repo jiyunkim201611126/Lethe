@@ -11,16 +11,18 @@ class UGameplayEffect;
 class UGameplayAbility;
 
 /**
- * Effect 적용을 담당하는 클래스입니다.
- * 파생된 자식 클래스는 필요한 GameplayEffect 클래스와 함께 그에 관련된 멤버 변수가 선언 및 할당됩니다.
+ * Effect 적용을 담당하는 구조체입니다.
+ * 파생된 자식 구조체는 필요한 GameplayEffect 클래스와 함께 그에 관련된 멤버 변수가 선언 및 할당됩니다.
  */
-UCLASS(NotBlueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
-class LETHE_API UGameplayEffectApplier : public UObject
+USTRUCT(BlueprintType)
+struct LETHE_API FGameplayEffectApplier
 {
 	GENERATED_BODY()
 
 public:
-	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(UGameplayEffectApplier::ApplyEffect, );
+	virtual ~FGameplayEffectApplier() = default;
+
+	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor);
 	virtual void CancelAbility();
 	virtual void EndAbility();
 	

@@ -4,11 +4,15 @@
 
 void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	for (auto& InstancedApplier : EffectAppliers)
 	{
-		if (EffectApplier && TargetActor)
+		if (InstancedApplier.IsValid())
 		{
-			EffectApplier->ApplyEffect(this, TargetActor);
+			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
+			if (TargetActor)
+			{
+				EffectApplier.ApplyEffect(this, TargetActor);
+			}
 		}
 	}
 }
@@ -16,31 +20,51 @@ void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel) const
 {
 	TArray<FText> ResultTexts;
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	for (const auto& InstancedApplier : EffectAppliers)
 	{
-		ResultTexts.Emplace(EffectApplier->GetDescriptionText(InLevel));
+		if (InstancedApplier.IsValid())
+		{
+			const FGameplayEffectApplier& EffectApplier = InstancedApplier.Get();
+			ResultTexts.Emplace(EffectApplier.GetDescriptionText(InLevel));
+		}
 	}
 
 	return FText::Join(FText::FromString(TEXT(" ")), ResultTexts);
 }
 
-FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const
+FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const int32 ApplierIndex) const
 {
-	for (const auto EffectApplier : EffectAppliers)
+	if (EffectAppliers.IsValidIndex(ApplierIndex))
 	{
-		if (EffectApplier && EffectApplier->GetClass() == ApplierClass)
+		const auto& InstancedApplier = EffectAppliers[ApplierIndex];
+		if (InstancedApplier.IsValid())
 		{
-			return EffectApplier->GetEffectContextHandle();
+			const FGameplayEffectApplier& EffectApplier = InstancedApplier.Get();
+			return EffectApplier.GetEffectContextHandle();
 		}
 	}
 	return FGameplayEffectContextHandle();
 }
 
+void ULetheGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (TriggerEventData && TriggerEventData->Target)
+	{
+		ApplyAllEffects(const_cast<AActor*>(TriggerEventData->Target.Get()));
+	}
+}
+
 void ULetheGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
-	for (const auto EffectApplier : EffectAppliers)
+	for (auto& InstancedApplier : EffectAppliers)
 	{
-		EffectApplier->CancelAbility();
+		if (InstancedApplier.IsValid())
+		{
+			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
+			EffectApplier.CancelAbility();
+		}
 	}
 	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
@@ -48,9 +72,13 @@ void ULetheGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handl
 
 void ULetheGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	for (const auto EffectApplier : EffectAppliers)
+	for (auto& InstancedApplier : EffectAppliers)
 	{
-		EffectApplier->EndAbility();
+		if (InstancedApplier.IsValid())
+		{
+			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
+			EffectApplier.EndAbility();
+		}
 	}
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);

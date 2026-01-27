@@ -23,6 +23,11 @@ public:
 	virtual void UnHighlightActor() override;
 	//~ End of IHighlightInterface
 
+	void SetActorOnTile(AActor* InActor);
+	
+	template<typename T>
+	T* GetActorOnTile() const;
+
 private:
 	void SetTileMesh(const TArray<UStaticMesh*>& Meshes) const;
 	
@@ -32,4 +37,17 @@ protected:
 
 private:
 	FCubeCoord CubeCoord;
+
+	TWeakObjectPtr<AActor> ActorOnTile;
 };
+
+template <typename T>
+T* ATile::GetActorOnTile() const
+{
+	if (ActorOnTile.IsValid())
+	{
+		return Cast<T>(ActorOnTile.Get());
+	}
+	
+	return nullptr;
+}

@@ -44,6 +44,11 @@ void ATile::UnHighlightActor()
 	}
 }
 
+void ATile::SetActorOnTile(AActor* InActor)
+{
+	ActorOnTile = InActor;
+}
+
 void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes) const
 {
 	TArray<UStaticMeshComponent*> Components;

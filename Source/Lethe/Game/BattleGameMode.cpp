@@ -74,7 +74,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			}
 		}
 
-		// 캐릭터 순서대로 가장 왼쪽 타일, 우상단, 우측, 우하단에 스폰시킵니다.
+		// 캐릭터 순서대로 가장 왼쪽 타일, 우상단, 우측, 우하단에 스폰합니다.
 		for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
 		{
 			const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];
@@ -83,9 +83,17 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
-			const ATile* TileActor = TileManagerSubsystem->GetTileActor(TargetCoord);
+			ATile* TileActor = TileManagerSubsystem->GetTileActor(TargetCoord);
 
-			GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, TileActor->GetActorLocation(), TileActor->GetActorRotation(), SpawnParameters);
+			APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, TileActor->GetActorLocation(), TileActor->GetActorRotation(), SpawnParameters);
+			TileActor->SetActorOnTile(SpawnedCharacter);
 		}
+
+		// 테스트용으로 중앙에 적을 하나 스폰합니다.
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ATile* TileActor = TileManagerSubsystem->GetTileActor(FCubeCoord(0, 0, 0));
+		ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemy, TileActor->GetActorLocation(), TileActor->GetActorRotation(), SpawnParameters);
+		TileActor->SetActorOnTile(SpawnedEnemy);
 	}
 }

@@ -6,6 +6,7 @@
 #include "LetheGameMode.h"
 #include "BattleGameMode.generated.h"
 
+class ALetheCharacterBase;
 class UCharacterDefinitionData;
 
 UCLASS()
@@ -18,4 +19,8 @@ public:
 
 private:
 	void OnCharacterDefinitionDataLoaded(const TArray<UCharacterDefinitionData*>& CharacterDefinitionDatas) const;
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ALetheCharacterBase> TestEnemy;
 };

@@ -7,8 +7,8 @@
 #include "ScalableFloat.h"
 #include "EffectApplier_Damage.generated.h"
 
-UCLASS()
-class LETHE_API UEffectApplier_Damage : public UGameplayEffectApplier
+USTRUCT(BlueprintType)
+struct LETHE_API FEffectApplier_Damage : public FGameplayEffectApplier
 {
 	GENERATED_BODY()
 
@@ -20,7 +20,6 @@ public:
 
 	virtual FText GetDescriptionText(const int32 InLevel) const override;
 
-	UFUNCTION(BlueprintPure, Category = "Text")
 	FText GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const;
 
 private:

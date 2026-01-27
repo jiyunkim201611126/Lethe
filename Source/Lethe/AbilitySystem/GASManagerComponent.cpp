@@ -7,6 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
+#include "Lethe/Player/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
@@ -43,9 +44,12 @@ void UGASManagerComponent::InitAbilityActorInfo()
 		// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
 		{
-			if (ALetheHUD* LetheHUD = PlayerController->GetHUD<ALetheHUD>())
+			if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 			{
-				LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
+				if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+				{
+					LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
+				}
 			}
 		}
 	}

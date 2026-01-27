@@ -9,7 +9,7 @@
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 #include "Lethe/UI/WidgetController/OverlayWidgetController.h"
 
-void ALetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	check(OverlayWidgetClass);
 	check(OverlayWidgetControllerClass);
@@ -38,7 +38,7 @@ void ALetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemC
 	}
 }
 
-UOverlayWidgetController* ALetheHUD::CreateOverlayWidgetController()
+UOverlayWidgetController* ULetheHUD::CreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
@@ -47,7 +47,7 @@ UOverlayWidgetController* ALetheHUD::CreateOverlayWidgetController()
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ALetheHUD::CreateCardWidgetController()
+UCardPanelWidgetController* ULetheHUD::CreateCardWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{
@@ -56,12 +56,12 @@ UCardPanelWidgetController* ALetheHUD::CreateCardWidgetController()
 	return CardPanelWidgetController;
 }
 
-UOverlayWidgetController* ALetheHUD::GetOverlayWidgetController() const
+UOverlayWidgetController* ULetheHUD::GetOverlayWidgetController() const
 {
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ALetheHUD::GetCardPanelWidgetController() const
+UCardPanelWidgetController* ULetheHUD::GetCardPanelWidgetController() const
 {
 	return CardPanelWidgetController;
 }

@@ -3,15 +3,19 @@
 #include "LetheAbilitySystemLibrary.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Lethe/Player/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UOverlayWidgetController* ULetheAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
-	if (const APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
 	{
-		if (const ALetheHUD* LetheHUD = PlayerController->GetHUD<ALetheHUD>())
+		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			return LetheHUD->GetOverlayWidgetController();
+			if (const ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			{
+				return LetheHUD->GetOverlayWidgetController();
+			}
 		}
 	}
 	return nullptr;
@@ -19,11 +23,14 @@ UOverlayWidgetController* ULetheAbilitySystemLibrary::GetOverlayWidgetController
 
 UCardPanelWidgetController* ULetheAbilitySystemLibrary::GetCardPanelWidgetController(const UObject* WorldContextObject)
 {
-	if (const APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
 	{
-		if (const ALetheHUD* LetheHUD = PlayerController->GetHUD<ALetheHUD>())
+		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			return LetheHUD->GetCardPanelWidgetController();
+			if (const ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			{
+				return LetheHUD->GetCardPanelWidgetController();
+			}
 		}
 	}
 	return nullptr;

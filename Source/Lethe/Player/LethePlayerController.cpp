@@ -85,3 +85,8 @@ bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget)
 	
 	return false;
 }
+
+ULetheHUD* ALethePlayerController::GetLetheHUD() const
+{
+	return LetheHUD;
+}

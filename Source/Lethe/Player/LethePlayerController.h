@@ -6,20 +6,23 @@
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
+struct FGameplayTag;
+class ULetheHUD;
 class IHighlightInterface;
 class UCardWidget;
-struct FGameplayTag;
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-	ALethePlayerController();
-
 public:
+	ALethePlayerController();
+	
 	void SetReadyToUseCard(const bool bReady);
 	bool RequestUseCard(const UCardWidget* InCardWidget);
+
+	ULetheHUD* GetLetheHUD() const;
 
 protected:
 	//~ Begin AActor Interface
@@ -27,6 +30,10 @@ protected:
 	virtual void PlayerTick(float DeltaTime) override;
 	//~ End of AActor Interface
 
+protected:
+	UPROPERTY(EditDefaultsOnly, Instanced)
+	TObjectPtr<ULetheHUD> LetheHUD;
+	
 private:
 	uint8 bReadyToUseCard : 1 = false;
 	

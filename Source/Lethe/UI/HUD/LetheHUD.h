@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+#include "UObject/Object.h"
 #include "LetheHUD.generated.h"
 
-class UCardViewData;
 struct FWidgetControllerParams;
+class UCardViewData;
 class UAttributeSet;
 class UAbilitySystemComponent;
 class UOverlayWidget;
@@ -15,8 +15,8 @@ class UCardPanelWidget;
 class UOverlayWidgetController;
 class UCardPanelWidgetController;
 
-UCLASS()
-class LETHE_API ALetheHUD : public AHUD
+UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
+class LETHE_API ULetheHUD : public UObject
 {
 	GENERATED_BODY()
 

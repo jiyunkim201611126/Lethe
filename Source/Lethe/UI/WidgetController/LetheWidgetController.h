@@ -85,6 +85,7 @@ protected:
 	TObjectPtr<APlayerState> PlayerState;
 
 	// 해당 배열의 Element는 Character의 BeginPlay가 호출된 순서대로 추가됩니다.
+	// 캐릭터 생성 시점에만 배열을 수정하고, 그 뒤로는 절대로 배열의 길이를 바꿔선 안 됩니다.
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TArray<FAbilitySystemReference> AbilitySystemReferences;
 };

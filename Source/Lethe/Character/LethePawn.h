@@ -31,6 +31,7 @@ protected:
 
 private:
 	void Move(const FInputActionValue& InputActionValue);
+	void NumberKeyPressed(const FInputActionValue& InputActionValue);
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -47,6 +48,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> NumberAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	float MoveSpeed = 10.f;

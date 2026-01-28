@@ -11,6 +11,8 @@ class ULetheHUD;
 class IHighlightInterface;
 class UCardWidget;
 
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
+
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
 {
@@ -18,6 +20,8 @@ class LETHE_API ALethePlayerController : public APlayerController
 
 public:
 	ALethePlayerController();
+
+	void OnNumberPressed(const int32 InNumber) const;
 	
 	void SetReadyToUseCard(const bool bReady);
 	bool RequestUseCard(const UCardWidget* InCardWidget);
@@ -30,6 +34,9 @@ protected:
 	virtual void PlayerTick(float DeltaTime) override;
 	//~ End of AActor Interface
 
+public:
+	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)
 	TObjectPtr<ULetheHUD> LetheHUD;

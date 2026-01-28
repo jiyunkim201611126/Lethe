@@ -15,6 +15,11 @@ ALethePlayerController::ALethePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
+void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
+{
+	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
+}
+
 void ALethePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -108,10 +113,8 @@ bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget)
 				Payload.Instigator = OwnerASC->GetAvatarActor();
 				Payload.Target = TargetActor;
 
-				OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpec[0]->Handle, OwnerASC->AbilityActorInfo.Get(), InCardWidget->GetCardTag(), &Payload, *OwnerASC);
-
-				// 카드 사용에 성공했다고 간주합니다.
-				return true;
+				// 카드 사용 성공 시 true를 반환합니다.
+				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpec[0]->Handle, OwnerASC->AbilityActorInfo.Get(), InCardWidget->GetCardTag(), &Payload, *OwnerASC);
 			}
 		}
 	}

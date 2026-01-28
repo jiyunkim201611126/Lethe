@@ -267,7 +267,7 @@ ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouse
 		case ECardMouseEvent::MouseButtonDown:
 			{
 				// 핸드 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
-				CardAction = ECardAction::Drag;
+				CardAction = ECardAction::ReadyToUse;
 			}
 			break;
 		case ECardMouseEvent::MouseButtonUp:

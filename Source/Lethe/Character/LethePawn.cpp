@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Lethe/Player/LethePlayerController.h"
 
 ALethePawn::ALethePawn()
 {
@@ -45,6 +46,7 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+	EnhancedInputComponent->BindAction(NumberAction, ETriggerEvent::Triggered, this, &ThisClass::NumberKeyPressed);
 }
 
 void ALethePawn::Move(const FInputActionValue& InputActionValue)
@@ -53,5 +55,17 @@ void ALethePawn::Move(const FInputActionValue& InputActionValue)
 	InputValue.Normalize();
 
 	AddActorLocalOffset(InputValue * MoveSpeed);
+}
+
+void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
+{
+	// Input 설정에서 값을 0으로 주면 입력 자체가 발생하지 않는 현상이 있어, 설정에서 최소값으로 1을 준 뒤 여기서 1을 빼고 사용합니다.
+	const float RawValue = InputActionValue.Get<float>() - 1;
+	const int32 InputIndex = FMath::RoundToInt(RawValue);
+
+	if (const ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
+	{
+		PlayerController->OnNumberPressed(InputIndex);
+	}
 }
 

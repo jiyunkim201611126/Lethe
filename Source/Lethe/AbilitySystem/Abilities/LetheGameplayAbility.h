@@ -19,7 +19,7 @@ class LETHE_API ULetheGameplayAbility : public UGameplayAbility
 public:
 	/**
 	 * Card가 소유하고 있는 EffectApplier를 모두 순회하며 TargetActor에게 Effect를 부여하는 함수입니다.
-	 * 갖고 있는 Effect를 각각 다른 타이밍에 부여하고 싶다면 자식 클래스로 캐스팅해 ApplyEffect를 직접 호출해 사용합니다.
+	 * 갖고 있는 Effect를 각각 다른 타이밍에 부여하고 싶다면 인덱스로 접근해 호출합니다.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void ApplyAllEffects(AActor* TargetActor);
@@ -66,8 +66,7 @@ protected:
 	FGameplayEffectContextHandle GetContextHandle(const int32 ApplierIndex) const;
 
 protected:
-	// 할당과 동시에 객체화되는 멤버변수입니다.
-	// Composite 패턴으로 조합해 사용할 수 있으며, 클래스 내부의 ApplyEffect나 ApplyAllEffects를 호출해 사용합니다.
+	// Composite 패턴으로 조합해 사용할 수 있으며, 구조체 내부의 ApplyEffect나 Ability의 ApplyAllEffects를 호출해 사용합니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect")
 	TArray<TInstancedStruct<FGameplayEffectApplier>> EffectAppliers;
 

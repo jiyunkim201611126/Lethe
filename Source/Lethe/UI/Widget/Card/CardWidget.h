@@ -48,7 +48,7 @@ enum class ECardAction : uint8
 	Draw,
 	HandHovered,
 	HandUnhovered,
-	Drag,
+	ReadyToUse,
 
 	None,
 };

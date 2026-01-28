@@ -2,7 +2,7 @@
 
 #include "LetheUserWidget.h"
 
-void ULetheUserWidget::SetWidgetController(UObject* InWidgetController)
+void ULetheUserWidget::SetWidgetController(ULetheWidgetController* InWidgetController)
 {
 	WidgetController = InWidgetController;
 	WidgetControllerSet();

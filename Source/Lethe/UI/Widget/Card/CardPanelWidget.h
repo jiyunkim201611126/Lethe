@@ -54,11 +54,14 @@ public:
 
 private:
 	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
+
+	void OnKeyboardEvent(const int32 InNumber);
 	
 	void CreateCard(const FCardInitParams& CardInitParams);
 	void UpdateAllCardTranslation();
 	void OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered);
 	void Draw(const UCardWidget* InCardWidget);
+	
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
 	void StartDrag(UCardWidget* InCardWidget);
 	void SuccessToUseCard();
@@ -97,5 +100,9 @@ private:
 	float PaddingHandAndHand = 10.f;
 	float CardHighlightScale;
 
-	TWeakObjectPtr<UCardWidget> CurrentDraggingCard;
+	TWeakObjectPtr<UCardWidget> CurrentReadyToUseCard;
+
+	// 키보드 입력으로 조작 시 핸드를 빠르게 탐색하기 위해 선언한 변수입니다.
+	UPROPERTY()
+	TArray<TObjectPtr<UCardWidget>> CurrentHands;
 };

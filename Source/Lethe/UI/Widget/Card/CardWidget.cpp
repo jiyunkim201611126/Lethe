@@ -60,6 +60,9 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	{
 		return;
 	}
+
+	// 드래그 상태였던 카드의 Visibility를 원복시키기 위한 구문입니다.
+	SetVisibility(ESlateVisibility::Visible);
 	
 	CurrentCardContainer = InCardContainer;
 	switch (InCardContainer)
@@ -72,10 +75,10 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 			PlayAnimation(ShowFrontAnimation, bShouldSkipAnimation ? ShowFrontAnimation->GetEndTime() : 0.f);
 			bIsDragging = false;
 			bCardHighlight = false;
-			bBlockHandHighlight = true;
 
 			// Hand가 된 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
 			// 이 처리를 해주지 않으면 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생해 플래그가 꼬입니다.
+			bBlockHandHighlight = true;
 			FTimerHandle TimerHandle;
 			TWeakObjectPtr<UCardWidget> WeakThis = this;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
@@ -88,7 +91,8 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 		}
 		break;
 	case ECardContainer::Dragging:
-		// 카드 사용 준비 상태인 경우 들어오는 분기입니다.
+		// 드래그 중인 경우 들어오는 분기입니다.
+		SetVisibility(ESlateVisibility::HitTestInvisible);
 		bIsDragging = true;
 		bShouldMove = false;
 		bCardHighlight = false;
@@ -128,6 +132,11 @@ bool UCardWidget::IsDragging() const
 FGameplayTag UCardWidget::GetCardTag() const
 {
 	return CardTag;
+}
+
+ECardContainer UCardWidget::GetCurrentCardContainer() const
+{
+	return CurrentCardContainer;
 }
 
 void UCardWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
@@ -191,8 +200,13 @@ FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
-	
-	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+
+	if (IsDragging())
+	{
+		return FReply::Unhandled();
+	}
+
+	return FReply::Handled();
 }
 
 void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)

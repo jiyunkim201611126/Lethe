@@ -14,12 +14,23 @@ void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystem
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 콜백이 바인드되도록 막아줍니다.
 	if (!bInitialized)
 	{
-		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+		if (LetheGameState.IsValid())
 		{
 			LetheGameState->OnChangePlayerTurnStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
 		}
 		
 		bInitialized = true;
+	}
+}
+
+void UCardPanelWidgetController::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	if (LetheGameState.IsValid())
+	{
+		LetheGameState->OnChangePlayerTurnStateDelegate.RemoveAll(this);
 	}
 }
 
@@ -40,7 +51,7 @@ float UCardPanelWidgetController::GetCardHighlightScale() const
 
 void UCardPanelWidgetController::GoDrawPhase() const
 {
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	if (LetheGameState.IsValid())
 	{
 		LetheGameState->GoDrawPhase();
 	}
@@ -48,10 +59,17 @@ void UCardPanelWidgetController::GoDrawPhase() const
 
 void UCardPanelWidgetController::GoBattlePhase() const
 {
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	if (LetheGameState.IsValid())
 	{
 		LetheGameState->GoBattlePhase();
 	}
+}
+
+void UCardPanelWidgetController::RequestTurnEnd()
+{
+	// TODO: 배틀 페이즈가 종료되고 GameState에서 적 턴이 시작되도록 제어해야 합니다.
+	// 현재는 단순히 DrawPhase로 돌아가도록 합니다.
+	GoDrawPhase();
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const

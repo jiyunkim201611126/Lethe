@@ -13,6 +13,8 @@ struct FLetheGameplayTags
 	//~ Begin Characters
 	FGameplayTag Character_Test0;
 	FGameplayTag Character_Test1;
+	FGameplayTag Character_Test2;
+	FGameplayTag Character_Test3;
 	//~ End of Characters
 
 	//~ Begin Attributes
@@ -30,6 +32,7 @@ struct FLetheGameplayTags
 	FGameplayTag Card_Ability_PhysicalTest;
 	FGameplayTag Card_Ability_MagicTest;
 	FGameplayTag Card_Ability_UtilTest;
+	FGameplayTag Card_Ability_JustTest;
 	//~ End of Card Ability
 	
 	//~ Begin Card Types

@@ -88,6 +88,8 @@ public:
 
 	FGameplayTag GetCardTag() const;
 
+	ECardContainer GetCurrentCardContainer() const;
+
 private:
 	UFUNCTION()
 	void OnUpdatedTimeline(const float InValue);

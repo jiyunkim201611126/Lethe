@@ -6,6 +6,7 @@
 #include "LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
+class ALetheGameState;
 struct FGameplayAbilitySpecHandle;
 struct FGameplayAbilitySpec;
 struct FCardSelfViewInfo;
@@ -56,11 +57,16 @@ public:
 	virtual void BroadcastInitialValue() override;
 	//~ End of ULetheWidgetController Interface
 
+	//~ Begin UObject Interface
+	virtual void BeginDestroy() override;
+	//~ End of UObject Interface
+
 	FVector2D GetCardSize() const;
 	float GetCardHighlightScale() const;
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;
+	void RequestTurnEnd();
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
@@ -76,4 +82,6 @@ protected:
 
 private:
 	uint8 bInitialized : 1 = false;
+
+	TWeakObjectPtr<ALetheGameState> LetheGameState;
 };

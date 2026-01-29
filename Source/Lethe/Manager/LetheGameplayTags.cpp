@@ -11,6 +11,10 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Character.Test0"), FString(""));
 	GameplayTags.Character_Test1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Character.Test1"), FString(""));
+	GameplayTags.Character_Test2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.Test2"), FString(""));
+	GameplayTags.Character_Test3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.Test3"), FString(""));
 	
 	GameplayTags.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Vital.Health"), FString(""));
@@ -28,6 +32,8 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Card.Ability.MagicTest"), FString(""));
 	GameplayTags.Card_Ability_UtilTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Ability.UtilTest"), FString(""));
+	GameplayTags.Card_Ability_JustTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Card.Ability.JustTest"), FString(""));
 	
 	GameplayTags.Card_Types_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Types.Physical"), FString(""));

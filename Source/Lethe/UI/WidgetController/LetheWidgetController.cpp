@@ -36,7 +36,7 @@ APlayerState* ULetheWidgetController::GetPS()
 	return PlayerState;
 }
 
-TArray<FAbilitySystemReference>* ULetheWidgetController::GetAbilitySystemReferences()
+const TArray<FAbilitySystemReference>& ULetheWidgetController::GetAbilitySystemReferences()
 {
-	return &AbilitySystemReferences;
+	return AbilitySystemReferences;
 }

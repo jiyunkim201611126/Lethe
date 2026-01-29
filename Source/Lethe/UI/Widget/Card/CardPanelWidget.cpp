@@ -4,6 +4,7 @@
 
 #include "CardWidget.h"
 #include "Blueprint/SlateBlueprintLibrary.h"
+#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
@@ -18,15 +19,29 @@ void UCardPanelWidget::NativeConstruct()
 
 	AbilitySystemComponentToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
 	CurrentHands.Reserve(MAX_HAND_COUNT);
+
+	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+}
+
+void UCardPanelWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(WidgetController->GetPC()))
+	{
+		PlayerController->OnNumberKeyPressedDelegate.Unbind();
+	}
 }
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()
 {
 	Super::WidgetControllerSet_Implementation();
 
-	if (UCardPanelWidgetController* CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController))
+	CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
+	if (CardPanelWidgetController)
 	{
-		AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
 		if (!bControllerInitialized)
 		{
 			// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
@@ -53,6 +68,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		}
 	}
 
+	// 키보드 입력에 반응할 수 있도록 콜백을 바인드합니다.
 	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(WidgetController->GetPC()))
 	{
 		PlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
@@ -91,22 +107,22 @@ void UCardPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 	}
 }
 
-FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	// 클릭 시 이 위젯이 Input을 캡쳐할 수 있도록 Handled를 반환합니다.
+	return FReply::Handled();
+}
+
+FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{	
 	if (CurrentReadyToUseCard.IsValid())
 	{
 		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
 		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 		{
+			CurrentReadyToUseCard->HighlightCard(false);
 			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentReadyToUseCard.Get());
-			if (bUseCardSuccess)
-			{
-				SuccessToUseCard();
-			}
-			else
-			{
-				FailToUseCard();
-			}
+			bUseCardSuccess ? SuccessToUseCard() : FailToUseCard();
 		}
 	}
 	
@@ -163,7 +179,7 @@ void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAc
 			OnHandHovered(InCardWidget, false);
 			break;
 		case ECardAction::ReadyToUse:
-			StartDrag(InCardWidget);
+			ReadyToUseCard(InCardWidget, true);
 			break;
 		default:
 			break;
@@ -176,32 +192,53 @@ void UCardPanelWidget::OnKeyboardEvent(const int32 InNumber)
 	switch (CurrentPlayerPhaseState)
 	{
 	case EPlayerPhaseState::DrawPhase:
-		if (AbilitySystemReferences->IsValidIndex(InNumber))
-		{
-			if (const FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find((*AbilitySystemReferences)[InNumber].AbilitySystemComponent))
-			{
-				if (!CharacterCards->Deck.IsEmpty())
-				{
-					Draw(CharacterCards->Deck[0]);
-					UpdateAllCardTranslation();
-				}
-			}
-		}
+		OnKeyboardEventWhenDrawPhase(InNumber);
 		break;
 	case EPlayerPhaseState::BattlePhase:
-		if (CurrentHands.IsValidIndex(InNumber) && CurrentHands[InNumber])
-		{
-			for (UCardWidget* Hand : CurrentHands)
-			{
-				Hand->HighlightCard(false);
-			}
-			
-			CurrentHands[InNumber]->HighlightCard(true);
-			CurrentReadyToUseCard = CurrentHands[InNumber];
-		}
+		OnKeyboardEventWhenBattlePhase(InNumber);
 		break;
 	default:
 		break;
+	}
+}
+
+void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 InNumber)
+{
+	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+	if (AbilitySystemReferences.IsValidIndex(InNumber))
+	{
+		if (const FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReferences[InNumber].AbilitySystemComponent))
+		{
+			if (!CharacterCards->Deck.IsEmpty())
+			{
+				Draw(CharacterCards->Deck[0]);
+				UpdateAllCardTranslation();
+			}
+		}
+	}
+}
+
+void UCardPanelWidget::OnKeyboardEventWhenBattlePhase(const int32 InNumber)
+{
+	if (CurrentHands.IsValidIndex(InNumber))
+	{
+		if (CurrentReadyToUseCard.IsValid())
+		{
+			CurrentReadyToUseCard->HighlightCard(false);
+			CurrentReadyToUseCard.Reset();
+		
+			if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+			{
+				PlayerController->SetReadyToUseCard(false);
+			}
+		}
+
+		UCardWidget* SelectedCard = CurrentHands[InNumber];
+		if (SelectedCard && SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
+		{
+			SelectedCard->HighlightCard(true);
+			ReadyToUseCard(SelectedCard, false);
+		}
 	}
 }
 
@@ -244,7 +281,8 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 	CurrentHands.Reset();
 	
 	// ASC를 순서대로 순회합니다.
-	for (const FAbilitySystemReference& AbilitySystemReference : *AbilitySystemReferences)
+	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
 	{
 		FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReference.AbilitySystemComponent);
 		if (!CharacterCards)
@@ -279,9 +317,14 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 		{
 			if (UCardWidget* CardInHand = CharacterCards->Hands[HandIndex])
 			{
-				FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
-				WidgetTransform.Translation = NextCardTranslation;
-				CardInHand->SetTargetTransform(WidgetTransform);
+				if (CardInHand->GetCurrentCardContainer() == ECardContainer::Hand)
+				{
+					// 사용한 카드는 로직상으로는 아직 배열에 남아있지만 View 상으로는 무덤 위치로 가있어야 합니다.
+					// 따라서 CurrentCardContainer가 Hand인 경우만 아래 위치 이동 로직을 수행합니다.
+					FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
+					WidgetTransform.Translation = NextCardTranslation;
+					CardInHand->SetTargetTransform(WidgetTransform);
+				}
 			
 				if (UCanvasPanelSlot* HandCardSlot = Cast<UCanvasPanelSlot>(CardInHand->Slot))
 				{
@@ -338,11 +381,8 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 
 	if (CurrentHands.Num() == MAX_HAND_COUNT)
 	{
-		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.	
-		if (const UCardPanelWidgetController* CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController))
-		{
-			CardPanelWidgetController->GoBattlePhase();
-		}
+		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
+		CardPanelWidgetController->GoBattlePhase();
 
 		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHighlight가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
 		for (const auto& CharacterCards : AbilitySystemComponentToCards)
@@ -367,12 +407,16 @@ void UCardPanelWidget::OnHandHovered(UCardWidget* InCardWidget, const bool bInHo
 	InCardWidget->HighlightCard(bInHovered);
 }
 
-void UCardPanelWidget::StartDrag(UCardWidget* InCardWidget)
+void UCardPanelWidget::ReadyToUseCard(UCardWidget* InCardWidget, const bool bByMouseEvent)
 {
 	CurrentReadyToUseCard = InCardWidget;
 	if (CurrentReadyToUseCard.IsValid())
 	{
-		CurrentReadyToUseCard->SetCardContainer(ECardContainer::Dragging);
+		if (bByMouseEvent)
+		{
+			CurrentReadyToUseCard->SetCardContainer(ECardContainer::Dragging);
+		}
+		
 		if (UCanvasPanelSlot* DraggingCardSlot = Cast<UCanvasPanelSlot>(CurrentReadyToUseCard->Slot))
 		{
 			DraggingCardSlot->SetZOrder(DraggingZOrder);
@@ -387,14 +431,13 @@ void UCardPanelWidget::StartDrag(UCardWidget* InCardWidget)
 
 void UCardPanelWidget::SuccessToUseCard()
 {
-	// 사용에 성공했으므로 해당하는 Hands 배열에서 제거하고 무덤에 추가합니다.
+	// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
+	// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 핸드 배열은 그대로 두고, 나중에 드로우 페이즈로 돌아왔을 때 정리합니다.
 	if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CurrentReadyToUseCard->GetOwnerASC()))
 	{
-		CharacterCards->Hands.Remove(CurrentReadyToUseCard.Get());
 		CharacterCards->Graves.Emplace(CurrentReadyToUseCard.Get());
 	}
 
-	// 무덤으로 보낸 뒤 재정렬합니다.
 	FWidgetTransform WidgetTransform = CurrentReadyToUseCard->GetRenderTransform();
 	WidgetTransform.Translation = GravesCardTranslation;
 	CurrentReadyToUseCard->SetTargetTransform(WidgetTransform);
@@ -411,7 +454,56 @@ void UCardPanelWidget::FailToUseCard()
 	UpdateAllCardTranslation();
 }
 
+void UCardPanelWidget::OnTurnEndButtonClicked()
+{
+	if (CurrentPlayerPhaseState == EPlayerPhaseState::BattlePhase)
+	{
+		CardPanelWidgetController->RequestTurnEnd();
+	}
+}
+
 void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPlayerPhaseState InState)
 {
 	CurrentPlayerPhaseState = InState;
+
+	switch (CurrentPlayerPhaseState)
+	{
+	case EPlayerPhaseState::DrawPhase:
+		OnDrawPhaseStarted();
+		break;
+	case EPlayerPhaseState::BattlePhase:
+		break;
+	default:
+		break;
+	}
+}
+
+void UCardPanelWidget::OnDrawPhaseStarted()
+{
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(WidgetController->GetPC()))
+	{
+		PlayerController->SetReadyToUseCard(false);
+	}
+	
+	// ASC를 순서대로 순회합니다.
+	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
+	{
+		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReference.AbilitySystemComponent))
+		{
+			// 핸드에 남아있던 카드를 묘지로 보내고 완전히 비웁니다.
+			for (UCardWidget* CardInHand : CharacterCards->Hands)
+			{
+				CharacterCards->Graves.AddUnique(CardInHand);
+
+				FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
+				WidgetTransform.Translation = GravesCardTranslation;
+				CardInHand->SetTargetTransform(WidgetTransform);
+				CardInHand->SetCardContainer(ECardContainer::Grave);
+			}
+			CharacterCards->Hands.Reset();
+		}
+	}
+
+	UpdateAllCardTranslation();
 }

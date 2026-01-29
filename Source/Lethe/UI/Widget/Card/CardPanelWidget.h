@@ -8,7 +8,9 @@
 #include "Lethe/UI/WidgetController/LetheWidgetController.h"
 #include "CardPanelWidget.generated.h"
 
+class UButton;
 struct FCardInitParams;
+class UCardPanelWidgetController;
 class UCardWidget;
 class UCanvasPanel;
 class ULetheAbilitySystemComponent;
@@ -45,7 +47,9 @@ class LETHE_API UCardPanelWidget : public ULetheUserWidget
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
@@ -53,9 +57,10 @@ public:
 	virtual void WidgetControllerSet_Implementation() override;
 
 private:
-	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
-
+	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);	
 	void OnKeyboardEvent(const int32 InNumber);
+	void OnKeyboardEventWhenDrawPhase(const int32 InNumber);
+	void OnKeyboardEventWhenBattlePhase(const int32 InNumber);
 	
 	void CreateCard(const FCardInitParams& CardInitParams);
 	void UpdateAllCardTranslation();
@@ -63,11 +68,15 @@ private:
 	void Draw(const UCardWidget* InCardWidget);
 	
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
-	void StartDrag(UCardWidget* InCardWidget);
+	void ReadyToUseCard(UCardWidget* InCardWidget, const bool bByMouseEvent);
 	void SuccessToUseCard();
 	void FailToUseCard();
 
+	UFUNCTION()
+	void OnTurnEndButtonClicked();
+
 	void OnPlayerPhaseStateChanged(const EPlayerPhaseState InState);
+	void OnDrawPhaseStarted();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -76,14 +85,17 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> TurnEndButton;
+
 private:
+	UPROPERTY()
+	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
+	
 	// Key를 OwnerASC로, Value로 CardWidget(Deck)을 매핑한 변수입니다.
 	// 이미 CardWidget도 OwnerASC를 멤버 변수로 갖고 있으나, CardPanelWidget도 정렬 및 접근 효율을 위해 매핑해두는 편이 좋습니다.
 	UPROPERTY()
 	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FCharacterCards> AbilitySystemComponentToCards;
-
-	// AbilitySystemComponent를 순서대로 참조하기 위해 선언된 변수입니다.
-	TArray<FAbilitySystemReference>* AbilitySystemReferences;
 	
 	uint8 bControllerInitialized : 1 = false;
 

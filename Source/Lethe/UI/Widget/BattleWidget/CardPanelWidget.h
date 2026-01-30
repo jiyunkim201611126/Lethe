@@ -49,13 +49,14 @@ public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
 
 private:
-	void OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);	
+	void OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
+	void OnMouseEventWhenDrawPhase(const UCardWidget* InCardWidget, const ECardAction InCardAction);
+	void OnMouseEventWhenBattlePhase(UCardWidget* InCardWidget, const ECardAction InCardAction);
 	void OnKeyboardEvent(const int32 InNumber);
 	void OnKeyboardEventWhenDrawPhase(const int32 InNumber);
 	void OnKeyboardEventWhenBattlePhase(const int32 InNumber);
@@ -66,17 +67,16 @@ private:
 	void Draw(const UCardWidget* InCardWidget);
 	
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
-	void ReadyToUseCard(UCardWidget* InCardWidget, const bool bByMouseEvent);
-	void ResetReadyToUseCard();
+	void SelectCard(UCardWidget* InCardWidget);
 	void TryUseCard();
 	void UseCardSuccess();
-	void UseCardFail();
+	void ResetSelectedCard();
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
 	void OnPlayerPhaseStateChanged(const EPlayerPhaseState InState);
-	void OnDrawPhaseStarted();
+	void OnDrawPhaseStarted() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -106,16 +106,16 @@ private:
 
 	int32 DeckZOrder = 100;
 	int32 HandZOrder = 200;
-	int32 DraggingZOrder = 300;
+	int32 SelectedZOrder = 300;
 
 	FVector2D FirstCardTranslation = FVector2D(80.f, -40.f);
 	FVector2D NextCardTranslation = FVector2D(80.f, -40.f);
 	FVector2D GravesCardTranslation = FVector2D(1760.f, -40.f);
 	float PaddingDeckAndHand = 25.f;
 	float PaddingHandAndHand = 10.f;
-	float CardHighlightScale;
+	float CardExpandScale;
 
-	TWeakObjectPtr<UCardWidget> CurrentReadyToUseCard;
+	TWeakObjectPtr<UCardWidget> CurrentSelectedCard;
 
 	// 키보드 입력으로 조작 시 핸드를 빠르게 탐색하기 위해 선언한 변수입니다.
 	UPROPERTY()

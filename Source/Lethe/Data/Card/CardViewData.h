@@ -14,16 +14,16 @@ class LETHE_API UCardViewData : public UDataAsset
 
 public:
 	FVector2D GetCardSize() const;
-	float GetCardHighlightScale() const;
+	float GetCardExpandScale() const;
 
 	FLinearColor* FindCardTypeColor(const FGameplayTag& InCardTypeTag);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	FVector2D CardSize = FVector2D(120.f, 168.f);
+	FVector2D CardSize = FVector2D(124.f, 172.f);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	float CardHighlightScale = 2.f;
+	float CardExpandScale = 2.f;
 
 	// Key는 CardTypeTag입니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Card")

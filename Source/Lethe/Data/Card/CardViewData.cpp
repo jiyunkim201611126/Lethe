@@ -7,9 +7,9 @@ FVector2D UCardViewData::GetCardSize() const
 	return CardSize;
 }
 
-float UCardViewData::GetCardHighlightScale() const
+float UCardViewData::GetCardExpandScale() const
 {
-	return CardHighlightScale;
+	return CardExpandScale;
 }
 
 FLinearColor* UCardViewData::FindCardTypeColor(const FGameplayTag& InCardTypeTag)

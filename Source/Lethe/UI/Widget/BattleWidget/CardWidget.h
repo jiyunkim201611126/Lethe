@@ -20,7 +20,7 @@ enum class ECardContainer : uint8
 {
 	Deck,
 	Hand,
-	Dragging,
+	Selected,
 	Grave,
 };
 
@@ -48,7 +48,7 @@ enum class ECardAction : uint8
 	Draw,
 	HandHovered,
 	HandUnhovered,
-	ReadyToUse,
+	Selected,
 
 	None,
 };
@@ -83,8 +83,7 @@ public:
 	// 마우스 이벤트에 의해 호출되는 함수로, 목표 지점을 결정한 뒤 이동을 시작합니다.
 	void SetTargetTransform(const FWidgetTransform& InTransform);
 
-	void HighlightCard(const bool bInHighlight);
-	bool IsDragging() const;
+	void MouseHovered(const bool bInHovered);
 
 	FGameplayTag GetCardTag() const;
 
@@ -97,7 +96,13 @@ private:
 	UFUNCTION()
 	void OnFinishedTimeline();
 
+	void TurnOnHighlightOutline() const;
+	void TurnOffHighlightOutline() const;
+
 	ECardAction OnMouseEventForCardAction(const ECardMouseEvent InMouseEvent) const;
+	void GetCardActionWhenDeckState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const;
+	void GetCardActionWhenHandState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const;
+	void GetCardActionWhenSelectedState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const;
 
 public:
 	FOnCardMouseEventSignature OnCardMouseEventDelegate;
@@ -114,6 +119,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardBacksideBorderImage;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> OutlineImage;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	TObjectPtr<UWidgetAnimation> ShowFrontAnimation;
@@ -135,12 +143,11 @@ private:
 	FWidgetTransform StartTransform;
 	FWidgetTransform TargetTransform;
 
-	float AddHighlightTranslation = -10.f;
+	float AddHoveredTranslation = -10.f;
 	
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 
 	uint8 bShouldMove : 1 = false;
-	uint8 bBlockHandHighlight : 1 = false;
-	uint8 bCardHighlight : 1 = false;
-	uint8 bIsDragging : 1 = false;
+	uint8 bBlockHandHovered : 1 = false;
+	uint8 bMouseHovered : 1 = false;
 };

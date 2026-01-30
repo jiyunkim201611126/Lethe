@@ -60,9 +60,8 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	{
 		return;
 	}
-
-	// 드래그 상태였던 카드의 Visibility를 원복시키기 위한 구문입니다.
-	SetVisibility(ESlateVisibility::Visible);
+	
+	TurnOffHighlightOutline();
 	
 	CurrentCardContainer = InCardContainer;
 	switch (InCardContainer)
@@ -73,29 +72,28 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	case ECardContainer::Hand:
 		{
 			PlayAnimation(ShowFrontAnimation, bShouldSkipAnimation ? ShowFrontAnimation->GetEndTime() : 0.f);
-			bIsDragging = false;
-			bCardHighlight = false;
+			//bIsDragging = false;
+			bMouseHovered = false;
 
-			// Hand가 된 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
-			// 이 처리를 해주지 않으면 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생해 플래그가 꼬입니다.
-			bBlockHandHighlight = true;
-			FTimerHandle TimerHandle;
-			TWeakObjectPtr<UCardWidget> WeakThis = this;
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
+			if (!bShouldSkipAnimation)
 			{
-				if (WeakThis.IsValid())
+				// 드로우 직후엔 HandHovered 이벤트가 발생할 수 없도록 합니다.
+				// 이 처리를 해주지 않으면 마우스가 이미 올라간 상태기 때문에, Hovered 이벤트는 발생하지 않고 UnHovered 이벤트만 발생해 플래그가 꼬입니다.
+				bBlockHandHovered = true;
+				FTimerHandle TimerHandle;
+				TWeakObjectPtr<UCardWidget> WeakThis = this;
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle, [WeakThis]()
 				{
-					WeakThis->bBlockHandHighlight = false;
-				}
-			}, 0.5f, false, 0.5f);
+					if (WeakThis.IsValid())
+					{
+						WeakThis->bBlockHandHovered = false;
+					}
+				}, 0.5f, false, 0.5f);
+			}
 		}
 		break;
-	case ECardContainer::Dragging:
-		// 드래그 중인 경우 들어오는 분기입니다.
-		SetVisibility(ESlateVisibility::HitTestInvisible);
-		bIsDragging = true;
-		bShouldMove = false;
-		bCardHighlight = false;
+	case ECardContainer::Selected:
+		TurnOnHighlightOutline();
 		break;
 	case ECardContainer::Grave:
 		// 카드 사용 후 들어오는 분기입니다.
@@ -113,20 +111,20 @@ void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
 	MovementTimeline.PlayFromStart();
 }
 
-void UCardWidget::HighlightCard(const bool bInHighlight)
+void UCardWidget::MouseHovered(const bool bInHovered)
 {
-	if (bCardHighlight == bInHighlight)
-	{
-		return;
-	}
-
-	bCardHighlight = bInHighlight;
+	bMouseHovered = bInHovered;
 	SetTargetTransform(TargetTransform);
 }
 
-bool UCardWidget::IsDragging() const
+void UCardWidget::TurnOnHighlightOutline() const
 {
-	return bIsDragging;
+	OutlineImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UCardWidget::TurnOffHighlightOutline() const
+{
+	OutlineImage->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 FGameplayTag UCardWidget::GetCardTag() const
@@ -151,8 +149,8 @@ void UCardWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTim
 
 void UCardWidget::OnUpdatedTimeline(const float InValue)
 {
-	const FVector2D HighlightTranslation = bCardHighlight ? FVector2D(0.f, AddHighlightTranslation) : FVector2D::ZeroVector;
-	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation + HighlightTranslation, InValue);
+	const FVector2D HoveredTranslation = bMouseHovered ? FVector2D(0.f, AddHoveredTranslation) : FVector2D::ZeroVector;
+	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation + HoveredTranslation, InValue);
 	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
 	const FVector2D LerpedScale = FMath::Lerp(StartTransform.Scale, TargetTransform.Scale, InValue);
 
@@ -170,9 +168,9 @@ void UCardWidget::OnFinishedTimeline()
 	bShouldMove = false;
 	StartTransform = TargetTransform;
 	SetRenderTransform(TargetTransform);
-	if (bCardHighlight)
+	if (bMouseHovered)
 	{
-		SetRenderTranslation(TargetTransform.Translation + FVector2D(0.f, AddHighlightTranslation));
+		SetRenderTranslation(TargetTransform.Translation + FVector2D(0.f, AddHoveredTranslation));
 	}
 }
 
@@ -201,11 +199,6 @@ FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
 {
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
 
-	if (IsDragging())
-	{
-		return FReply::Unhandled();
-	}
-
 	return FReply::Handled();
 }
 
@@ -223,83 +216,121 @@ ECardAction UCardWidget::OnMouseEventForCardAction(const ECardMouseEvent InMouse
 	switch (CurrentCardContainer)
 	{
 	case ECardContainer::Deck:
-		switch (InMouseEvent)
-		{
-		case ECardMouseEvent::MouseEnter:
-			{
-				// 덱 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
-				CardAction = ECardAction::DeckHovered;
-			}
-			break;
-		case ECardMouseEvent::MouseLeave:
-			{
-				// 덱 위에서 마우스가 벗어날 때 들어오는 분기입니다.
-				CardAction = ECardAction::DeckUnhovered;
-			}
-			break;
-		case ECardMouseEvent::MouseButtonDown:
-			{
-				// 덱 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
-			}
-			break;
-		case ECardMouseEvent::MouseButtonUp:
-			{
-				// 덱 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
-				CardAction = ECardAction::Draw;
-			}
-			break;
-		case ECardMouseEvent::MouseCaptureLost:
-			{
-				// 덱 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
-				CardAction = ECardAction::DeckUnhovered;
-			}
-			break;
-		}
+		GetCardActionWhenDeckState(InMouseEvent, CardAction);
 		break;
-		
 	case ECardContainer::Hand:
-		switch (InMouseEvent)
-		{
-		case ECardMouseEvent::MouseEnter:
-			{
-				// 핸드 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
-				if (!bBlockHandHighlight)
-				{
-					CardAction = ECardAction::HandHovered;
-				}
-			}
-			break;
-		case ECardMouseEvent::MouseLeave:
-			{
-				// 핸드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
-				if (!bBlockHandHighlight)
-				{
-					CardAction = bIsDragging ? ECardAction::None : ECardAction::HandUnhovered;
-				}
-			}
-			break;
-		case ECardMouseEvent::MouseButtonDown:
-			{
-				// 핸드 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
-				CardAction = ECardAction::ReadyToUse;
-			}
-			break;
-		case ECardMouseEvent::MouseButtonUp:
-			{
-				// 핸드 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
-			}
-			break;
-		case ECardMouseEvent::MouseCaptureLost:
-			{
-				// 핸드 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
-				CardAction = ECardAction::HandUnhovered;
-			}
-			break;
-		}
+		GetCardActionWhenHandState(InMouseEvent, CardAction);
+		break;
+	case ECardContainer::Selected:
+		GetCardActionWhenSelectedState(InMouseEvent, CardAction);
 		break;
 	default:
 		break;
 	}
 
 	return CardAction;
+}
+
+void UCardWidget::GetCardActionWhenDeckState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const
+{
+	switch (InMouseEvent)
+	{
+	case ECardMouseEvent::MouseEnter:
+		{
+			// 덱 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
+			OutCardAction = ECardAction::DeckHovered;
+		}
+		break;
+	case ECardMouseEvent::MouseLeave:
+		{
+			// 덱 위에서 마우스가 벗어날 때 들어오는 분기입니다.
+			OutCardAction = ECardAction::DeckUnhovered;
+		}
+		break;
+	case ECardMouseEvent::MouseButtonDown:
+		{
+			// 덱 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
+		}
+		break;
+	case ECardMouseEvent::MouseButtonUp:
+		{
+			// 덱 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
+			OutCardAction = ECardAction::Draw;
+		}
+		break;
+	case ECardMouseEvent::MouseCaptureLost:
+		{
+			// 덱 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
+			OutCardAction = ECardAction::DeckUnhovered;
+		}
+		break;
+	}
+}
+
+void UCardWidget::GetCardActionWhenHandState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const
+{
+	switch (InMouseEvent)
+	{
+	case ECardMouseEvent::MouseEnter:
+		{
+			// 핸드 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
+			if (!bBlockHandHovered)
+			{
+				OutCardAction = ECardAction::HandHovered;
+			}
+		}
+		break;
+	case ECardMouseEvent::MouseLeave:
+		{
+			// 핸드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
+			if (!bBlockHandHovered)
+			{
+				OutCardAction = ECardAction::HandUnhovered;
+			}
+		}
+		break;
+	case ECardMouseEvent::MouseButtonDown:
+		{
+			// 핸드 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
+		}
+		break;
+	case ECardMouseEvent::MouseButtonUp:
+		{
+			// 핸드 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
+			OutCardAction = ECardAction::Selected;
+		}
+		break;
+	case ECardMouseEvent::MouseCaptureLost:
+		{
+			// 핸드 상태로 마우스를 캡쳐하고 있던 중, 마우스 캡쳐를 잃어버린 경우 들어오는 분기입니다.
+			OutCardAction = ECardAction::HandUnhovered;
+		}
+		break;
+	}
+}
+
+void UCardWidget::GetCardActionWhenSelectedState(const ECardMouseEvent InMouseEvent, ECardAction& OutCardAction) const
+{
+	switch (InMouseEvent)
+	{
+	case ECardMouseEvent::MouseEnter:
+		{
+			// 선택된 카드 위에 마우스를 올려놓은 경우 들어오는 분기입니다.
+			if (!bBlockHandHovered)
+			{
+				OutCardAction = ECardAction::HandHovered;
+			}
+		}
+		break;
+	case ECardMouseEvent::MouseLeave:
+		{
+			// 선택된 카드 위에서 마우스가 벗어날 때 들어오는 분기입니다.
+			if (!bBlockHandHovered)
+			{
+				OutCardAction = ECardAction::HandUnhovered;
+			}
+		}
+	default:
+		break;
+	}
 }

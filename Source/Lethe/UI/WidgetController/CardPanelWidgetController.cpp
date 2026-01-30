@@ -44,9 +44,9 @@ FVector2D UCardPanelWidgetController::GetCardSize() const
 	return CardViewData->GetCardSize();
 }
 
-float UCardPanelWidgetController::GetCardHighlightScale() const
+float UCardPanelWidgetController::GetCardExpandScale() const
 {
-	return CardViewData->GetCardHighlightScale();
+	return CardViewData->GetCardExpandScale();
 }
 
 void UCardPanelWidgetController::GoDrawPhase() const

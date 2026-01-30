@@ -4,7 +4,6 @@
 
 #include "CardUseSectionWidget.h"
 #include "CardWidget.h"
-#include "Blueprint/SlateBlueprintLibrary.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -42,7 +41,8 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		if (!bControllerInitialized)
 		{
 			// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
-			const FVector2D CardSize = CardPanelWidgetController->GetCardSize();
+			// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
+			const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
 			PaddingDeckAndHand += CardSize.X;
 			PaddingHandAndHand += CardSize.X;
 			FirstCardTranslation.X += CardSize.X / 2.f;
@@ -60,7 +60,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
 			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-			CardHighlightScale = 1.f / CardPanelWidgetController->GetCardHighlightScale();
+			CardExpandScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
 			bControllerInitialized = true;
 		}
 	}
@@ -72,81 +72,55 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	}
 }
 
-void UCardPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	if (CurrentReadyToUseCard.IsValid() && CurrentReadyToUseCard->IsDragging())
+void UCardPanelWidget::OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction)
+{	
+	switch (CurrentPlayerPhaseState)
 	{
-		// 드래그 중인 카드가 있을 때만 들어오는 분기입니다.
-		if (const APlayerController* PlayerController = GetOwningPlayer())
-		{
-			FVector2D MousePosition;
-			if (PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y))
-			{
-				// CardPanel의 Geometry를 가져옵니다.
-				const FGeometry CardPanelGeometry = GetCachedGeometry();
-
-				// 마우스 스크린 좌표를 CardPanel의 로컬 좌표로 변환합니다.
-				FVector2D LocalMousePosition;
-				USlateBlueprintLibrary::ScreenToWidgetLocal(GetWorld(), CardPanelGeometry, MousePosition, LocalMousePosition);
-
-				// 앵커가 (0, 1)이므로, Y 위치를 CardPanel의 높이만큼 빼주면 딱 맞습니다.
-				const FVector2D CardPanelSize = CardPanelGeometry.GetLocalSize();
-				FVector2D FinalTranslation;
-				FinalTranslation.X = LocalMousePosition.X;
-				FinalTranslation.Y = LocalMousePosition.Y - CardPanelSize.Y;
-
-				// 카드의 중심이 마우스에 있도록 조정합니다.
-				CurrentReadyToUseCard->SetRenderTranslation(FinalTranslation);
-			}
-		}
+	case EPlayerPhaseState::DrawPhase:
+		OnMouseEventWhenDrawPhase(InCardWidget, InCardAction);
+		break;
+	case EPlayerPhaseState::BattlePhase:
+		OnMouseEventWhenBattlePhase(InCardWidget, InCardAction);
+		break;
+	default:
+		break;
 	}
 }
 
-void UCardPanelWidget::OnCardMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction)
-{	
-	if (CurrentPlayerPhaseState == EPlayerPhaseState::DrawPhase)
+void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* InCardWidget, const ECardAction InCardAction)
+{
+	switch (InCardAction)
 	{
-		switch (InCardAction)
-		{
-		case ECardAction::DeckHovered:
-			OnDeckHovered(InCardWidget, true);
-			break;
-		case ECardAction::DeckUnhovered:
-			OnDeckHovered(InCardWidget, false);
-			break;
-		case ECardAction::Draw:
-			Draw(InCardWidget);
-			UpdateAllCardTranslation();
-			break;
-		default:
-			break;
-		}
+	case ECardAction::DeckHovered:
+		OnDeckHovered(InCardWidget, true);
+		break;
+	case ECardAction::DeckUnhovered:
+		OnDeckHovered(InCardWidget, false);
+		break;
+	case ECardAction::Draw:
+		Draw(InCardWidget);
+		UpdateAllCardTranslation();
+		break;
+	default:
+		break;
 	}
-	
-	if (CurrentPlayerPhaseState == EPlayerPhaseState::BattlePhase)
+}
+
+void UCardPanelWidget::OnMouseEventWhenBattlePhase(UCardWidget* InCardWidget, const ECardAction InCardAction)
+{
+	switch (InCardAction)
 	{
-		// 키보드 입력을 통해 사용 준비 중인 카드가 있었다면, 마우스 입력이 주체가 되었으므로 리셋합니다.
-		if (CurrentReadyToUseCard.IsValid() && !CurrentReadyToUseCard->IsDragging())
-		{
-			ResetReadyToUseCard();
-		}
-		
-		switch (InCardAction)
-		{
-		case ECardAction::HandHovered:
-			OnHandHovered(InCardWidget, true);
-			break;
-		case ECardAction::HandUnhovered:
-			OnHandHovered(InCardWidget, false);
-			break;
-		case ECardAction::ReadyToUse:
-			ReadyToUseCard(InCardWidget, true);
-			break;
-		default:
-			break;
-		}
+	case ECardAction::HandHovered:
+		OnHandHovered(InCardWidget, true);
+		break;
+	case ECardAction::HandUnhovered:
+		OnHandHovered(InCardWidget, false);
+		break;
+	case ECardAction::Selected:
+		SelectCard(InCardWidget);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -185,21 +159,11 @@ void UCardPanelWidget::OnKeyboardEventWhenBattlePhase(const int32 InNumber)
 {
 	if (CurrentHands.IsValidIndex(InNumber))
 	{
-		if (CurrentReadyToUseCard.IsValid())
-		{
-			ResetReadyToUseCard();
-		
-			if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
-			{
-				PlayerController->SetReadyToUseCard(false);
-			}
-		}
-
+		ResetSelectedCard();
 		UCardWidget* SelectedCard = CurrentHands[InNumber];
-		if (SelectedCard && SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
+		if (SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
 		{
-			SelectedCard->HighlightCard(true);
-			ReadyToUseCard(SelectedCard, false);
+			SelectCard(SelectedCard);
 		}
 	}
 }
@@ -214,11 +178,11 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 
 		CreatedCard->SetWidgetController(WidgetController);
 		CreatedCard->SetCardInfo(CardInitParams);
-		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
+		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
 		
 		// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
-		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardHighlightScale);
-		CreatedCard->SetRenderScale(FVector2D(CardHighlightScale));
+		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardExpandScale);
+		CreatedCard->SetRenderScale(FVector2D(CardExpandScale));
 		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
 			// 앵커를 좌하단에 박습니다.
@@ -314,8 +278,8 @@ void UCardPanelWidget::OnDeckHovered(const UCardWidget* InCardWidget, const bool
 			// 덱 가장 윗장을 가져옵니다.
 			if (UCardWidget* DeckOnTopCard = CharacterCards->Deck.Last())
 			{
-				// 마우스 Hovered 여부에 따라 카드를 Highlight합니다.
-				DeckOnTopCard->HighlightCard(bInHovered);
+				// 마우스 Hovered 여부에 따라 카드를 위로 살짝 올려줍니다.
+				DeckOnTopCard->MouseHovered(bInHovered);
 			}
 		}
 	}
@@ -346,7 +310,7 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
 		CardPanelWidgetController->GoBattlePhase();
 
-		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHighlight가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
+		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHovered가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
 		for (const auto& CharacterCards : AbilitySystemComponentToCards)
 		{
 			if (!CharacterCards.Value.Deck.IsEmpty())
@@ -358,62 +322,42 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 }
 
 void UCardPanelWidget::OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const
+{	
+	// 마우스가 Hovered 상태에 따라 카드 위치를 조정합니다.
+	InCardWidget->MouseHovered(bInHovered);
+}
+
+void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 {
-	if (bInHovered && CurrentReadyToUseCard.IsValid())
-	{
-		// 마우스가 핸드 위로 올라왔을 때, 현재 드래그 중인 카드가 있다면 아무런 상호작용을 하지 않습니다.
-		return;
-	}
+	// 다른 카드가 선택되어 있었다면 선택을 취소합니다.
+	ResetSelectedCard();
 	
-	// 마우스 Hovered 여부에 따라 카드를 Highlight합니다.
-	InCardWidget->HighlightCard(bInHovered);
-}
-
-void UCardPanelWidget::ReadyToUseCard(UCardWidget* InCardWidget, const bool bByMouseEvent)
-{
-	CurrentReadyToUseCard = InCardWidget;
-	if (CurrentReadyToUseCard.IsValid())
+	CurrentSelectedCard = InCardWidget;
+	if (CurrentSelectedCard.IsValid())
 	{
-		if (bByMouseEvent)
-		{
-			CurrentReadyToUseCard->SetCardContainer(ECardContainer::Dragging);
-		}
+		CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
 		
-		if (UCanvasPanelSlot* DraggingCardSlot = Cast<UCanvasPanelSlot>(CurrentReadyToUseCard->Slot))
+		if (UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(CurrentSelectedCard->Slot))
 		{
-			DraggingCardSlot->SetZOrder(DraggingZOrder);
+			CardSlot->SetZOrder(SelectedZOrder);
 		}
 		
 		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 		{
-			PlayerController->SetReadyToUseCard(true);
-		}
-	}
-}
-
-void UCardPanelWidget::ResetReadyToUseCard()
-{
-	if (CurrentReadyToUseCard.IsValid())
-	{
-		CurrentReadyToUseCard->HighlightCard(false);
-		CurrentReadyToUseCard.Reset();
-		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
-		{
-			PlayerController->SetReadyToUseCard(false);
+			PlayerController->SetCardSelected(true);
 		}
 	}
 }
 
 void UCardPanelWidget::TryUseCard()
 {
-	if (CurrentReadyToUseCard.IsValid())
+	if (CurrentSelectedCard.IsValid())
 	{
 		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
 		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 		{
-			CurrentReadyToUseCard->HighlightCard(false);
-			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentReadyToUseCard->GetOwnerASC(), CurrentReadyToUseCard->GetCardTag());
-			bUseCardSuccess ? UseCardSuccess() : UseCardFail();
+			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
+			bUseCardSuccess ? UseCardSuccess() : ResetSelectedCard();
 		}
 	}
 }
@@ -422,25 +366,39 @@ void UCardPanelWidget::UseCardSuccess()
 {
 	// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
 	// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 핸드 배열은 그대로 두고, 나중에 턴 종료 시 정리합니다.
-	if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CurrentReadyToUseCard->GetOwnerASC()))
+	if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CurrentSelectedCard->GetOwnerASC()))
 	{
-		CharacterCards->Graves.Emplace(CurrentReadyToUseCard.Get());
+		CharacterCards->Graves.Emplace(CurrentSelectedCard.Get());
 	}
 
-	FWidgetTransform WidgetTransform = CurrentReadyToUseCard->GetRenderTransform();
+	FWidgetTransform WidgetTransform = CurrentSelectedCard->GetRenderTransform();
 	WidgetTransform.Translation = GravesCardTranslation;
-	CurrentReadyToUseCard->SetTargetTransform(WidgetTransform);
-	CurrentReadyToUseCard->SetCardContainer(ECardContainer::Grave);
-	ResetReadyToUseCard();
-	UpdateAllCardTranslation();
+	CurrentSelectedCard->SetTargetTransform(WidgetTransform);
+	CurrentSelectedCard->SetCardContainer(ECardContainer::Grave);
+	CurrentSelectedCard->MouseHovered(false);
+	CurrentSelectedCard.Reset();
+	
+	if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+	{
+		PlayerController->SetCardSelected(false);
+	}
 }
 
-void UCardPanelWidget::UseCardFail()
+void UCardPanelWidget::ResetSelectedCard()
 {
-	// 사용에 실패했으므로 제자리로 되돌립니다.
-	CurrentReadyToUseCard->SetCardContainer(ECardContainer::Hand, true);
-	ResetReadyToUseCard();
-	UpdateAllCardTranslation();
+	if (CurrentSelectedCard.IsValid())
+	{		
+		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
+		CurrentSelectedCard->MouseHovered(false);
+		CurrentSelectedCard.Reset();
+		
+		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+		{
+			PlayerController->SetCardSelected(false);
+		}
+
+		UpdateAllCardTranslation();
+	}
 }
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
@@ -492,10 +450,10 @@ void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPlayerPhaseState InState
 	}
 }
 
-void UCardPanelWidget::OnDrawPhaseStarted()
+void UCardPanelWidget::OnDrawPhaseStarted() const
 {
 	if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
 	{
-		PlayerController->SetReadyToUseCard(false);
+		PlayerController->SetCardSelected(false);
 	}
 }

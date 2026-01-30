@@ -62,7 +62,7 @@ public:
 	//~ End of UObject Interface
 
 	FVector2D GetCardSize() const;
-	float GetCardHighlightScale() const;
+	float GetCardExpandScale() const;
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;

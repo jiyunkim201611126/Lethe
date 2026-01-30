@@ -23,7 +23,7 @@ public:
 
 	void OnNumberPressed(const int32 InNumber) const;
 	
-	void SetReadyToUseCard(const bool bReady);
+	void SetCardSelected(const bool bSelected);
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
 
@@ -44,7 +44,7 @@ protected:
 	TObjectPtr<ULetheHUD> LetheHUD;
 	
 private:
-	uint8 bReadyToUseCard : 1 = false;
+	uint8 bCardSelected : 1 = false;
 	uint8 bMouseOnCardUseSection : 1 = false;
 	
 	TScriptInterface<IHighlightInterface> LastActor;

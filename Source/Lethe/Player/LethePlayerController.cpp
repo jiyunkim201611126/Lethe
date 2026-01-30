@@ -39,7 +39,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	if (bReadyToUseCard && bMouseOnCardUseSection)
+	if (bCardSelected && bMouseOnCardUseSection)
 	{
 		// 카드 사용 준비 상태일 경우 들어오는 분기입니다.
 		FHitResult Hit;
@@ -78,9 +78,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	}
 }
 
-void ALethePlayerController::SetReadyToUseCard(const bool bReady)
+void ALethePlayerController::SetCardSelected(const bool bSelected)
 {
-	bReadyToUseCard = bReady;
+	bCardSelected = bSelected;
 }
 
 void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)
@@ -91,7 +91,7 @@ void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardU
 bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	// 우선 카드 드래그가 중단될 수 있도록 제어합니다.
-	SetReadyToUseCard(false);
+	SetCardSelected(false);
 	
 	// 커서 아래로 라인 트레이스를 통해 타일 검출을 시도합니다.
 	FHitResult Hit;

@@ -5,7 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/UI/Widget/OverlayWidget.h"
-#include "Lethe/UI/Widget/Card/CardPanelWidget.h"
+#include "Lethe/UI/Widget/BattleWidget/CardPanelWidget.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 #include "Lethe/UI/WidgetController/OverlayWidgetController.h"
 

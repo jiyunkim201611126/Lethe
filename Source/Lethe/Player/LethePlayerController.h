@@ -9,7 +9,7 @@
 struct FGameplayTag;
 class ULetheHUD;
 class IHighlightInterface;
-class UCardWidget;
+class ULetheAbilitySystemComponent;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 
@@ -24,13 +24,15 @@ public:
 	void OnNumberPressed(const int32 InNumber) const;
 	
 	void SetReadyToUseCard(const bool bReady);
-	bool RequestUseCard(const UCardWidget* InCardWidget);
+	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
+	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
 
 	ULetheHUD* GetLetheHUD() const;
 
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PlayerTick(float DeltaTime) override;
 	//~ End of AActor Interface
 
@@ -43,6 +45,7 @@ protected:
 	
 private:
 	uint8 bReadyToUseCard : 1 = false;
+	uint8 bMouseOnCardUseSection : 1 = false;
 	
 	TScriptInterface<IHighlightInterface> LastActor;
 	TScriptInterface<IHighlightInterface> ThisActor;

@@ -8,6 +8,7 @@
 #include "Lethe/UI/WidgetController/LetheWidgetController.h"
 #include "CardPanelWidget.generated.h"
 
+class UCardUseSectionWidget;
 class UButton;
 struct FCardInitParams;
 class UCardPanelWidgetController;
@@ -49,9 +50,6 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
 	virtual void WidgetControllerSet_Implementation() override;
@@ -69,8 +67,10 @@ private:
 	
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
 	void ReadyToUseCard(UCardWidget* InCardWidget, const bool bByMouseEvent);
-	void SuccessToUseCard();
-	void FailToUseCard();
+	void ResetReadyToUseCard();
+	void TryUseCard();
+	void UseCardSuccess();
+	void UseCardFail();
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
@@ -84,6 +84,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCardUseSectionWidget> CardUseSection;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> TurnEndButton;

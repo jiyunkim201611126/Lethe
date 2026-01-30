@@ -65,11 +65,13 @@ void UCardPanelWidgetController::GoBattlePhase() const
 	}
 }
 
-void UCardPanelWidgetController::RequestTurnEnd()
+bool UCardPanelWidgetController::RequestTurnEnd()
 {
 	// TODO: 배틀 페이즈가 종료되고 GameState에서 적 턴이 시작되도록 제어해야 합니다.
 	// 현재는 단순히 DrawPhase로 돌아가도록 합니다.
 	GoDrawPhase();
+
+	return true;
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const

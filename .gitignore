@@ -4,7 +4,9 @@
 Binaries/
 DerivedDataCache/
 InterMediate/
-Saved/
+Saved/*
+
+!Saved/SaveGames/
 
 *.vsconfig
 *.sln

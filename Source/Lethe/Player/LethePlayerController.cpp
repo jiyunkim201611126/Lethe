@@ -6,7 +6,6 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/HighlightInterface.h"
-#include "Lethe/UI/Widget/Card/CardWidget.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -30,11 +29,17 @@ void ALethePlayerController::BeginPlay()
 	SetInputMode(InputMode);
 }
 
+void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	OnNumberKeyPressedDelegate.Unbind();
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	if (bReadyToUseCard)
+	if (bReadyToUseCard && bMouseOnCardUseSection)
 	{
 		// 카드 사용 준비 상태일 경우 들어오는 분기입니다.
 		FHitResult Hit;
@@ -78,7 +83,12 @@ void ALethePlayerController::SetReadyToUseCard(const bool bReady)
 	bReadyToUseCard = bReady;
 }
 
-bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget)
+void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)
+{
+	bMouseOnCardUseSection = bInMouseOnCardUseSection;
+}
+
+bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	// 우선 카드 드래그가 중단될 수 있도록 제어합니다.
 	SetReadyToUseCard(false);
@@ -90,15 +100,14 @@ bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget)
 	if (Hit.IsValidBlockingHit())
 	{
 		// 타일 검출에 성공한 경우 들어오는 분기입니다.
-		ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC();
 		const ATile* Tile = Cast<ATile>(Hit.GetActor());
 		
 		if (OwnerASC && Tile)
 		{
 			// CardTag를 통해 발동할 Ability를 가져옵니다.
 			TArray<FGameplayAbilitySpec*> AbilitySpec;
-			const FGameplayTagContainer CardTag = InCardWidget->GetCardTag().GetSingleTagContainer();
-			OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTag, AbilitySpec);
+			const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
+			OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpec);
 
 			// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
 			// TODO: 현재는 첫번째 거로 사용합니다.
@@ -114,7 +123,7 @@ bool ALethePlayerController::RequestUseCard(const UCardWidget* InCardWidget)
 				Payload.Target = TargetActor;
 
 				// 카드 사용 성공 시 true를 반환합니다.
-				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpec[0]->Handle, OwnerASC->AbilityActorInfo.Get(), InCardWidget->GetCardTag(), &Payload, *OwnerASC);
+				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpec[0]->Handle, OwnerASC->AbilityActorInfo.Get(), CardTag, &Payload, *OwnerASC);
 			}
 		}
 	}

@@ -66,7 +66,7 @@ public:
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;
-	void RequestTurnEnd();
+	bool RequestTurnEnd();
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;

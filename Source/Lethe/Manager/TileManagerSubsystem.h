@@ -36,10 +36,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MakeNewTileMap();
 
-	ATile* GetTileActor(const FCubeCoord& InCubeCoord);
-
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
-	TSet<FCubeCoord> TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
+	void TileBFS(TSet<FCubeCoord>& OutCoords, const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
+	
+	ATile* GetTile(const FCubeCoord& InCubeCoord);
+	void MapActorAndTile(ATile* InTile, AActor* InActor);
+	void UnmapActorAndTile(ATile* InTile, AActor* InActor);
+	AActor* GetActorOnTile(const ATile* InTile) const;
+	ATile* GetTileUnderActor(const AActor* InActor) const;
 
 private:
 	const FStageData* GetStageData(const FName& StageName) const;
@@ -70,6 +74,10 @@ private:
 
 	UPROPERTY()
 	TMap<FCubeCoord, FTileData> TileDataMap;
+
+	// 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다.
+	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
+	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 };
 
 /**
@@ -79,14 +87,13 @@ private:
  * 템플릿 선언 내에서 작성된 검사는 공통 BFS의 검사 내용만
  */
 template <typename BFSConditionFunc, typename SelectConditionFunc>
-TSet<FCubeCoord> UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)
+void UTileManagerSubsystem::TileBFS(TSet<FCubeCoord>& OutCoords, const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)
 {
 	TSet<FCubeCoord> Visited;
-	TSet<FCubeCoord> Selected;
 	
 	if (!TileDataMap.Contains(StartCoord))
 	{
-		return Visited;
+		return;
 	}
 	
 	TQueue<TPair<FCubeCoord, int32>> Queue;
@@ -112,7 +119,7 @@ TSet<FCubeCoord> UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, co
 
 		if (SelectCondition(CurrentTileData, CurrentDepth))
 		{
-			Selected.Emplace(CurrentCoord);
+			OutCoords.Emplace(CurrentCoord);
 		}
 
 		//뻗어 나갈 타일들에 대한 조건 검사
@@ -160,6 +167,4 @@ TSet<FCubeCoord> UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, co
 			Queue.Enqueue({NextCoord, CurrentDepth + 1});
 		}
 	}
-
-	return Selected;
 }

@@ -29,9 +29,14 @@ void ATile::SetTopTile(ATile* InTile)
 	TopTile = InTile;
 }
 
-void ATile::SetActorOnTile(AActor* InActor)
+ATile* ATile::GetTopTile()
 {
-	ActorOnTile = InActor;
+	if (TopTile.IsValid())
+	{
+		return TopTile.Get();
+	}
+
+	return this;
 }
 
 void ATile::HighlightActorByMouse_Implementation()

@@ -20,7 +20,7 @@ public:
 	
 	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const bool bIsTop);
 	void SetTopTile(ATile* InTile);
-	void SetActorOnTile(AActor* InActor);
+	ATile* GetTopTile();
 
 	//~ Begin IHighlightInterface
 	virtual void HighlightActorByMouse_Implementation() override;
@@ -30,9 +30,6 @@ public:
 	//~ End of IHighlightInterface
 	
 	FCubeCoord GetCubeCoord() const;
-	
-	template<typename T>
-	T* GetActorOnTile() const;
 
 private:
 	void SetTileMesh(const TArray<UStaticMesh*>& Meshes) const;
@@ -53,19 +50,7 @@ private:
 
 	// 해당 타일이 TopTile이면 nullptr입니다.
 	TWeakObjectPtr<ATile> TopTile;
-	TWeakObjectPtr<AActor> ActorOnTile;
 
 	int32 OutlineColorByMouse = CUSTOM_DEPTH_RED;
 	int32 OutlineColorByCard = 0;
 };
-
-template <typename T>
-T* ATile::GetActorOnTile() const
-{
-	if (ActorOnTile.IsValid())
-	{
-		return Cast<T>(ActorOnTile.Get());
-	}
-	
-	return nullptr;
-}

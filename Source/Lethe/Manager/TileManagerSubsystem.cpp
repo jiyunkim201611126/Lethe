@@ -43,19 +43,6 @@ void UTileManagerSubsystem::MakeNewTileMap()
 	MakeTileActor(StageData, StageInitData);
 }
 
-ATile* UTileManagerSubsystem::GetTileActor(const FCubeCoord& InCubeCoord)
-{
-	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
-	{
-		if (TileData->TileActor.IsValid())
-		{
-			return TileData->TileActor.Get();
-		}
-	}
-
-	return nullptr;
-}
-
 const FStageData* UTileManagerSubsystem::GetStageData(const FName& StageName) const
 {
 	return StageDataTable.LoadSynchronous()->FindRow<FStageData>(StageName, TEXT(""));
@@ -102,46 +89,48 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		int32 PrevDepth = -1;
 		int32 Probability = 0;
 		
-		TSet<FCubeCoord> SelectedCoords = TileBFS(Coord, 10, EBFSType::Connection, []()
-		{
-			return true;
-		},
-		[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
-		{
-			if (CurrentTileData->RoomID != RootTileData->RoomID)
+		TSet<FCubeCoord> SelectedCoords;
+		TileBFS(SelectedCoords, Coord, 10, EBFSType::Connection,
+			[]()
 			{
-				return false;
-			}
-
-			//타일 생성의 랜덤성을 위해 확률 커브, 랜덤 값 등을 활용
-			//단, 랜덤성 때문에 이가 빠진 듯이 타일이 삐죽하게 생성되는걸 원치 않아서
-			//확률에 한 번 선정되었을 경우 연속 횟수만큼은 확률 계산 하지 않고 통과하도록 함
-		
-			if (PrevDepth != CurrentDepth) //Depth가 변경되는 페이즈에 잔여 연속 횟수 소진을 위해 필요함
-			{
-				PrevDepth = CurrentDepth;
-				Probability = Curve->GetFloatValue(CurrentDepth * 0.1f) * 100;
-				ConsecutiveCount = 0;
-			}
-
-			int32 Rand = 0;
-		
-			if (ConsecutiveCount == 0)
-			{
-				ConsecutiveCount = StageInitData->ConsecutiveTileCount;
-				Rand = RandomStream->FRandRange(0, 100);
-			}
-			
-			if (Rand < Probability)
-			{
-				--ConsecutiveCount;
 				return true;
-			}
-		
-			return false;
-		});
+			},
+		[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
+			{
+				if (CurrentTileData->RoomID != RootTileData->RoomID)
+				{
+					return false;
+				}
 
-		if (SelectedCoords.Num() <= 0)
+				//타일 생성의 랜덤성을 위해 확률 커브, 랜덤 값 등을 활용
+				//단, 랜덤성 때문에 이가 빠진 듯이 타일이 삐죽하게 생성되는걸 원치 않아서
+				//확률에 한 번 선정되었을 경우 연속 횟수만큼은 확률 계산 하지 않고 통과하도록 함
+			
+				if (PrevDepth != CurrentDepth) //Depth가 변경되는 페이즈에 잔여 연속 횟수 소진을 위해 필요함
+				{
+					PrevDepth = CurrentDepth;
+					Probability = Curve->GetFloatValue(CurrentDepth * 0.1f) * 100;
+					ConsecutiveCount = 0;
+				}
+
+				int32 Rand = 0;
+			
+				if (ConsecutiveCount == 0)
+				{
+					ConsecutiveCount = StageInitData->ConsecutiveTileCount;
+					Rand = RandomStream->FRandRange(0, 100);
+				}
+				
+				if (Rand < Probability)
+				{
+					--ConsecutiveCount;
+					return true;
+				}
+			
+				return false;
+			});
+
+		if (SelectedCoords.IsEmpty())
 		{
 			continue;
 		}
@@ -157,19 +146,21 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		}
 
 		//테두리 검출 후 타일 연결 끊기
-		TSet<FCubeCoord> BoundCoords = TileBFS(Coord, 15, EBFSType::Connection, []()
-		{
-			return true;
-		},
-		[&RoomId](const FTileData* CurrentTileData, const int32 CurrentDepth)
-		{
-			if (CurrentTileData->RoomID != RoomId) //이새끼가 문제임
+		TSet<FCubeCoord> BoundCoords;
+		TileBFS(BoundCoords, Coord, 15, EBFSType::Connection,
+			[]()
 			{
 				return true;
-			}
+			},
+			[&RoomId](const FTileData* CurrentTileData, const int32 CurrentDepth)
+			{
+				if (CurrentTileData->RoomID != RoomId) //이새끼가 문제임
+				{
+					return true;
+				}
 
-			return false;
-		});
+				return false;
+			});
 
 		for (FCubeCoord BoundCoord : BoundCoords)
 		{
@@ -267,6 +258,7 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 
 			if (Floor == Pair.Value.Floor)
 			{
+				// 좌표에 해당하는 TileData에 꼭대기 타일만 할당합니다.
 				if (FTileData* FoundData = TileDataMap.Find(Pair.Key))
 				{
 					FoundData->TileActor = TileActor;
@@ -309,7 +301,7 @@ void UTileManagerSubsystem::GetCoordFromRange(const FCubeCoord& CenterCoord, TAr
 
 FVector UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord) const
 {
-	//언리얼 월드 좌표에서 X축은 위로, Y축은 오른쪽으로 향함.
+	// 언리얼은 왼손 좌표계로, 검지가 X축, 중지가 Y축, 엄지가 Z축에 해당합니다.
 	const float WorldX = TileHeightInterval * (-Coord.R);
 	const float WorldY = TileWidthInterval * (Coord.Q + Coord.R * 0.5f);
 
@@ -327,4 +319,63 @@ void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArr
 			Array.Swap(Index, SwapIndex);
 		}
 	}
+}
+
+ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord)
+{
+	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
+	{
+		if (TileData->TileActor.IsValid())
+		{
+			return TileData->TileActor.Get();
+		}
+	}
+
+	return nullptr;
+}
+
+void UTileManagerSubsystem::MapActorAndTile(ATile* InTile, AActor* InActor)
+{
+	if (!TileToActorMap.Contains(InTile) && !ActorToTileMap.Contains(InActor))
+	{
+		TileToActorMap.Emplace(InTile, InActor);
+		ActorToTileMap.Emplace(InActor, InTile);
+	}
+}
+
+void UTileManagerSubsystem::UnmapActorAndTile(ATile* InTile, AActor* InActor)
+{
+	if (TileToActorMap.Contains(InTile) && ActorToTileMap.Contains(InActor))
+	{
+		TileToActorMap.Remove(InTile);
+		ActorToTileMap.Remove(InActor);
+	}
+}
+
+AActor* UTileManagerSubsystem::GetActorOnTile(const ATile* InTile) const
+{
+	if (TileToActorMap.Contains(InTile))
+	{
+		const TWeakObjectPtr<AActor> FoundActor = TileToActorMap.FindRef(InTile);
+		if (FoundActor.IsValid())
+		{
+			return FoundActor.Get();
+		}
+	}
+
+	return nullptr;
+}
+
+ATile* UTileManagerSubsystem::GetTileUnderActor(const AActor* InActor) const
+{
+	if (ActorToTileMap.Contains(InActor))
+	{
+		const TWeakObjectPtr<ATile> FoundTile = ActorToTileMap.FindRef(InActor);
+		if (FoundTile.IsValid())
+		{
+			return FoundTile.Get();
+		}
+	}
+
+	return nullptr;
 }

@@ -5,6 +5,7 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/HighlightInterface.h"
+#include "Lethe/Manager/TileManagerSubsystem.h"
 
 UTileSelectorComponent::UTileSelectorComponent()
 {
@@ -46,7 +47,7 @@ void UTileSelectorComponent::UnhighlightTile()
 	}
 }
 
-AActor* UTileSelectorComponent::TryGetActorOnTileUnderCursor() const
+AActor* UTileSelectorComponent::GetActorOnTileUnderCursor() const
 {
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
 	{
@@ -55,13 +56,45 @@ AActor* UTileSelectorComponent::TryGetActorOnTileUnderCursor() const
 
 		if (Hit.IsValidBlockingHit())
 		{
-			if (const ATile* Tile = Cast<ATile>(Hit.GetActor()))
+			if (ATile* HitTile = Cast<ATile>(Hit.GetActor()))
 			{
-				return Tile->GetActorOnTile<AActor>();
+				const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+				const ATile* TopTile = HitTile->GetTopTile();
+				if (TileManagerSubsystem && TopTile)
+				{
+					return TileManagerSubsystem->GetActorOnTile(TopTile);
+				}
 			}
 		}
 	}
 
 	return nullptr;
+}
+
+bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const FCubeCoord& CenterCoord, const int32 InDepth) const
+{
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		TSet<FCubeCoord> SelectedCoords;
+		TileManagerSubsystem->TileBFS(SelectedCoords, CenterCoord, InDepth, EBFSType::Connection,
+			[]()
+			{
+				return true;
+			},
+			[](const FTileData* TileData, int32 Depth)
+			{
+				return true;
+			});
+
+		for (const FCubeCoord& SelectedCoord : SelectedCoords)
+		{
+			if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
+			{
+				OutTiles.Emplace(SelectedTile);
+			}
+		}
+	}
+
+	return OutTiles.Num() > 0;
 }
 

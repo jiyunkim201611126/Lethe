@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "TileSelectorComponent.generated.h"
 
+class ATile;
+struct FCubeCoord;
 class IHighlightInterface;
 
 /**
@@ -22,7 +24,8 @@ public:
 	void HighlightTile(AActor* Tile);
 	void UnhighlightTile();
 
-	AActor* TryGetActorOnTileUnderCursor() const;
+	AActor* GetActorOnTileUnderCursor() const;
+	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const FCubeCoord& CenterCoord, const int32 InDepth) const;
 
 private:
 	TScriptInterface<IHighlightInterface> LastHoveredTile;

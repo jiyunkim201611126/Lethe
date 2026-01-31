@@ -74,7 +74,7 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 
 	if (OwnerASC)
 	{
-		if (AActor* TargetActor = TileSelector->TryGetActorOnTileUnderCursor())
+		if (AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor())
 		{
 			// CardTag를 통해 발동할 Ability를 가져옵니다.
 			TArray<FGameplayAbilitySpec*> AbilitySpec;

@@ -48,7 +48,8 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		// 가장 왼쪽에 있는 타일을 가져오는 과정입니다.
 		FCubeCoord MostLeftTileCoord(0, 0, 0);
 		
-		const TSet<FCubeCoord> ComponentCoord = TileManagerSubsystem->TileBFS(MostLeftTileCoord, INT32_MAX, EBFSType::Through,
+		TSet<FCubeCoord> SelectedCoord;
+		TileManagerSubsystem->TileBFS(SelectedCoord, MostLeftTileCoord, INT32_MAX, EBFSType::Through,
 			[]()
 			{
 				return true;
@@ -64,9 +65,9 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 				return false;
 			});
 
-		if (!ComponentCoord.IsEmpty())
+		if (!SelectedCoord.IsEmpty())
 		{
-			for (const FCubeCoord& CurrentCoord : ComponentCoord)
+			for (const FCubeCoord& CurrentCoord : SelectedCoord)
 			{
 				if (CurrentCoord.Q < MostLeftTileCoord.Q)
 				{
@@ -84,17 +85,22 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
-			ATile* TileActor = TileManagerSubsystem->GetTileActor(TargetCoord);
-
+			ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord);
 			APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, TileActor->GetActorLocation(), TileActor->GetActorRotation(), SpawnParameters);
-			TileActor->SetActorOnTile(SpawnedCharacter);
+			if (TileActor && SpawnedCharacter)
+			{
+				TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedCharacter);
+			}
 		}
 
 		// 테스트용으로 중앙에 적을 하나 스폰합니다.
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		ATile* TileActor = TileManagerSubsystem->GetTileActor(FCubeCoord(0, 0, 0));
+		ATile* TileActor = TileManagerSubsystem->GetTile(FCubeCoord(0, 0, 0));
 		ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemy, TileActor->GetActorLocation(), TileActor->GetActorRotation(), SpawnParameters);
-		TileActor->SetActorOnTile(SpawnedEnemy);
+		if (TileActor && SpawnedEnemy)
+		{
+			TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedEnemy);
+		}
 	}
 }

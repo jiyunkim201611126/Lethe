@@ -6,7 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Lethe/Player/LethePlayerController.h"
+#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 ALethePawn::ALethePawn()
 {

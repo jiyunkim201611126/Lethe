@@ -7,7 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
-#include "Lethe/Player/LethePlayerController.h"
+#include "Lethe/Player/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
@@ -60,7 +60,8 @@ void UGASManagerComponent::InitAbilityActorInfo()
 		const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
 		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
 		{
-			if (const FSavedCharacterDeck* CharacterDeck = DeckManagerSubsystem->GetEquippedDecks().Find(CharacterTag))
+			const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
+			if (const FSavedCharacterDeck* CharacterDeck = EquippedDecks.Find(CharacterTag))
 			{
 				// Equipped Deck들을 실제 Ability로 부여합니다.
 				AddCharacterAbilities(CharacterDeck->Deck);

@@ -55,10 +55,11 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			},
 			[](const FTileData* TileData, int32 Depth)
 			{
-				if (TileData && TileData->TileActor)
+				if (TileData && TileData->TileActor.IsValid())
 				{
 					// 중앙 일렬 타일 중 좌측에 있는 것만 가져옵니다.
-					return TileData->TileActor->GetCubeCoord().R == 0 && TileData->TileActor->GetCubeCoord().Q < 0;
+					const FCubeCoord& CubeCoord = TileData->TileActor->GetCubeCoord();
+					return CubeCoord.R == 0 && CubeCoord.Q < 0;
 				}
 				return false;
 			});

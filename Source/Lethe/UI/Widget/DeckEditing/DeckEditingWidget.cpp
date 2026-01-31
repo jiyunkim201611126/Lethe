@@ -28,8 +28,6 @@ void UDeckEditingWidget::NativeConstruct()
 	NextCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnNextCharacterButtonClicked);
 	PreviousCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnPreviousCharacterButtonClicked);
 
-	GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
-
 	StartLoadAllCards();
 }
 
@@ -121,6 +119,12 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 	if (LoadedCardCount >= ShouldLoadCardCount)
 	{
 		UpdateCardPage(0, 0);
+	}
+
+	// 로드가 안 끝났는데 BattleLevel로 넘어가버리는 대참사를 막기 위해 여기서 바인드합니다.
+	if (!GoToBattleButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnGoToBattleButtonClicked))
+	{
+		GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
 	}
 }
 

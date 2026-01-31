@@ -17,6 +17,15 @@ class LETHE_API IHighlightInterface
 	GENERATED_BODY()
 
 public:
-	virtual void HighlightActor() = 0;
-	virtual void UnHighlightActor() = 0;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void HighlightActorByMouse();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void UnhighlightActorByMouse();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void HighlightActorByCard(const int32 InOutlineColor);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void UnhighlightActorByCard();
 };

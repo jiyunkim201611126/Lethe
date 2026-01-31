@@ -12,6 +12,8 @@ void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
+	EquippedDecks.Reserve(PLAYABLE_CHARACTER_NUMBER);
+	UnequippedDecks.Reserve(PLAYABLE_CHARACTER_NUMBER);
 	LoadDeck();
 }
 

@@ -8,7 +8,7 @@
 
 struct FGameplayTag;
 class ULetheHUD;
-class IHighlightInterface;
+class UTileSelectorComponent;
 class ULetheAbilitySystemComponent;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
@@ -23,7 +23,7 @@ public:
 
 	void OnNumberPressed(const int32 InNumber) const;
 	
-	void SetCardSelected(const bool bSelected);
+	void SetCardSelected(const bool bInCardSelected);
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
 
@@ -44,9 +44,9 @@ protected:
 	TObjectPtr<ULetheHUD> LetheHUD;
 	
 private:
+	UPROPERTY()
+	TObjectPtr<UTileSelectorComponent> TileSelector;
+	
 	uint8 bCardSelected : 1 = false;
 	uint8 bMouseOnCardUseSection : 1 = false;
-	
-	TScriptInterface<IHighlightInterface> LastActor;
-	TScriptInterface<IHighlightInterface> ThisActor;
 };

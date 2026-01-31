@@ -28,6 +28,10 @@ class LETHE_API UTileManagerSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	//~ Begin USubsystem Interface
+	virtual void Deinitialize() override;
+	//~ End of USubsystem Interface
+	
 	//초기화
 	UFUNCTION(BlueprintCallable)
 	void MakeNewTileMap();

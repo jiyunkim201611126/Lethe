@@ -5,6 +5,13 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
 
+void UTileManagerSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	TileDataMap.Empty();
+}
+
 void UTileManagerSubsystem::MakeNewTileMap()
 {
 	//절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
@@ -40,7 +47,10 @@ ATile* UTileManagerSubsystem::GetTileActor(const FCubeCoord& InCubeCoord)
 {
 	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
 	{
-		return TileData->TileActor;
+		if (TileData->TileActor.IsValid())
+		{
+			return TileData->TileActor.Get();
+		}
 	}
 
 	return nullptr;
@@ -195,6 +205,9 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 	{
 		FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
 		//WorldPosition.Z = pair.Value.Floor * 40;
+
+		TArray<ATile*> NonTopTiles;
+		NonTopTiles.Reserve(Pair.Value.Floor);
 		
 		for (int32 Floor = 1; Floor <= Pair.Value.Floor; Floor++)
 		{
@@ -230,13 +243,13 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 					}
 					else if (TileDataMap[Pair.Key + Offset].Floor < Pair.Value.Floor)
 					{
-						Key = ETileMeshType::Side_Lower;						
+						Key = ETileMeshType::Side_Lower;
 					}
 					else
 					{
 						if (TileDataMap[Pair.Key + Offset].RoomID == Pair.Value.RoomID) //같은 층 같은 룸이면 연결
 						{
-							Key = ETileMeshType::Side;							
+							Key = ETileMeshType::Side;
 						}
 					}
 				}
@@ -258,6 +271,18 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 				{
 					FoundData->TileActor = TileActor;
 				}
+
+				// 꼭대기 타일이 아닌 모든 타일에게 꼭대기 타일을 할당합니다.
+				for (ATile* NonTopTile : NonTopTiles)
+				{
+					NonTopTile->SetTopTile(TileActor);
+				}
+				
+				NonTopTiles.Empty();
+			}
+			else
+			{
+				NonTopTiles.Emplace(TileActor);
 			}
 		}
 	}

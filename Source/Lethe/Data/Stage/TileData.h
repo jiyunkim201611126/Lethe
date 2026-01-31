@@ -52,5 +52,5 @@ struct FTileData
 	
 	// 타일 생성 시 동적으로 할당되는 포인터입니다.
 	UPROPERTY()
-	TObjectPtr<ATile> TileActor;
+	TWeakObjectPtr<ATile> TileActor;
 };

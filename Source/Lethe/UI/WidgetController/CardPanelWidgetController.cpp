@@ -5,6 +5,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
@@ -14,6 +15,12 @@ void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystem
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 콜백이 바인드되도록 막아줍니다.
 	if (!bInitialized)
 	{
+		LethePlayerController = Cast<ALethePlayerController>(PlayerController);
+		if (LethePlayerController)
+		{
+			LethePlayerController->OnNumberKeyPressed.BindUObject(this, &ThisClass::OnNumberKeyPressed);
+		}
+		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		if (LetheGameState.IsValid())
 		{
@@ -49,6 +56,14 @@ float UCardPanelWidgetController::GetCardExpandScale() const
 	return CardViewData->GetCardExpandScale();
 }
 
+void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->SetCardSelected(bInCardSelected);
+	}
+}
+
 void UCardPanelWidgetController::GoDrawPhase() const
 {
 	if (LetheGameState.IsValid())
@@ -65,13 +80,22 @@ void UCardPanelWidgetController::GoBattlePhase() const
 	}
 }
 
-bool UCardPanelWidgetController::RequestTurnEnd()
+bool UCardPanelWidgetController::RequestTurnEnd() const
 {
 	// TODO: 배틀 페이즈가 종료되고 GameState에서 적 턴이 시작되도록 제어해야 합니다.
 	// 현재는 단순히 DrawPhase로 돌아가도록 합니다.
 	GoDrawPhase();
 
 	return true;
+}
+
+bool UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+{
+	if (LethePlayerController)
+	{
+		return LethePlayerController->RequestUseCard(OwnerASC, CardTag);
+	}
+	return false;
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
@@ -88,4 +112,9 @@ void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* Own
 void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState InState) const
 {
 	OnPlayerPhaseStateChangedDelegate.Broadcast(InState);
+}
+
+void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
+{
+	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }

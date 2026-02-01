@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "LetheWidgetController.h"
+#include "Lethe/UI/Widget/BattleWidget/CardPanelWidget.h"
+#include "Lethe/UI/Widget/BattleWidget/CardWidget.h"
 #include "CardPanelWidgetController.generated.h"
 
-class ALetheGameState;
 struct FGameplayAbilitySpecHandle;
 struct FGameplayAbilitySpec;
 struct FCardSelfViewInfo;
+class ALethePlayerController;
+class ALetheGameState;
 class UCharacterDefinitionData;
 class UCardSelfViewData;
 class UCardDefinitionData;
@@ -43,8 +46,9 @@ struct FCardInitParams
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
-
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChangedSignature, const EPlayerPhaseState);
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
+
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -63,18 +67,23 @@ public:
 
 	FVector2D GetCardSize() const;
 	float GetCardExpandScale() const;
+	
+	void SetCardSelected(bool bInCardSelected) const;
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;
-	bool RequestTurnEnd();
+	bool RequestTurnEnd() const;
+	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
 	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
+	void OnNumberKeyPressed(int32 InNumber) const;
 
 public:
 	FOnAbilityUpdatedSignature OnAbilityUpdatedDelegate;
 	FOnPlayerPhaseStateChangedSignature OnPlayerPhaseStateChangedDelegate;
+	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
@@ -82,6 +91,9 @@ protected:
 
 private:
 	uint8 bInitialized : 1 = false;
+	
+	UPROPERTY()
+	TObjectPtr<ALethePlayerController> LethePlayerController;
 
 	TWeakObjectPtr<ALetheGameState> LetheGameState;
 };

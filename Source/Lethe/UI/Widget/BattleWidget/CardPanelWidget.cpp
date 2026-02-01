@@ -10,7 +10,6 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardViewData.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 
 void UCardPanelWidget::NativeConstruct()
@@ -35,40 +34,36 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 {
 	Super::WidgetControllerSet_Implementation();
 
-	CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
-	if (CardPanelWidgetController)
+	if (!CardPanelWidgetController)
 	{
-		if (!bControllerInitialized)
-		{
-			// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
-			// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
-			const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
-			PaddingDeckAndHand += CardSize.X;
-			PaddingHandAndHand += CardSize.X;
-			FirstCardTranslation.X += CardSize.X / 2.f;
-			FirstCardTranslation.Y -= CardSize.Y / 2.f;
-			NextCardTranslation.X += CardSize.X / 2.f;
-			NextCardTranslation.Y -= CardSize.Y / 2.f;
-			GravesCardTranslation.X += CardSize.X / 2.f;
-			GravesCardTranslation.Y -= CardSize.Y / 2.f;
-			
-			CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
-			CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
-			
-			CardPanelWidgetController->BroadcastInitialValue();
-			
-			// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
-			// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
-			// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-			CardExpandScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
-			bControllerInitialized = true;
-		}
+		CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
 	}
-
-	// 키보드 입력에 반응할 수 있도록 콜백을 바인드합니다.
-	if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+	
+	if (!bControllerInitialized && CardPanelWidgetController)
 	{
-		PlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
+		// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
+		// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
+		const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
+		PaddingDeckAndHand += CardSize.X;
+		PaddingHandAndHand += CardSize.X;
+		FirstCardTranslation.X += CardSize.X / 2.f;
+		FirstCardTranslation.Y -= CardSize.Y / 2.f;
+		NextCardTranslation.X += CardSize.X / 2.f;
+		NextCardTranslation.Y -= CardSize.Y / 2.f;
+		GravesCardTranslation.X += CardSize.X / 2.f;
+		GravesCardTranslation.Y -= CardSize.Y / 2.f;
+		
+		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
+		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
+		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
+		
+		CardPanelWidgetController->BroadcastInitialValue();
+		
+		// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
+		// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
+		// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
+		CardExpandScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
+		bControllerInitialized = true;
 	}
 }
 
@@ -341,24 +336,21 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 		{
 			CardSlot->SetZOrder(SelectedZOrder);
 		}
-		
-		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+
+		if (CardPanelWidgetController)
 		{
-			PlayerController->SetCardSelected(true);
+			CardPanelWidgetController->SetCardSelected(true);
 		}
 	}
 }
 
 void UCardPanelWidget::TryUseCard()
 {
-	if (CurrentSelectedCard.IsValid())
+	if (CurrentSelectedCard.IsValid() && CardPanelWidgetController)
 	{
 		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
-		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
-		{
-			const bool bUseCardSuccess = PlayerController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
-			bUseCardSuccess ? UseCardSuccess() : ResetSelectedCard();
-		}
+		const bool bUseCardSuccess = CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
+		bUseCardSuccess ? UseCardSuccess() : ResetSelectedCard();
 	}
 }
 
@@ -377,10 +369,10 @@ void UCardPanelWidget::UseCardSuccess()
 	CurrentSelectedCard->SetCardContainer(ECardContainer::Grave);
 	CurrentSelectedCard->MouseHovered(false);
 	CurrentSelectedCard.Reset();
-	
-	if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+
+	if (CardPanelWidgetController)
 	{
-		PlayerController->SetCardSelected(false);
+		CardPanelWidgetController->SetCardSelected(false);
 	}
 }
 
@@ -391,10 +383,10 @@ void UCardPanelWidget::ResetSelectedCard()
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
 		CurrentSelectedCard->MouseHovered(false);
 		CurrentSelectedCard.Reset();
-		
-		if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+
+		if (CardPanelWidgetController)
 		{
-			PlayerController->SetCardSelected(false);
+			CardPanelWidgetController->SetCardSelected(false);
 		}
 
 		UpdateAllCardTranslation();
@@ -452,8 +444,8 @@ void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPlayerPhaseState InState
 
 void UCardPanelWidget::OnDrawPhaseStarted() const
 {
-	if (ALethePlayerController* PlayerController = GetOwningPlayer<ALethePlayerController>())
+	if (CardPanelWidgetController)
 	{
-		PlayerController->SetCardSelected(false);
+		CardPanelWidgetController->SetCardSelected(false);
 	}
 }

@@ -12,38 +12,38 @@ UTileSelectorComponent::UTileSelectorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UTileSelectorComponent::HighlightTile(AActor* Tile)
+void UTileSelectorComponent::HighlightTileByMouse(AActor* Tile)
 {
 	if (Tile)
 	{
-		LastHoveredTile = CurrentHoveredTile;
-		CurrentHoveredTile = Tile;
+		LastMouseHoveredTile = CurrentMouseHoveredTile;
+		CurrentMouseHoveredTile = Tile;
 
-		if (LastHoveredTile != CurrentHoveredTile)
+		if (LastMouseHoveredTile != CurrentMouseHoveredTile)
 		{
-			if (LastHoveredTile)
+			if (LastMouseHoveredTile)
 			{
-				IHighlightInterface::Execute_UnhighlightActorByMouse(LastHoveredTile.GetObject());
+				IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredTile.GetObject());
 			}
-			if (CurrentHoveredTile)
+			if (CurrentMouseHoveredTile)
 			{
-				IHighlightInterface::Execute_HighlightActorByMouse(CurrentHoveredTile.GetObject());
+				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredTile.GetObject());
 			}
 		}
 	}
 }
 
-void UTileSelectorComponent::UnhighlightTile()
+void UTileSelectorComponent::UnhighlightTileByMouse()
 {
-	if (LastHoveredTile)
+	if (LastMouseHoveredTile)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(LastHoveredTile.GetObject());
-		LastHoveredTile = nullptr;
+		IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredTile.GetObject());
+		LastMouseHoveredTile = nullptr;
 	}
-	if (CurrentHoveredTile)
+	if (CurrentMouseHoveredTile)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentHoveredTile.GetObject());
-		CurrentHoveredTile = nullptr;
+		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredTile.GetObject());
+		CurrentMouseHoveredTile = nullptr;
 	}
 }
 

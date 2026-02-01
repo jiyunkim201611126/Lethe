@@ -19,12 +19,17 @@ ALethePlayerController::ALethePlayerController()
 
 void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 {
-	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
+	OnNumberKeyPressed.ExecuteIfBound(InNumber);
 }
 
 void ALethePlayerController::SetCardSelected(const bool bInCardSelected)
 {
 	bCardSelected = bInCardSelected;
+
+	if (bCardSelected)
+	{
+		
+	}
 }
 
 void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)
@@ -44,7 +49,7 @@ void ALethePlayerController::BeginPlay()
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnNumberKeyPressedDelegate.Unbind();
+	OnNumberKeyPressed.Unbind();
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -60,12 +65,12 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		if (Hit.IsValidBlockingHit())
 		{
 			// 마우스가 올라가있는 타일을 하이라이팅할 수 있도록 알려줍니다.
-			TileSelector->HighlightTile(Hit.GetActor());
+			TileSelector->HighlightTileByMouse(Hit.GetActor());
 		}
 		return;
 	}
 
-	TileSelector->UnhighlightTile();
+	TileSelector->UnhighlightTileByMouse();
 }
 
 bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)

@@ -11,7 +11,7 @@ class ULetheHUD;
 class UTileSelectorComponent;
 class ULetheAbilitySystemComponent;
 
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -37,7 +37,7 @@ protected:
 	//~ End of AActor Interface
 
 public:
-	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
+	FOnNumberKeyPressed OnNumberKeyPressed;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)

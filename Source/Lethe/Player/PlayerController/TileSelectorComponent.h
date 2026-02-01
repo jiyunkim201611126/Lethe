@@ -6,8 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "TileSelectorComponent.generated.h"
 
-class ATile;
 struct FCubeCoord;
+class ATile;
 class IHighlightInterface;
 
 /**
@@ -21,13 +21,13 @@ class LETHE_API UTileSelectorComponent : public UActorComponent
 public:
 	UTileSelectorComponent();
 
-	void HighlightTile(AActor* Tile);
-	void UnhighlightTile();
+	void HighlightTileByMouse(AActor* Tile);
+	void UnhighlightTileByMouse();
 
 	AActor* GetActorOnTileUnderCursor() const;
 	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const FCubeCoord& CenterCoord, const int32 InDepth) const;
 
 private:
-	TScriptInterface<IHighlightInterface> LastHoveredTile;
-	TScriptInterface<IHighlightInterface> CurrentHoveredTile;
+	TScriptInterface<IHighlightInterface> LastMouseHoveredTile;
+	TScriptInterface<IHighlightInterface> CurrentMouseHoveredTile;
 };

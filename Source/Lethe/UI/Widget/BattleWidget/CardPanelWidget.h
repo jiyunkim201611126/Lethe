@@ -8,9 +8,9 @@
 #include "Lethe/UI/WidgetController/LetheWidgetController.h"
 #include "CardPanelWidget.generated.h"
 
+struct FCardInitParams;
 class UCardUseSectionWidget;
 class UButton;
-struct FCardInitParams;
 class UCardPanelWidgetController;
 class UCardWidget;
 class UCanvasPanel;

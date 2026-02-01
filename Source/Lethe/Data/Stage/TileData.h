@@ -11,6 +11,25 @@ class ATile;
  * Tile 시스템에서 사용되는 Enum 모음
  */
 UENUM()
+enum class EBFSType : uint8
+{
+	Connection,
+	Through,
+};
+
+USTRUCT()
+struct FAbilityRange
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	EBFSType BFSType;
+	
+	UPROPERTY(EditDefaultsOnly)
+	int32 Depth;
+};
+
+UENUM()
 enum class ETileMeshType : uint8
 {
 	Main,

@@ -7,6 +7,7 @@
 #include "TileSelectorComponent.generated.h"
 
 struct FCubeCoord;
+struct FAbilityRange;
 class ATile;
 class IHighlightInterface;
 
@@ -23,11 +24,21 @@ public:
 
 	void HighlightTileByMouse(AActor* Tile);
 	void UnhighlightTileByMouse();
+	void HighlightTileByCard(const TArray<ATile*>& Tiles);
+	void UnhighlightTileByCard();
 
 	AActor* GetActorOnTileUnderCursor() const;
-	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const FCubeCoord& CenterCoord, const int32 InDepth) const;
+	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const;
 
 private:
 	TScriptInterface<IHighlightInterface> LastMouseHoveredTile;
 	TScriptInterface<IHighlightInterface> CurrentMouseHoveredTile;
+
+	/**
+	 * 현재 하이라이팅된 타일을 추적하는 변수입니다.
+	 * 3 * Depth * (Depth + 1) + 1 개만큼의 배열 길이를 가지므로, Depth에 2차 함수로 비례해서 메모리를 잡아먹게 됩니다.
+	 * 그러나 메모리 개선을 하기 위해선 이전에 선택됐던 카드의 범위를 다시 한 번 탐색해 Unhighlight를 수행하는 과정이 필요합니다.
+	 * CPU 부담을 키우지 않기 위해 메모리 사용을 감수합니다.
+	 */
+	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedByCardTiles;
 };

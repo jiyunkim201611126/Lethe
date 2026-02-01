@@ -7,7 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "OverlayWidgetController.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedSignature, const UAbilitySystemComponent*, OwnerASC, float, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChanged, const UAbilitySystemComponent*, OwnerASC, float, NewValue);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UOverlayWidgetController : public ULetheWidgetController
@@ -22,8 +22,8 @@ public:
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS | Attributes")
-	FOnAttributeChangedSignature OnHealthChanged;
+	FOnAttributeChanged OnHealthChangedDelegate;
 	
 	UPROPERTY(BlueprintAssignable, Category = "GAS | Attributes")
-	FOnAttributeChangedSignature OnMaxHealthChanged;
+	FOnAttributeChanged OnMaxHealthChangedDelegate;
 };

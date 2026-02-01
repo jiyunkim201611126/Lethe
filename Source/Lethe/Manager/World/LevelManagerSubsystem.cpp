@@ -44,14 +44,18 @@ void ULevelManagerSubsystem::OnPostLoadLoadingMapWithWorld(UWorld* World)
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
 	// 이전 레벨에 있던 UObject들이 메모리에서 제대로 내려갈 수 있도록 약간의 딜레이를 주어 이동합니다.
-	World->GetTimerManager().SetTimer(OpenLevelDelayTimer, [this]()
-	{
-		PreviousLevelType = CurrentLevelType;
-		CurrentLevelType = NextLevelType;
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindUObject(this, &ThisClass::DelayedOpenLevel);
+	World->GetTimerManager().SetTimer(OpenLevelDelayTimer, TimerDelegate, OpenLevelDelayTime, false);
+}
 
-		FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnPostLoadMapWithWorld);
-		UGameplayStatics::OpenLevelBySoftObjectPtr(this, NextLevel, true, NextLevelStartTag);
-	}, OpenLevelDelayTime, false);
+void ULevelManagerSubsystem::DelayedOpenLevel()
+{
+	PreviousLevelType = CurrentLevelType;
+	CurrentLevelType = NextLevelType;
+
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnPostLoadMapWithWorld);
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, NextLevel, true, NextLevelStartTag);
 }
 
 void ULevelManagerSubsystem::OnPostLoadMapWithWorld(UWorld* World)

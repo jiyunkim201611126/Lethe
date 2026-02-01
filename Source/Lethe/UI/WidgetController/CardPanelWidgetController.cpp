@@ -18,7 +18,7 @@ void UCardPanelWidgetController::BindCallbacksToDependencies(ULetheAbilitySystem
 		LethePlayerController = Cast<ALethePlayerController>(PlayerController);
 		if (LethePlayerController)
 		{
-			LethePlayerController->OnNumberKeyPressed.BindUObject(this, &ThisClass::OnNumberKeyPressed);
+			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
 		}
 		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
@@ -56,11 +56,11 @@ float UCardPanelWidgetController::GetCardExpandScale() const
 	return CardViewData->GetCardExpandScale();
 }
 
-void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected) const
+void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->SetCardSelected(bInCardSelected);
+		LethePlayerController->SetCardSelected(bInCardSelected, OwnerASC, CardTag);
 	}
 }
 

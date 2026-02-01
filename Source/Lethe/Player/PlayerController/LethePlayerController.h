@@ -3,15 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
-struct FGameplayTag;
 class ULetheHUD;
 class UTileSelectorComponent;
 class ULetheAbilitySystemComponent;
 
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -23,7 +23,7 @@ public:
 
 	void OnNumberPressed(const int32 InNumber) const;
 	
-	void SetCardSelected(const bool bInCardSelected);
+	void SetCardSelected(const bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
 
@@ -37,7 +37,7 @@ protected:
 	//~ End of AActor Interface
 
 public:
-	FOnNumberKeyPressed OnNumberKeyPressed;
+	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)

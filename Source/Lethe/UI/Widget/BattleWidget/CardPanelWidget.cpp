@@ -32,13 +32,12 @@ void UCardPanelWidget::NativeDestruct()
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()
 {
-	Super::WidgetControllerSet_Implementation();
-
 	if (!CardPanelWidgetController)
 	{
 		CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
 	}
 	
+	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 아래 로직이 실행되도록 막아줍니다.
 	if (!bControllerInitialized && CardPanelWidgetController)
 	{
 		// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
@@ -59,7 +58,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		
 		CardPanelWidgetController->BroadcastInitialValue();
 		
-		// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐가 깨져버립니다.
+		// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐, 텍스트가 깨져버립니다.
 		// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 		// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
 		CardExpandScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
@@ -339,7 +338,7 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 
 		if (CardPanelWidgetController)
 		{
-			CardPanelWidgetController->SetCardSelected(true);
+			CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
 		}
 	}
 }

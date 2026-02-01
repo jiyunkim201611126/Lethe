@@ -34,7 +34,7 @@ public:
 
 private:
 	void OnPostLoadLoadingMapWithWorld(UWorld* World);
-
+	void DelayedOpenLevel();
 	void OnPostLoadMapWithWorld(UWorld* World);
 
 private:

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/Data/Stage/TileData.h"
 #include "StructUtils/InstancedStruct.h"
 #include "LetheGameplayAbility.generated.h"
 
@@ -27,7 +28,15 @@ public:
 	// Card에 대한 설명을 반환하는 함수로, 갖고 있는 EffectAppliers를 순회하며 설명을 가져옵니다.
 	FText GetCardDescription(const int32 InLevel) const;
 
+	FAbilityRange GetAbilityRange() const;
+
 protected:
+	//~ Begin UGameplayAbility Interface
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	//~ End UGameplayAbility Interface
+	
 	template<typename T>
 	T* GetEffectApplier()
 	{
@@ -70,12 +79,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect")
 	TArray<TInstancedStruct<FGameplayEffectApplier>> EffectAppliers;
 
-protected:
-	//~ Begin UGameplayAbility Interface
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UGameplayAbility Interface
+	// 카드 사용 시 범위입니다.
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	FAbilityRange AbilityRange;
 
 #if WITH_EDITOR
 	// 생성과 동시에 자동으로 ActivationBlockedTags에 CharacterState_Dead를 추가해주는 함수입니다.

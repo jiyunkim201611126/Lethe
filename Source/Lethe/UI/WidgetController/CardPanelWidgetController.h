@@ -45,10 +45,9 @@ struct FCardInitParams
 	const UCharacterDefinitionData* CharacterDefinitionData;
 };
 
-DECLARE_DELEGATE_OneParam(FOnAbilityUpdatedSignature, const FCardInitParams&)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChangedSignature, const EPlayerPhaseState);
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
-
+DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChanged, const EPlayerPhaseState);
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -68,7 +67,7 @@ public:
 	FVector2D GetCardSize() const;
 	float GetCardExpandScale() const;
 	
-	void SetCardSelected(bool bInCardSelected) const;
+	void SetCardSelected(bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;
@@ -81,9 +80,9 @@ private:
 	void OnNumberKeyPressed(int32 InNumber) const;
 
 public:
-	FOnAbilityUpdatedSignature OnAbilityUpdatedDelegate;
-	FOnPlayerPhaseStateChangedSignature OnPlayerPhaseStateChangedDelegate;
-	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
+	FOnAbilityUpdated OnAbilityUpdatedDelegate;
+	FOnPlayerPhaseStateChanged OnPlayerPhaseStateChangedDelegate;
+	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")

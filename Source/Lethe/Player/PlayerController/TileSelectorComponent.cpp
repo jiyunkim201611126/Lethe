@@ -47,6 +47,29 @@ void UTileSelectorComponent::UnhighlightTileByMouse()
 	}
 }
 
+void UTileSelectorComponent::HighlightTileByCard(const TArray<ATile*>& Tiles)
+{
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		for (ATile* Tile : Tiles)
+		{
+			// 타일 위에 무언가 있다면 초록색으로, 없다면 파란색으로 아웃라인을 표시합니다.
+			const int32 OutlineColor = TileManagerSubsystem->GetActorOnTile(Tile) ? CUSTOM_DEPTH_GREEN : CUSTOM_DEPTH_BLUE;
+			IHighlightInterface::Execute_HighlightActorByCard(Tile, OutlineColor);
+			CurrentHighlightedByCardTiles.Emplace(Tile);
+		}
+	}
+}
+
+void UTileSelectorComponent::UnhighlightTileByCard()
+{
+	for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedByCardTiles)
+	{
+		IHighlightInterface::Execute_UnhighlightActorByCard(HighlightTile.GetObject());
+	}
+	CurrentHighlightedByCardTiles.Reset();
+}
+
 AActor* UTileSelectorComponent::GetActorOnTileUnderCursor() const
 {
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
@@ -71,30 +94,33 @@ AActor* UTileSelectorComponent::GetActorOnTileUnderCursor() const
 	return nullptr;
 }
 
-bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const FCubeCoord& CenterCoord, const int32 InDepth) const
+bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const
 {
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		TSet<FCubeCoord> SelectedCoords;
-		TileManagerSubsystem->TileBFS(SelectedCoords, CenterCoord, InDepth, EBFSType::Connection,
-			[]()
-			{
-				return true;
-			},
-			[](const FTileData* TileData, int32 Depth)
-			{
-				return true;
-			});
-
-		for (const FCubeCoord& SelectedCoord : SelectedCoords)
+		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))
 		{
-			if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
+			TSet<FCubeCoord> SelectedCoords;
+			TileManagerSubsystem->TileBFS(SelectedCoords, Tile->GetCubeCoord(), InRange.Depth, InRange.BFSType,
+				[]()
+				{
+					return true;
+				},
+				[](const FTileData* TileData, int32 Depth)
+				{
+					return true;
+				});
+
+			for (const FCubeCoord& SelectedCoord : SelectedCoords)
 			{
-				OutTiles.Emplace(SelectedTile);
+				if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
+				{
+					OutTiles.Emplace(SelectedTile);
+				}
 			}
 		}
 	}
 
-	return OutTiles.Num() > 0;
+	return !OutTiles.IsEmpty();
 }
 

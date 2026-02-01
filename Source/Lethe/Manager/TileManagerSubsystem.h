@@ -12,13 +12,6 @@ struct FStageData;
 class UStageInitData;
 class ATile;
 
-UENUM()
-enum class EBFSType : uint8
-{
-	Connection,
-	Through,
-};
-
 /**
  * 타일 생성을 책임지는 월드 서브시스템
  */

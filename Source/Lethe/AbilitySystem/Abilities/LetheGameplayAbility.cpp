@@ -32,6 +32,11 @@ FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel) const
 	return FText::Join(FText::FromString(TEXT(" ")), ResultTexts);
 }
 
+FAbilityRange ULetheGameplayAbility::GetAbilityRange() const
+{
+	return AbilityRange;
+}
+
 FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const int32 ApplierIndex) const
 {
 	if (EffectAppliers.IsValidIndex(ApplierIndex))

@@ -95,7 +95,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 			{
 				return true;
 			},
-		[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
+			[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
 				if (CurrentTileData->RoomID != RootTileData->RoomID)
 				{

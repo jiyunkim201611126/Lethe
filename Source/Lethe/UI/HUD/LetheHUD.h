@@ -6,14 +6,14 @@
 #include "UObject/Object.h"
 #include "LetheHUD.generated.h"
 
-struct FWidgetControllerParams;
-class UCardViewData;
-class UAttributeSet;
 class UAbilitySystemComponent;
-class UOverlayWidget;
+class UAttributeSet;
 class UCardPanelWidget;
-class UOverlayWidgetController;
 class UCardPanelWidgetController;
+class UCardViewData;
+class UOverlayWidget;
+class UOverlayWidgetController;
+struct FWidgetControllerParams;
 
 UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
 class LETHE_API ULetheHUD : public UObject

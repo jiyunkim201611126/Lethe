@@ -6,11 +6,11 @@
 #include "AbilitySystemComponent.h"
 #include "LetheAbilitySystemComponent.generated.h"
 
-struct FSavedCard;
 class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
+struct FSavedCard;
 
 DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /*this*/, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
 

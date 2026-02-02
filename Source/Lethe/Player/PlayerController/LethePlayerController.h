@@ -7,9 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
+class ULetheAbilitySystemComponent;
 class ULetheHUD;
 class UTileSelectorComponent;
-class ULetheAbilitySystemComponent;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 

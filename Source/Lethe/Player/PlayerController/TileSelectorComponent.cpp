@@ -47,14 +47,23 @@ void UTileSelectorComponent::UnhighlightTileByMouse()
 	}
 }
 
-void UTileSelectorComponent::HighlightTileByCard(const TArray<ATile*>& Tiles)
+void UTileSelectorComponent::HighlightTileByCard(const TArray<ATile*>& Tiles, const AActor* CardOwner)
 {
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		for (ATile* Tile : Tiles)
 		{
-			// 타일 위에 무언가 있다면 초록색으로, 없다면 파란색으로 아웃라인을 표시합니다.
-			const int32 OutlineColor = TileManagerSubsystem->GetActorOnTile(Tile) ? CUSTOM_DEPTH_GREEN : CUSTOM_DEPTH_BLUE;
+			// 타일 위에 카드 주인이 있다면 검은색, 다른 게 있다면 초록색으로, 아무것도 없다면 파란색으로 아웃라인을 표시합니다.
+			int32 OutlineColor;
+			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
+			{
+				OutlineColor = ActorOnTile == CardOwner ? CUSTOM_DEPTH_BLACK : CUSTOM_DEPTH_GREEN;
+			}
+			else
+			{
+				OutlineColor = CUSTOM_DEPTH_BLUE;
+			}
+			
 			IHighlightInterface::Execute_HighlightActorByCard(Tile, OutlineColor);
 			CurrentHighlightedByCardTiles.Emplace(Tile);
 		}

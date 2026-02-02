@@ -7,11 +7,11 @@
 #include "Components/PawnComponent.h"
 #include "GASManagerComponent.generated.h"
 
-struct FSavedCard;
+class UAbilitySystemComponent;
+class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
-class UAttributeSet;
-class UAbilitySystemComponent;
+struct FSavedCard;
 
 UENUM(BlueprintType)
 enum class ETeamSide : uint8

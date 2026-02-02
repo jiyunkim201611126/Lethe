@@ -7,10 +7,10 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "DataLoadManagerSubsystem.generated.h"
 
-struct FSavedCharacterDeck;
 class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
+struct FSavedCharacterDeck;
 
 DECLARE_DELEGATE_OneParam(FOnCardDefinitionsLoaded, const TArray<UCardDefinitionData*>&)
 DECLARE_DELEGATE_TwoParams(FOnCardViewLoaded, UCardSelfViewData*, UCharacterDefinitionData*)

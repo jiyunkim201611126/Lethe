@@ -47,7 +47,7 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const U
 			{
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
-				TileSelector->HighlightTileByCard(OutTiles);
+				TileSelector->HighlightTileByCard(OutTiles, CardOwner);
 			}
 		}
 	}

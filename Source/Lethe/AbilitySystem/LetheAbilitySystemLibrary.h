@@ -7,8 +7,8 @@
 #include "LetheAbilitySystemLibrary.generated.h"
 
 class ALetheHUD;
-class UOverlayWidgetController;
 class UCardPanelWidgetController;
+class UOverlayWidgetController;
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemLibrary : public UBlueprintFunctionLibrary

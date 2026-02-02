@@ -7,11 +7,11 @@
 #include "UObject/Object.h"
 #include "CardPrimaryDataAssetLoader.generated.h"
 
-struct FSavedCard;
 class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
 class UDataLoadManagerSubsystem;
+struct FSavedCard;
 
 USTRUCT(BlueprintType)
 struct FLoadedCardInfo

@@ -6,10 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "TileSelectorComponent.generated.h"
 
-struct FCubeCoord;
-struct FAbilityRange;
 class ATile;
 class IHighlightInterface;
+struct FCubeCoord;
+struct FAbilityRange;
 
 /**
  * 타일 선택과 하이타이팅을 담당하는 클래스입니다.
@@ -24,7 +24,7 @@ public:
 
 	void HighlightTileByMouse(AActor* Tile);
 	void UnhighlightTileByMouse();
-	void HighlightTileByCard(const TArray<ATile*>& Tiles);
+	void HighlightTileByCard(const TArray<ATile*>& Tiles, const AActor* CardOwner);
 	void UnhighlightTileByCard();
 
 	AActor* GetActorOnTileUnderCursor() const;

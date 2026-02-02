@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Lethe/SaveGame/DeckSaveGame.h"
 #include "UObject/Object.h"
 #include "DeckEditingCardListObject.generated.h"

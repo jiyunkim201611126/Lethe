@@ -8,10 +8,10 @@
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
-struct FCardInitParams;
-class USizeBox;
-class ULetheImage;
 class ULetheAbilitySystemComponent;
+class ULetheImage;
+class USizeBox;
+struct FCardInitParams;
 
 // CardWidget이 현재 어디에 속해있는지 나타내는 Enum입니다.
 // 이미 CardPanelWidget이 이를 알고는 있으나, CardWidget이 알고 있어야 스스로 어떤 CardAction이 발생했는지 판별한 후 CardPanelWidget에게 알려줄 수 있습니다.

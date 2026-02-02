@@ -11,5 +11,6 @@
 #define CUSTOM_DEPTH_RED 250
 #define CUSTOM_DEPTH_GREEN 251
 #define CUSTOM_DEPTH_BLUE 252
+#define CUSTOM_DEPTH_BLACK 253
 
 #define ECC_Tile ECollisionChannel::ECC_GameTraceChannel1

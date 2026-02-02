@@ -8,9 +8,9 @@
 #include "Lethe/Data/Stage/TileData.h"
 #include "TileManagerSubsystem.generated.h"
 
-struct FStageData;
-class UStageInitData;
 class ATile;
+class UStageInitData;
+struct FStageData;
 
 /**
  * 타일 생성을 책임지는 월드 서브시스템

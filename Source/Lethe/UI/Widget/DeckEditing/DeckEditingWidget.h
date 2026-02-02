@@ -7,14 +7,14 @@
 #include "Blueprint/UserWidget.h"
 #include "DeckEditingWidget.generated.h"
 
+class UButton;
+class UCardViewData;
+class UDeckEditingCardListObject;
+class ULetheGameplayAbility;
+class UTileView;
 struct FSavedCharacterDeck;
 struct FGameplayTag;
 struct FCardSelfViewInfo;
-class UDeckEditingCardListObject;
-class ULetheGameplayAbility;
-class UCardViewData;
-class UTileView;
-class UButton;
 enum class ECardAction : uint8;
 
 USTRUCT()

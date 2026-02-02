@@ -6,11 +6,11 @@
 #include "GameFramework/Pawn.h"
 #include "LethePawn.generated.h"
 
-struct FInputActionValue;
+class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class USpringArmComponent;
-class UCameraComponent;
+struct FInputActionValue;
 
 /**
  * 카메라를 담당하는 기본 Pawn입니다.

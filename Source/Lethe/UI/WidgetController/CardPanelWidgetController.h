@@ -8,16 +8,16 @@
 #include "Lethe/UI/Widget/BattleWidget/CardWidget.h"
 #include "CardPanelWidgetController.generated.h"
 
-struct FGameplayAbilitySpecHandle;
-struct FGameplayAbilitySpec;
-struct FCardSelfViewInfo;
 class ALethePlayerController;
 class ALetheGameState;
-class UCharacterDefinitionData;
-class UCardSelfViewData;
 class UCardDefinitionData;
-class ULetheGameplayAbility;
+class UCardSelfViewData;
 class UCardViewData;
+class UCharacterDefinitionData;
+class ULetheGameplayAbility;
+struct FCardSelfViewInfo;
+struct FGameplayAbilitySpec;
+struct FGameplayAbilitySpecHandle;
 enum class EPlayerPhaseState : uint8;
 
 /**

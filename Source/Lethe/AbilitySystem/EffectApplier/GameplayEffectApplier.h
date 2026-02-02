@@ -7,8 +7,8 @@
 #include "UObject/Object.h"
 #include "GameplayEffectApplier.generated.h"
 
-class UGameplayEffect;
 class UGameplayAbility;
+class UGameplayEffect;
 
 /**
  * Effect 적용을 담당하는 구조체입니다.

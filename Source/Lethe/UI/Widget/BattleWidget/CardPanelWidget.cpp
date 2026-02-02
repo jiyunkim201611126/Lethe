@@ -2,6 +2,7 @@
 
 #include "CardPanelWidget.h"
 
+#include "CardPanelWidgetController.h"
 #include "CardUseSectionWidget.h"
 #include "CardWidget.h"
 #include "Components/Button.h"
@@ -10,7 +11,6 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardViewData.h"
-#include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
 
 void UCardPanelWidget::NativeConstruct()
 {

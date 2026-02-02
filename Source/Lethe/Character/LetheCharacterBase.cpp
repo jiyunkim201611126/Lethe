@@ -3,6 +3,7 @@
 #include "LetheCharacterBase.h"
 
 #include "AbilitySystemComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Lethe/AbilitySystem/GASManagerComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
@@ -17,6 +18,9 @@ ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitial
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 	AttributeSet = CreateDefaultSubobject<ULetheAttributeSet>(TEXT("AttributeSet"));
+
+	AttributeWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AttributeWidgetComponent"));
+	AttributeWidgetComponent->SetupAttachment(RootComponent);
 }
 
 UAbilitySystemComponent* ALetheCharacterBase::GetAbilitySystemComponent() const
@@ -39,5 +43,5 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 {
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);
 	GASManagerComponent->SetAttributeSet(AttributeSet);
-	GASManagerComponent->InitAbilityActorInfo();
+	GASManagerComponent->InitAbilityActorInfo(AttributeWidgetComponent->GetWidget());
 }

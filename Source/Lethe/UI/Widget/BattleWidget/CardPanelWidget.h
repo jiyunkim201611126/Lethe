@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Lethe/Game/LetheGameState.h"
 #include "Lethe/UI/Widget/LetheUserWidget.h"
-#include "Lethe/UI/WidgetController/LetheWidgetController.h"
 #include "CardPanelWidget.generated.h"
 
 class UButton;
@@ -51,7 +50,9 @@ public:
 	virtual void NativeDestruct() override;
 	//~ End of UUserWidget Interface
 
+	//~ Begin ULetheUserWidget Interface
 	virtual void WidgetControllerSet_Implementation() override;
+	//~ End of ULetheUserWidget Interface
 
 private:
 	void OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);

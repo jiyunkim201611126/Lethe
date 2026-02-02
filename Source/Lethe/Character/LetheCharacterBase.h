@@ -11,6 +11,7 @@
 class UAttributeSet;
 class UGameplayAbility;
 class UGASManagerComponent;
+class UWidgetComponent;
 
 UCLASS()
 class LETHE_API ALetheCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -44,4 +45,7 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
 };

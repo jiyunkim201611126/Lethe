@@ -31,11 +31,11 @@ UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void UGASManagerComponent::InitAbilityActorInfo()
+void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 {
-	AActor* OwnerActor = GetOwner();
+	APawn* OwnerPawn = GetOwner<APawn>();
 	
-	AbilitySystemComponent->InitAbilityActorInfo(OwnerActor, OwnerActor);
+	AbilitySystemComponent->InitAbilityActorInfo(OwnerPawn, OwnerPawn);
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
 	// 플레이어블 캐릭터인 경우만 HUD쪽으로 넘겨줍니다.
@@ -48,14 +48,14 @@ void UGASManagerComponent::InitAbilityActorInfo()
 			{
 				if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
 				{
-					LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
+					LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
 				}
 			}
 		}
 	}
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerActor))
+	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))
 	{
 		const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
 		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())

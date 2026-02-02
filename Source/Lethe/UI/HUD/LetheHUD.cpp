@@ -4,17 +4,15 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/UI/Widget/OverlayWidget.h"
-#include "Lethe/UI/Widget/BattleWidget/CardPanelWidget.h"
-#include "Lethe/UI/WidgetController/CardPanelWidgetController.h"
-#include "Lethe/UI/WidgetController/OverlayWidgetController.h"
+#include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/UI/Widget/Attribute/AttributeWidget.h"
+#include "Lethe/UI/Widget/Attribute/AttributeWidgetController.h"
+#include "Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.h"
+#include "Lethe/UI/Widget/Overlay/OverlayWidget.h"
+#include "Lethe/UI/Widget/Overlay/OverlayWidgetController.h"
 
-void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
 {
-	check(OverlayWidgetClass);
-	check(OverlayWidgetControllerClass);
-	check(CardPanelWidgetControllerClass);
-
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 
 	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
@@ -35,6 +33,15 @@ void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemC
 		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
 		OverlayWidget->SetWidgetController(OverlayWidgetController);
 		OverlayWidget->AddToViewport();
+	}
+
+	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
+	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
+	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
+	if (AttributeWidgetController && AttributeWidget)
+	{
+		AttributeWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
+		AttributeWidget->SetWidgetController(AttributeWidgetController);
 	}
 }
 

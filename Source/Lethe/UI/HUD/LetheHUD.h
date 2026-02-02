@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "LetheHUD.generated.h"
 
+class UAttributeWidgetController;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UCardPanelWidget;
@@ -21,7 +22,7 @@ class LETHE_API ULetheHUD : public UObject
 	GENERATED_BODY()
 
 public:
-	void InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+	void InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
 	
 	UOverlayWidgetController* CreateOverlayWidgetController();
 	UCardPanelWidgetController* CreateCardWidgetController();
@@ -30,14 +31,17 @@ public:
 	UCardPanelWidgetController* GetCardPanelWidgetController() const;
 
 protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UOverlayWidget> OverlayWidgetClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UCardPanelWidgetController> CardPanelWidgetControllerClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UAttributeWidgetController> AttributeWidgetControllerClass;
 	
 private:
 	UPROPERTY()

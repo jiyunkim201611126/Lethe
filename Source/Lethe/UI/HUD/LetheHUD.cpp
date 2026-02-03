@@ -11,7 +11,7 @@
 #include "Lethe/UI/Widget/Overlay/OverlayWidget.h"
 #include "Lethe/UI/Widget/Overlay/OverlayWidgetController.h"
 
-void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 
@@ -22,11 +22,11 @@ void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemC
 	CreateOverlayWidgetController();
 	// 총 4쌍의 ASC, AS를 WidgetController에게 넘겨줘야 하기 때문에 생성 시점이 아닌 여기서 호출합니다.
 	OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	OverlayWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
+	OverlayWidgetController->BindCallbacks(LetheASC, LetheAS);
 	
 	CreateCardWidgetController();
 	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	CardPanelWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
+	CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS);
 
 	if (!OverlayWidget)
 	{
@@ -40,7 +40,20 @@ void ULetheHUD::InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemC
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController && AttributeWidget)
 	{
-		AttributeWidgetController->BindCallbacksToDependencies(LetheASC, LetheAS);
+		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
+		AttributeWidget->SetWidgetController(AttributeWidgetController);
+	}
+}
+
+void ULetheHUD::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+{
+	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
+	const ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
+	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
+	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
+	if (AttributeWidgetController && AttributeWidget)
+	{
+		AttributeWidgetController->BindCallbacksForEnemy(LetheASC, LetheAS);
 		AttributeWidget->SetWidgetController(AttributeWidgetController);
 	}
 }

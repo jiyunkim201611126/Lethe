@@ -20,6 +20,14 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Attributes.Vital.Health"), FString(""));
 	GameplayTags.Attributes_Vital_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Vital.MaxHealth"), FString(""));
+	GameplayTags.Attributes_Vital_Mana = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Vital.Mana"), FString(""));
+	GameplayTags.Attributes_Vital_MaxMana = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Vital.MaxMana"), FString(""));
+	GameplayTags.Attributes_Vital_Cost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Vital.Cost"), FString(""));
+	GameplayTags.Attributes_Vital_MaxCost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Vital.MaxCost"), FString(""));
 	
 	GameplayTags.Damage_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Damage.Physical"), FString(""));

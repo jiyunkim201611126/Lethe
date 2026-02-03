@@ -9,8 +9,8 @@
 
 void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {
-	PlayerController = Cast<APlayerController>(WidgetControllerParams.PlayerController);
-	PlayerState = Cast<APlayerState>(WidgetControllerParams.PlayerState);
+	PlayerController = WidgetControllerParams.PlayerController;
+	PlayerState = WidgetControllerParams.PlayerState;
 
 	AbilitySystemReferences.Reserve(PLAYABLE_CHARACTER_NUMBER);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
@@ -18,7 +18,7 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	AbilitySystemReferences.Emplace(FAbilitySystemReference(AbilitySystemComponent, AttributeSet));
 }
 
-void ULetheWidgetController::BindCallbacksToDependencies(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
+void ULetheWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 }
 

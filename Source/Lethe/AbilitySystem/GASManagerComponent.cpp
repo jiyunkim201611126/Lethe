@@ -38,21 +38,26 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	AbilitySystemComponent->InitAbilityActorInfo(OwnerPawn, OwnerPawn);
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
-	// 플레이어블 캐릭터인 경우만 HUD쪽으로 넘겨줍니다.
-	if (TeamSide == ETeamSide::Player)
+	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
 	{
-		// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
-		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
+			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
 			{
-				if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+				switch (TeamSide)
 				{
-					LetheHUD->InitHUD(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
+				case ETeamSide::Player:
+					LetheHUD->InitPlayerUI(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
+					break;
+				case ETeamSide::Enemy:
+					LetheHUD->InitEnemyUI(AbilitySystemComponent, AttributeSet, AttributeWidget);
+					break;
 				}
 			}
 		}
 	}
+
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
 	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))

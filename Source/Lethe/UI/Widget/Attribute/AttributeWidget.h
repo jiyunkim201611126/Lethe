@@ -19,6 +19,7 @@ protected:
 	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
 
+protected:
 	UFUNCTION()
 	void OnHealthChanged(const float Health, const float MaxHealth);
 

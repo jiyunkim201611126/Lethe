@@ -22,7 +22,8 @@ class LETHE_API ULetheHUD : public UObject
 	GENERATED_BODY()
 
 public:
-	void InitHUD(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+	void InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+	void InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
 	
 	UOverlayWidgetController* CreateOverlayWidgetController();
 	UCardPanelWidgetController* CreateCardWidgetController();

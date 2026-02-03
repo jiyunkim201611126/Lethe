@@ -55,9 +55,13 @@ void ULetheGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (TriggerEventData && TriggerEventData->Target)
+	if (CheckCost(Handle, ActorInfo))
 	{
-		ApplyAllEffects(const_cast<AActor*>(TriggerEventData->Target.Get()));
+		if (TriggerEventData && TriggerEventData->Target)
+		{
+			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
+			ApplyAllEffects(const_cast<AActor*>(TriggerEventData->Target.Get()));
+		}
 	}
 }
 

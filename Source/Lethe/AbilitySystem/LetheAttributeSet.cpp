@@ -12,14 +12,14 @@ ULetheAttributeSet::ULetheAttributeSet()
 {
 	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
 	
-	TagsToAttributes.Reserve(6);
+	AttributesToTags.Reserve(6);
 	
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_Health, GetHealthAttribute);
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_MaxHealth, GetMaxHealthAttribute);
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_Mana, GetManaAttribute);
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_MaxMana, GetMaxManaAttribute);
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_Cost, GetCostAttribute);
-	TagsToAttributes.Emplace(GameplayTags.Attributes_Vital_MaxCost, GetMaxCostAttribute);
+	AttributesToTags.Emplace(GetHealthAttribute(), GameplayTags.Attributes_Vital_Health);
+	AttributesToTags.Emplace(GetMaxHealthAttribute(), GameplayTags.Attributes_Vital_MaxHealth);
+	AttributesToTags.Emplace(GetManaAttribute(), GameplayTags.Attributes_Vital_Mana);
+	AttributesToTags.Emplace(GetMaxManaAttribute(), GameplayTags.Attributes_Vital_MaxMana);
+	AttributesToTags.Emplace(GetCostAttribute(), GameplayTags.Attributes_Vital_Cost);
+	AttributesToTags.Emplace(GetMaxCostAttribute(), GameplayTags.Attributes_Vital_MaxCost);
 }
 
 void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

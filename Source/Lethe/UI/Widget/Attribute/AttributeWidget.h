@@ -22,6 +22,8 @@ protected:
 protected:
 	UFUNCTION()
 	void OnHealthChanged(const float Health, const float MaxHealth);
+	
+	virtual void OnHealthPreviewValueChanged(const float PreviewValue);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -29,4 +31,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheTextBlock> HealthText;
+
+	UPROPERTY(meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> HealthBarPreviewAnimation;
 };

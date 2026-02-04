@@ -80,7 +80,7 @@ private:
 public:
 	// 델리게이트가 아닌 함수 포인터를 직접 Value로 선언한 TMap.
 	// 저수준 방식으로 최적화를 위해서 사용하기도 하지만, 보일러 플레이트를 줄이는 게 의미가 더 큽니다.
-	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+	TMap<FGameplayAttribute, FGameplayTag> AttributesToTags;
 
 	/**
 	 * Vital Attributes

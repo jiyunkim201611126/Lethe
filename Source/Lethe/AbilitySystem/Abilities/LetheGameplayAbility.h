@@ -30,6 +30,9 @@ public:
 
 	FAbilityRange GetAbilityRange() const;
 
+	bool TryGetAbilityCostEffectPreviewData(TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
+	bool TryGetAllEffectsPreviewData(UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+
 protected:
 	//~ Begin UGameplayAbility Interface
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
@@ -73,6 +76,9 @@ protected:
 	 */ 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FGameplayEffectContextHandle GetContextHandle(const int32 ApplierIndex) const;
+
+private:
+	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const UGameplayEffect* GameplayEffectCDO, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 protected:
 	// Composite 패턴으로 조합해 사용할 수 있으며, 구조체 내부의 ApplyEffect나 Ability의 ApplyAllEffects를 호출해 사용합니다.

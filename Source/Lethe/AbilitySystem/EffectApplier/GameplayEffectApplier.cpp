@@ -40,3 +40,8 @@ FText FGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
 {
 	return FText();
 }
+
+TSubclassOf<UGameplayEffect> FGameplayEffectApplier::GetEffectClass() const
+{
+	return EffectClass;
+}

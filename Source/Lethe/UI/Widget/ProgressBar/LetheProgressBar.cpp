@@ -47,6 +47,11 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 	}
 }
 
+void ULetheProgressBar::SetPreviewValue(const float InPercent) const
+{
+	FrontProgressBar->SetPercent(InPercent);
+}
+
 void ULetheProgressBar::BarPercentSet()
 {
 	GhostPercentTarget = FrontProgressBar->GetPercent();

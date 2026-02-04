@@ -11,7 +11,7 @@ void UAttributeWidget::WidgetControllerSet_Implementation()
 {
 	if (UAttributeWidgetController* AttributeWidgetController = Cast<UAttributeWidgetController>(WidgetController))
 	{
-		AttributeWidgetController->OnHealthPercentChangedDelegate.AddDynamic(this, &ThisClass::OnHealthChanged);
+		AttributeWidgetController->OnHealthChangedDelegate.AddDynamic(this, &ThisClass::OnHealthChanged);
 		AttributeWidgetController->BroadcastInitialValue();
 	}
 }
@@ -20,4 +20,10 @@ void UAttributeWidget::OnHealthChanged(const float Health, const float MaxHealth
 {
 	HealthBar->SetBarPercent(UKismetMathLibrary::SafeDivide(Health, MaxHealth));
 	HealthText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(Health), FMath::RoundToInt(MaxHealth)));
+}
+
+void UAttributeWidget::OnHealthPreviewValueChanged(const float PreviewValue)
+{
+	PlayAnimation(HealthBarPreviewAnimation, 0, 0);
+	HealthBar->SetPreviewValue(PreviewValue);
 }

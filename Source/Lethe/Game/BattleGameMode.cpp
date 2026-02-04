@@ -49,7 +49,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		FCubeCoord MostLeftTileCoord(0, 0, 0);
 		
 		TSet<FCubeCoord> SelectedCoord;
-		TileManagerSubsystem->TileBFS(SelectedCoord, MostLeftTileCoord, INT32_MAX, EBFSType::Through,
+		TileManagerSubsystem->TileBFS(MostLeftTileCoord, INT32_MAX, EBFSType::Through, SelectedCoord,
 			[]()
 			{
 				return true;

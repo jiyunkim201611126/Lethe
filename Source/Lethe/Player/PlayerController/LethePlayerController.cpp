@@ -48,6 +48,9 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const U
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
 				TileSelector->HighlightTileByCard(OutTiles, CardOwner);
+
+				// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
+				OnCardSelectedDelegate.Broadcast(OwnerASC, LetheGameplayAbility);
 			}
 		}
 	}

@@ -90,7 +90,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		int32 Probability = 0;
 		
 		TSet<FCubeCoord> SelectedCoords;
-		TileBFS(SelectedCoords, Coord, 10, EBFSType::Connection,
+		TileBFS(Coord, 10, EBFSType::Connection, SelectedCoords,
 			[]()
 			{
 				return true;
@@ -147,7 +147,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 
 		//테두리 검출 후 타일 연결 끊기
 		TSet<FCubeCoord> BoundCoords;
-		TileBFS(BoundCoords, Coord, 15, EBFSType::Connection,
+		TileBFS(Coord, 15, EBFSType::Connection, BoundCoords,
 			[]()
 			{
 				return true;

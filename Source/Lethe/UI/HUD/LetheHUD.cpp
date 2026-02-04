@@ -36,7 +36,7 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 	}
 
 	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
-	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
+	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController && AttributeWidget)
 	{
@@ -48,12 +48,12 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 void ULetheHUD::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
 {
 	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
-	const ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
+	ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController && AttributeWidget)
 	{
-		AttributeWidgetController->BindCallbacksForEnemy(LetheASC, LetheAS);
+		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
 		AttributeWidget->SetWidgetController(AttributeWidgetController);
 	}
 }

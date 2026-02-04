@@ -32,6 +32,8 @@ public:
 
 	virtual FText GetDescriptionText(const int32 InLevel) const;
 
+	TSubclassOf<UGameplayEffect> GetEffectClass() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;

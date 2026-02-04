@@ -8,10 +8,12 @@
 #include "LethePlayerController.generated.h"
 
 class ULetheAbilitySystemComponent;
+class ULetheGameplayAbility;
 class ULetheHUD;
 class UTileSelectorComponent;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent*, const ULetheGameplayAbility*)
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -38,6 +40,7 @@ protected:
 
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
+	FOnCardSelectedSignature OnCardSelectedDelegate;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)

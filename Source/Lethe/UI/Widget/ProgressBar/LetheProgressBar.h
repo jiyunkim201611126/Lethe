@@ -25,8 +25,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetFillColorAndOpacity(const FLinearColor& InLinearColor);
 	
-	UFUNCTION(BlueprintCallable)
 	void SetBarPercent(const float InPercent, const bool bShouldInterp = true);
+	void SetPreviewValue(const float InPercent) const;
 
 protected:
 	//~ Begin UUserWidget Interface

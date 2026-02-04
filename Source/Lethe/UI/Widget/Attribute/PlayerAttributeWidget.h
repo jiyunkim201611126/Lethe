@@ -31,5 +31,8 @@ protected:
 	TObjectPtr<ULetheTextBlock> ManaText;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<ULetheTextBlock> CostText;
+	TObjectPtr<ULetheTextBlock> CardCostText;
+
+	UPROPERTY(meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> CostPreviewAnimation;
 };

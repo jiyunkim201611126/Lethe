@@ -30,7 +30,7 @@ public:
 	void MakeNewTileMap();
 
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
-	void TileBFS(TSet<FCubeCoord>& OutCoords, const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
+	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
 	void MapActorAndTile(ATile* InTile, AActor* InActor);
@@ -80,7 +80,7 @@ private:
  * 템플릿 선언 내에서 작성된 검사는 공통 BFS의 검사 내용만
  */
 template <typename BFSConditionFunc, typename SelectConditionFunc>
-void UTileManagerSubsystem::TileBFS(TSet<FCubeCoord>& OutCoords, const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)
+void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)
 {
 	TSet<FCubeCoord> Visited;
 	

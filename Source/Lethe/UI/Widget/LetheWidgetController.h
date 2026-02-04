@@ -66,7 +66,7 @@ class LETHE_API ULetheWidgetController : public UObject
 	GENERATED_BODY()
 
 public:
-	void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams);
+	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams);
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS);
 
 	// 객체 생성 직후 View에 표시해야 한다면 아래 함수를 활용할 수 있습니다.

@@ -14,6 +14,7 @@ class UCardPanelWidgetController;
 class UCardViewData;
 class UOverlayWidget;
 class UOverlayWidgetController;
+class UPlayerAttributeWidgetController;
 struct FWidgetControllerParams;
 
 UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
@@ -43,6 +44,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UAttributeWidgetController> AttributeWidgetControllerClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UAttributeWidgetController> PlayerAttributeWidgetControllerClass;
 	
 private:
 	UPROPERTY()

@@ -23,6 +23,10 @@ private:
 	UFUNCTION()
 	void OnCostChanged(const float Cost);
 
+	//CB_ADDED 260205 에러나서 추가함
+	UFUNCTION()
+	void OnAbilityCostPreviewValueChanged(const float PreviewValue);
+
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<ULetheProgressBar> ManaBar;

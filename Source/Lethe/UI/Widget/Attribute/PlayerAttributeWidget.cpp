@@ -15,7 +15,8 @@ void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 		AttributeWidgetController->OnManaChangedDelegate.AddDynamic(this, &ThisClass::OnManaChanged);
 		AttributeWidgetController->OnCostChangedDelegate.AddDynamic(this, &ThisClass::OnCostChanged);
 
-		AttributeWidgetController->OnPreviewDataChangedMap.(this, &ThisClass::OnAbilityCostPreviewValueChanged);
+		//CB_ADDED 260205 에러나는 부분 주석처리
+		//AttributeWidgetController->OnPreviewDataChangedMap(this, &ThisClass::OnAbilityCostPreviewValueChanged);
 		AttributeWidgetController->BroadcastInitialValue();
 	}
 }

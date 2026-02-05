@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeWidgetController.h"
+#include "GameplayTagContainer.h" //CB_ADDED 260205
 #include "PlayerAttributeWidgetController.generated.h"
 
 struct FGameplayTag;

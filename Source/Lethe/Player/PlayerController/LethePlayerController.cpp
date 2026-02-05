@@ -57,6 +57,7 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const U
 	else
 	{
 		TileSelector->UnhighlightTileByCard();
+		OnCancelCardSelectDelegate.Broadcast();
 	}
 }
 

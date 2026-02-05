@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
 struct FOnAttributeChangeData;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, float, NewValue);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedWithMaxValue, float, CurrentValue, float, MaxValue);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, float);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UAttributeWidgetController : public ULetheWidgetController
@@ -23,15 +23,16 @@ public:
 	virtual void BroadcastInitialValue() override;
 	//~ End LetheWidgetController Interface
 
+protected:
+	virtual void OnCancelCardSelect();
+
 private:
-	void OnHealthChanged(const FOnAttributeChangeData& Data);
-	void OnMaxHealthChanged(const FOnAttributeChangeData& Data);
+	void OnHealthChanged(const FOnAttributeChangeData& Data) const;
+	void OnMaxHealthChanged(const FOnAttributeChangeData& Data) const;
 
 public:
-	UPROPERTY(BlueprintAssignable, Category = "GAS | Attributes")
-	FOnAttributeChangedWithMaxValue OnHealthChangedDelegate;
-
-private:
-	float Health = 0.f;
-	float MaxHealth = 0.f;
+	FOnAttributeChanged OnHealthChangedDelegate;
+	FOnAttributeChanged OnMaxHealthChangedDelegate;
+	
+	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewDataDelegateMap;
 };

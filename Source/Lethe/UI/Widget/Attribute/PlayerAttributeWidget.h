@@ -16,16 +16,18 @@ protected:
 	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
 
-private:	
+private:
 	UFUNCTION()
-	void OnManaChanged(const float Mana, const float MaxMana);
+	void OnManaChanged(const float NewValue);
+	
+	UFUNCTION()
+	void OnMaxManaChanged(const float NewValue);
 
 	UFUNCTION()
-	void OnCostChanged(const float Cost);
+	void OnCostChanged(const float NewValue);
 
-	//CB_ADDED 260205 에러나서 추가함
 	UFUNCTION()
-	void OnAbilityCostPreviewValueChanged(const float PreviewValue);
+	void OnCostPreviewActivate(const float DeltaValue);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -37,6 +39,11 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheTextBlock> CardCostText;
 
-	UPROPERTY(meta = (BindWidgetAnim))
-	TObjectPtr<UWidgetAnimation> CostPreviewAnimation;
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> CostBlinkingAnimation;
+
+private:
+	float Mana = 0.f;
+	float MaxMana = 0.f;
+	float Cost = 0.f;
 };

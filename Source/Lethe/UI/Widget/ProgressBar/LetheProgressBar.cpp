@@ -47,9 +47,9 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 	}
 }
 
-void ULetheProgressBar::SetPreviewValue(const float InPercent) const
+void ULetheProgressBar::SetPreviewValue(const float DeltaValue) const
 {
-	FrontProgressBar->SetPercent(InPercent);
+	//FrontProgressBar->SetPercent(UKismetMathLibrary::SafeDivide(InCurrentValue, InMaxValue));
 }
 
 void ULetheProgressBar::BarPercentSet()

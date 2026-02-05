@@ -14,6 +14,7 @@ class UTileSelectorComponent;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent*, const ULetheGameplayAbility*)
+DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -41,6 +42,7 @@ protected:
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 	FOnCardSelectedSignature OnCardSelectedDelegate;
+	FOnCancelCardSelectSignature OnCancelCardSelectDelegate;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)

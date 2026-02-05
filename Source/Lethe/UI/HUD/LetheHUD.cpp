@@ -40,6 +40,7 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController && AttributeWidget)
 	{
+		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
 		AttributeWidget->SetWidgetController(AttributeWidgetController);
 	}
@@ -53,6 +54,8 @@ void ULetheHUD::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUs
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController && AttributeWidget)
 	{
+		const FWidgetControllerParams WidgetControllerParams(nullptr, nullptr, ASC, AS);
+		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
 		AttributeWidget->SetWidgetController(AttributeWidgetController);
 	}

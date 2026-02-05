@@ -16,39 +16,40 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnMaxManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 
-	Mana = AS->GetMana();
-	MaxMana = AS->GetMaxMana();
-	Cost = AS->GetCost();
-
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
 		LethePlayerController->OnCardSelectedDelegate.AddUObject(this, &ThisClass::OnCardSelected);
+		LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 	}
 }
 
 void UPlayerAttributeWidgetController::BroadcastInitialValue()
 {
 	Super::BroadcastInitialValue();
-	OnManaChangedDelegate.Broadcast(Mana, MaxMana);
-	OnCostChangedDelegate.Broadcast(Cost);
+	if (!AbilitySystemReferences.IsEmpty())
+	{
+		if (const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences[0].AttributeSet)
+		{
+			OnManaChangedDelegate.Broadcast(LetheAttributeSet->GetMana());
+			OnMaxManaChangedDelegate.Broadcast(LetheAttributeSet->GetMaxMana());
+			OnCostChangedDelegate.Broadcast(LetheAttributeSet->GetCost());
+		}
+	}
 }
 
-void UPlayerAttributeWidgetController::OnManaChanged(const FOnAttributeChangeData& Data)
+void UPlayerAttributeWidgetController::OnManaChanged(const FOnAttributeChangeData& Data) const
 {
-	Mana = Data.NewValue;
-	OnManaChangedDelegate.Broadcast(Mana, MaxMana);
+	OnManaChangedDelegate.Broadcast(Data.NewValue);
 }
 
-void UPlayerAttributeWidgetController::OnMaxManaChanged(const FOnAttributeChangeData& Data)
+void UPlayerAttributeWidgetController::OnMaxManaChanged(const FOnAttributeChangeData& Data) const
 {
-	MaxMana = Data.NewValue;
-	OnManaChangedDelegate.Broadcast(Mana, MaxMana);
+	OnMaxManaChangedDelegate.Broadcast(Data.NewValue);
 }
 
-void UPlayerAttributeWidgetController::OnCostChanged(const FOnAttributeChangeData& Data)
+void UPlayerAttributeWidgetController::OnCostChanged(const FOnAttributeChangeData& Data) const
 {
-	Cost = Data.NewValue;
-	OnCostChangedDelegate.Broadcast(Cost);
+	OnCostChangedDelegate.Broadcast(Data.NewValue);
 }
 
 void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility)
@@ -65,9 +66,11 @@ void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemC
 			{
 				if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(AbilityCostPreview.Key))
 				{
+					// 카드 Ability의 Cost Effect가 적용됐을 때 수정되는 Attribute를 멤버변수에 캐싱합니다.
 					AbilityCostPreviewData.Emplace(*AttributeTag, AbilityCostPreview.Value);
-			
-					if (const FOnPreviewValueChanged* Delegate = OnPreviewDataChangedMap.Find(*AttributeTag))
+
+					// 변경될 값을 Widget에 알려줍니다.
+					if (const FOnAttributeChanged* Delegate = OnPreviewDataDelegateMap.Find(*AttributeTag))
 					{
 						Delegate->Broadcast(AbilityCostPreview.Value);
 					}
@@ -75,4 +78,12 @@ void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemC
 			}
 		}
 	}
+}
+
+void UPlayerAttributeWidgetController::OnCancelCardSelect()
+{
+	Super::OnCancelCardSelect();
+	
+	// 캐싱했던 값을 비워줍니다.
+	AbilityCostPreviewData.Empty();
 }

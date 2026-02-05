@@ -7,10 +7,7 @@
 #include "GameplayTagContainer.h" //CB_ADDED 260205
 #include "PlayerAttributeWidgetController.generated.h"
 
-struct FGameplayTag;
 class ULetheGameplayAbility;
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewValueChanged, const float);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UPlayerAttributeWidgetController : public UAttributeWidgetController
@@ -23,27 +20,22 @@ public:
 	virtual void BroadcastInitialValue() override;
 	//~ End LetheWidgetController Interface
 
+protected:
+	virtual void OnCancelCardSelect() override;
+
 private:
-	void OnManaChanged(const FOnAttributeChangeData& Data);
-	void OnMaxManaChanged(const FOnAttributeChangeData& Data);
-	void OnCostChanged(const FOnAttributeChangeData& Data);
+	void OnManaChanged(const FOnAttributeChangeData& Data) const;
+	void OnMaxManaChanged(const FOnAttributeChangeData& Data) const;
+	void OnCostChanged(const FOnAttributeChangeData& Data) const;
 
 	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
 
 public:
-	UPROPERTY(BlueprintAssignable, Category = "GAS | Attributes")
-	FOnAttributeChangedWithMaxValue OnManaChangedDelegate;
-	
-	UPROPERTY(BlueprintAssignable, Category = "GAS | Attributes")
+	FOnAttributeChanged OnManaChangedDelegate;
+	FOnAttributeChanged OnMaxManaChangedDelegate;
 	FOnAttributeChanged OnCostChangedDelegate;
 
-	TMap<FGameplayTag, FOnPreviewValueChanged> OnPreviewDataChangedMap;
-
 private:
-	float Mana = 0.f;
-	float MaxMana = 0.f;
-	float Cost = 0.f;
-
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
 	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
 

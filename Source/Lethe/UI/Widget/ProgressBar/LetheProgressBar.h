@@ -26,7 +26,7 @@ public:
 	void SetFillColorAndOpacity(const FLinearColor& InLinearColor);
 	
 	void SetBarPercent(const float InPercent, const bool bShouldInterp = true);
-	void SetPreviewValue(const float InPercent) const;
+	void SetPreviewValue(const float DeltaValue) const;
 
 protected:
 	//~ Begin UUserWidget Interface

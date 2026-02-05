@@ -22,24 +22,35 @@ void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	// Attribute들에게 변동사항이 있는 경우 Widget Controller가 알 수 있도록 각 AttributeSet에게 함수를 바인드합니다.
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnMaxHealthChanged);
-
-	Health = AS->GetHealth();
-	MaxHealth = AS->GetMaxHealth();
 }
 
 void UAttributeWidgetController::BroadcastInitialValue()
 {
-	OnHealthChangedDelegate.Broadcast(Health, MaxHealth);
+	if (!AbilitySystemReferences.IsEmpty())
+	{
+		if (const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences[0].AttributeSet)
+		{
+			OnHealthChangedDelegate.Broadcast(LetheAttributeSet->GetHealth());
+			OnMaxHealthChangedDelegate.Broadcast(LetheAttributeSet->GetMaxHealth());
+		}
+	}
 }
 
-void UAttributeWidgetController::OnHealthChanged(const FOnAttributeChangeData& Data)
+void UAttributeWidgetController::OnHealthChanged(const FOnAttributeChangeData& Data) const
 {
-	Health = Data.NewValue;
-	OnHealthChangedDelegate.Broadcast(Health, MaxHealth);
+	OnHealthChangedDelegate.Broadcast(Data.NewValue);
 }
 
-void UAttributeWidgetController::OnMaxHealthChanged(const FOnAttributeChangeData& Data)
+void UAttributeWidgetController::OnMaxHealthChanged(const FOnAttributeChangeData& Data) const
 {
-	MaxHealth = Data.NewValue;
-	OnHealthChangedDelegate.Broadcast(Health, MaxHealth);
+	OnMaxHealthChangedDelegate.Broadcast(Data.NewValue);
+}
+
+void UAttributeWidgetController::OnCancelCardSelect()
+{
+	for (const auto& Elem : OnPreviewDataDelegateMap)
+	{
+		// Widget이 카드 선택이 취소됐음을 알 수 있도록 INDEX_NONE으로 Broadcast합니다.
+		Elem.Value.Broadcast(INDEX_NONE);
+	}
 }

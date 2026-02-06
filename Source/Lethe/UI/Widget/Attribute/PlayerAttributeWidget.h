@@ -17,17 +17,14 @@ protected:
 	//~ End of ULetheUserWidget Interface
 
 private:
-	UFUNCTION()
 	void OnManaChanged(const float NewValue);
-	
-	UFUNCTION()
 	void OnMaxManaChanged(const float NewValue);
-
-	UFUNCTION()
 	void OnCostChanged(const float NewValue);
-
-	UFUNCTION()
-	void OnCostPreviewActivate(const float DeltaValue);
+	
+	void OnManaPreviewValueChanged(const float PreviewDeltaValue);
+	void OnMaxManaPreviewValueChanged(const float PreviewDeltaValue);
+	void StartManaPreview() const;
+	void OnCardCostPreviewValueChanged(const float PreviewDeltaValue);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -45,5 +42,9 @@ protected:
 private:
 	float Mana = 0.f;
 	float MaxMana = 0.f;
-	float Cost = 0.f;
+	float CardCost = 0.f;
+
+	float PreviewDeltaMana = 0.f;
+	float PreviewDeltaMaxMana = 0.f;
+	float PreviewDeltaCardCost = 0.f;
 };

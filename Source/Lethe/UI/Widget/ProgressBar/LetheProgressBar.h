@@ -26,7 +26,8 @@ public:
 	void SetFillColorAndOpacity(const FLinearColor& InLinearColor);
 	
 	void SetBarPercent(const float InPercent, const bool bShouldInterp = true);
-	void SetPreviewValue(const float DeltaValue) const;
+	void SetPreviewBarPercent(const float InPercent);
+	void StopPreview(const float InPercent);
 
 protected:
 	//~ Begin UUserWidget Interface
@@ -36,13 +37,17 @@ protected:
 	void BarPercentSet();
 	void InterpGhostBar();
 
-private:
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget = "true"))
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> FrontProgressBar;
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget = "true"))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> GhostProgressBar;
 
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	TObjectPtr<UWidgetAnimation> FrontBarBlinkingAnimation;
+
+private:
 	FTimerHandle GhostPercentSetTimerHandle;
 	FTimerHandle PercentInterpTimerHandle;
 

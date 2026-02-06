@@ -4,6 +4,7 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
 void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {
@@ -14,43 +15,50 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	AbilitySystemReferences.Reserve(1);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = Cast<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
-	AbilitySystemReferences.Emplace(FAbilitySystemReference(AbilitySystemComponent, AttributeSet));
+	
+	FAbilitySystemReference AbilitySystemReference;
+	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
+	AbilitySystemReference.AttributeSet = AttributeSet;
+	AbilitySystemReferences.Emplace(AbilitySystemReference);
 }
 
 void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 	// Attribute들에게 변동사항이 있는 경우 Widget Controller가 알 수 있도록 각 AttributeSet에게 함수를 바인드합니다.
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnMaxHealthChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnAttributeChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnAttributeChanged);
 }
 
-void UAttributeWidgetController::BroadcastInitialValue()
+void UAttributeWidgetController::OnAttributeChanged(const FOnAttributeChangeData& AttributeData)
 {
 	if (!AbilitySystemReferences.IsEmpty())
 	{
 		if (const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences[0].AttributeSet)
 		{
-			OnHealthChangedDelegate.Broadcast(LetheAttributeSet->GetHealth());
-			OnMaxHealthChangedDelegate.Broadcast(LetheAttributeSet->GetMaxHealth());
+			if (const FGameplayTag* AttributeTag = LetheAttributeSet->AttributesToTags.Find(AttributeData.Attribute))
+			{
+				if (const FOnAttributeChanged* AttributeChangedDelegate = OnAttributeChangedDelegates.Find(*AttributeTag))
+				{
+					AttributeChangedDelegate->Broadcast(AttributeData.NewValue);
+				}
+			}
 		}
 	}
 }
 
-void UAttributeWidgetController::OnHealthChanged(const FOnAttributeChangeData& Data) const
+void UAttributeWidgetController::OnAttributePreviewChanged(const FGameplayAttribute& Attribute, const float PreviewDeltaValue)
 {
-	OnHealthChangedDelegate.Broadcast(Data.NewValue);
-}
-
-void UAttributeWidgetController::OnMaxHealthChanged(const FOnAttributeChangeData& Data) const
-{
-	OnMaxHealthChangedDelegate.Broadcast(Data.NewValue);
-}
-
-void UAttributeWidgetController::OnCancelCardSelect()
-{
-	for (const auto& Elem : OnPreviewDataDelegateMap)
+	if (!AbilitySystemReferences.IsEmpty())
 	{
-		// Widget이 카드 선택이 취소됐음을 알 수 있도록 INDEX_NONE으로 Broadcast합니다.
-		Elem.Value.Broadcast(INDEX_NONE);
+		if (const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences[0].AttributeSet)
+		{
+			if (const FGameplayTag* AttributeTag = LetheAttributeSet->AttributesToTags.Find(Attribute))
+			{
+				if (const FOnAttributeChanged* AttributeChangedDelegate = OnAttributePreviewChangedDelegates.Find(*AttributeTag))
+				{
+					AttributeChangedDelegate->Broadcast(PreviewDeltaValue);
+				}
+			}
+		}
 	}
 }

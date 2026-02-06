@@ -7,6 +7,7 @@
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
+struct FGameplayAttribute;
 struct FOnAttributeChangeData;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, float);
@@ -20,19 +21,13 @@ public:
 	//~ Begin LetheWidgetController Interface
 	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams) override;
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
-	virtual void BroadcastInitialValue() override;
 	//~ End LetheWidgetController Interface
 
-protected:
-	virtual void OnCancelCardSelect();
-
-private:
-	void OnHealthChanged(const FOnAttributeChangeData& Data) const;
-	void OnMaxHealthChanged(const FOnAttributeChangeData& Data) const;
+protected:	
+	void OnAttributeChanged(const FOnAttributeChangeData& AttributeData);
+	void OnAttributePreviewChanged(const FGameplayAttribute& Attribute, const float PreviewDeltaValue);
 
 public:
-	FOnAttributeChanged OnHealthChangedDelegate;
-	FOnAttributeChanged OnMaxHealthChangedDelegate;
-	
-	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewDataDelegateMap;
+	TMap<FGameplayTag, FOnAttributeChanged> OnAttributeChangedDelegates;
+	TMap<FGameplayTag, FOnAttributeChanged> OnAttributePreviewChangedDelegates;
 };

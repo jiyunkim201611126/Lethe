@@ -36,7 +36,6 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	APawn* OwnerPawn = GetOwner<APawn>();
 	
 	AbilitySystemComponent->InitAbilityActorInfo(OwnerPawn, OwnerPawn);
-	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
@@ -57,7 +56,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 			}
 		}
 	}
-
+	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
 	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))

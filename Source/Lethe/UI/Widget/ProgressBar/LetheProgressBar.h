@@ -42,10 +42,13 @@ protected:
 	TObjectPtr<UProgressBar> FrontProgressBar;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UProgressBar> PreviewProgressBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> GhostProgressBar;
 
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	TObjectPtr<UWidgetAnimation> FrontBarBlinkingAnimation;
+	TObjectPtr<UWidgetAnimation> PreviewBlinkingAnimation;
 
 private:
 	FTimerHandle GhostPercentSetTimerHandle;

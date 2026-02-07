@@ -19,12 +19,15 @@ protected:
 private:
 	void OnManaChanged(const float NewValue);
 	void OnMaxManaChanged(const float NewValue);
+	void UpdateManaUI() const;
 	void OnCostChanged(const float NewValue);
 	
 	void OnManaPreviewValueChanged(const float PreviewDeltaValue);
 	void OnMaxManaPreviewValueChanged(const float PreviewDeltaValue);
-	void StartManaPreview() const;
 	void OnCardCostPreviewValueChanged(const float PreviewDeltaValue);
+	
+	void StartManaPreview() const;
+	void StopManaPreview() const;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

@@ -28,6 +28,8 @@ protected:
 	void OnAttributePreviewChanged(const FGameplayAttribute& Attribute, const float PreviewDeltaValue);
 
 public:
+	// AttributeTag를 Key로, 델리게이트를 Value로 매핑하는 TMap입니다.
+	// 기존 Attribute 하나당 하나의 델리게이트를 선언하는 방식은 Attribute가 많아질 경우 가독성이 저하되므로, 이와 같은 방식을 사용합니다.
 	TMap<FGameplayTag, FOnAttributeChanged> OnAttributeChangedDelegates;
 	TMap<FGameplayTag, FOnAttributeChanged> OnAttributePreviewChangedDelegates;
 };

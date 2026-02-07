@@ -27,6 +27,7 @@ struct FLetheGameplayTags
 	//~ End of Attributes
 	
 	//~ Begin Damage Types
+	FGameplayTag Damage;
 	FGameplayTag Damage_Physical;
 
 	TArray<FGameplayTag> DamageTypeTags;

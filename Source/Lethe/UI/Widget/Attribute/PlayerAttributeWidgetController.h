@@ -23,10 +23,17 @@ protected:
 	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
 	void OnCancelCardSelect();
 
-private:
-	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
-	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
+	virtual void StartAllPreview() override;
+	virtual void StopAllPreview() override;
 
-	// 해당 WidgetController와 연관된 ASC의 카드가 선택되면, Ability의 Cost에 대한 예고를 보여주기 위해 아래에 데이터가 캐싱됩니다.
-	TMap<FGameplayAttribute, float> AbilityCostPreviewData;
+private:
+	void OnManaChanged(const FOnAttributeChangeData& AttributeData);
+	void BroadcastManaChanged() const;
+	
+	void OnCostChanged(const FOnAttributeChangeData& AttributeData);
+	void BroadcastCostChanged() const;
+
+private:
+	// 카드가 선택되면 해당하는 Ability의 Cost가 적용되는 경우 어떤 Attribute 변화가 있는지를 캐싱해두는 TMap입니다.
+	TMap<FGameplayAttribute, float> CachedAbilityCostPreviewData;
 };

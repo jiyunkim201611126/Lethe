@@ -10,6 +10,7 @@
 ALethePlayerController::ALethePlayerController()
 {
 	TileSelector = CreateDefaultSubobject<UTileSelectorComponent>("TileSelector");
+	TileSelector->OnDetectedOtherTile.BindUObject(this, &ThisClass::OnOtherTileDetected);
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -45,6 +46,9 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const U
 			const AActor* CardOwner = OwnerASC->GetOwner();
 			if (LetheGameplayAbility && CardOwner)
 			{
+				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
+				SelectedCardAbility = LetheGameplayAbility;
+				
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
 				TileSelector->HighlightTileByCard(OutTiles, CardOwner);
@@ -100,6 +104,14 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	}
 
 	TileSelector->UnhighlightTileByMouse();
+}
+
+void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const
+{
+	if (SelectedCardAbility.IsValid())
+	{
+		OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardAbility.Get());
+	}
 }
 
 bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)

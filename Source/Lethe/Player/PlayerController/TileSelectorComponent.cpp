@@ -29,6 +29,16 @@ void UTileSelectorComponent::HighlightTileByMouse(AActor* Tile)
 			{
 				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredTile.GetObject());
 			}
+			
+			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+			{
+				const AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredTile.GetObject()));
+				const AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredTile.GetObject()));
+				if (LastActor != CurrentActor)
+				{
+					OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);
+				}
+			}
 		}
 	}
 }

@@ -28,7 +28,9 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Attributes.Vital.Cost"), FString(""));
 	GameplayTags.Attributes_Vital_MaxCost = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Vital.MaxCost"), FString(""));
-	
+
+	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Damage"), FString(""));
 	GameplayTags.Damage_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Damage.Physical"), FString(""));
 

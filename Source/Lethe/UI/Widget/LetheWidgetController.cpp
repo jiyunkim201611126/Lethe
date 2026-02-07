@@ -15,7 +15,11 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	AbilitySystemReferences.Reserve(PLAYABLE_CHARACTER_NUMBER);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = Cast<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
-	AbilitySystemReferences.Emplace(FAbilitySystemReference(AbilitySystemComponent, AttributeSet));
+	
+	FAbilitySystemReference AbilitySystemReference;
+	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
+	AbilitySystemReference.AttributeSet = AttributeSet;
+	AbilitySystemReferences.Emplace(AbilitySystemReference);
 }
 
 void ULetheWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)

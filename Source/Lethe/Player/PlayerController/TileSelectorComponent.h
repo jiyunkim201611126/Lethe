@@ -11,6 +11,8 @@ class IHighlightInterface;
 struct FCubeCoord;
 struct FAbilityRange;
 
+DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, const AActor*, const AActor*);
+
 /**
  * 타일 선택과 하이타이팅을 담당하는 클래스입니다.
  */
@@ -29,6 +31,9 @@ public:
 
 	AActor* GetActorOnTileUnderCursor() const;
 	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const;
+
+public:
+	FOnDetectedOtherTile OnDetectedOtherTile;
 
 private:
 	TScriptInterface<IHighlightInterface> LastMouseHoveredTile;

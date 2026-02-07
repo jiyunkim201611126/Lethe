@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AttributeSet.h"
 #include "AttributeWidgetController.h"
 #include "PlayerAttributeWidgetController.generated.h"
 
@@ -23,10 +22,17 @@ protected:
 	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
 	void OnCancelCardSelect();
 
+	virtual void StartAllPreview() override;
+	virtual void StopAllPreview() override;
+
 private:
+	void OnManaChanged(const FOnAttributeChangeData& AttributeData);
+	void BroadcastManaChanged() const;
+	
+	void OnCostChanged(const FOnAttributeChangeData& AttributeData);
+	void BroadcastCostChanged() const;
+
+private:	
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
 	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
-
-	// 해당 WidgetController와 연관된 ASC의 카드가 선택되면, Ability의 Cost에 대한 예고를 보여주기 위해 아래에 데이터가 캐싱됩니다.
-	TMap<FGameplayAttribute, float> AbilityCostPreviewData;
 };

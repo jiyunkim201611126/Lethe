@@ -17,17 +17,10 @@ protected:
 	//~ End of ULetheUserWidget Interface
 
 private:
-	void OnManaChanged(const float NewValue);
-	void OnMaxManaChanged(const float NewValue);
-	void UpdateManaUI() const;
-	void OnCostChanged(const float NewValue);
-	
-	void OnManaPreviewValueChanged(const float PreviewDeltaValue);
-	void OnMaxManaPreviewValueChanged(const float PreviewDeltaValue);
-	void OnCardCostPreviewValueChanged(const float PreviewDeltaValue);
-	
-	void StartManaPreview() const;
-	void StopManaPreview() const;
+	void UpdateManaUI(const FAttributeData& NewData) const;
+	void UpdateCostUI(const FAttributeData& NewData);
+	void StopPreviewMana(const FAttributeData& NewData) const;
+	void StopPreviewCost(const FAttributeData& NewData);
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -41,13 +34,4 @@ protected:
 
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	TObjectPtr<UWidgetAnimation> CostBlinkingAnimation;
-
-private:
-	float Mana = 0.f;
-	float MaxMana = 0.f;
-	float CardCost = 0.f;
-
-	float PreviewDeltaMana = 0.f;
-	float PreviewDeltaMaxMana = 0.f;
-	float PreviewDeltaCardCost = 0.f;
 };

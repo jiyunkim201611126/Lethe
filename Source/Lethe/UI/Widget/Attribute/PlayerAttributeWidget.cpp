@@ -14,82 +14,57 @@ void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 	
 	if (UPlayerAttributeWidgetController* AttributeWidgetController = Cast<UPlayerAttributeWidgetController>(WidgetController))
 	{
-		// Attribute에 해당하는 Tag를 통해서 매핑된 Delegate를 가져와 함수를 바인드합니다.
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		
-		AttributeWidgetController->OnAttributeChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::OnManaChanged);
-		AttributeWidgetController->OnAttributeChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::OnMaxManaChanged);
-		AttributeWidgetController->OnAttributeChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::OnCostChanged);
-		AttributeWidgetController->BroadcastInitialValue();
+		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::UpdateManaUI);
+		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
+		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
 
-		AttributeWidgetController->OnAttributePreviewChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::OnManaPreviewValueChanged);
-		AttributeWidgetController->OnAttributePreviewChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::OnMaxManaPreviewValueChanged);
-		AttributeWidgetController->OnAttributePreviewChangedDelegates.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::OnCardCostPreviewValueChanged);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::UpdateManaUI);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
+		
+		AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::StopPreviewMana);
+		AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StopPreviewCost);
 	}
 }
 
-void UPlayerAttributeWidget::OnManaChanged(const float NewValue)
+void UPlayerAttributeWidget::UpdateManaUI(const FAttributeData& NewData) const
 {
-	Mana = NewValue;
-	UpdateManaUI();
+	if (NewData.bIsPreview)
+	{
+		ManaBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+		ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
+	}
+	else
+	{
+		ManaBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+		ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
+	}
 }
 
-void UPlayerAttributeWidget::OnMaxManaChanged(const float NewValue)
+void UPlayerAttributeWidget::UpdateCostUI(const FAttributeData& NewData)
 {
-	MaxMana = NewValue;
-	UpdateManaUI();
-}
-
-void UPlayerAttributeWidget::UpdateManaUI() const
-{
-	ManaBar->SetBarPercent(UKismetMathLibrary::SafeDivide(Mana, MaxMana));
-	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(Mana), FMath::RoundToInt(MaxMana)));
-}
-
-void UPlayerAttributeWidget::OnCostChanged(const float NewValue)
-{
-	StopAnimation(CostBlinkingAnimation);
-	CardCost = NewValue;
-	CardCostText->SetText(FText::Format(INVTEXT("{0}"), NewValue));
-}
-
-void UPlayerAttributeWidget::OnManaPreviewValueChanged(const float PreviewDeltaValue)
-{
-	PreviewDeltaMana = PreviewDeltaValue;
-	IsPreviewing(PreviewDeltaMana) ? StartManaPreview() : StopManaPreview();
-}
-
-void UPlayerAttributeWidget::OnMaxManaPreviewValueChanged(const float PreviewDeltaValue)
-{
-	PreviewDeltaMaxMana = PreviewDeltaValue;
-	IsPreviewing(PreviewDeltaMaxMana) ? StartManaPreview() : StopManaPreview();
-}
-
-void UPlayerAttributeWidget::OnCardCostPreviewValueChanged(const float PreviewDeltaValue)
-{
-	PreviewDeltaCardCost = PreviewDeltaValue;
-	if (IsPreviewing(PreviewDeltaValue))
+	if (NewData.bIsPreview)
 	{
 		PlayAnimation(CostBlinkingAnimation, 0, 0);
-		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(CardCost + PreviewDeltaCardCost)));
+		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 	}
 	else
 	{
 		StopAnimation(CostBlinkingAnimation);
-		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(CardCost)));
+		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 	}
 }
 
-void UPlayerAttributeWidget::StartManaPreview() const
+void UPlayerAttributeWidget::StopPreviewMana(const FAttributeData& NewData) const
 {
-	const float PreviewMana = Mana + PreviewDeltaMana;
-	const float PreviewMaxMana = MaxMana + PreviewDeltaMaxMana;
-	ManaBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(PreviewMana, PreviewMaxMana));
-	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(PreviewMana), FMath::RoundToInt(PreviewMaxMana)));
+	ManaBar->StopPreview(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
-void UPlayerAttributeWidget::StopManaPreview() const
+void UPlayerAttributeWidget::StopPreviewCost(const FAttributeData& NewData)
 {
-	ManaBar->StopPreview(UKismetMathLibrary::SafeDivide(Mana, MaxMana));
-	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(Mana), FMath::RoundToInt(MaxMana)));
+	StopAnimation(CostBlinkingAnimation);
+	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }

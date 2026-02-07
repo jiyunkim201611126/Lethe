@@ -25,31 +25,125 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 
 void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
-	// Attribute들에게 변동사항이 있는 경우 Widget Controller가 알 수 있도록 각 AttributeSet에게 함수를 바인드합니다.
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnAttributeChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnAttributeChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
 }
 
-void UAttributeWidgetController::OnAttributeChanged(const FOnAttributeChangeData& AttributeData)
+void UAttributeWidgetController::OnHealthChanged(const FOnAttributeChangeData& AttributeData)
 {
-	const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences.IsValidIndex(0) ? AbilitySystemReferences[0].AttributeSet : nullptr;
-	const FGameplayTag* AttributeTag = LetheAttributeSet ? LetheAttributeSet->AttributesToTags.Find(AttributeData.Attribute) : nullptr;
-	const FOnAttributeChanged* AttributeChangedDelegate = AttributeTag ? OnAttributeChangedDelegates.Find(*AttributeTag) : nullptr;
+	UpdateCachedAttribute(AttributeData);
+	BroadcastHealthChanged();
+}
 
-	if (AttributeChangedDelegate)
+void UAttributeWidgetController::BroadcastHealthChanged() const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	FAttributeData Data;
+	Data.bIsPreview = false;
+	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_Health);
+	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_MaxHealth);
+	if (const FOnAttributeChanged* OnHealthChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attributes_Vital_Health))
 	{
-		AttributeChangedDelegate->Broadcast(AttributeData.NewValue);
+		OnHealthChanged->Broadcast(Data);
 	}
 }
 
-void UAttributeWidgetController::OnAttributePreviewChanged(const FGameplayAttribute& Attribute, const float PreviewDeltaValue)
+void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData)
 {
-	const ULetheAttributeSet* LetheAttributeSet = AbilitySystemReferences.IsValidIndex(0) ? AbilitySystemReferences[0].AttributeSet : nullptr;
-	const FGameplayTag* AttributeTag = LetheAttributeSet ? LetheAttributeSet->AttributesToTags.Find(Attribute) : nullptr;
-	const FOnAttributeChanged* AttributePreviewChangedDelegate = AttributeTag ? OnAttributePreviewChangedDelegates.Find(*AttributeTag) : nullptr;
+	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AttributeSet)
+	{
+		if (FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(AttributeData.Attribute))
+		{
+			CachedAttribute.Emplace(*AttributeTag, AttributeData.NewValue);
+		}
+	}
+}
+
+void UAttributeWidgetController::UpdateCachedPreviewAttribute(const FGameplayAttribute& Attribute, const float NewValue)
+{
+	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AttributeSet)
+	{
+		if (FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(Attribute))
+		{
+			CachedPreviewAttribute.Emplace(*AttributeTag, NewValue);
+		}
+	}
+}
+
+void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag)
+{
+	if (CachedPreviewAttribute.IsEmpty())
+	{
+		return;
+	}
+
+	bool bShouldPreview = false;
+
+	// Preview 내역이 있는 경우에만 Preview를 표시할 수 있도록 합니다.
+	float PreviewCurrentValue = CachedAttribute.FindRef(CurrentTag);
+	const float* DeltaCurrentValue = CachedPreviewAttribute.Find(CurrentTag);
+	if (DeltaCurrentValue)
+	{
+		PreviewCurrentValue += *DeltaCurrentValue;
+		bShouldPreview = true;
+	}
 	
-	if (AttributePreviewChangedDelegate)
+	float PreviewMaxValue = CachedAttribute.FindRef(MaxTag);
+	const float* DeltaMaxValue = CachedPreviewAttribute.Find(MaxTag);
+	if (DeltaMaxValue)
 	{
-		AttributePreviewChangedDelegate->Broadcast(PreviewDeltaValue);
+		PreviewMaxValue += *DeltaMaxValue;
+		bShouldPreview = true;
 	}
+
+	// Preview 여부를 AttributeWidget에게 알려줍니다.
+	if (bShouldPreview)
+	{
+		if (const FOnAttributeChanged* OnChanged = OnPreviewAttributeChangedMap.Find(CurrentTag))
+		{
+			FAttributeData Data;
+			Data.bIsPreview = true;
+			Data.CurrentValue = PreviewCurrentValue;
+			Data.MaxValue = PreviewMaxValue;
+			OnChanged->Broadcast(Data);
+		}
+	}
+}
+
+void UAttributeWidgetController::StopPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag)
+{
+	if (CachedPreviewAttribute.IsEmpty())
+	{
+		return;
+	}
+
+	// Preview 내역이 있는 경우에만 Preview를 취소하는 동작을 할 수 있도록 합니다.
+	const bool bIsPreviewing = CachedPreviewAttribute.Contains(CurrentTag) || CachedPreviewAttribute.Contains(MaxTag);
+	if (bIsPreviewing)
+	{
+		const float CurrentValue = CachedAttribute.FindRef(CurrentTag);
+		const float PreviewMaxValue = CachedAttribute.FindRef(MaxTag);
+
+		// Preview가 중단되도록 Widget에게 알려줍니다.
+		if (const FOnAttributeChanged* OnChanged = OnPreviewEndedMap.Find(CurrentTag))
+		{
+			FAttributeData Data;
+			Data.bIsPreview = false;
+			Data.CurrentValue = CurrentValue;
+			Data.MaxValue = PreviewMaxValue;
+			OnChanged->Broadcast(Data);
+		}
+	}
+}
+
+void UAttributeWidgetController::StartAllPreview()
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	StartPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth);
+}
+
+void UAttributeWidgetController::StopAllPreview()
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	StopPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth);
 }

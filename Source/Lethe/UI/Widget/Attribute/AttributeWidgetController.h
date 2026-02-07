@@ -10,7 +10,18 @@
 struct FGameplayAttribute;
 struct FOnAttributeChangeData;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, float);
+USTRUCT()
+struct FAttributeData
+{
+	GENERATED_BODY()
+
+	bool bIsPreview = false;
+
+	float CurrentValue = 0.f;
+	float MaxValue = 0.f;
+};
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, const FAttributeData&);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UAttributeWidgetController : public ULetheWidgetController
@@ -23,13 +34,26 @@ public:
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
 	//~ End LetheWidgetController Interface
 
-protected:	
-	void OnAttributeChanged(const FOnAttributeChangeData& AttributeData);
-	void OnAttributePreviewChanged(const FGameplayAttribute& Attribute, const float PreviewDeltaValue);
+protected:
+	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);
+	void UpdateCachedPreviewAttribute(const FGameplayAttribute& Attribute, const float NewValue);
+
+	void StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag);
+	void StopPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag);
+	
+	virtual void StartAllPreview();
+	virtual void StopAllPreview();
+
+private:
+	void OnHealthChanged(const FOnAttributeChangeData& AttributeData);
+	void BroadcastHealthChanged() const;
 
 public:
-	// AttributeTag를 Key로, 델리게이트를 Value로 매핑하는 TMap입니다.
-	// 기존 Attribute 하나당 하나의 델리게이트를 선언하는 방식은 Attribute가 많아질 경우 가독성이 저하되므로, 이와 같은 방식을 사용합니다.
-	TMap<FGameplayTag, FOnAttributeChanged> OnAttributeChangedDelegates;
-	TMap<FGameplayTag, FOnAttributeChanged> OnAttributePreviewChangedDelegates;
+	TMap<FGameplayTag, FOnAttributeChanged> OnAttributeChangedMap;
+	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewAttributeChangedMap;
+	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewEndedMap;
+
+protected:
+	TMap<FGameplayTag, float> CachedAttribute;
+	TMap<FGameplayTag, float> CachedPreviewAttribute;
 };

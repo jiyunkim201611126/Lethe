@@ -6,8 +6,9 @@
 #include "Abilities/GameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Data/Stage/TileData.h"
-#include "StructUtils/InstancedStruct.h"
 #include "LetheGameplayAbility.generated.h"
+
+class UGameplayEffectApplier;
 
 /**
  * 해당 프로젝트에서 Card와 Ability는 동의어 취급해도 무방합니다.
@@ -43,47 +44,32 @@ protected:
 	template<typename T>
 	T* GetEffectApplier()
 	{
-		static_assert(TIsDerivedFrom<T, FGameplayEffectApplier>::IsDerived, "T는 반드시 FGameplayEffectApplier를 상속받아야 합니다.");
+		static_assert(TIsDerivedFrom<T, UGameplayEffectApplier>::IsDerived, "T는 반드시 UGameplayEffectApplier를 상속받아야 합니다.");
 
-		for (auto& InstancedApplier : EffectAppliers)
+		for (UGameplayEffectApplier* Applier : EffectAppliers)
 		{
-			if (T* Applier = InstancedApplier.GetMutablePtr<T>())
+			if (Applier && Applier->IsA<T>())
 			{
-				return Applier;
-			}
-		}
-		return nullptr;
-	}
-
-	template<typename T>
-	const T* GetEffectApplier() const
-	{
-		static_assert(TIsDerivedFrom<T, FGameplayEffectApplier>::IsDerived, "T는 반드시 FGameplayEffectApplier를 상속받아야 합니다.");
-
-		for (const auto& InstancedApplier : EffectAppliers)
-		{
-			if (const T* Applier = InstancedApplier.GetPtr<T>())
-			{
-				return Applier;
+				return Cast<T>(Applier);
 			}
 		}
 		return nullptr;
 	}
 	
 	/**
-	 * 매개변수로 들어온 ApplierIndex에 해당하는 GameplayEffectApplier가 갖고 있는 GameplayEffectContextHandle을 가져오는 함수입니다.
+	 * 매개변수로 들어온 GameplayEffectApplier 클래스가 갖고 있는 GameplayEffectContextHandle을 가져오는 함수입니다.
 	 * 반드시 Card가 소유하고 있는 GameplayEffectApplier를 사용해야 합니다.
 	 */ 
 	UFUNCTION(BlueprintPure, Category = "Effect")
-	FGameplayEffectContextHandle GetContextHandle(const int32 ApplierIndex) const;
+	FGameplayEffectContextHandle GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const;
 
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 protected:
 	// Composite 패턴으로 조합해 사용할 수 있으며, 구조체 내부의 ApplyEffect나 Ability의 ApplyAllEffects를 호출해 사용합니다.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect")
-	TArray<TInstancedStruct<FGameplayEffectApplier>> EffectAppliers;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
+	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
 
 	// 카드 사용 시 범위입니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")

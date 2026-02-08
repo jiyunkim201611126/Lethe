@@ -30,8 +30,6 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	{
 		return;
 	}
-
-	TileSelector->Reset();
 	
 	bCardSelected = bInCardSelected;
 	if (bCardSelected && OwnerASC && CardTag.IsValid())
@@ -79,6 +77,7 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		SelectedCardAbility = nullptr;
 		SelectedCardOwnerASC = nullptr;
 		TileSelector->UnhighlightTileByCard();
+		TileSelector->UnhighlightTileByMouse();
 		OnCancelCardSelectDelegate.Broadcast();
 	}
 }
@@ -132,7 +131,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 	}
 }
 
-bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
+bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (OwnerASC)
 	{
@@ -159,7 +158,6 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 		}
 	}
 	
-	SetCardSelected(false);
 	return false;
 }
 

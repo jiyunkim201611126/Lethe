@@ -7,15 +7,11 @@
 
 void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 {
-	for (auto& InstancedApplier : EffectAppliers)
+	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
-		if (InstancedApplier.IsValid())
+		if (EffectApplier && TargetActor)
 		{
-			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
-			if (TargetActor)
-			{
-				EffectApplier.ApplyEffect(this, TargetActor);
-			}
+			EffectApplier->ApplyEffect(this, TargetActor);
 		}
 	}
 }
@@ -23,12 +19,11 @@ void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 FText ULetheGameplayAbility::GetCardDescription(const int32 InLevel) const
 {
 	TArray<FText> ResultTexts;
-	for (const auto& InstancedApplier : EffectAppliers)
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
-		if (InstancedApplier.IsValid())
+		if (EffectApplier)
 		{
-			const FGameplayEffectApplier& EffectApplier = InstancedApplier.Get();
-			ResultTexts.Emplace(EffectApplier.GetDescriptionText(InLevel));
+			ResultTexts.Emplace(EffectApplier->GetDescriptionText(InLevel));
 		}
 	}
 
@@ -59,18 +54,17 @@ bool ULetheGameplayAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySys
 
 bool ULetheGameplayAbility::TryGetAbilityEffectsPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
-	for (auto& InstancedApplier : EffectAppliers)
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
 		// Ability 사용 시 효과는 대행자가 있으므로, EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
-		if (InstancedApplier.IsValid())
+		if (EffectApplier)
 		{
-			const FGameplayEffectApplier& EffectApplier = InstancedApplier.Get();
-			const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier.GetEffectClass();
+			const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
 			
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier.TryMakeSpecHandles(SourceASC, this, PreviewContextHandle, SpecHandles))
+			if (EffectApplier->TryMakeSpecHandles(SourceASC, this, PreviewContextHandle, SpecHandles))
 			{
 				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
 			}
@@ -134,15 +128,13 @@ bool ULetheGameplayAbility::TryGetGameplayEffectPreviewData(UAbilitySystemCompon
 	return false;
 }
 
-FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const int32 ApplierIndex) const
+FGameplayEffectContextHandle ULetheGameplayAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const
 {
-	if (EffectAppliers.IsValidIndex(ApplierIndex))
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
-		const auto& InstancedApplier = EffectAppliers[ApplierIndex];
-		if (InstancedApplier.IsValid())
+		if (EffectApplier && EffectApplier->GetClass() == ApplierClass)
 		{
-			const FGameplayEffectApplier& EffectApplier = InstancedApplier.Get();
-			return EffectApplier.GetEffectContextHandle();
+			return EffectApplier->GetEffectContextHandle();
 		}
 	}
 	return FGameplayEffectContextHandle();
@@ -164,12 +156,11 @@ void ULetheGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 void ULetheGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
-	for (auto& InstancedApplier : EffectAppliers)
+	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
-		if (InstancedApplier.IsValid())
+		if (EffectApplier)
 		{
-			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
-			EffectApplier.CancelAbility();
+			EffectApplier->CancelAbility();
 		}
 	}
 	
@@ -178,12 +169,11 @@ void ULetheGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handl
 
 void ULetheGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	for (auto& InstancedApplier : EffectAppliers)
+	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
-		if (InstancedApplier.IsValid())
+		if (EffectApplier)
 		{
-			FGameplayEffectApplier& EffectApplier = InstancedApplier.GetMutable();
-			EffectApplier.EndAbility();
+			EffectApplier->EndAbility();
 		}
 	}
 	

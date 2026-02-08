@@ -14,18 +14,16 @@ class UGameplayEffect;
  * Effect 적용을 담당하는 구조체입니다.
  * 파생된 자식 구조체는 필요한 GameplayEffect 클래스와 함께 그에 관련된 멤버 변수가 선언 및 할당됩니다.
  */
-USTRUCT(BlueprintType)
-struct LETHE_API FGameplayEffectApplier
+UCLASS(Abstract, NotBlueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
+class LETHE_API UGameplayEffectApplier : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	virtual ~FGameplayEffectApplier() = default;
-
-	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor);
+	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(ULetheEffectApplier::ApplyEffect, );
 	virtual void CancelAbility();
 	virtual void EndAbility();
-	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
 	virtual FText GetDescriptionText(const int32 InLevel) const;
 
 	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);

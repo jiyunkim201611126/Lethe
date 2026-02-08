@@ -5,31 +5,22 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 
-void FGameplayEffectApplier::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
-{
-}
-
-void FGameplayEffectApplier::CancelAbility()
+void UGameplayEffectApplier::CancelAbility()
 {
 	EffectContextHandle.Clear();
 }
 
-void FGameplayEffectApplier::EndAbility()
+void UGameplayEffectApplier::EndAbility()
 {
 	EffectContextHandle.Clear();
 }
 
-bool FGameplayEffectApplier::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
-{
-	return false;
-}
-
-FText FGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
+FText UGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
 {
 	return FText();
 }
 
-bool FGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
+bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
 {
 	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC)
@@ -43,7 +34,7 @@ bool FGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplay
 	return true;
 }
 
-void FGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
+void UGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
 {
 	// EffectContext를 생성 및 할당합니다.
 	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
@@ -55,12 +46,12 @@ void FGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* Own
 	}
 }
 
-TSubclassOf<UGameplayEffect> FGameplayEffectApplier::GetEffectClass() const
+TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetEffectClass() const
 {
 	return EffectClass;
 }
 
-FGameplayEffectContextHandle FGameplayEffectApplier::GetEffectContextHandle() const
+FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() const
 {
 	return EffectContextHandle;
 }

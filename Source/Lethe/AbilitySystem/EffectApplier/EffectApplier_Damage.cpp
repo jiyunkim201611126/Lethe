@@ -8,7 +8,7 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 
-void FEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
+void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor);
 	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
@@ -23,11 +23,9 @@ void FEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 	{
 		CauseDamage(OwningAbility, TargetActor, OutSpecHandles);
 	}
-	
-	EffectContextHandle.Clear();
 }
 
-bool FEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool UEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
@@ -48,7 +46,7 @@ bool FEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* So
 	return !OutSpecHandles.IsEmpty();
 }
 
-void FEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs)
+void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs)
 {
 	if (EffectContextHandle.IsValid())
 	{
@@ -72,7 +70,7 @@ void FEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 	}
 }
 
-FText FEffectApplier_Damage::GetDescriptionText(const int32 InLevel) const
+FText UEffectApplier_Damage::GetDescriptionText(const int32 InLevel) const
 {
 	TArray<FText> DamageTexts;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
@@ -83,7 +81,7 @@ FText FEffectApplier_Damage::GetDescriptionText(const int32 InLevel) const
 	return FText::Join(FText::FromString(TEXT(" ")), DamageTexts);
 }
 
-FText FEffectApplier_Damage::GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const
+FText UEffectApplier_Damage::GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const
 {
 	const FScalableFloat* DamageValue = DamageValues.Find(InDamageTag);
 	check(DamageValue);

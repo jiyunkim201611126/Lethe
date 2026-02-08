@@ -72,6 +72,7 @@ private:
 	void TryUseCard();
 	void UseCardSuccess();
 	void ResetSelectedCard();
+	void ResetSelectedCardWithoutEvent();
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();

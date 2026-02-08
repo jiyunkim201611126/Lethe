@@ -82,6 +82,7 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 	{
 		// 마찬가지로 현재 작동 중이었던 Preview를 모두 중단한 뒤, Ability의 Target으로서의 Preview Data를 업데이트한 후 Preview를 진행합니다.
 		StopAllPreview();
+		CachedAbilityEffectPreviewData.Empty();
 		TMap<FGameplayAttribute, float> TempAbilityEffectPreviewData;
 		CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, TempAbilityEffectPreviewData);
 		for (const auto& Elem : TempAbilityEffectPreviewData)

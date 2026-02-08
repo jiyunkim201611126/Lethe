@@ -55,7 +55,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
-		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::ResetSelectedCard);
+		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::ResetSelectedCardWithoutEvent);
 		
 		CardPanelWidgetController->BroadcastInitialValue();
 		
@@ -388,6 +388,18 @@ void UCardPanelWidget::ResetSelectedCard()
 		{
 			CardPanelWidgetController->SetCardSelected(false);
 		}
+
+		UpdateAllCardTranslation();
+	}
+}
+
+void UCardPanelWidget::ResetSelectedCardWithoutEvent()
+{
+	if (CurrentSelectedCard.IsValid())
+	{		
+		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
+		CurrentSelectedCard->MouseHovered(false);
+		CurrentSelectedCard.Reset();
 
 		UpdateAllCardTranslation();
 	}

@@ -7,8 +7,8 @@
 #include "ScalableFloat.h"
 #include "EffectApplier_Damage.generated.h"
 
-USTRUCT(BlueprintType)
-struct LETHE_API FEffectApplier_Damage : public FGameplayEffectApplier
+UCLASS()
+class LETHE_API UEffectApplier_Damage : public UGameplayEffectApplier
 {
 	GENERATED_BODY()
 

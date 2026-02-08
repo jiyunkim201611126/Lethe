@@ -30,7 +30,7 @@ public:
 	
 	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
-	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
+	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
 
 	ULetheHUD* GetLetheHUD() const;
 

@@ -15,7 +15,8 @@ struct LETHE_API FEffectApplier_Damage : public FGameplayEffectApplier
 public:
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
 
-	TArray<FGameplayEffectSpecHandle> MakeDamageSpecHandle(const UGameplayAbility* OwningAbility);
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
+	
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);
 
 	virtual FText GetDescriptionText(const int32 InLevel) const override;

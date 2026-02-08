@@ -34,7 +34,7 @@ protected:
 	virtual void NativeDestruct() override;
 	//~ End of UUserWidget Interface
 	
-	void BarPercentSet();
+	void BarPercentSet(const float InPercent);
 	void InterpGhostBar();
 
 protected:

@@ -15,24 +15,20 @@ void FEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 	if (AbilitySystemInterface && AbilitySystemInterface->GetAbilitySystemComponent() && AbilitySystemInterface->GetAbilitySystemComponent()->HasMatchingGameplayTag(GameplayTags.CharacterState_Dead))
 	{
 		// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
-		EffectContextHandle.Clear();
 		return;
 	}
-	
-	CauseDamage(OwningAbility, TargetActor, MakeDamageSpecHandle(OwningAbility));
-}
 
-TArray<FGameplayEffectSpecHandle> FEffectApplier_Damage::MakeDamageSpecHandle(const UGameplayAbility* OwningAbility)
-{
-	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
-	if (!ASC)
+	TArray<FGameplayEffectSpecHandle> OutSpecHandles;
+	if (TryMakeSpecHandlesWithContextHandle(OwningAbility, OutSpecHandles))
 	{
-		return TArray<FGameplayEffectSpecHandle>();
+		CauseDamage(OwningAbility, TargetActor, OutSpecHandles);
 	}
 	
-	MakeEffectContextHandle(OwningAbility);
-	
-	TArray<FGameplayEffectSpecHandle> DamageSpecs;
+	EffectContextHandle.Clear();
+}
+
+bool FEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+{
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())
@@ -40,17 +36,16 @@ TArray<FGameplayEffectSpecHandle> FEffectApplier_Damage::MakeDamageSpecHandle(co
 			const float ScaledDamage = Pair.Value.GetValueAtLevel(OwningAbility->GetAbilityLevel());
 		
 			// 할당받은 DamageEffectClass를 기반으로 GameplayEffectSpec을 생성합니다.
-			FGameplayEffectSpecHandle DamageSpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.f, EffectContextHandle);
+			FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(EffectClass, 1.f, InContextHandle);
 		
 			// Spec 안에 SetByCallerMagnitudes라는 이름의 TMap이 있으며, 거기에 Tag를 키, Damage를 밸류로 값을 추가하는 함수입니다.
 			// 이 값은 GetSetByCallerMagnitude로 꺼내올 수 있습니다.
 			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, Pair.Key, ScaledDamage);
 
-			DamageSpecs.Add(DamageSpecHandle);
+			OutSpecHandles.Emplace(DamageSpecHandle);
 		}
 	}
-	
-	return DamageSpecs;
+	return !OutSpecHandles.IsEmpty();
 }
 
 void FEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs)

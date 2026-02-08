@@ -23,12 +23,31 @@ void FGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* Own
 {
 	// EffectContext를 생성 및 할당합니다.
 	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
-	if (const UAbilitySystemComponent* AbilitySystemComponent = OwningAbility->GetAbilitySystemComponentFromActorInfo())
+	if (const UAbilitySystemComponent* OwningASC = OwningAbility->GetAbilitySystemComponentFromActorInfo())
 	{
 		EffectContextHandle.Clear();
-		EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectContextHandle = OwningASC->MakeEffectContext();
 		EffectContextHandle.SetAbility(OwningAbility);
 	}
+}
+
+bool FGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
+{
+	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
+	if (!ASC)
+	{
+		return false;
+	}
+	
+	MakeEffectContextHandle(OwningAbility);
+	TryMakeSpecHandles(ASC, OwningAbility, EffectContextHandle, OutSpecHandles);
+	
+	return true;
+}
+
+bool FGameplayEffectApplier::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+{
+	return false;
 }
 
 FGameplayEffectContextHandle FGameplayEffectApplier::GetEffectContextHandle() const

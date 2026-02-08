@@ -56,7 +56,7 @@ float UCardPanelWidgetController::GetCardExpandScale() const
 	return CardViewData->GetCardExpandScale();
 }
 
-void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (LethePlayerController)
 	{

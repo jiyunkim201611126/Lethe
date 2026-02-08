@@ -16,7 +16,7 @@ class UTileSelectorComponent;
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent*, const ULetheGameplayAbility*)
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnOtherTileDetected, const AActor*, const AActor*, const ULetheGameplayAbility*)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor*, const AActor*, const UAbilitySystemComponent*, const ULetheGameplayAbility*)
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -28,7 +28,7 @@ public:
 
 	void OnNumberPressed(const int32 InNumber) const;
 	
-	void SetCardSelected(const bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
+	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
 
@@ -61,7 +61,8 @@ private:
 	
 	uint8 bCardSelected : 1 = false;
 	uint8 bMouseOnCardUseSection : 1 = false;
-
+	
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
 	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
+	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
 };

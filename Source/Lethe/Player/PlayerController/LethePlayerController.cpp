@@ -24,7 +24,7 @@ void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
 
-void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
+void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	if (!TileSelector)
 	{
@@ -42,12 +42,13 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, const U
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		if (!AbilitySpecs.IsEmpty())
 		{
-			const ULetheGameplayAbility* LetheGameplayAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability);
+			ULetheGameplayAbility* LetheGameplayAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability);
 			const AActor* CardOwner = OwnerASC->GetOwner();
 			if (LetheGameplayAbility && CardOwner)
 			{
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheGameplayAbility;
+				SelectedCardOwnerASC = OwnerASC;
 				
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
@@ -108,9 +109,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 
 void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const
 {
-	if (SelectedCardAbility.IsValid())
+	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
 	{
-		OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardAbility.Get());
+		OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardOwnerASC.Get(), SelectedCardAbility.Get());
 	}
 }
 

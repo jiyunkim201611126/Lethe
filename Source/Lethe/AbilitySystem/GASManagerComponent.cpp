@@ -50,7 +50,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 					LetheHUD->InitPlayerUI(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
 					break;
 				case ETeamSide::Enemy:
-					LetheHUD->InitEnemyUI(AbilitySystemComponent, AttributeSet, AttributeWidget);
+					LetheHUD->InitEnemyUI(PlayerController, AbilitySystemComponent, AttributeSet, AttributeWidget);
 					break;
 				}
 			}

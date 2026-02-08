@@ -67,7 +67,7 @@ public:
 	FVector2D GetCardSize() const;
 	float GetCardExpandScale() const;
 	
-	void SetCardSelected(bool bInCardSelected, const ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
+	void SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;

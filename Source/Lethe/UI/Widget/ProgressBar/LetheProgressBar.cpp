@@ -37,10 +37,15 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 
 	if (bShouldInterp)
 	{
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindWeakLambda(this, [this, InPercent]()
+		{
+			BarPercentSet(InPercent);
+		});
+		
 		GetWorld()->GetTimerManager().SetTimer(
 			GhostPercentSetTimerHandle,
-			this,
-			&ThisClass::BarPercentSet,
+			TimerDelegate,
 			GhostStartDelay,
 			false);
 	}
@@ -65,9 +70,9 @@ void ULetheProgressBar::StopPreview(const float InPercent)
 	FrontProgressBar->SetPercent(InPercent);
 }
 
-void ULetheProgressBar::BarPercentSet()
+void ULetheProgressBar::BarPercentSet(const float InPercent)
 {
-	GhostPercentTarget = FrontProgressBar->GetPercent();
+	GhostPercentTarget = InPercent;
 
 	GetWorld()->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(

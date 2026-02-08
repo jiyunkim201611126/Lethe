@@ -27,7 +27,7 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
-		LethePlayerController->OnOtherTileDetectedDelegate.AddUObject(this, &ThisClass::OtherTileDetected);
+		LethePlayerController->OnOtherTileDetectedDelegate.AddUObject(this, &ThisClass::OnOtherTileDetected);
 	}
 }
 
@@ -56,34 +56,34 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 	}
 }
 
-void UAttributeWidgetController::OtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const ULetheGameplayAbility* CardAbility)
+void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
 		return;
 	}
 
-	UAbilitySystemComponent* ASC = AbilitySystemReferences[0].AbilitySystemComponent;
+	UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
 	const IAbilitySystemInterface* LastAbilitySystemInterface = Cast<IAbilitySystemInterface>(LastActor);
 	const IAbilitySystemInterface* CurrentAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
 
 	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ASC)
+	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
 		// 먼저 현재 작동 중이었던 Preview를 모두 중단하고, Ability의 Target으로서의 Preview Data를 모두 제거한 뒤 다시 Preview를 진행합니다.
-		// 해당 클래스를 상속받는 클래스에서 Ability의 Target으로서의 Preview만이 아닌 Cost 등 다른 Preview도 진행할 수 있기 때문입니다.
+		// 자식 클래스에서 Ability의 Target으로서의 Preview만이 아닌 Cost 등 다른 Preview도 진행할 수 있기 때문입니다.
 		StopAllPreview();
 		CachedAbilityEffectPreviewData.Empty();
 		StartAllPreview();
 	}
 
 	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ASC)
+	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
 		// 마찬가지로 현재 작동 중이었던 Preview를 모두 중단한 뒤, Ability의 Target으로서의 Preview Data를 업데이트한 후 Preview를 진행합니다.
 		StopAllPreview();
 		TMap<FGameplayAttribute, float> TempAbilityEffectPreviewData;
-		CardAbility->TryGetAllEffectsPreviewData(ASC, TempAbilityEffectPreviewData);
+		CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, TempAbilityEffectPreviewData);
 		for (const auto& Elem : TempAbilityEffectPreviewData)
 		{
 			UpdateCachedPreviewAttribute(Elem.Key, Elem.Value);

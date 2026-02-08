@@ -57,7 +57,7 @@ private:
 	void OnHealthChanged(const FOnAttributeChangeData& AttributeData);
 	void BroadcastHealthChanged() const;
 	
-	void OtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const ULetheGameplayAbility* CardAbility);
+	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility);
 
 public:
 	// AttributeTag를 Key로, AttributeWidget이 콜백을 걸어두는 델리게이트를 Value로 하는 TMap들입니다.

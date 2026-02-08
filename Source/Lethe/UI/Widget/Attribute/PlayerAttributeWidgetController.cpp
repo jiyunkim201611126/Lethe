@@ -66,7 +66,7 @@ void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemC
 	if (AbilitySystemReferences.IsValidIndex(0) && AbilitySystemReferences[0].AbilitySystemComponent == CardOwnerASC)
 	{
 		// 해당 WidgetController와 관련 있는 ASC의 카드가 선택된 경우 들어오는 분기입니다.
-		if (CardAbility->TryGetAbilityCostEffectPreviewData(CachedAbilityCostPreviewData))
+		if (CardAbility->TryGetAbilityCostEffectPreviewData(CardOwnerASC, CachedAbilityCostPreviewData))
 		{
 			// 카드 Ability의 Cost Effect가 적용됐을 때 변경되는 Attribute 값을 성공적으로 가져온 경우 들어오는 분기입니다.
 			for (const auto& AbilityCostPreview : CachedAbilityCostPreviewData)

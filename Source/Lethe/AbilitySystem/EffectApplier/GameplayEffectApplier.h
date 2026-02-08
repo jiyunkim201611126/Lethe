@@ -27,7 +27,10 @@ public:
 	virtual void EndAbility();
 	
 	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);
-
+	
+	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
+	
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
 	virtual FText GetDescriptionText(const int32 InLevel) const;

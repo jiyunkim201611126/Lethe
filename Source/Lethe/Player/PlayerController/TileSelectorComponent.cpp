@@ -143,3 +143,9 @@ bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const 
 	return !OutTiles.IsEmpty();
 }
 
+void UTileSelectorComponent::Reset()
+{
+	LastMouseHoveredTile = nullptr;
+	CurrentMouseHoveredTile = nullptr;
+}
+

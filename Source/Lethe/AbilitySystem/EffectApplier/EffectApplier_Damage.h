@@ -13,14 +13,13 @@ struct LETHE_API FEffectApplier_Damage : public FGameplayEffectApplier
 	GENERATED_BODY()
 
 public:
+	//~ Begin FGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
-
 	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
+	virtual FText GetDescriptionText(const int32 InLevel) const override;
+	//~ End of FGameplayEffectApplier Interface
 	
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);
-
-	virtual FText GetDescriptionText(const int32 InLevel) const override;
-
 	FText GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const;
 
 private:

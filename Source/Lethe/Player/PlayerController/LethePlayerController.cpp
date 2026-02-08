@@ -30,6 +30,8 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	{
 		return;
 	}
+
+	TileSelector->Reset();
 	
 	bCardSelected = bInCardSelected;
 	if (bCardSelected && OwnerASC && CardTag.IsValid())
@@ -46,21 +48,36 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 			const AActor* CardOwner = OwnerASC->GetOwner();
 			if (LetheGameplayAbility && CardOwner)
 			{
-				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
-				SelectedCardAbility = LetheGameplayAbility;
-				SelectedCardOwnerASC = OwnerASC;
+				if (OwnerASC->AbilityActorInfo.IsValid())
+				{
+					// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
+					const FGameplayAbilitySpecHandle PreviewHandle;
+					const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
+					const bool bCanUse = LetheGameplayAbility->CheckCost(PreviewHandle, PreviewActorInfo);
+					if (!bCanUse)
+					{
+						SetCardSelected(false);
+						return;
+					}
 				
-				TArray<ATile*> OutTiles;
-				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
-				TileSelector->HighlightTileByCard(OutTiles, CardOwner);
+					// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
+					SelectedCardAbility = LetheGameplayAbility;
+					SelectedCardOwnerASC = OwnerASC;
+				
+					TArray<ATile*> OutTiles;
+					TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
+					TileSelector->HighlightTileByCard(OutTiles, CardOwner);
 
-				// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
-				OnCardSelectedDelegate.Broadcast(OwnerASC, LetheGameplayAbility);
+					// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
+					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheGameplayAbility);
+				}
 			}
 		}
 	}
 	else
 	{
+		SelectedCardAbility = nullptr;
+		SelectedCardOwnerASC = nullptr;
 		TileSelector->UnhighlightTileByCard();
 		OnCancelCardSelectDelegate.Broadcast();
 	}
@@ -117,8 +134,6 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 
 bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
-	SetCardSelected(false);
-
 	if (OwnerASC)
 	{
 		if (AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor())
@@ -144,6 +159,7 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 		}
 	}
 	
+	SetCardSelected(false);
 	return false;
 }
 

@@ -19,6 +19,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		if (LethePlayerController)
 		{
 			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
+			LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		}
 		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
@@ -117,4 +118,9 @@ void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState In
 void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
 {
 	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
+}
+
+void UCardPanelWidgetController::OnCancelCardSelect() const
+{
+	OnCancelCardSelectDelegate.ExecuteIfBound();
 }

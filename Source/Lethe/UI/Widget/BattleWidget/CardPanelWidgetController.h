@@ -48,6 +48,7 @@ struct FCardInitParams
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChanged, const EPlayerPhaseState);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
+DECLARE_DELEGATE(FOnCancelCardSelect);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -78,11 +79,13 @@ private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
 	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
+	void OnCancelCardSelect() const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
 	FOnPlayerPhaseStateChanged OnPlayerPhaseStateChangedDelegate;
 	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
+	FOnCancelCardSelect OnCancelCardSelectDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")

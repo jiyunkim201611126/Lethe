@@ -32,6 +32,8 @@ public:
 	AActor* GetActorOnTileUnderCursor() const;
 	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const;
 
+	void Reset();
+
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;
 

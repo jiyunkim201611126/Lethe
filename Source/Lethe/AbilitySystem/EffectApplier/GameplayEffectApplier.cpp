@@ -19,16 +19,14 @@ void FGameplayEffectApplier::EndAbility()
 	EffectContextHandle.Clear();
 }
 
-void FGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
+bool FGameplayEffectApplier::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
-	// EffectContext를 생성 및 할당합니다.
-	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
-	if (const UAbilitySystemComponent* OwningASC = OwningAbility->GetAbilitySystemComponentFromActorInfo())
-	{
-		EffectContextHandle.Clear();
-		EffectContextHandle = OwningASC->MakeEffectContext();
-		EffectContextHandle.SetAbility(OwningAbility);
-	}
+	return false;
+}
+
+FText FGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
+{
+	return FText();
 }
 
 bool FGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
@@ -45,22 +43,24 @@ bool FGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplay
 	return true;
 }
 
-bool FGameplayEffectApplier::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+void FGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
 {
-	return false;
-}
-
-FGameplayEffectContextHandle FGameplayEffectApplier::GetEffectContextHandle() const
-{
-	return EffectContextHandle;
-}
-
-FText FGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
-{
-	return FText();
+	// EffectContext를 생성 및 할당합니다.
+	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
+	if (const UAbilitySystemComponent* OwningASC = OwningAbility->GetAbilitySystemComponentFromActorInfo())
+	{
+		EffectContextHandle.Clear();
+		EffectContextHandle = OwningASC->MakeEffectContext();
+		EffectContextHandle.SetAbility(OwningAbility);
+	}
 }
 
 TSubclassOf<UGameplayEffect> FGameplayEffectApplier::GetEffectClass() const
 {
 	return EffectClass;
+}
+
+FGameplayEffectContextHandle FGameplayEffectApplier::GetEffectContextHandle() const
+{
+	return EffectContextHandle;
 }

@@ -25,20 +25,17 @@ public:
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor);
 	virtual void CancelAbility();
 	virtual void EndAbility();
-	
-	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);
-	
-	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
 	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
-	
-	FGameplayEffectContextHandle GetEffectContextHandle() const;
-
 	virtual FText GetDescriptionText(const int32 InLevel) const;
 
+	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
+	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);
+	
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
+	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;
 
 	FGameplayEffectContextHandle EffectContextHandle;

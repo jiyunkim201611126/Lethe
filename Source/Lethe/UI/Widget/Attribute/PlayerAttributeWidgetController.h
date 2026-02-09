@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AttributeSet.h"
 #include "AttributeWidgetController.h"
 #include "PlayerAttributeWidgetController.generated.h"
 
@@ -23,7 +22,8 @@ protected:
 	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
 	void OnCancelCardSelect();
 
-	virtual void StartAllPreview() override;
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility) override;
+	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;
 	virtual void StopAllPreview() override;
 
 private:
@@ -32,8 +32,4 @@ private:
 	
 	void OnCostChanged(const FOnAttributeChangeData& AttributeData);
 	void BroadcastCostChanged() const;
-
-private:
-	// 카드가 선택되면 해당하는 Ability의 Cost가 적용되는 경우 어떤 Attribute 변화가 있는지를 캐싱해두는 TMap입니다.
-	TMap<FGameplayAttribute, float> CachedAbilityCostPreviewData;
 };

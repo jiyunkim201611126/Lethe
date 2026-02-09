@@ -19,20 +19,17 @@ void ULetheProgressBar::NativeDestruct()
 void ULetheProgressBar::SetProgressBarStyle(const FProgressBarStyle& FrontProgressBarStyle, const FProgressBarStyle& GhostProgressBarStyle)
 {
 	FrontProgressBar->SetWidgetStyle(FrontProgressBarStyle);
-	PreviewProgressBar->SetWidgetStyle(FrontProgressBarStyle);
 	GhostProgressBar->SetWidgetStyle(GhostProgressBarStyle);
 }
 
 void ULetheProgressBar::SetFillColorAndOpacity(const FLinearColor& InLinearColor)
 {
 	FrontProgressBar->SetFillColorAndOpacity(InLinearColor);
-	PreviewProgressBar->SetFillColorAndOpacity(InLinearColor);
 	GhostProgressBar->SetFillColorAndOpacity(InLinearColor);
 }
 
 void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldInterp)
 {
-	PreviewProgressBar->SetVisibility(ESlateVisibility::Collapsed);
 	FrontProgressBar->SetPercent(InPercent);
 
 	if (bShouldInterp)
@@ -57,16 +54,11 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 
 void ULetheProgressBar::SetPreviewBarPercent(const float InPercent)
 {
-	PlayAnimation(PreviewBlinkingAnimation, 0, 0);
-	PreviewProgressBar->SetPercent(FrontProgressBar->GetPercent());
-	PreviewProgressBar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	FrontProgressBar->SetPercent(InPercent);
 }
 
 void ULetheProgressBar::StopPreview(const float InPercent)
 {
-	StopAnimation(PreviewBlinkingAnimation);
-	PreviewProgressBar->SetVisibility(ESlateVisibility::Collapsed);
 	FrontProgressBar->SetPercent(InPercent);
 }
 

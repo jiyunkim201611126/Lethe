@@ -22,6 +22,7 @@ protected:
 	
 private:
 	void UpdateHealthUI(const FAttributeData& NewData) const;
+	void StartPreviewHealth(const FAttributeData& NewData) const;
 	void StopPreviewHealth(const FAttributeData& NewData) const;
 
 protected:

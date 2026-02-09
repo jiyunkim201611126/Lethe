@@ -16,23 +16,21 @@ void UAttributeWidget::WidgetControllerSet_Implementation()
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		
 		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::UpdateHealthUI);
-		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::UpdateHealthUI);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::StartPreviewHealth);
 		AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::StopPreviewHealth);
 	}
 }
 
 void UAttributeWidget::UpdateHealthUI(const FAttributeData& NewData) const
 {
-	if (NewData.bIsPreview)
-	{
-		HealthBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
-		HealthText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
-	}
-	else
-	{
-		HealthBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
-		HealthText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
-	}
+	HealthBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+	HealthText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
+}
+
+void UAttributeWidget::StartPreviewHealth(const FAttributeData& NewData) const
+{
+	HealthBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+	HealthText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
 void UAttributeWidget::StopPreviewHealth(const FAttributeData& NewData) const

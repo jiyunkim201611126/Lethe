@@ -70,7 +70,7 @@ bool ULetheGameplayAbility::TryGetAbilityEffectsPreviewData(const UAbilitySystem
 			}
 		}
 	}
-	return false;
+	return !OutPreviewData.IsEmpty();
 }
 
 bool ULetheGameplayAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const

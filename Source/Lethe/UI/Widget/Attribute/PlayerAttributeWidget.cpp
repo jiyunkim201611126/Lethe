@@ -20,9 +20,9 @@ void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
 		AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
 
-		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::UpdateManaUI);
-		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
-		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::StartPreviewMana);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::StartPreviewMana);
+		AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StartPreviewCost);
 		
 		AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::StopPreviewMana);
 		AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StopPreviewCost);
@@ -31,30 +31,26 @@ void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 
 void UPlayerAttributeWidget::UpdateManaUI(const FAttributeData& NewData) const
 {
-	if (NewData.bIsPreview)
-	{
-		ManaBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
-		ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
-	}
-	else
-	{
-		ManaBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
-		ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
-	}
+	ManaBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
 void UPlayerAttributeWidget::UpdateCostUI(const FAttributeData& NewData)
 {
-	if (NewData.bIsPreview)
-	{
-		PlayAnimation(CostBlinkingAnimation, 0, 0);
-		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
-	}
-	else
-	{
-		StopAnimation(CostBlinkingAnimation);
-		CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
-	}
+	StopPreviewCostAnimation();
+	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
+}
+
+void UPlayerAttributeWidget::StartPreviewMana(const FAttributeData& NewData) const
+{
+	ManaBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
+	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
+}
+
+void UPlayerAttributeWidget::StartPreviewCost(const FAttributeData& NewData)
+{
+	PlayPreviewCostAnimation(GetWorld()->GetTimeSeconds(), NewData.CurrentValue);
+	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }
 
 void UPlayerAttributeWidget::StopPreviewMana(const FAttributeData& NewData) const
@@ -65,6 +61,6 @@ void UPlayerAttributeWidget::StopPreviewMana(const FAttributeData& NewData) cons
 
 void UPlayerAttributeWidget::StopPreviewCost(const FAttributeData& NewData)
 {
-	StopAnimation(CostBlinkingAnimation);
+	StopPreviewCostAnimation();
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }

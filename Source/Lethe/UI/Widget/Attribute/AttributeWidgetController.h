@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
@@ -15,8 +16,6 @@ USTRUCT()
 struct FAttributeData
 {
 	GENERATED_BODY()
-
-	bool bIsPreview = false;
 
 	float CurrentValue = 0.f;
 	float MaxValue = 0.f;
@@ -44,20 +43,20 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);
-	void UpdateCachedPreviewAttribute(const FGameplayAttribute& Attribute, const float NewValue);
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility);
 
-	void StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag);
+	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);
+	void ConvertAttributeToTag(const TMap<FGameplayAttribute, float>& InMap, TMap<FGameplayTag, float>& OutMap);
+
+	void StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag, const TMap<FGameplayTag, float>& InPreviewData);
 	void StopPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag);
 	
-	virtual void StartAllPreview();
+	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData);
 	virtual void StopAllPreview();
 
 private:
 	void OnHealthChanged(const FOnAttributeChangeData& AttributeData);
 	void BroadcastHealthChanged() const;
-	
-	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility);
 
 public:
 	// AttributeTag를 Key로, AttributeWidget이 콜백을 걸어두는 델리게이트를 Value로 하는 TMap들입니다.
@@ -68,6 +67,5 @@ public:
 protected:
 	// 실제 AttributeSet이 갖고 있는 Attribute Value를 캐싱해두는 TMap입니다.
 	TMap<FGameplayTag, float> CachedAttribute;
-	// Ability가 갖고 있는 Effect가 적용될 경우 Attribute에 어떤 변화가 일어나는지 그 값을 캐싱해두는 TMap입니다.
-	TMap<FGameplayTag, float> CachedAbilityEffectPreviewData;
+	TSet<FGameplayTag> NowPreviewAttributes;
 };

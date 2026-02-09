@@ -49,9 +49,8 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				if (OwnerASC->AbilityActorInfo.IsValid())
 				{
 					// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
-					const FGameplayAbilitySpecHandle PreviewHandle;
 					const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
-					const bool bCanUse = LetheGameplayAbility->CheckCost(PreviewHandle, PreviewActorInfo);
+					const bool bCanUse = LetheGameplayAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
 					if (!bCanUse)
 					{
 						SetCardSelected(false);

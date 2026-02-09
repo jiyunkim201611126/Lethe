@@ -47,7 +47,6 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FAttributeData Data;
-	Data.bIsPreview = false;
 	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_Health);
 	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_MaxHealth);
 	if (const FOnAttributeChanged* OnHealthChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attributes_Vital_Health))
@@ -70,26 +69,25 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
 	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
-		// 먼저 현재 작동 중이었던 Preview를 모두 중단하고, Ability의 Target으로서의 Preview Data를 모두 제거한 뒤 다시 Preview를 진행합니다.
-		// 자식 클래스에서 Ability의 Target으로서의 Preview만이 아닌 Cost 등 다른 Preview도 진행할 수 있기 때문입니다.
 		StopAllPreview();
-		CachedAbilityEffectPreviewData.Empty();
-		StartAllPreview();
+		return;
 	}
 
 	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
 	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
-		// 마찬가지로 현재 작동 중이었던 Preview를 모두 중단한 뒤, Ability의 Target으로서의 Preview Data를 업데이트한 후 Preview를 진행합니다.
 		StopAllPreview();
-		CachedAbilityEffectPreviewData.Empty();
-		TMap<FGameplayAttribute, float> TempAbilityEffectPreviewData;
-		CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, TempAbilityEffectPreviewData);
-		for (const auto& Elem : TempAbilityEffectPreviewData)
+		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
+		TMap<FGameplayTag, float> OutPreviewData;
+		if (CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
 		{
-			UpdateCachedPreviewAttribute(Elem.Key, Elem.Value);
+			ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
 		}
-		StartAllPreview();
+		
+		if (!OutPreviewData.IsEmpty())
+		{
+			StartAllPreview(OutPreviewData);
+		}
 	}
 }
 
@@ -104,34 +102,37 @@ void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeD
 	}
 }
 
-void UAttributeWidgetController::UpdateCachedPreviewAttribute(const FGameplayAttribute& Attribute, const float NewValue)
+void UAttributeWidgetController::ConvertAttributeToTag(const TMap<FGameplayAttribute, float>& InMap, TMap<FGameplayTag, float>& OutMap)
 {
 	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AttributeSet)
 	{
-		if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(Attribute))
+		for (const auto& Elem : InMap)
 		{
-			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-			if (AttributeTag->MatchesTagExact(LetheGameplayTags.Damage))
+			if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(Elem.Key))
 			{
-				// Damage Attribute인 경우 Health Attribute로 바꾸고, 값도 음수로 바꿔서 넣어줍니다.
-				CachedAbilityEffectPreviewData.FindOrAdd(LetheGameplayTags.Attributes_Vital_Health) -= NewValue;
-			}
-			else
-			{
-				// Cost와 마우스 Hovered 상태를 합산해서 보여주기 위해 Emplace가 아닌 FindOrAdd를 사용합니다.
-				CachedAbilityEffectPreviewData.FindOrAdd(*AttributeTag) += NewValue;
+				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+				if (AttributeTag->MatchesTagExact(LetheGameplayTags.Damage))
+				{
+					// Damage Attribute인 경우 Health Attribute로 바꾸고, 값도 음수로 바꿔서 넣어줍니다.
+					OutMap.FindOrAdd(LetheGameplayTags.Attributes_Vital_Health) -= Elem.Value;
+				}
+				else
+				{
+					// Cost와 마우스 Hovered 상태를 합산해서 보여주기 위해 Emplace가 아닌 FindOrAdd를 사용합니다.
+					OutMap.FindOrAdd(*AttributeTag) += Elem.Value;
+				}
 			}
 		}
 	}
 }
 
-void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag)
+void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag, const TMap<FGameplayTag, float>& InPreviewData)
 {
 	bool bShouldPreview = false;
 
 	// Preview 내역이 있는 경우에만 Preview를 표시할 수 있도록 합니다.
 	float PreviewCurrentValue = CachedAttribute.FindRef(CurrentTag);
-	const float* DeltaCurrentValue = CachedAbilityEffectPreviewData.Find(CurrentTag);
+	const float* DeltaCurrentValue = InPreviewData.Find(CurrentTag);
 	if (DeltaCurrentValue)
 	{
 		PreviewCurrentValue += *DeltaCurrentValue;
@@ -139,7 +140,7 @@ void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, co
 	}
 	
 	float PreviewMaxValue = CachedAttribute.FindRef(MaxTag);
-	const float* DeltaMaxValue = CachedAbilityEffectPreviewData.Find(MaxTag);
+	const float* DeltaMaxValue = InPreviewData.Find(MaxTag);
 	if (DeltaMaxValue)
 	{
 		PreviewMaxValue += *DeltaMaxValue;
@@ -149,10 +150,10 @@ void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, co
 	// Preview 여부를 AttributeWidget에게 알려줍니다.
 	if (bShouldPreview)
 	{
+		NowPreviewAttributes.Emplace(CurrentTag);
 		if (const FOnAttributeChanged* OnChanged = OnPreviewAttributeChangedMap.Find(CurrentTag))
 		{
 			FAttributeData Data;
-			Data.bIsPreview = true;
 			Data.CurrentValue = PreviewCurrentValue;
 			Data.MaxValue = PreviewMaxValue;
 			OnChanged->Broadcast(Data);
@@ -162,29 +163,30 @@ void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, co
 
 void UAttributeWidgetController::StopPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag)
 {
-	// Preview 내역이 있는 경우에만 Preview를 취소하는 동작을 할 수 있도록 합니다.
-	const bool bIsPreviewing = CachedAbilityEffectPreviewData.Contains(CurrentTag) || CachedAbilityEffectPreviewData.Contains(MaxTag);
-	if (bIsPreviewing)
+	if (!NowPreviewAttributes.Contains(CurrentTag))
 	{
-		const float CurrentValue = CachedAttribute.FindRef(CurrentTag);
-		const float PreviewMaxValue = CachedAttribute.FindRef(MaxTag);
+		return;
+	}
 
-		// Preview가 중단되도록 Widget에게 알려줍니다.
-		if (const FOnAttributeChanged* OnChanged = OnPreviewEndedMap.Find(CurrentTag))
-		{
-			FAttributeData Data;
-			Data.bIsPreview = false;
-			Data.CurrentValue = CurrentValue;
-			Data.MaxValue = PreviewMaxValue;
-			OnChanged->Broadcast(Data);
-		}
+	NowPreviewAttributes.Remove(CurrentTag);
+	
+	const float CurrentValue = CachedAttribute.FindRef(CurrentTag);
+	const float PreviewMaxValue = CachedAttribute.FindRef(MaxTag);
+
+	// Preview가 중단되도록 Widget에게 알려줍니다.
+	if (const FOnAttributeChanged* OnChanged = OnPreviewEndedMap.Find(CurrentTag))
+	{
+		FAttributeData Data;
+		Data.CurrentValue = CurrentValue;
+		Data.MaxValue = PreviewMaxValue;
+		OnChanged->Broadcast(Data);
 	}
 }
 
-void UAttributeWidgetController::StartAllPreview()
+void UAttributeWidgetController::StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	StartPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth);
+	StartPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth, InPreviewData);
 }
 
 void UAttributeWidgetController::StopAllPreview()

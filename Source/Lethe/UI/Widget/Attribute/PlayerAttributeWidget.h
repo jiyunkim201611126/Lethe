@@ -16,9 +16,17 @@ protected:
 	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayPreviewCostAnimation(const float InTime, const float PreviewCostValue);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void StopPreviewCostAnimation();
+
 private:
 	void UpdateManaUI(const FAttributeData& NewData) const;
 	void UpdateCostUI(const FAttributeData& NewData);
+	void StartPreviewMana(const FAttributeData& NewData) const;
+	void StartPreviewCost(const FAttributeData& NewData);
 	void StopPreviewMana(const FAttributeData& NewData) const;
 	void StopPreviewCost(const FAttributeData& NewData);
 
@@ -29,9 +37,6 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheTextBlock> ManaText;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<ULetheTextBlock> CardCostText;
-
-	UPROPERTY(Transient, meta = (BindWidgetAnim))
-	TObjectPtr<UWidgetAnimation> CostBlinkingAnimation;
 };

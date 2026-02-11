@@ -44,6 +44,7 @@ public:
 
 protected:
 	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility);
+	void OnCancelCardSelect();
 
 	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);
 	void ConvertAttributeToTag(const TMap<FGameplayAttribute, float>& InMap, TMap<FGameplayTag, float>& OutMap);

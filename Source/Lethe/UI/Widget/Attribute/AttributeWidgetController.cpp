@@ -28,6 +28,7 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
 		LethePlayerController->OnOtherTileDetectedDelegate.AddUObject(this, &ThisClass::OnOtherTileDetected);
+		LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 	}
 }
 
@@ -89,6 +90,11 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 			StartAllPreview(OutPreviewData);
 		}
 	}
+}
+
+void UAttributeWidgetController::OnCancelCardSelect()
+{
+	StopAllPreview();
 }
 
 void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData)

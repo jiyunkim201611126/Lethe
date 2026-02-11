@@ -20,7 +20,6 @@ public:
 
 protected:
 	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
-	void OnCancelCardSelect();
 
 	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility) override;
 	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;

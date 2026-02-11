@@ -130,7 +130,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 	}
 }
 
-bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	if (OwnerASC)
 	{
@@ -151,6 +151,21 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 				Payload.Instigator = OwnerASC->GetAvatarActor();
 				Payload.Target = TargetActor;
 
+				// 현재 카드를 사용 중인 상태라면 Queue에 넣어둡니다.
+				if (bIsUsingCard)
+				{
+					FUseCardData UseCardData;
+					UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					UseCardData.CardTag = CardTag;
+					UseCardData.Payload = Payload;
+					UseCardData.AbilityOwnerASC = OwnerASC;
+					
+					UseCardDataQueue.Emplace(UseCardData);
+					return true;
+				}
+
+				bIsUsingCard = true;
+
 				// 카드 사용 성공 시 true를 반환합니다.
 				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, OwnerASC->AbilityActorInfo.Get(), CardTag, &Payload, *OwnerASC);
 			}
@@ -158,6 +173,20 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 	}
 	
 	return false;
+}
+
+void ALethePlayerController::OnUseCardEnded()
+{
+	if (!UseCardDataQueue.IsEmpty())
+	{
+		// Queue에 쌓인 데이터가 있는 경우 들어오는 분기입니다.
+		const FUseCardData& UseCardData = UseCardDataQueue[0];
+		UseCardData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(UseCardData.AbilitySpecHandle, UseCardData.AbilityOwnerASC->AbilityActorInfo.Get(), UseCardData.CardTag, &UseCardData.Payload, *UseCardData.AbilityOwnerASC);
+		return;
+	}
+
+	// Queue가 비어있다면 false로 바꿔줍니다.
+	bIsUsingCard = false;
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

@@ -56,4 +56,9 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("CharacterState.Dead"), FString(""));
 	GameplayTags.CharacterState_Knockback = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("CharacterState.Knockback"), FString(""));
+
+	GameplayTags.MontageEvent_ApplyEffect = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("MontageEvent.ApplyEffect"), FString(""));
+	GameplayTags.MontageEvent_EndUseCard = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("MontageEvent.EndUseCard"), FString(""));
 }

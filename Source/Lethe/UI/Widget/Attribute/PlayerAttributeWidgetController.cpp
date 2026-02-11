@@ -20,7 +20,6 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
 		LethePlayerController->OnCardSelectedDelegate.AddUObject(this, &ThisClass::OnCardSelected);
-		LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 	}
 }
 
@@ -80,11 +79,6 @@ void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemC
 			}
 		}
 	}
-}
-
-void UPlayerAttributeWidgetController::OnCancelCardSelect()
-{
-	StopAllPreview();
 }
 
 void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility)

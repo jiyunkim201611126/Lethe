@@ -2,8 +2,12 @@
 
 #include "LetheGameplayAbility.h"
 
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffectExecutionCalculation.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void ULetheGameplayAbility::ApplyAllEffects(AActor* TargetActor)
 {
@@ -144,12 +148,63 @@ void ULetheGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (CheckCost(Handle, ActorInfo))
+	// PlayerController에서 이미 CostEffect를 적용하고 왔으므로 CommitCost는 생략합니다.
+	
+	if (TriggerEventData && TriggerEventData->Target)
 	{
-		if (TriggerEventData && TriggerEventData->Target)
+		// 애니메이션 재생을 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
+		CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
+
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		
+		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			LetheGameplayTags.MontageEvent_ApplyEffect,
+			nullptr,
+			true,
+			true);
+		WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+		WaitApplyEffectEventTask->ReadyForActivation();
+		
+		UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			LetheGameplayTags.MontageEvent_ApplyEffect,
+			nullptr,
+			true,
+			true);
+		WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+		WaitEndUseCardEventTask->ReadyForActivation();
+
+		UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this,
+			NAME_None,
+			AbilityAnimMontage,
+			1.f,
+			NAME_None,
+			false,
+			1.f);
+		PlayMontageAndWaitTask->ReadyForActivation();
+	}
+}
+
+void ULetheGameplayAbility::OnEventReceived(FGameplayEventData Payload)
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	
+	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_ApplyEffect))
+	{
+		if (CachedTargetActor.IsValid())
 		{
-			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-			ApplyAllEffects(const_cast<AActor*>(TriggerEventData->Target.Get()));
+			ApplyAllEffects(CachedTargetActor.Get());
+			CachedTargetActor.Reset();
+		}
+	}
+	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_EndUseCard))
+	{
+		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
+		{
+			LethePlayerController->OnUseCardEnded();
+			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 		}
 	}
 }
@@ -182,8 +237,6 @@ void ULetheGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 
 
 #if WITH_EDITOR
-#include "Lethe/Manager/LetheGameplayTags.h"
-
 void ULetheGameplayAbility::PostInitProperties()
 {
 	Super::PostInitProperties();

@@ -51,6 +51,11 @@ struct FLetheGameplayTags
 	FGameplayTag CharacterState_Knockback;
 	//~ End of CharacterState
 
+	//~ Begin Montage Event
+	FGameplayTag MontageEvent_ApplyEffect;
+	FGameplayTag MontageEvent_EndUseCard;
+	//~ End of Montage Event
+
 private:
 	static FLetheGameplayTags GameplayTags;
 };

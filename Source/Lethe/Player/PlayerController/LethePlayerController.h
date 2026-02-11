@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/GameplayAbilityTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
@@ -12,6 +14,23 @@ class ULetheAbilitySystemComponent;
 class ULetheGameplayAbility;
 class ULetheHUD;
 class UTileSelectorComponent;
+struct FGameplayAbilityActorInfo;
+
+USTRUCT()
+struct FUseCardData
+{
+	GENERATED_BODY()
+	
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
+	
+	FGameplayTag CardTag;
+
+	UPROPERTY()
+	FGameplayEventData Payload;
+
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
+};
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent*, const ULetheGameplayAbility*)
@@ -30,7 +49,8 @@ public:
 	
 	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
-	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
+	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
+	void OnUseCardEnded();
 
 	ULetheHUD* GetLetheHUD() const;
 
@@ -65,4 +85,10 @@ private:
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
 	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
 	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
+
+	uint8 bIsUsingCard : 1 = false;
+
+	// 사실상 Queue로 사용하지만, GC의 보호를 받기 위해 Array로 선언합니다.
+	UPROPERTY()
+	TArray<FUseCardData> UseCardDataQueue;
 };

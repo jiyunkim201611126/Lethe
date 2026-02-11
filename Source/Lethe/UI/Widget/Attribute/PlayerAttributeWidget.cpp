@@ -37,7 +37,7 @@ void UPlayerAttributeWidget::UpdateManaUI(const FAttributeData& NewData) const
 
 void UPlayerAttributeWidget::UpdateCostUI(const FAttributeData& NewData)
 {
-	StopPreviewCostAnimation();
+	StopPreviewCostBlinking();
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }
 
@@ -49,7 +49,7 @@ void UPlayerAttributeWidget::StartPreviewMana(const FAttributeData& NewData) con
 
 void UPlayerAttributeWidget::StartPreviewCost(const FAttributeData& NewData)
 {
-	PlayPreviewCostAnimation(GetWorld()->GetTimeSeconds(), NewData.CurrentValue);
+	PlayPreviewCostBlinking(GetWorld()->GetTimeSeconds());
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }
 
@@ -61,6 +61,6 @@ void UPlayerAttributeWidget::StopPreviewMana(const FAttributeData& NewData) cons
 
 void UPlayerAttributeWidget::StopPreviewCost(const FAttributeData& NewData)
 {
-	StopPreviewCostAnimation();
+	StopPreviewCostBlinking();
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }

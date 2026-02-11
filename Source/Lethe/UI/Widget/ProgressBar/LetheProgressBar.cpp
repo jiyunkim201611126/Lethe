@@ -3,6 +3,7 @@
 #include "LetheProgressBar.h"
 
 #include "Components/ProgressBar.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void ULetheProgressBar::NativeDestruct()
@@ -16,21 +17,34 @@ void ULetheProgressBar::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void ULetheProgressBar::SetProgressBarStyle(const FProgressBarStyle& FrontProgressBarStyle, const FProgressBarStyle& GhostProgressBarStyle)
+void ULetheProgressBar::SetProgressBarStyle(const FProgressBarStyle& FrontProgressBarStyle, const FProgressBarStyle& GhostProgressBarStyle, UMaterialInterface* PreviewProgressBarMaterial)
 {
 	FrontProgressBar->SetWidgetStyle(FrontProgressBarStyle);
 	GhostProgressBar->SetWidgetStyle(GhostProgressBarStyle);
+
+	if (PreviewProgressBarMaterial)
+	{
+		FProgressBarStyle PreviewProgressBarStyle = FrontProgressBarStyle;
+		FSlateBrush PreviewBrush = PreviewProgressBarStyle.FillImage;
+		PreviewBarDynamicMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, PreviewProgressBarMaterial);
+		PreviewBrush.SetResourceObject(PreviewBarDynamicMaterialInstance);
+		PreviewProgressBarStyle.SetFillImage(PreviewBrush);
+		PreviewProgressBar->SetWidgetStyle(PreviewProgressBarStyle);
+		PreviewProgressBar->SynchronizeProperties();
+	}
 }
 
 void ULetheProgressBar::SetFillColorAndOpacity(const FLinearColor& InLinearColor)
 {
 	FrontProgressBar->SetFillColorAndOpacity(InLinearColor);
+	PreviewProgressBar->SetFillColorAndOpacity(InLinearColor);
 	GhostProgressBar->SetFillColorAndOpacity(InLinearColor);
 }
 
 void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldInterp)
 {
 	FrontProgressBar->SetPercent(InPercent);
+	PreviewProgressBar->SetVisibility(ESlateVisibility::Collapsed);
 
 	if (bShouldInterp)
 	{
@@ -54,11 +68,15 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 
 void ULetheProgressBar::SetPreviewBarPercent(const float InPercent)
 {
+	PlayPreviewBlinking(GetWorld()->GetTimeSeconds());
+	PreviewProgressBar->SetPercent(FrontProgressBar->GetPercent());
+	PreviewProgressBar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	FrontProgressBar->SetPercent(InPercent);
 }
 
 void ULetheProgressBar::StopPreview(const float InPercent)
 {
+	PreviewProgressBar->SetVisibility(ESlateVisibility::Collapsed);
 	FrontProgressBar->SetPercent(InPercent);
 }
 

@@ -17,10 +17,10 @@ protected:
 	//~ End of ULetheUserWidget Interface
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void PlayPreviewCostAnimation(const float InTime, const float PreviewCostValue);
+	void PlayPreviewCostBlinking(const float InTime);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void StopPreviewCostAnimation();
+	void StopPreviewCostBlinking();
 
 private:
 	void UpdateManaUI(const FAttributeData& NewData) const;

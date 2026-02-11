@@ -20,7 +20,7 @@ class LETHE_API ULetheProgressBar : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetProgressBarStyle(const FProgressBarStyle& FrontProgressBarStyle, const FProgressBarStyle& GhostProgressBarStyle);
+	void SetProgressBarStyle(const FProgressBarStyle& FrontProgressBarStyle, const FProgressBarStyle& GhostProgressBarStyle, UMaterialInterface* PreviewProgressBarMaterial);
 
 	UFUNCTION(BlueprintCallable)
 	void SetFillColorAndOpacity(const FLinearColor& InLinearColor);
@@ -37,12 +37,21 @@ protected:
 	void BarPercentSet(const float InPercent);
 	void InterpGhostBar();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayPreviewBlinking(const float InTime);
+	
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> FrontProgressBar;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UProgressBar> PreviewProgressBar;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UProgressBar> GhostProgressBar;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UMaterialInstanceDynamic> PreviewBarDynamicMaterialInstance;
 
 private:
 	FTimerHandle GhostPercentSetTimerHandle;

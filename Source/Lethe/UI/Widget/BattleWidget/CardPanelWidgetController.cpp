@@ -5,12 +5,17 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 	// Ability가 부여되면 콜백을 받아 해당하는 Card를 생성할 수 있도록 바인드합니다.
 	ASC->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);
+
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	ASC->GenericGameplayEventCallbacks.FindOrAdd(LetheGameplayTags.Event_UseCardSuccess).AddUObject(this, &ThisClass::OnCardUsedSuccess);
+	ASC->GenericGameplayEventCallbacks.FindOrAdd(LetheGameplayTags.Event_UseCardFailure).AddUObject(this, &ThisClass::OnCardUsedFailure);
 
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 콜백이 바인드되도록 막아줍니다.
 	if (!bInitialized)
@@ -123,4 +128,14 @@ void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
 void UCardPanelWidgetController::OnCancelCardSelect() const
 {
 	OnCancelCardSelectDelegate.ExecuteIfBound();
+}
+
+void UCardPanelWidgetController::OnCardUsedSuccess(const FGameplayEventData* Payload) const
+{
+	OnUseCardResultDelegate.ExecuteIfBound(true);
+}
+
+void UCardPanelWidgetController::OnCardUsedFailure(const FGameplayEventData* Payload) const
+{
+	OnUseCardResultDelegate.ExecuteIfBound(false);
 }

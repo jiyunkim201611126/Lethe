@@ -70,9 +70,11 @@ private:
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
 	void SelectCard(UCardWidget* InCardWidget);
 	void TryUseCard();
-	void UseCardSuccess();
+	void RequestUseCardSuccess();
 	void ResetSelectedCard();
 	void ResetSelectedCardWithoutEvent();
+
+	void OnUseCardResult(const bool bSuccess);
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
@@ -117,7 +119,11 @@ private:
 	float PaddingHandAndHand = 10.f;
 	float CardExpandScale;
 
-	TWeakObjectPtr<UCardWidget> CurrentSelectedCard;
+	UPROPERTY()
+	TObjectPtr<UCardWidget> CurrentSelectedCard;
+	
+	UPROPERTY()
+	TArray<TObjectPtr<UCardWidget>> UseRequestedCardsQueue;
 
 	// 키보드 입력으로 조작 시 핸드를 빠르게 탐색하기 위해 선언한 변수입니다.
 	UPROPERTY()

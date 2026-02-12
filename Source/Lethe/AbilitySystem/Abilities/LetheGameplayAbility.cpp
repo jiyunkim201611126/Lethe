@@ -148,42 +148,44 @@ void ULetheGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	// PlayerController에서 이미 CostEffect를 적용하고 왔으므로 CommitCost는 생략합니다.
-	
-	if (TriggerEventData && TriggerEventData->Target)
+	if (CheckCost(Handle, ActorInfo))
 	{
-		// 애니메이션 재생을 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
-		CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
-
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
 		
-		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-			this,
-			LetheGameplayTags.MontageEvent_ApplyEffect,
-			nullptr,
-			true,
-			true);
-		WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-		WaitApplyEffectEventTask->ReadyForActivation();
+		if (TriggerEventData && TriggerEventData->Target)
+		{
+			// 애니메이션 재생을 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
+			CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
+			
+			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+			UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this,
+				LetheGameplayTags.MontageEvent_ApplyEffect,
+				nullptr,
+				true,
+				true);
+			WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+			WaitApplyEffectEventTask->ReadyForActivation();
 		
-		UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-			this,
-			LetheGameplayTags.MontageEvent_ApplyEffect,
-			nullptr,
-			true,
-			true);
-		WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-		WaitEndUseCardEventTask->ReadyForActivation();
+			UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this,
+				LetheGameplayTags.MontageEvent_EndUseCard,
+				nullptr,
+				true,
+				true);
+			WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+			WaitEndUseCardEventTask->ReadyForActivation();
 
-		UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-			this,
-			NAME_None,
-			AbilityAnimMontage,
-			1.f,
-			NAME_None,
-			false,
-			1.f);
-		PlayMontageAndWaitTask->ReadyForActivation();
+			UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+				this,
+				NAME_None,
+				AbilityAnimMontage,
+				1.f,
+				NAME_None,
+				false,
+				1.f);
+			PlayMontageAndWaitTask->ReadyForActivation();
+		}
 	}
 }
 
@@ -197,6 +199,10 @@ void ULetheGameplayAbility::OnEventReceived(FGameplayEventData Payload)
 		{
 			ApplyAllEffects(CachedTargetActor.Get());
 			CachedTargetActor.Reset();
+
+			// Effect 적용 타이밍에 카드 사용 성공 이벤트를 발생시킵니다.
+			// Ability 발동 타이밍에 발생시킬 경우 타이밍 이슈로 CardPanel이 정상적으로 동작하지 못 하기 때문에, 살짝 늦은 타이밍에 보내야 하는데 이 위치가 제격입니다.
+			GetAbilitySystemComponentFromActorInfo()->HandleGameplayEvent(LetheGameplayTags.Event_UseCardSuccess, new FGameplayEventData());
 		}
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_EndUseCard))

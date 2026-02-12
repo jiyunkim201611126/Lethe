@@ -56,6 +56,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::ResetSelectedCardWithoutEvent);
+		CardPanelWidgetController->OnUseCardResultDelegate.BindUObject(this, &ThisClass::OnUseCardResult);
 		
 		CardPanelWidgetController->BroadcastInitialValue();
 		
@@ -328,7 +329,7 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 	ResetSelectedCard();
 	
 	CurrentSelectedCard = InCardWidget;
-	if (CurrentSelectedCard.IsValid())
+	if (CurrentSelectedCard)
 	{
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
 		
@@ -346,29 +347,20 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 
 void UCardPanelWidget::TryUseCard()
 {
-	if (CurrentSelectedCard.IsValid() && CardPanelWidgetController)
+	if (CurrentSelectedCard && CardPanelWidgetController)
 	{
 		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
-		const bool bUseCardSuccess = CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
-		bUseCardSuccess ? UseCardSuccess() : ResetSelectedCard();
+		const bool bRequestSuccess = CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
+		bRequestSuccess ? RequestUseCardSuccess() : ResetSelectedCard();
 	}
 }
 
-void UCardPanelWidget::UseCardSuccess()
+void UCardPanelWidget::RequestUseCardSuccess()
 {
-	// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
-	// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 핸드 배열은 그대로 두고, 나중에 턴 종료 시 정리합니다.
-	if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CurrentSelectedCard->GetOwnerASC()))
-	{
-		CharacterCards->Graves.Emplace(CurrentSelectedCard.Get());
-	}
-
-	FWidgetTransform WidgetTransform = CurrentSelectedCard->GetRenderTransform();
-	WidgetTransform.Translation = GravesCardTranslation;
-	CurrentSelectedCard->SetTargetTransform(WidgetTransform);
-	CurrentSelectedCard->SetCardContainer(ECardContainer::Grave);
+	// 카드 사용 성공 여부를 아직 알 수 없으므로 선택만 취소해놓고 결과를 기다립니다.
+	UseRequestedCardsQueue.Emplace(CurrentSelectedCard);
 	CurrentSelectedCard->MouseHovered(false);
-	CurrentSelectedCard.Reset();
+	CurrentSelectedCard = nullptr;
 
 	if (CardPanelWidgetController)
 	{
@@ -378,11 +370,11 @@ void UCardPanelWidget::UseCardSuccess()
 
 void UCardPanelWidget::ResetSelectedCard()
 {
-	if (CurrentSelectedCard.IsValid())
+	if (CurrentSelectedCard)
 	{		
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
 		CurrentSelectedCard->MouseHovered(false);
-		CurrentSelectedCard.Reset();
+		CurrentSelectedCard = nullptr;
 
 		if (CardPanelWidgetController)
 		{
@@ -395,14 +387,50 @@ void UCardPanelWidget::ResetSelectedCard()
 
 void UCardPanelWidget::ResetSelectedCardWithoutEvent()
 {
-	if (CurrentSelectedCard.IsValid())
+	if (CurrentSelectedCard)
 	{		
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
 		CurrentSelectedCard->MouseHovered(false);
-		CurrentSelectedCard.Reset();
+		CurrentSelectedCard = nullptr;
 
 		UpdateAllCardTranslation();
 	}
+}
+
+void UCardPanelWidget::OnUseCardResult(const bool bSuccess)
+{
+	// 카드 사용 요청 성공 후, Ability 실제 발동 여부와 상관 없이 이 로직으로 들어옵니다.
+	// 해당 함수 호출 횟수는 반드시 카드 사용 요청 성공 횟수와 1:1 대응해야 합니다.
+	if (UseRequestedCardsQueue.IsEmpty())
+	{
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다."));
+		return;
+	}
+	
+	if (bSuccess)
+	{
+		// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
+		// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 핸드 배열은 그대로 두고, 나중에 턴 종료 시 정리합니다.
+		UCardWidget* CardWidget = UseRequestedCardsQueue[0].Get();
+		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CardWidget->GetOwnerASC()))
+		{
+			CharacterCards->Graves.Emplace(CardWidget);
+		}
+
+		FWidgetTransform WidgetTransform = CardWidget->GetRenderTransform();
+		WidgetTransform.Translation = GravesCardTranslation;
+		CardWidget->SetTargetTransform(WidgetTransform);
+		CardWidget->SetCardContainer(ECardContainer::Grave);
+		CardWidget->MouseHovered(false);
+
+		if (CardPanelWidgetController)
+		{
+			CardPanelWidgetController->SetCardSelected(false);
+		}
+	}
+
+	// 성공 여부와 관계 없이 남은 카드 중 가장 앞 카드는 제거합니다.
+	UseRequestedCardsQueue.RemoveAt(0);
 }
 
 void UCardPanelWidget::OnTurnEndButtonClicked()

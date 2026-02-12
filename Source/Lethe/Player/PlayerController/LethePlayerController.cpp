@@ -6,6 +6,7 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -146,6 +147,12 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 		
 			if (!AbilitySpecs.IsEmpty())
 			{
+				const FGameplayAbilitySpec* AbilitySpec = AbilitySpecs[0];
+				if (!AbilitySpec->Ability->CheckCost(AbilitySpec->Handle, OwnerASC->AbilityActorInfo.Get()))
+				{
+					return false;
+				}
+				
 				// Ability가 발동될 수 있도록 이벤트를 발생시킵니다.
 				FGameplayEventData Payload;
 				Payload.Instigator = OwnerASC->GetAvatarActor();
@@ -155,7 +162,7 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 				if (bIsUsingCard)
 				{
 					FUseCardData UseCardData;
-					UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					UseCardData.AbilitySpecHandle = AbilitySpec->Handle;
 					UseCardData.CardTag = CardTag;
 					UseCardData.Payload = Payload;
 					UseCardData.AbilityOwnerASC = OwnerASC;
@@ -166,12 +173,11 @@ bool ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 
 				bIsUsingCard = true;
 
-				// 카드 사용 성공 시 true를 반환합니다.
-				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, OwnerASC->AbilityActorInfo.Get(), CardTag, &Payload, *OwnerASC);
+				// 카드 사용에 성공한 경우 true를 반환합니다.
+				return OwnerASC->TriggerAbilityFromGameplayEvent(AbilitySpec->Handle, OwnerASC->AbilityActorInfo.Get(), CardTag, &Payload, *OwnerASC);
 			}
 		}
 	}
-	
 	return false;
 }
 
@@ -179,9 +185,16 @@ void ALethePlayerController::OnUseCardEnded()
 {
 	if (!UseCardDataQueue.IsEmpty())
 	{
-		// Queue에 쌓인 데이터가 있는 경우 들어오는 분기입니다.
+		// 발동해야할 Ability가 있는 경우 들어오는 분기입니다.
 		const FUseCardData& UseCardData = UseCardDataQueue[0];
-		UseCardData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(UseCardData.AbilitySpecHandle, UseCardData.AbilityOwnerASC->AbilityActorInfo.Get(), UseCardData.CardTag, &UseCardData.Payload, *UseCardData.AbilityOwnerASC);
+		const bool bUseSuccess = UseCardData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(UseCardData.AbilitySpecHandle, UseCardData.AbilityOwnerASC->AbilityActorInfo.Get(), UseCardData.CardTag, &UseCardData.Payload, *UseCardData.AbilityOwnerASC);
+		if (!bUseSuccess)
+		{
+			// 사용에 성공한 경우 Ability가 알아서 이벤트를 발생시키므로, 실패한 경우는 여기서 발생시킵니다.
+			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+			UseCardData.AbilityOwnerASC->HandleGameplayEvent(LetheGameplayTags.Event_UseCardFailure, new FGameplayEventData());
+		}
+		UseCardDataQueue.RemoveAt(0);
 		return;
 	}
 

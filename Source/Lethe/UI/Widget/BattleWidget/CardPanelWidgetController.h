@@ -8,6 +8,7 @@
 #include "Lethe/UI/Widget/BattleWidget/CardWidget.h"
 #include "CardPanelWidgetController.generated.h"
 
+struct FGameplayEventData;
 class ALethePlayerController;
 class ALetheGameState;
 class UCardDefinitionData;
@@ -49,6 +50,7 @@ DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChanged, const EPlayerPhaseState);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCancelCardSelect);
+DECLARE_DELEGATE_OneParam(FOnUseCardResult, const bool);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -81,11 +83,15 @@ private:
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
 
+	void OnCardUsedSuccess(const FGameplayEventData* Payload) const;
+	void OnCardUsedFailure(const FGameplayEventData* Payload) const;
+
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
 	FOnPlayerPhaseStateChanged OnPlayerPhaseStateChangedDelegate;
 	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 	FOnCancelCardSelect OnCancelCardSelectDelegate;
+	FOnUseCardResult OnUseCardResultDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")

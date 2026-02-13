@@ -61,9 +61,4 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("MontageEvent.ApplyEffect"), FString(""));
 	GameplayTags.MontageEvent_EndUseCard = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("MontageEvent.EndUseCard"), FString(""));
-	
-	GameplayTags.Event_UseCardSuccess = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Event.UseCardSuccess"), FString(""));
-	GameplayTags.Event_UseCardFailure= UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Event.UseCardFailure"), FString(""));
 }

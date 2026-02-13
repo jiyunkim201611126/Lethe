@@ -20,6 +20,8 @@ USTRUCT()
 struct FUseCardData
 {
 	GENERATED_BODY()
+
+	int32 HandIndex = INDEX_NONE;
 	
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 	
@@ -32,10 +34,11 @@ struct FUseCardData
 	TObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 };
 
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent*, const ULetheGameplayAbility*)
+DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheGameplayAbility* /* CardAbility */)
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor*, const AActor*, const UAbilitySystemComponent*, const ULetheGameplayAbility*)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheGameplayAbility* /* CardAbility */)
+DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */)
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -49,8 +52,8 @@ public:
 	
 	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
-	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag);
-	void OnUseCardEnded();
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex);
+	void OnAbilityEnded();
 
 	ULetheHUD* GetLetheHUD() const;
 
@@ -65,11 +68,14 @@ private:
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
 
+	void TryUseNextCardAbility();
+
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 	FOnCardSelectedSignature OnCardSelectedDelegate;
 	FOnCardSelectCanceledSignature OnCancelCardSelectDelegate;
 	FOnOtherTileDetected OnOtherTileDetectedDelegate;
+	FOnResolveUseCardSignature OnResolveUseCardDelegate;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced)
@@ -86,9 +92,9 @@ private:
 	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
 	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
 
-	uint8 bIsUsingCard : 1 = false;
-
-	// 사실상 Queue로 사용하지만, GC의 보호를 받기 위해 Array로 선언합니다.
+	// 사실상 Queue로 사용하며, Key용 값인 HandIndex도 있어 Map으로도 구현 가능합니다.
+	// 하지만 내부에 할당되는 개수가 어차피 최대 7개라 그냥 순회하면서 찾는 게 더 빠르니까 Array로 구현했습니다.
 	UPROPERTY()
-	TArray<FUseCardData> UseCardDataQueue;
+	TArray<FUseCardData> WaitingForUseCardsQueue;
+	uint8 bIsProgressingCardAbility : 1 = false;
 };

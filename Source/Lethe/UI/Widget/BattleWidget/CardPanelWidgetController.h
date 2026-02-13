@@ -50,7 +50,7 @@ DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChanged, const EPlayerPhaseState);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCancelCardSelect);
-DECLARE_DELEGATE_OneParam(FOnUseCardResult, const bool);
+DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -75,23 +75,21 @@ public:
 	void GoDrawPhase() const;
 	void GoBattlePhase() const;
 	bool RequestTurnEnd() const;
-	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
 	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
-
-	void OnCardUsedSuccess(const FGameplayEventData* Payload) const;
-	void OnCardUsedFailure(const FGameplayEventData* Payload) const;
+	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess) const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
 	FOnPlayerPhaseStateChanged OnPlayerPhaseStateChangedDelegate;
 	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 	FOnCancelCardSelect OnCancelCardSelectDelegate;
-	FOnUseCardResult OnUseCardResultDelegate;
+	FOnUseCardResolved OnUseCardResolvedDelegate;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")

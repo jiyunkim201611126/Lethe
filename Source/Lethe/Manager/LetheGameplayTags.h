@@ -56,11 +56,6 @@ struct FLetheGameplayTags
 	FGameplayTag MontageEvent_EndUseCard;
 	//~ End of Montage Event
 
-	//~ Begin Event
-	FGameplayTag Event_UseCardSuccess;
-	FGameplayTag Event_UseCardFailure;
-	//~ End of Event
-
 private:
 	static FLetheGameplayTags GameplayTags;
 };

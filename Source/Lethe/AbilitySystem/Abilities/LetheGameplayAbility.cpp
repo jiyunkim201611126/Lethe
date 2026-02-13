@@ -199,17 +199,13 @@ void ULetheGameplayAbility::OnEventReceived(FGameplayEventData Payload)
 		{
 			ApplyAllEffects(CachedTargetActor.Get());
 			CachedTargetActor.Reset();
-
-			// Effect 적용 타이밍에 카드 사용 성공 이벤트를 발생시킵니다.
-			// Ability 발동 타이밍에 발생시킬 경우 타이밍 이슈로 CardPanel이 정상적으로 동작하지 못 하기 때문에, 살짝 늦은 타이밍에 보내야 하는데 이 위치가 제격입니다.
-			GetAbilitySystemComponentFromActorInfo()->HandleGameplayEvent(LetheGameplayTags.Event_UseCardSuccess, new FGameplayEventData());
 		}
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_EndUseCard))
 	{
 		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 		{
-			LethePlayerController->OnUseCardEnded();
+			LethePlayerController->OnAbilityEnded();
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 		}
 	}

@@ -5,17 +5,12 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/LetheGameState.h"
-#include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
 	// Ability가 부여되면 콜백을 받아 해당하는 Card를 생성할 수 있도록 바인드합니다.
 	ASC->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);
-
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	ASC->GenericGameplayEventCallbacks.FindOrAdd(LetheGameplayTags.Event_UseCardSuccess).AddUObject(this, &ThisClass::OnCardUsedSuccess);
-	ASC->GenericGameplayEventCallbacks.FindOrAdd(LetheGameplayTags.Event_UseCardFailure).AddUObject(this, &ThisClass::OnCardUsedFailure);
 
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 콜백이 바인드되도록 막아줍니다.
 	if (!bInitialized)
@@ -25,6 +20,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		{
 			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
 			LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+			LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
 		}
 		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
@@ -40,6 +36,11 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 void UCardPanelWidgetController::BeginDestroy()
 {
 	Super::BeginDestroy();
+
+	if (LethePlayerController)
+	{
+		LethePlayerController->OnResolveUseCardDelegate.Unbind();
+	}
 
 	if (LetheGameState.IsValid())
 	{
@@ -95,13 +96,12 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 	return true;
 }
 
-bool UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
 	if (LethePlayerController)
 	{
-		return LethePlayerController->RequestUseCard(OwnerASC, CardTag);
+		LethePlayerController->RequestUseCard(OwnerASC, CardTag, InHandIndex);
 	}
-	return false;
 }
 
 void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
@@ -130,12 +130,7 @@ void UCardPanelWidgetController::OnCancelCardSelect() const
 	OnCancelCardSelectDelegate.ExecuteIfBound();
 }
 
-void UCardPanelWidgetController::OnCardUsedSuccess(const FGameplayEventData* Payload) const
+void UCardPanelWidgetController::OnUseCardResolved(const int32 HandIndex, const bool bSuccess) const
 {
-	OnUseCardResultDelegate.ExecuteIfBound(true);
-}
-
-void UCardPanelWidgetController::OnCardUsedFailure(const FGameplayEventData* Payload) const
-{
-	OnUseCardResultDelegate.ExecuteIfBound(false);
+	OnUseCardResolvedDelegate.ExecuteIfBound(HandIndex, bSuccess);
 }

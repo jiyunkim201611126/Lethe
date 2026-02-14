@@ -143,40 +143,42 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 		}
 	}
 	
-	if (OwnerASC)
+	AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor();
+	if (OwnerASC && TargetActor)
 	{
-		if (AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor())
-		{
-			// CardTag에 해당하는 Ability를 가져옵니다.
-			TArray<FGameplayAbilitySpec*> AbilitySpecs;
-			const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
-			OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
+		// CardTag에 해당하는 Ability를 가져옵니다.
+		TArray<FGameplayAbilitySpec*> AbilitySpecs;
+		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
+		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
 
-			// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
-			// TODO: 현재는 첫번째 거로 사용합니다.
+		// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
+		// TODO: 현재는 첫번째 거로 사용합니다.
 		
-			if (!AbilitySpecs.IsEmpty())
+		if (!AbilitySpecs.IsEmpty())
+		{
+			// Ability가 발동될 수 있도록 이벤트 데이터를 생성합니다.
+			FGameplayEventData Payload;
+			Payload.Instigator = OwnerASC->GetAvatarActor();
+			Payload.Target = TargetActor;
+
+			// Queue에 넣고 Ability 발동을 시작합니다.
+			FUseCardData UseCardData;
+			UseCardData.HandIndex = InHandIndex;
+			UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+			UseCardData.CardTag = CardTag;
+			UseCardData.Payload = Payload;
+			UseCardData.AbilityOwnerASC = OwnerASC;
+
+			WaitingForUseCardsQueue.Emplace(UseCardData);
+			if (!bIsProgressingCardAbility)
 			{
-				// Ability가 발동될 수 있도록 이벤트 데이터를 생성합니다.
-				FGameplayEventData Payload;
-				Payload.Instigator = OwnerASC->GetAvatarActor();
-				Payload.Target = TargetActor;
-
-				// Queue에 넣고 Ability 발동을 시작합니다.
-				FUseCardData UseCardData;
-				UseCardData.HandIndex = InHandIndex;
-				UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-				UseCardData.CardTag = CardTag;
-				UseCardData.Payload = Payload;
-				UseCardData.AbilityOwnerASC = OwnerASC;
-
-				WaitingForUseCardsQueue.Emplace(UseCardData);
-				if (!bIsProgressingCardAbility)
-				{
-					TryUseNextCardAbility();
-				}
+				TryUseNextCardAbility();
 			}
 		}
+	}
+	else
+	{
+		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
 }
 

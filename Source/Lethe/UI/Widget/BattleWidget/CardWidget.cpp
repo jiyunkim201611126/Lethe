@@ -4,6 +4,7 @@
 
 #include "CardPanelWidgetController.h"
 #include "Animation/WidgetAnimation.h"
+#include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -27,10 +28,29 @@ void UCardWidget::NativeConstruct()
 	MovementTimeline.SetTimelineFinishedFunc(OnFinishedFunction);
 }
 
+void UCardWidget::NativeDestruct()
+{
+	OnCardMouseEventDelegate.Unbind();
+	
+	Super::NativeDestruct();
+}
+
 void UCardWidget::SetSize(const FVector2D& InSize) const
 {
 	RootSizeBox->SetWidthOverride(InSize.X);
 	RootSizeBox->SetHeightOverride(InSize.Y);
+}
+
+void UCardWidget::SetCardImageSize(const FVector2D& InCardImageSize, const float BaseRenderScale) const
+{
+	// 카드 확대 기능 수행을 위해 RenderScale을 1보다 낮은 수치로 할당했기 때문에, 디자이너탭에서 설정한 값들을 그대로 사용하면 문제가 생기므로 여기서 보정합니다.
+	CardImage->SetDesiredSizeOverride(InCardImageSize);
+	if (UOverlaySlot* CardImageSlot = Cast<UOverlaySlot>(CardImage->Slot))
+	{
+		FMargin DesiredPadding = CardImageSlot->GetPadding();
+		DesiredPadding.Top /= BaseRenderScale;
+		CardImageSlot->SetPadding(DesiredPadding);
+	}
 }
 
 void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)

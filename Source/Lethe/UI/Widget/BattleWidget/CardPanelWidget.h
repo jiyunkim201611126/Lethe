@@ -116,7 +116,7 @@ private:
 	FVector2D GravesCardTranslation = FVector2D(1760.f, -40.f);
 	float PaddingDeckAndHand = 25.f;
 	float PaddingHandAndHand = 10.f;
-	float CardExpandScale;
+	float CardBaseRenderScale;
 
 	UPROPERTY()
 	TObjectPtr<UCardWidget> CurrentSelectedCard;

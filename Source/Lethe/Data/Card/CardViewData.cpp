@@ -7,6 +7,11 @@ FVector2D UCardViewData::GetCardSize() const
 	return CardSize;
 }
 
+FVector2D UCardViewData::GetCardImageSize() const
+{
+	return CardImageSize;
+}
+
 float UCardViewData::GetCardExpandScale() const
 {
 	return CardExpandScale;

@@ -64,7 +64,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐, 텍스트가 깨져버립니다.
 		// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
 		// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-		CardExpandScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
+		CardBaseRenderScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
 		bControllerInitialized = true;
 	}
 }
@@ -172,16 +172,18 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 		// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
 		FCharacterCards& CharacterCards = AbilitySystemComponentToCards.FindOrAdd(CardInitParams.OwnerASC);
 		CharacterCards.Deck.Emplace(CreatedCard);
-
-		CreatedCard->SetWidgetController(WidgetController);
-		CreatedCard->SetCardInfo(CardInitParams);
-		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
 		
-		// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
-		CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardExpandScale);
-		CreatedCard->SetRenderScale(FVector2D(CardExpandScale));
 		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
+			// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
+			CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardBaseRenderScale);
+			CreatedCard->SetCardImageSize(CardInitParams.CardViewData->GetCardImageSize() / CardBaseRenderScale, CardBaseRenderScale);
+			CreatedCard->SetRenderScale(FVector2D(CardBaseRenderScale));
+			
+			CreatedCard->SetWidgetController(WidgetController);
+			CreatedCard->SetCardInfo(CardInitParams);
+			CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
+			
 			// 앵커를 좌하단에 박습니다.
 			CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
 			CardSlot->SetAlignment(FVector2D(0.5f, 0.5f));

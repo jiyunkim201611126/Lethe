@@ -63,6 +63,7 @@ class LETHE_API UCardWidget : public ULetheUserWidget
 public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
@@ -72,7 +73,7 @@ public:
 	//~ End of UUserWidget Interface
 
 	void SetSize(const FVector2D& InSize) const;
-
+	void SetCardImageSize(const FVector2D& InCardImageSize, const float BaseRenderScale) const;
 	void SetCardInfo(const FCardInitParams& InitParams);
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;

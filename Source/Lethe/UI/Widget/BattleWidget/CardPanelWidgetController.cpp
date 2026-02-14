@@ -33,6 +33,17 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	}
 }
 
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
+{
+	FCardInitParams InitParams;
+	InitParams.OwnerASC = OwnerASC;
+	InitParams.CardViewData = CardViewData;
+	InitParams.CardDefinition = CardDefinitionData;
+	InitParams.CardSelfViewData = CardSelfViewData;
+	InitParams.CharacterDefinitionData = CharacterDefinitionData;
+	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
+}
+
 void UCardPanelWidgetController::BeginDestroy()
 {
 	Super::BeginDestroy();
@@ -91,9 +102,17 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 {
 	// TODO: 배틀 페이즈가 종료되고 GameState에서 적 턴이 시작되도록 제어해야 합니다.
 	// 현재는 단순히 DrawPhase로 돌아가도록 합니다.
-	GoDrawPhase();
-
-	return true;
+	
+	if (LethePlayerController)
+	{
+		if (!LethePlayerController->IsProgressingCardAbility())
+		{
+			// Ability 발동 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
+			GoDrawPhase();
+			return true;
+		}
+	}
+	return false;
 }
 
 void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
@@ -102,17 +121,6 @@ void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* Ow
 	{
 		LethePlayerController->RequestUseCard(OwnerASC, CardTag, InHandIndex);
 	}
-}
-
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
-{
-	FCardInitParams InitParams;
-	InitParams.OwnerASC = OwnerASC;
-	InitParams.CardViewData = CardViewData;
-	InitParams.CardDefinition = CardDefinitionData;
-	InitParams.CardSelfViewData = CardSelfViewData;
-	InitParams.CharacterDefinitionData = CharacterDefinitionData;
-	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }
 
 void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState InState) const

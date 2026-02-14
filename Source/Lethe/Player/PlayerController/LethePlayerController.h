@@ -56,6 +56,7 @@ public:
 	void OnAbilityEnded();
 
 	ULetheHUD* GetLetheHUD() const;
+	bool IsProgressingCardAbility() const;
 
 protected:
 	//~ Begin AActor Interface

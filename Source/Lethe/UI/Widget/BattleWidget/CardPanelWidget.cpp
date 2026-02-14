@@ -335,6 +335,12 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 	{
 		return;
 	}
+
+	// 이미 사용했거나, 선택된 카드라면 얼리 리턴합니다.
+	if (InCardWidget->GetCurrentCardContainer() == ECardContainer::Grave || InCardWidget->GetCurrentCardContainer() == ECardContainer::Selected)
+	{
+		return;
+	}
 	
 	CurrentSelectedCard = InCardWidget;
 	if (CurrentSelectedCard)
@@ -384,9 +390,8 @@ void UCardPanelWidget::TryUseCard()
 void UCardPanelWidget::ResetSelectedCard()
 {
 	if (CurrentSelectedCard)
-	{		
+	{
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
-		CurrentSelectedCard->MouseHovered(false);
 		CurrentSelectedCard = nullptr;
 
 		if (CardPanelWidgetController)
@@ -401,9 +406,8 @@ void UCardPanelWidget::ResetSelectedCard()
 void UCardPanelWidget::ResetSelectedCardWithoutEvent()
 {
 	if (CurrentSelectedCard)
-	{		
+	{
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
-		CurrentSelectedCard->MouseHovered(false);
 		CurrentSelectedCard = nullptr;
 
 		UpdateAllCardTranslation();
@@ -435,8 +439,13 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 		CardWidget->SetTargetTransform(WidgetTransform);
 		CardWidget->SetCardContainer(ECardContainer::Grave);
 	}
+	else
+	{
+		// 사용에 실패했으므로 Container 상태를 Selected에서 Hand로 되돌립니다.
+		CardWidget->SetCardContainer(ECardContainer::Hand, true);
+	}
 
-	// 성공 여부와 관계 없이 사용을 요청했던 카드는 제거합니다.
+	// 성공 여부와 관계 없이 사용을 요청했던 카드는 사용 대기 상태를 해제합니다.
 	UseRequestedCards.Remove(HandIndex);
 }
 

@@ -55,7 +55,7 @@ ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 
 void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation)
 {
-	// 처리할 필요가 없는 경우 조기 return합니다.
+	// 처리할 필요가 없는 경우 얼리 리턴합니다.
 	if (CurrentCardContainer == InCardContainer)
 	{
 		return;
@@ -72,7 +72,6 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	case ECardContainer::Hand:
 		{
 			PlayAnimation(ShowFrontAnimation, bShouldSkipAnimation ? ShowFrontAnimation->GetEndTime() : 0.f);
-			//bIsDragging = false;
 			bMouseHovered = false;
 
 			if (!bShouldSkipAnimation)

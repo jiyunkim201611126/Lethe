@@ -195,7 +195,7 @@ void ALethePlayerController::TryUseNextCardAbility()
 		
 		if (!bUseSuccess)
 		{
-			// 카드 사용 실패 시 Queue에 있는 모든 카드 사용 데이터를 실패로 간주하고 이를 콜백합니다.
+			// 카드 사용 실패 시 Queue에 있는 모든 카드 사용 데이터를 실패로 간주하고, 이를 Widget에게 전달합니다.
 			for (const FUseCardData& WaitingCardData : WaitingForUseCardsQueue)
 			{
 				OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
@@ -217,4 +217,9 @@ void ALethePlayerController::OnAbilityEnded()
 ULetheHUD* ALethePlayerController::GetLetheHUD() const
 {
 	return LetheHUD;
+}
+
+bool ALethePlayerController::IsProgressingCardAbility() const
+{
+	return bIsProgressingCardAbility;
 }

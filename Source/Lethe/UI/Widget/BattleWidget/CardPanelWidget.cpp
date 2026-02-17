@@ -26,9 +26,19 @@ void UCardPanelWidget::NativeConstruct()
 
 void UCardPanelWidget::NativeDestruct()
 {
-	Super::NativeDestruct();
-
 	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	
+	Super::NativeDestruct();
+}
+
+FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	{
+		ResetSelectedCard();
+		return FReply::Handled();
+	}
+	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()

@@ -48,6 +48,7 @@ public:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
 
 	//~ Begin ULetheUserWidget Interface
@@ -127,4 +128,6 @@ private:
 	// 키보드 입력으로 조작 시 핸드를 빠르게 탐색하기 위해 선언한 변수입니다.
 	UPROPERTY()
 	TArray<TObjectPtr<UCardWidget>> CurrentHands;
+
+	uint8 bRightMouseButtonPressed : 1 = false;
 };

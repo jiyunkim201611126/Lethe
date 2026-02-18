@@ -37,7 +37,7 @@ void UCardPrimaryDataAssetLoader::LoadCardData(const FGameplayTag& CharacterTag,
 
 	// 로드할 CardTag들을 가져옵니다.
 	TArray<FGameplayTag> CardTags;
-	CardTags.Reserve(Cards.Num());
+	CardTags.Reserve(TotalLoadCount);
 	for (const FSavedCard& SavedCard : Cards)
 	{
 		CardTags.Emplace(SavedCard.CardTag);
@@ -51,7 +51,7 @@ void UCardPrimaryDataAssetLoader::OnCardDefinitionsLoaded(const TArray<UCardDefi
 {
 	if (LoadedDefinitions.IsEmpty())
 	{
-		CheckIfFinished();
+		CheckLoadFinished();
 		return;
 	}
 
@@ -72,7 +72,7 @@ void UCardPrimaryDataAssetLoader::OnCardDefinitionsLoaded(const TArray<UCardDefi
 		}
 	}
 	
-	CheckIfFinished();
+	CheckLoadFinished();
 }
 
 void UCardPrimaryDataAssetLoader::OnViewDataLoaded(UCardDefinitionData* CardDefinition, UCardSelfViewData* SelfView, UCharacterDefinitionData* CharacterDefinition)
@@ -85,10 +85,10 @@ void UCardPrimaryDataAssetLoader::OnViewDataLoaded(UCardDefinitionData* CardDefi
 
 	CurrentLoadCount++;
 	
-	CheckIfFinished();
+	CheckLoadFinished();
 }
 
-void UCardPrimaryDataAssetLoader::CheckIfFinished()
+void UCardPrimaryDataAssetLoader::CheckLoadFinished()
 {
 	if (CurrentLoadCount >= TotalLoadCount)
 	{

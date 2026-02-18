@@ -42,7 +42,7 @@ private:
 	const FStageData* GetStageData(const FName& StageName) const;
 	
 	//맵 데이터 초기화
-	void InitMapData(const FStageData* StageData, const UStageInitData* StageInitData);
+	void InitMapData(const UStageInitData* StageInitData);
 	//높낮이맵 제작 알고리즘
 	void MakeFloorData(const FRandomStream* RandomStream, const UStageInitData* StageInitData);
 	//타일맵 제작 알고리즘

@@ -19,36 +19,43 @@ void UTileManagerSubsystem::MakeNewTileMap()
 	//2. 타일에 층고를 만들기 위한 알고리즘을 실행한다.
 	//3. 타일에 이벤트를 생성하기 위한 알고리즘을 실행한다.
 	//4. 데이터를 기반으로 실제 액터를 생성한다.
-	const FStageData* StageData = GetStageData(FName("Forest"));
-	const UStageInitData* StageInitData = StageData->StageInitData.LoadSynchronous();
-
-	//맵 시드 이용해서 디버깅 용이하게 만듬
-	FRandomStream RandomStream;
-
-	if (StageInitData->MapSeed == 0)
+	if (const FStageData* StageData = GetStageData(FName("Forest")))
 	{
-		const int32 RandomSeed = FMath::RandRange(0, 10000);
-		UE_LOG(LogTemp, Warning, TEXT("Random Seed : %d"), RandomSeed);
-		RandomStream.Initialize(RandomSeed);
-	}		
-	else
-	{
-		RandomStream.Initialize(StageInitData->MapSeed);
-		UE_LOG(LogTemp, Warning, TEXT("Map Seed : %d"), StageInitData->MapSeed);
-	}
+		if (const UStageInitData* StageInitData = StageData->StageInitData.LoadSynchronous())
+		{
+			//맵 시드 이용해서 디버깅 용이하게 만듬
+			FRandomStream RandomStream;
+
+			if (StageInitData->MapSeed == 0)
+			{
+				const int32 RandomSeed = FMath::RandRange(0, 10000);
+				UE_LOG(LogTemp, Warning, TEXT("Random Seed : %d"), RandomSeed);
+				RandomStream.Initialize(RandomSeed);
+			}		
+			else
+			{
+				RandomStream.Initialize(StageInitData->MapSeed);
+				UE_LOG(LogTemp, Warning, TEXT("Map Seed : %d"), StageInitData->MapSeed);
+			}
 	
-	InitMapData(StageData, StageInitData);
-	MakeFloorData(&RandomStream, StageInitData);
-	MakeEventData(StageData, StageInitData);
-	MakeTileActor(StageData, StageInitData);
+			InitMapData(StageInitData);
+			MakeFloorData(&RandomStream, StageInitData);
+			MakeEventData(StageData, StageInitData);
+			MakeTileActor(StageData, StageInitData);
+		}
+	}
 }
 
 const FStageData* UTileManagerSubsystem::GetStageData(const FName& StageName) const
 {
-	return StageDataTable.LoadSynchronous()->FindRow<FStageData>(StageName, TEXT(""));
+	if (const UDataTable* LoadedStageDataTable = StageDataTable.LoadSynchronous())
+	{
+		return LoadedStageDataTable->FindRow<FStageData>(StageName, TEXT(""));
+	}
+	return nullptr;
 }
 
-void UTileManagerSubsystem::InitMapData(const FStageData* StageData, const UStageInitData* StageInitData)
+void UTileManagerSubsystem::InitMapData(const UStageInitData* StageInitData)
 {
 	TileDataMap.Reserve(StageInitData->MapWidth * StageInitData->MapHeight); //공간 미리 잡는 함수
 	

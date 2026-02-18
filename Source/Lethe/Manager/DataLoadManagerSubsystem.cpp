@@ -1,7 +1,6 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "DataLoadManagerSubsystem.h"
-#include "string"
 #include "Engine/AssetManager.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardSelfViewData.h"
@@ -27,12 +26,16 @@ void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 		if (!FoundCardIdString.IsEmpty() && !FoundCardTagString.IsEmpty())
 		{
-			uint64 CardId = std::stoull(*FoundCardIdString);
+			uint64 CardId = 0;
+			if (!LexTryParseString(CardId, *FoundCardIdString))
+			{
+				continue;
+			}
 			FGameplayTag CardTag;
 			CardTag.FromExportString(FoundCardTagString);
 			FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CardDefinitionAssetData);
 			
-			checkf(!CardDefinitionDataAssetIds.Contains(CardTag), TEXT("CardId({0})가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
+			checkf(!CardDefinitionDataAssetIds.Contains(CardTag), TEXT("CardId: %d가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
 			
 			CardDefinitionDataAssetIds.Emplace(CardTag, AssetId);
 
@@ -48,18 +51,22 @@ void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		FString FoundCardIdString;
 		if (CardSelfViewAssetData.GetTagValue(GET_MEMBER_NAME_CHECKED(UCardSelfViewData, CardId), FoundCardIdString))
 		{
-			uint64 CardId = std::stoull(*FoundCardIdString);
+			uint64 CardId = 0;
+			if (!LexTryParseString(CardId, *FoundCardIdString))
+			{
+				continue;
+			}
 			if (const FGameplayTag* CardTag = CardIdToTags.Find(CardId))
 			{
 				FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CardSelfViewAssetData);
 
-				checkf(!CardSelfViewDataAssetIds.Contains(*CardTag), TEXT("CardId({0})가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
+				checkf(!CardSelfViewDataAssetIds.Contains(*CardTag), TEXT("CardId: %d가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
 
 				CardSelfViewDataAssetIds.Emplace(*CardTag, AssetId);
 			}
 			else
 			{
-				checkf(false, TEXT("CardId({0})가 일치하지 않는 CardDefinition과 CardSelfView Data Asset이 존재합니다."), CardId)
+				checkf(false, TEXT("CardId: %d가 일치하지 않는 CardDefinition과 CardSelfView Data Asset이 존재합니다."), CardId)
 			}
 		}
 	}
@@ -75,7 +82,7 @@ void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			CharacterTag.FromExportString(FoundCharacterTagString);
 			FPrimaryAssetId AssetId = AssetManager.GetPrimaryAssetIdForData(CharacterDefinitionData);
 
-			checkf(!CharacterDefinitionDataAssetIds.Contains(CharacterTag), TEXT("CharacterTag({0})가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.GetTagName().ToString());
+			checkf(!CharacterDefinitionDataAssetIds.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.GetTagName().ToString());
 
 			CharacterDefinitionDataAssetIds.Emplace(CharacterTag, AssetId);
 		}
@@ -108,6 +115,10 @@ void UDataLoadManagerSubsystem::LoadCardDefinitionData(const TArray<FGameplayTag
 		{
 			OnCardDefinitionDataLoaded(AssetsToLoad, OnComplete);
 		}));
+	}
+	else
+	{
+		OnComplete.ExecuteIfBound(TArray<UCardDefinitionData*>());
 	}
 }
 
@@ -151,6 +162,7 @@ void UDataLoadManagerSubsystem::LoadCardViewData(const FGameplayTag& InCardTag, 
 	}
 	else
 	{
+		OnComplete.ExecuteIfBound(nullptr, nullptr);
 		UE_LOG(LogTemp, Error, TEXT("CardTag: %s, 혹은 CharacterTag: %s에 해당하는 CardViewData DataAsset이 없습니다."), *InCardTag.GetTagName().ToString(), *InCharacterTag.GetTagName().ToString());
 	}
 }
@@ -180,6 +192,10 @@ void UDataLoadManagerSubsystem::LoadCharacterDefinitionData(const TArray<FGamepl
 		{
 			OnCharacterDefinitionDataLoaded(AssetsToLoad, OnComplete);
 		}));
+	}
+	else
+	{
+		OnComplete.ExecuteIfBound(TArray<UCharacterDefinitionData*>());
 	}
 }
 
@@ -275,7 +291,11 @@ void UDataLoadManagerSubsystem::GetCharacterMappingCaches(TMap<FGameplayTag, uin
 		{
 			FGameplayTag FoundTag;
 			FoundTag.FromExportString(FoundTagString);
-			uint64 FoundId = std::stoull(*FoundIdString);
+			uint64 FoundId = 0;
+			if (!LexTryParseString(FoundId, *FoundIdString))
+			{
+				continue;
+			}
 
 			OutTagToIds.Emplace(FoundTag, FoundId);
 			OutIdToTags.Emplace(FoundId, FoundTag);

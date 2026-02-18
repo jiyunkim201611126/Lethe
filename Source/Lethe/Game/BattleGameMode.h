@@ -22,5 +22,5 @@ private:
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ALetheCharacterBase> TestEnemy;
+	TSubclassOf<ALetheCharacterBase> TestEnemyClass;
 };

@@ -50,7 +50,7 @@ public:
 private:
 	void OnCardDefinitionsLoaded(const TArray<UCardDefinitionData*>& LoadedDefinitions);
 	void OnViewDataLoaded(UCardDefinitionData* CardDefinition, UCardSelfViewData* SelfView, UCharacterDefinitionData* CharacterDefinition);
-	void CheckIfFinished();
+	void CheckLoadFinished();
 
 	void SelfDestruct();
 

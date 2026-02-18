@@ -85,28 +85,30 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
-			ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord);
-			FVector SpawnLocation = TileActor->GetActorLocation();
-			// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
-			SpawnLocation.Z += 90;
-			APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters);
-			if (TileActor && SpawnedCharacter)
+			if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
 			{
-				TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedCharacter);
+				// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
+				FVector SpawnLocation = TileActor->GetActorLocation();
+				SpawnLocation.Z += 90;
+				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+				{
+					TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedCharacter);
+				}
 			}
 		}
 
 		// 테스트용으로 중앙에 적을 하나 스폰합니다.
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		ATile* TileActor = TileManagerSubsystem->GetTile(FCubeCoord(0, 0, 0));
-		FVector SpawnLocation = TileActor->GetActorLocation();
-		// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
-		SpawnLocation.Z += 90;
-		ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemy, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters);
-		if (TileActor && SpawnedEnemy)
+		if (ATile* TileActor = TileManagerSubsystem->GetTile(FCubeCoord(0, 0, 0)))
 		{
-			TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedEnemy);
+			// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
+			FVector SpawnLocation = TileActor->GetActorLocation();
+			SpawnLocation.Z += 90;
+			if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+			{
+				TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedEnemy);
+			}
 		}
 	}
 }

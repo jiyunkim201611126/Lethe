@@ -342,7 +342,7 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 	ResetSelectedCard();
 
 	// 이미 사용 대기 상태인 카드라면 선택하지 않고 얼리 리턴합니다.
-	const int32 HandIndex = CurrentHands.Find(CurrentSelectedCard);
+	const int32 HandIndex = CurrentHands.Find(InCardWidget);
 	if (UseRequestedCards.Contains(HandIndex))
 	{
 		return;

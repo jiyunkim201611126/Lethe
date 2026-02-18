@@ -6,6 +6,7 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -96,6 +97,10 @@ void ALethePlayerController::BeginPlay()
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
 }
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -128,6 +133,16 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 {
 	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
 	{
+		const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor();
+		if (SelectedCardOwnerActor && CurrentActor)
+		{
+			ArrowRenderer->SetPoints(SelectedCardOwnerActor->GetActorLocation(), CurrentActor->GetActorLocation());
+		}
+		else
+		{
+			ArrowRenderer->SetActive(false);
+		}
+		
 		OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardOwnerASC.Get(), SelectedCardAbility.Get());
 	}
 }

@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "LethePlayerController.generated.h"
 
+class AArrowRenderer;
 class UAbilitySystemComponent;
 class ULetheAbilitySystemComponent;
 class ULetheGameplayAbility;
@@ -79,7 +80,7 @@ public:
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, Instanced)
+	UPROPERTY(EditDefaultsOnly, Instanced, Category = LetheHUD)
 	TObjectPtr<ULetheHUD> LetheHUD;
 	
 private:
@@ -98,4 +99,10 @@ private:
 	UPROPERTY()
 	TArray<FUseCardData> WaitingForUseCardsQueue;
 	uint8 bIsProgressingCardAbility : 1 = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = ArrowRenderer)
+	TSubclassOf<AArrowRenderer> ArrowRendererClass;
+
+	UPROPERTY()
+	TObjectPtr<AArrowRenderer> ArrowRenderer;
 };

@@ -3,6 +3,7 @@
 #include "LethePlayerController.h"
 
 #include "TileSelectorComponent.h"
+#include "GameFramework/Character.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
@@ -29,7 +30,7 @@ void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 
 void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
-	if (!TileSelector)
+	if (!TileSelector && !ArrowRenderer)
 	{
 		return;
 	}
@@ -80,6 +81,7 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		SelectedCardOwnerASC = nullptr;
 		TileSelector->UnhighlightTileByCard();
 		TileSelector->UnhighlightTileByMouse();
+		ArrowRenderer->SetActive(false);
 		OnCancelCardSelectDelegate.Broadcast();
 	}
 }
@@ -98,6 +100,7 @@ void ALethePlayerController::BeginPlay()
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
 
+	check(ArrowRendererClass);
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
@@ -136,7 +139,13 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 		const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor();
 		if (SelectedCardOwnerActor && CurrentActor)
 		{
-			ArrowRenderer->SetPoints(SelectedCardOwnerActor->GetActorLocation(), CurrentActor->GetActorLocation());
+			const FVector SourceLocation = SelectedCardOwnerActor->GetActorLocation();
+			FVector TargetLocation = CurrentActor->GetActorLocation();
+			if (const ACharacter* TargetCharacter = Cast<ACharacter>(CurrentActor))
+			{
+				TargetLocation.Z += TargetCharacter->GetDefaultHalfHeight() / 2.f;
+			}
+			ArrowRenderer->SetPoints(SourceLocation, TargetLocation);
 		}
 		else
 		{

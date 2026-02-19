@@ -17,14 +17,22 @@ AArrowRenderer::AArrowRenderer()
 
 	SplineMesh = CreateDefaultSubobject<USplineMeshComponent>(TEXT("SplineMesh"));
 	SplineMesh->SetupAttachment(RootComponent);
-	SplineMesh->SetForwardAxis(ESplineMeshAxis::Z);
-	SplineMesh->SetMobility(EComponentMobility::Movable);
+	SplineMesh->SetForwardAxis(ESplineMeshAxis::Y);
 	SplineMesh->SetVisibility(false);
 
 	ArrowHead = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArrowHead"));
 	ArrowHead->SetupAttachment(RootComponent);
-	ArrowHead->SetMobility(EComponentMobility::Movable);
 	ArrowHead->SetVisibility(false);
+}
+
+void AArrowRenderer::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ArrowBodyDynamicMaterialInstance = UMaterialInstanceDynamic::Create(ArrowBodyMaterial, this);
+	SplineMesh->SetMaterial(0, ArrowBodyDynamicMaterialInstance);
+
+	ArrowBodyDynamicMaterialInstance->SetScalarParameterValue(FlowSpeedParamName, FlowSpeed);
 }
 
 void AArrowRenderer::SetPoints(const FVector& StartLocation, const FVector& EndLocation) const
@@ -33,10 +41,7 @@ void AArrowRenderer::SetPoints(const FVector& StartLocation, const FVector& EndL
 	const FVector Direction = EndLocation - StartLocation;
 	const FVector NormalizedDirection = Direction.GetSafeNormal();
 	const float Distance = Direction.Size();
-	if (Distance < KINDA_SMALL_NUMBER)
-	{
-		SetActive(false);
-	}
+	ArrowBodyDynamicMaterialInstance->SetScalarParameterValue(TilingParamName, Distance / 200);
 
 	// 시작점과 끝점이 캐릭터와 겹치지 않도록 각각 알맞은 방향으로 보정합니다.
 	constexpr float LocationOffset = 50.f;
@@ -44,7 +49,7 @@ void AArrowRenderer::SetPoints(const FVector& StartLocation, const FVector& EndL
 	const FVector AdjustedEndLocation = EndLocation - NormalizedDirection * LocationOffset * 1.5f;
 
 	// 높이를 거리 비례로 계산한 후, Start와 End의 중간 지점에서 해당 높이만큼 더해 포물선의 중간 지점을 계산합니다.
-	const float ArcHeight = FMath::Clamp(Distance * 0.15f, 40.f, 320.f);
+	const float ArcHeight = FMath::Clamp(Distance * 0.15f, 20.f, 240.f);
 	const FVector MidLocation = (AdjustedStartLocation + AdjustedEndLocation) * 0.5f + FVector::UpVector * ArcHeight;
 
 	Spline->ClearSplinePoints(false);

@@ -87,12 +87,13 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
 			if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
 			{
-				// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
+				// 캐릭터 절반 높이만큼 위로 올려줍니다.
 				FVector SpawnLocation = TileActor->GetActorLocation();
-				SpawnLocation.Z += 90;
 				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
 					TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedCharacter);
+					SpawnLocation.Z += SpawnedCharacter->GetDefaultHalfHeight();
+					SpawnedCharacter->SetActorLocation(SpawnLocation);
 				}
 			}
 		}
@@ -102,12 +103,13 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		if (ATile* TileActor = TileManagerSubsystem->GetTile(FCubeCoord(0, 0, 0)))
 		{
-			// 캐릭터 절반 높이만큼 위로 올려줍니다. (임시 90으로 할당)
+			// 캐릭터 절반 높이만큼 위로 올려줍니다.
 			FVector SpawnLocation = TileActor->GetActorLocation();
-			SpawnLocation.Z += 90;
 			if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 			{
 				TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedEnemy);
+				SpawnLocation.Z += SpawnedEnemy->GetDefaultHalfHeight();
+				SpawnedEnemy->SetActorLocation(SpawnLocation);
 			}
 		}
 	}

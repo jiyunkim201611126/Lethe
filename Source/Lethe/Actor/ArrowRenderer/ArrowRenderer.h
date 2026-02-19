@@ -17,6 +17,10 @@ class LETHE_API AArrowRenderer : public AActor
 public:
 	AArrowRenderer();
 
+	//~ Begin AActor Interface
+	virtual void BeginPlay() override;
+	//~ End of AActor Interface
+
 	void SetPoints(const FVector& StartLocation, const FVector& EndLocation) const;
 	void SetActive(bool bActive) const;
 
@@ -29,4 +33,19 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UStaticMeshComponent> ArrowHead;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
+	TObjectPtr<UMaterialInterface> ArrowBodyMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
+	FName FlowSpeedParamName = TEXT("FlowSpeed");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
+	FName TilingParamName = TEXT("Tiling");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
+	float FlowSpeed = 1.f;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> ArrowBodyDynamicMaterialInstance;
 };

@@ -6,7 +6,7 @@
 #include "AttributeWidgetController.h"
 #include "PlayerAttributeWidgetController.generated.h"
 
-class ULetheGameplayAbility;
+class ULetheCardAbility;
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UPlayerAttributeWidgetController : public UAttributeWidgetController
@@ -19,9 +19,9 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility);
+	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility);
 
-	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility) override;
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility) override;
 	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;
 	virtual void StopAllPreview() override;
 

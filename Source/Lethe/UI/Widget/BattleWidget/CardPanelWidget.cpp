@@ -21,6 +21,7 @@ void UCardPanelWidget::NativeConstruct()
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 	
 	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDown);
 	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::TryUseCard);
 }
 
@@ -36,7 +37,6 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
 		ResetSelectedCard();
-		return FReply::Handled();
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -371,7 +371,16 @@ void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
 	}
 }
 
-void UCardPanelWidget::TryUseCard()
+bool UCardPanelWidget::OnMouseButtonDown() const
+{
+	if (CurrentSelectedCard)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool UCardPanelWidget::TryUseCard()
 {
 	if (CurrentSelectedCard && CardPanelWidgetController)
 	{
@@ -380,7 +389,7 @@ void UCardPanelWidget::TryUseCard()
 		if (HandIndex == INDEX_NONE)
 		{
 			ResetSelectedCard();
-			return;
+			return false;
 		}
 		UseRequestedCards.Emplace(HandIndex, CurrentSelectedCard);
 		CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag(), HandIndex);
@@ -396,7 +405,9 @@ void UCardPanelWidget::TryUseCard()
 				CardPanelWidgetController->SetCardSelected(false);
 			}
 		}
+		return true;
 	}
+	return false;
 }
 
 void UCardPanelWidget::ResetSelectedCard()

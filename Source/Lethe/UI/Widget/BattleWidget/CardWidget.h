@@ -53,7 +53,7 @@ enum class ECardAction : uint8
 	None,
 };
 
-DECLARE_DELEGATE_TwoParams(FOnCardMouseEventSignature, class UCardWidget*, const ECardAction);
+DECLARE_DELEGATE_TwoParams(FOnCardMouseEventSignature, UCardWidget*, const ECardAction);
 
 UCLASS()
 class LETHE_API UCardWidget : public ULetheUserWidget

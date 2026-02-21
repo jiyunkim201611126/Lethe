@@ -28,6 +28,13 @@ UAbilitySystemComponent* ALetheCharacterBase::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
+{
+	// 캐릭터 절반 높이만큼 위로 올려줍니다.
+	InTileLocation.Z += GetDefaultHalfHeight();
+	SetActorLocation(InTileLocation);
+}
+
 void ALetheCharacterBase::Die()
 {
 }
@@ -44,4 +51,5 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);
 	GASManagerComponent->SetAttributeSet(AttributeSet);
 	GASManagerComponent->InitAbilityActorInfo(AttributeWidgetComponent->GetWidget());
+	GASManagerComponent->AddCharacterAbilities(StartAbilities);
 }

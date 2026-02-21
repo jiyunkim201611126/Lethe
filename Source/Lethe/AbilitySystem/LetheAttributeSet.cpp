@@ -106,9 +106,9 @@ void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, con
 		const bool bFatal = NewHealth <= 0.f;
 		if (bFatal)
 		{
-			if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
+			if (ICombatInterface* Combat = Cast<ICombatInterface>(Props.TargetAvatarActor))
 			{
-				CombatInterface->Die();
+				Combat->Die();
 			}
 		}
 	}

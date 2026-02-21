@@ -4,15 +4,14 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 
 void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
-	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor);
+	const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
-	if (AbilitySystemInterface && AbilitySystemInterface->GetAbilitySystemComponent() && AbilitySystemInterface->GetAbilitySystemComponent()->HasMatchingGameplayTag(GameplayTags.CharacterState_Dead))
+	if (TargetASC->HasMatchingGameplayTag(GameplayTags.CharacterState_Dead))
 	{
 		// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
 		return;

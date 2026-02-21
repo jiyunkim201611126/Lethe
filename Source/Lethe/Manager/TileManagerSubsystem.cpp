@@ -341,22 +341,54 @@ ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord)
 	return nullptr;
 }
 
-void UTileManagerSubsystem::MapActorAndTile(ATile* InTile, AActor* InActor)
+bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 {
-	if (!TileToActorMap.Contains(InTile) && !ActorToTileMap.Contains(InActor))
+	if (!InTile || !InActor)
 	{
-		TileToActorMap.Emplace(InTile, InActor);
-		ActorToTileMap.Emplace(InActor, InTile);
+		return false;
 	}
+
+	UnmapByTile(InTile);
+	UnmapByActor(InActor);
+	
+	TileToActorMap.Emplace(InTile, InActor);
+	ActorToTileMap.Emplace(InActor, InTile);
+
+	return true;
 }
 
-void UTileManagerSubsystem::UnmapActorAndTile(ATile* InTile, AActor* InActor)
+void UTileManagerSubsystem::UnmapByTile(ATile* InTile)
 {
-	if (TileToActorMap.Contains(InTile) && ActorToTileMap.Contains(InActor))
+	if (!InTile)
 	{
-		TileToActorMap.Remove(InTile);
-		ActorToTileMap.Remove(InActor);
+		return;
 	}
+	
+	if (const TWeakObjectPtr<AActor>* Actor = TileToActorMap.Find(InTile))
+	{
+		if (Actor->IsValid())
+		{
+			ActorToTileMap.Remove(Actor->Get());
+		}
+	}
+	TileToActorMap.Remove(InTile);
+}
+
+void UTileManagerSubsystem::UnmapByActor(AActor* InActor)
+{
+	if (!InActor)
+	{
+		return;
+	}
+	
+	if (const TWeakObjectPtr<ATile>* Tile = ActorToTileMap.Find(InActor))
+	{
+		if (Tile->IsValid())
+		{
+			TileToActorMap.Remove(Tile->Get());
+		}
+	}
+	ActorToTileMap.Remove(InActor);
 }
 
 AActor* UTileManagerSubsystem::GetActorOnTile(const ATile* InTile) const

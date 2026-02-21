@@ -28,9 +28,7 @@ void ULetheAbilitySystemComponent::AddCharacterAbilitiesWithActive(const TArray<
 
 void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards)
 {
-	IPlayableCharacterInterface* PlayerCharacter = Cast<IPlayableCharacterInterface>(GetOwner());
-	
-	if (PlayerCharacter)
+	if (IPlayableCharacterInterface* PlayerCharacter = Cast<IPlayableCharacterInterface>(GetOwner()))
 	{
 		if (UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this))
 		{

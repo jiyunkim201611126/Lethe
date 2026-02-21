@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
-UINTERFACE()
+UINTERFACE(NotBlueprintable)
 class UCombatInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -17,5 +17,7 @@ class LETHE_API ICombatInterface
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable)
+	virtual void SetLocationOnTile(FVector InTileLocation) = 0;
 	virtual void Die() = 0;
 };

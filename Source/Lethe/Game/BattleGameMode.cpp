@@ -91,9 +91,8 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 				FVector SpawnLocation = TileActor->GetActorLocation();
 				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
-					TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedCharacter);
-					SpawnLocation.Z += SpawnedCharacter->GetDefaultHalfHeight();
-					SpawnedCharacter->SetActorLocation(SpawnLocation);
+					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
+					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 				}
 			}
 		}
@@ -107,9 +106,8 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			FVector SpawnLocation = TileActor->GetActorLocation();
 			if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 			{
-				TileManagerSubsystem->MapActorAndTile(TileActor, SpawnedEnemy);
-				SpawnLocation.Z += SpawnedEnemy->GetDefaultHalfHeight();
-				SpawnedEnemy->SetActorLocation(SpawnLocation);
+				TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedEnemy);
+				SpawnedEnemy->SetLocationOnTile(SpawnLocation);
 			}
 		}
 	}

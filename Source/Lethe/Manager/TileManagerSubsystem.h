@@ -33,8 +33,12 @@ public:
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
-	void MapActorAndTile(ATile* InTile, AActor* InActor);
-	void UnmapActorAndTile(ATile* InTile, AActor* InActor);
+	
+	UFUNCTION(BlueprintCallable)
+	bool MapTileAndActor(ATile* InTile, AActor* InActor);
+	void UnmapByTile(ATile* InTile);
+	void UnmapByActor(AActor* InActor);
+	
 	AActor* GetActorOnTile(const ATile* InTile) const;
 	ATile* GetTileUnderActor(const AActor* InActor) const;
 

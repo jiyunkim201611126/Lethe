@@ -13,7 +13,7 @@ class USpringArmComponent;
 struct FInputActionValue;
 
 /**
- * 카메라를 담당하는 기본 Pawn입니다.
+ * 카메라와 월드 입력을 담당하는 기본 Pawn입니다.
  */
 UCLASS()
 class LETHE_API ALethePawn : public APawn
@@ -31,7 +31,10 @@ protected:
 
 private:
 	void Move(const FInputActionValue& InputActionValue);
+	void Zoom(const FInputActionValue& InputActionValue);
 	void NumberKeyPressed(const FInputActionValue& InputActionValue);
+	void LeftMouseButtonClicked();
+	void RightMouseButtonClicked();
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -48,9 +51,18 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> MouseWheelAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> NumberAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> LeftMouseButtonClickAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> RightMouseButtonClickAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	float MoveSpeed = 10.f;

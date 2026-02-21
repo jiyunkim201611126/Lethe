@@ -59,9 +59,9 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-	if (IPlayableCharacterInterface* OwnerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))
+	if (IPlayableCharacterInterface* PlayerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))
 	{
-		const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
+		const FGameplayTag& CharacterTag = PlayerCharacter->GetCharacterTag();
 		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
 		{
 			const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();

@@ -2,12 +2,17 @@
 
 #include "LethePlayerController.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "TileSelectorComponent.h"
 #include "GameFramework/Character.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
+#include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -28,6 +33,91 @@ void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
 
+void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
+{
+	if (SelectedCardAbility.IsValid() || !TileSelector)
+	{
+		return;
+	}
+
+	FTileAndActor TileAndActor;
+	TileSelector->GetTileAndActorUnderCursor(TileAndActor);
+	if (!TileAndActor.Tile)
+	{
+		// Tile 검출에 실패했다면 얼리리턴합니다.
+		ResetSelectedCharacter();
+		return;
+	}
+
+	bool bIsSelectingCharacter = false;
+	if ((!SelectedCharacter.IsValid() && !TileAndActor.Actor) || TileAndActor.Actor == SelectedCharacter)
+	{
+		// 캐릭터 미선택 상태에서 빈 타일을 클릭했거나, 이미 선택된 캐릭터와 동일한 캐릭터를 선택한 경우 얼리리턴합니다.
+		return;
+	}
+
+	if (TileAndActor.Actor)
+	{
+		// 클릭한 타일에 무언가 있다면 일단 캐릭터 선택 상태를 초기화하고, 캐릭터 선택 로직을 시작합니다.
+		ResetSelectedCharacter();
+		if (TileAndActor.Actor->Implements<UPlayableCharacterInterface>())
+		{
+			SelectedCharacter = TileAndActor.Actor;
+			bIsSelectingCharacter = true;
+		}
+	}
+
+	if (!SelectedCharacter.IsValid())
+	{
+		// 최종적으로 선택된 캐릭터가 없는 경우 얼리리턴합니다.
+		return;
+	}
+
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	TArray<FGameplayAbilitySpec*> AbilitySpecs;
+	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+	if (UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SelectedCharacter.Get()))
+	{
+		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
+		if (!AbilitySpecs.IsEmpty())
+		{
+			TArray<ATile*> OutTiles;
+			if (const ULetheGameplayAbility* MoveAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability))
+			{
+				TileSelector->TryGetTilesByDepth(OutTiles, SelectedCharacter.Get(), MoveAbility->GetAbilityRange());
+			}
+			
+			if (!OutTiles.IsEmpty())
+			{
+				if (bIsSelectingCharacter)
+				{
+					// 캐릭터를 선택한 경우 들어오는 분기입니다.
+					TileSelector->HighlightTileByAbility(OutTiles, SelectedCharacter.Get(), EAbilityType::MoveAbility);
+				}
+				else
+				{
+					// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
+					if (OutTiles.Contains(TileAndActor.Tile))
+					{
+						// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
+						FGameplayEventData Payload;
+						Payload.Instigator = SelectedCharacter.Get();
+						Payload.OptionalObject = TileAndActor.Tile;
+						AbilitySystemComponent->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, AbilitySystemComponent->AbilityActorInfo.Get(), LetheGameplayTags.Ability_Move, &Payload, *AbilitySystemComponent);
+					}
+					ResetSelectedCharacter();
+				}
+			}
+		}
+	}
+}
+
+void ALethePlayerController::ResetSelectedCharacter()
+{
+	SelectedCharacter.Reset();
+	TileSelector->UnhighlightTileByAbility(EAbilityType::MoveAbility);
+}
+
 void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	if (!TileSelector && !ArrowRenderer)
@@ -35,10 +125,8 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		return;
 	}
 	
-	bCardSelected = bInCardSelected;
-	if (bCardSelected && OwnerASC && CardTag.IsValid())
+	if (bInCardSelected && OwnerASC && CardTag.IsValid())
 	{
-		// CardTag에 해당하는 Ability를 가져옵니다.
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
 		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
@@ -46,15 +134,15 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		if (!AbilitySpecs.IsEmpty())
 		{
-			ULetheGameplayAbility* LetheGameplayAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability);
+			ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
 			const AActor* CardOwner = OwnerASC->GetOwner();
-			if (LetheGameplayAbility && CardOwner)
+			if (LetheCardAbility && CardOwner)
 			{
 				if (OwnerASC->AbilityActorInfo.IsValid())
 				{
 					// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
 					const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
-					const bool bCanUse = LetheGameplayAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
+					const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
 					if (!bCanUse)
 					{
 						SetCardSelected(false);
@@ -62,24 +150,31 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 					}
 				
 					// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
-					SelectedCardAbility = LetheGameplayAbility;
+					SelectedCardAbility = LetheCardAbility;
 					SelectedCardOwnerASC = OwnerASC;
 				
 					TArray<ATile*> OutTiles;
-					TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheGameplayAbility->GetAbilityRange());
-					TileSelector->HighlightTileByCard(OutTiles, CardOwner);
+					TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
+					TileSelector->HighlightTileByAbility(OutTiles, CardOwner, EAbilityType::CardAbility);
 
 					// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
-					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheGameplayAbility);
+					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
 				}
 			}
+		}
+
+		if (SelectedCharacter.IsValid())
+		{
+			// 선택된 캐릭터가 있었던 경우, Arrow가 나타날 수 있도록 명시적으로 아래 함수를 호출합니다.
+			OnOtherTileDetected(nullptr, TileSelector->GetActorOnTileUnderCursor());
+			ResetSelectedCharacter();
 		}
 	}
 	else
 	{
 		SelectedCardAbility = nullptr;
 		SelectedCardOwnerASC = nullptr;
-		TileSelector->UnhighlightTileByCard();
+		TileSelector->UnhighlightTileByAbility(EAbilityType::CardAbility);
 		TileSelector->UnhighlightTileByMouse();
 		ArrowRenderer->SetActive(false);
 		OnCancelCardSelectDelegate.Broadcast();
@@ -116,9 +211,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 	
-	if (bCardSelected && bMouseOnCardUseSection)
+	if ((SelectedCardAbility.IsValid() || SelectedCharacter.IsValid()) && bMouseOnCardUseSection)
 	{
-		// 카드 사용 준비가 완료된 경우 들어오는 분기입니다.
+		// 선택된 카드가 있거나 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
 		FHitResult Hit;
 		GetHitResultUnderCursor(ECC_Tile, false, Hit);
 		if (Hit.IsValidBlockingHit())
@@ -170,7 +265,6 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 	AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor();
 	if (OwnerASC && TargetActor)
 	{
-		// CardTag에 해당하는 Ability를 가져옵니다.
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
 		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);

@@ -57,17 +57,18 @@ void UTileSelectorComponent::UnhighlightTileByMouse()
 	}
 }
 
-void UTileSelectorComponent::HighlightTileByCard(const TArray<ATile*>& Tiles, const AActor* CardOwner)
+void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner, const EAbilityType InAbilityType)
 {
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
+		CurrentAbilityType = InAbilityType;
 		for (ATile* Tile : Tiles)
 		{
 			// 타일 위에 카드 주인이 있다면 검은색, 다른 게 있다면 초록색으로, 아무것도 없다면 파란색으로 아웃라인을 표시합니다.
 			int32 OutlineColor;
 			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
 			{
-				OutlineColor = ActorOnTile == CardOwner ? CUSTOM_DEPTH_BLACK : CUSTOM_DEPTH_GREEN;
+				OutlineColor = ActorOnTile == AbilityOwner ? CUSTOM_DEPTH_BLACK : CUSTOM_DEPTH_GREEN;
 			}
 			else
 			{
@@ -75,18 +76,44 @@ void UTileSelectorComponent::HighlightTileByCard(const TArray<ATile*>& Tiles, co
 			}
 			
 			IHighlightInterface::Execute_HighlightActorByCard(Tile, OutlineColor);
-			CurrentHighlightedByCardTiles.Emplace(Tile);
+			CurrentHighlightedTilesByAbility.Emplace(Tile);
 		}
 	}
 }
 
-void UTileSelectorComponent::UnhighlightTileByCard()
+void UTileSelectorComponent::UnhighlightTileByAbility(const EAbilityType InAbilityType)
 {
-	for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedByCardTiles)
+	if (CurrentAbilityType == InAbilityType)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByCard(HighlightTile.GetObject());
+		for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedTilesByAbility)
+		{
+			IHighlightInterface::Execute_UnhighlightActorByCard(HighlightTile.GetObject());
+		}
+		CurrentHighlightedTilesByAbility.Reset();
 	}
-	CurrentHighlightedByCardTiles.Reset();
+}
+
+void UTileSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
+{
+	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
+	{
+		FHitResult Hit;
+		PlayerController->GetHitResultUnderCursor(ECC_Tile, false, Hit);
+
+		if (Hit.IsValidBlockingHit())
+		{
+			if (ATile* HitTile = Cast<ATile>(Hit.GetActor()))
+			{
+				const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+				ATile* TopTile = HitTile->GetTopTile();
+				if (TileManagerSubsystem && TopTile)
+				{
+					TileAndActor.Tile = TopTile;
+					TileAndActor.Actor = TileManagerSubsystem->GetActorOnTile(TopTile);
+				}
+			}
+		}
+	}
 }
 
 AActor* UTileSelectorComponent::GetActorOnTileUnderCursor() const

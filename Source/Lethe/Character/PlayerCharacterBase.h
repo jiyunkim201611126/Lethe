@@ -14,6 +14,8 @@ class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlaya
 	GENERATED_BODY()
 
 public:
+	APlayerCharacterBase(const FObjectInitializer& ObjectInitializer);
+	
 	virtual FGameplayTag GetCharacterTag() override;	
 
 protected:

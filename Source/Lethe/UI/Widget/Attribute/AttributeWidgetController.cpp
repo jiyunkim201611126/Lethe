@@ -5,7 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Player/PlayerController/LethePlayerController.h"
 
@@ -56,7 +56,7 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 	}
 }
 
-void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility)
+void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
@@ -64,18 +64,18 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 	}
 
 	UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
-	const IAbilitySystemInterface* LastAbilitySystemInterface = Cast<IAbilitySystemInterface>(LastActor);
-	const IAbilitySystemInterface* CurrentAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
+	const IAbilitySystemInterface* LastAbilitySystem = Cast<IAbilitySystemInterface>(LastActor);
+	const IAbilitySystemInterface* CurrentAbilitySystem = Cast<IAbilitySystemInterface>(CurrentActor);
 
 	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	if (LastAbilitySystem && LastAbilitySystem->GetAbilitySystemComponent() == ThisASC)
 	{
 		StopAllPreview();
 		return;
 	}
 
 	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	if (CurrentAbilitySystem && CurrentAbilitySystem->GetAbilitySystemComponent() == ThisASC)
 	{
 		StopAllPreview();
 		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;

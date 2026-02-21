@@ -11,6 +11,27 @@ class IHighlightInterface;
 struct FCubeCoord;
 struct FAbilityRange;
 
+// 로컬 변수로만 활용하기 때문에 멤버 변수를 Raw 포인터로 사용합니다.
+USTRUCT()
+struct FTileAndActor
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	ATile* Tile;
+
+	UPROPERTY()
+	AActor* Actor;
+};
+
+UENUM()
+enum class EAbilityType : uint8
+{
+	MoveAbility,
+	CardAbility,
+	None,
+};
+
 DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, const AActor*, const AActor*);
 
 /**
@@ -26,9 +47,10 @@ public:
 
 	void HighlightTileByMouse(AActor* Tile);
 	void UnhighlightTileByMouse();
-	void HighlightTileByCard(const TArray<ATile*>& Tiles, const AActor* CardOwner);
-	void UnhighlightTileByCard();
+	void HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner, const EAbilityType InAbilityType);
+	void UnhighlightTileByAbility(const EAbilityType InAbilityType);
 
+	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	AActor* GetActorOnTileUnderCursor() const;
 	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const;
 
@@ -45,5 +67,7 @@ private:
 	 * 그러나 메모리 개선을 하기 위해선 이전에 선택됐던 카드의 범위를 다시 한 번 탐색해 Unhighlight를 수행하는 과정이 필요합니다.
 	 * CPU 부담을 키우지 않기 위해 메모리 사용을 감수합니다.
 	 */
-	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedByCardTiles;
+	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedTilesByAbility;
+
+	EAbilityType CurrentAbilityType = EAbilityType::None;
 };

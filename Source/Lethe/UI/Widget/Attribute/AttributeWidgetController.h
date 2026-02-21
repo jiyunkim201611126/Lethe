@@ -8,7 +8,7 @@
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
-class ULetheGameplayAbility;
+class ULetheCardAbility;
 struct FGameplayAttribute;
 struct FOnAttributeChangeData;
 
@@ -43,7 +43,7 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility);
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility);
 	void OnCancelCardSelect();
 
 	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);

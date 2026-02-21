@@ -33,13 +33,26 @@ void UCardUseSectionWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent
 
 FReply UCardUseSectionWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	// 클릭 시 이 위젯이 Input을 캡쳐할 수 있도록 Handled를 반환합니다.
-	return FReply::Handled();
+	// 마우스 왼쪽 클릭 시 이 위젯이 Input을 캡쳐할 수 있도록 Handled를 반환합니다.
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && OnMouseButtonDown.IsBound())
+	{
+		if (OnMouseButtonDown.Execute())
+		{
+			return FReply::Handled();
+		}
+	}
+	return FReply::Unhandled();
 }
 
 FReply UCardUseSectionWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	OnMouseButtonUp.ExecuteIfBound();
-	
-	return FReply::Handled();
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && OnMouseButtonUp.IsBound())
+	{
+		// 카드를 선택한 상태에서 입력이 수행되었다면 true를 반환받아 입력을 소비, 그렇지 않다면 Unhandled를 반환해 PlayerController까지 입력을 내려줍니다.
+		if (OnMouseButtonUp.Execute())
+		{
+			return FReply::Handled();
+		}
+	}
+	return FReply::Unhandled();
 }

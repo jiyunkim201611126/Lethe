@@ -46,7 +46,10 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+	EnhancedInputComponent->BindAction(MouseWheelAction, ETriggerEvent::Triggered, this, &ThisClass::Zoom);
 	EnhancedInputComponent->BindAction(NumberAction, ETriggerEvent::Triggered, this, &ThisClass::NumberKeyPressed);
+	EnhancedInputComponent->BindAction(LeftMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::LeftMouseButtonClicked);
+	EnhancedInputComponent->BindAction(RightMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::RightMouseButtonClicked);
 }
 
 void ALethePawn::Move(const FInputActionValue& InputActionValue)
@@ -55,6 +58,12 @@ void ALethePawn::Move(const FInputActionValue& InputActionValue)
 	InputValue.Normalize();
 
 	AddActorLocalOffset(InputValue * MoveSpeed);
+}
+
+void ALethePawn::Zoom(const FInputActionValue& InputActionValue)
+{
+	const float InputValue = InputActionValue.Get<float>();
+	SpringArmComponent->TargetArmLength += InputValue * MoveSpeed;
 }
 
 void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
@@ -66,6 +75,22 @@ void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
 	if (const ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
 	{
 		PlayerController->OnNumberPressed(InputIndex);
+	}
+}
+
+void ALethePawn::LeftMouseButtonClicked()
+{
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
+	{
+		PlayerController->OnLeftMouseButtonClickedOnWorld();
+	}
+}
+
+void ALethePawn::RightMouseButtonClicked()
+{
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
+	{
+		PlayerController->ResetSelectedCharacter();
 	}
 }
 

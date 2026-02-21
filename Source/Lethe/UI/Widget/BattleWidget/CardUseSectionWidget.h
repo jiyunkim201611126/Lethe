@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CardUseSectionWidget.generated.h"
 
-DECLARE_DELEGATE(FOnMouseButtonUp)
+DECLARE_DELEGATE_RetVal(bool, FOnMouseButtonEvent)
 
 UCLASS()
 class LETHE_API UCardUseSectionWidget : public UUserWidget
@@ -23,5 +23,6 @@ public:
 	//~ End of UUserWidget Interface
 
 public:
-	FOnMouseButtonUp OnMouseButtonUp;
+	FOnMouseButtonEvent OnMouseButtonDown;
+	FOnMouseButtonEvent OnMouseButtonUp;
 };

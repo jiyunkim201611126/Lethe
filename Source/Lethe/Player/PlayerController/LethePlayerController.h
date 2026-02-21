@@ -12,7 +12,7 @@
 class AArrowRenderer;
 class UAbilitySystemComponent;
 class ULetheAbilitySystemComponent;
-class ULetheGameplayAbility;
+class ULetheCardAbility;
 class ULetheHUD;
 class UTileSelectorComponent;
 struct FGameplayAbilityActorInfo;
@@ -36,9 +36,9 @@ struct FUseCardData
 };
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheGameplayAbility* /* CardAbility */)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */)
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheGameplayAbility* /* CardAbility */)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */)
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */)
 
 UCLASS()
@@ -50,6 +50,8 @@ public:
 	ALethePlayerController();
 
 	void OnNumberPressed(const int32 InNumber) const;
+	void OnLeftMouseButtonClickedOnWorld();
+	void ResetSelectedCharacter();
 	
 	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
@@ -70,6 +72,7 @@ private:
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
 
+	// WaitingForUseCardsQueue에서 하나씩 Ability를 꺼내 사용하는 함수입니다.
 	void TryUseNextCardAbility();
 
 public:
@@ -87,11 +90,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<UTileSelectorComponent> TileSelector;
 	
-	uint8 bCardSelected : 1 = false;
 	uint8 bMouseOnCardUseSection : 1 = false;
 	
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
-	TWeakObjectPtr<const ULetheGameplayAbility> SelectedCardAbility;
+	TWeakObjectPtr<const ULetheCardAbility> SelectedCardAbility;
 	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
 
 	// 사실상 Queue로 사용하며, Key용 값인 HandIndex도 있어 Map으로도 구현 가능합니다.
@@ -105,4 +107,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
+
+	TWeakObjectPtr<AActor> SelectedCharacter;
 };

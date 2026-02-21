@@ -2,7 +2,15 @@
 
 #include "PlayerCharacterBase.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
+
+APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
 
 FGameplayTag APlayerCharacterBase::GetCharacterTag()
 {

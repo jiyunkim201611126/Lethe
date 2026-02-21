@@ -3,7 +3,7 @@
 #include "PlayerAttributeWidgetController.h"
 
 #include "AbilitySystemInterface.h"
-#include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -59,7 +59,7 @@ void UPlayerAttributeWidgetController::BroadcastCostChanged() const
 	}
 }
 
-void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheGameplayAbility* CardAbility)
+void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility)
 {
 	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AbilitySystemComponent == CardOwnerASC)
 	{
@@ -81,7 +81,7 @@ void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemC
 	}
 }
 
-void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheGameplayAbility* CardAbility)
+void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{

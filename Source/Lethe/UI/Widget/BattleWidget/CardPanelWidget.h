@@ -70,7 +70,9 @@ private:
 	
 	void OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const;
 	void SelectCard(UCardWidget* InCardWidget);
-	void TryUseCard();
+	// 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다.
+	bool OnMouseButtonDown() const;
+	bool TryUseCard();
 	void ResetSelectedCard();
 	void ResetSelectedCardWithoutEvent();
 

@@ -36,6 +36,9 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.DamageTypeTags.Emplace(GameplayTags.Damage_Physical);
 	
+	GameplayTags.Ability_Move = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Ability.Move"), FString(""));
+	
 	GameplayTags.Card_Ability_PhysicalTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Ability.PhysicalTest"), FString(""));
 	GameplayTags.Card_Ability_MagicTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -54,8 +57,8 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.CharacterState_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("CharacterState.Dead"), FString(""));
-	GameplayTags.CharacterState_Knockback = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("CharacterState.Knockback"), FString(""));
+	GameplayTags.CharacterState_MoveConsumed = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("CharacterState.MoveConsumed"), FString(""));
 
 	GameplayTags.MontageEvent_ApplyEffect = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("MontageEvent.ApplyEffect"), FString(""));

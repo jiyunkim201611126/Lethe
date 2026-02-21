@@ -32,6 +32,10 @@ struct FLetheGameplayTags
 
 	TArray<FGameplayTag> DamageTypeTags;
 	//~ End of Damage Types
+
+	//~ Begin Ability
+	FGameplayTag Ability_Move;
+	//~ End of Ability
 	
 	//~ Begin Card Ability
 	FGameplayTag Card_Ability_PhysicalTest;
@@ -48,7 +52,7 @@ struct FLetheGameplayTags
 
 	//~ Begin CharacterState
 	FGameplayTag CharacterState_Dead;
-	FGameplayTag CharacterState_Knockback;
+	FGameplayTag CharacterState_MoveConsumed;
 	//~ End of CharacterState
 
 	//~ Begin Montage Event

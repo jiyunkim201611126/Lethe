@@ -7,7 +7,6 @@
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
-#include "Lethe/SaveGame/DeckSaveGame.h"
 
 void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities)
 {
@@ -49,7 +48,7 @@ void ULetheAbilitySystemComponent::OnAllCardsLoaded(const FGameplayTag& Characte
 		if (CardInfo.CardDefinition && CardInfo.CardDefinition->AbilityClass)
 		{
 			// Ability 부여 시 SourceObject에 CardDefinitionData를 넣어줍니다.
-			FGameplayAbilitySpec Spec(CardInfo.CardDefinition->AbilityClass, 1, INDEX_NONE, CardInfo.CardDefinition);
+			FGameplayAbilitySpec Spec(CardInfo.CardDefinition->AbilityClass, CardInfo.SavedCardInfo.CardLevel, INDEX_NONE, CardInfo.CardDefinition);
 			GiveAbility(Spec);
 
 			// 카드 위젯이 생성될 수 있도록 콜백을 호출합니다.

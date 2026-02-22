@@ -66,7 +66,17 @@ void ALethePawn::Move(const FInputActionValue& InputActionValue)
 void ALethePawn::Zoom(const FInputActionValue& InputActionValue)
 {
 	const float InputValue = InputActionValue.Get<float>();
-	SpringArmComponent->TargetArmLength += InputValue * MoveSpeed;
+
+	// TODO: 현재는 SpringArmComponent로 간단하게 구현되어 있으나, 추후 카메라 연출이 필요하면 제거하고 아래 구문도 완전히 수정됩니다.
+	const float DesiredTargetArmLength = FMath::Clamp(SpringArmComponent->TargetArmLength + InputValue * MoveSpeed, 400.f, 1000.f);
+	SpringArmComponent->TargetArmLength = DesiredTargetArmLength;
+	
+	OnCameraHeightChanged.Broadcast(GetAttributeWidgetSize());
+}
+
+float ALethePawn::GetAttributeWidgetSize() const
+{
+	return FMath::Clamp((1000.f - SpringArmComponent->TargetArmLength) / 400.f, 0.6f, 1.5f);
 }
 
 void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
@@ -96,4 +106,3 @@ void ALethePawn::RightMouseButtonClicked()
 		PlayerController->ResetSelectedCharacter();
 	}
 }
-

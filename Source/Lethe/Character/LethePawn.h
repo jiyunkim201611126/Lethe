@@ -12,6 +12,8 @@ class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChanged, float);
+
 /**
  * 카메라와 월드 입력을 담당하는 기본 Pawn입니다.
  */
@@ -22,6 +24,12 @@ class LETHE_API ALethePawn : public APawn
 
 public:
 	ALethePawn();
+
+	/**
+	 * PlayerCharacter와 Enemy가 하나씩 갖고 있는 AttributeWidget의 사이즈가 Camera의 위치에 따라 동적으로 계산됩니다.
+	 * 게임 시작 직후엔 바인드가 이루어져있지 않기 때문에 Character들이 직접 가져갑니다.
+	 */
+	float GetAttributeWidgetSize() const;
 
 protected:
 	//~ Begin APawn Interface
@@ -35,6 +43,9 @@ private:
 	void NumberKeyPressed(const FInputActionValue& InputActionValue);
 	void LeftMouseButtonClicked();
 	void RightMouseButtonClicked();
+
+public:
+	FOnCameraHeightChanged OnCameraHeightChanged;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")

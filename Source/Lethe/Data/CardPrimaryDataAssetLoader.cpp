@@ -4,7 +4,6 @@
 
 #include "Card/CardDefinitionData.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
-#include "Lethe/SaveGame/DeckSaveGame.h"
 #include "Engine/GameInstance.h"
 
 UCardPrimaryDataAssetLoader* UCardPrimaryDataAssetLoader::CreateLoader(UObject* Outer)
@@ -33,6 +32,7 @@ void UCardPrimaryDataAssetLoader::LoadCardData(const FGameplayTag& CharacterTag,
 	ForCharacterTag = CharacterTag;
 	bIsFromEquippedDeck = bEquipped;
 	OnAllDataLoaded = OnLoadedCallback;
+	LoadRequestedCards = Cards;
 	TotalShouldLoadCount = 0;
 	CurrentLoadedCount = 0;
 
@@ -77,6 +77,25 @@ void UCardPrimaryDataAssetLoader::OnViewDataLoaded(UCardDefinitionData* CardDefi
 	Info.CardDefinition = CardDefinition;
 	Info.SelfViewData = SelfView;
 	Info.CharacterDefinition = CharacterDefinition;
+
+	int32 RemoveIndex = INDEX_NONE;
+	if (CardDefinition)
+	{
+		for (int32 Index = 0; Index < LoadRequestedCards.Num(); ++Index)
+		{
+			if (LoadRequestedCards[Index].CardId == CardDefinition->CardId)
+			{
+				Info.SavedCardInfo = LoadRequestedCards[Index];
+				RemoveIndex = Index;
+				break;
+			}
+		}
+	}
+	if (RemoveIndex != INDEX_NONE)
+	{
+		LoadRequestedCards.RemoveAt(RemoveIndex, EAllowShrinking::No);
+	}
+	
 	LoadedCardInfos.Emplace(Info);
 
 	++CurrentLoadedCount;

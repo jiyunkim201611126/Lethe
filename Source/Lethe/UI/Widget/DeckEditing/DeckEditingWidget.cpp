@@ -114,13 +114,8 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 			// TileView에 추가할 UObject 객체를 생성합니다.
 			if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
 			{
-				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
-				FSavedCard SavedCard;
-				SavedCard.CardId = CardInfo.CardDefinition->CardId;
-				SavedCard.CardTag = CardInfo.CardDefinition->CardTag;
-				SavedCard.CardLevel = 1;
-			
-				CardListObject->SavedCardInfo = SavedCard;
+				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.			
+				CardListObject->SavedCardInfo = CardInfo.SavedCardInfo;
 				CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
 				CardListObject->CardTexture = CardInfo.SelfViewData->CardTexture;
 

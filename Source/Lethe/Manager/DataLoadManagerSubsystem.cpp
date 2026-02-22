@@ -1,11 +1,12 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "DataLoadManagerSubsystem.h"
+
 #include "Engine/AssetManager.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/SaveGame/DeckSaveGame.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 
 void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {

@@ -8,6 +8,7 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "LetheCharacterBase.generated.h"
 
+class ALethePawn;
 class UAttributeSet;
 class UGameplayAbility;
 class UGASManagerComponent;
@@ -32,10 +33,18 @@ public:
 
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActor Interface
+
+	UFUNCTION()
+	void BindCameraHeightChanged(APawn* OldPawn, APawn* NewPawn);
+	void UnbindCameraHeightChanged(APawn* OldPawn) const;
 
 protected:
 	void InitAbilityActorInfo() const;
+
+private:
+	void OnCameraHeightChanged(const float InWidgetSize) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -56,4 +65,7 @@ protected:
 	 */
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
+
+private:
+	FDelegateHandle OnCameraHeightChangedDelegateHandle;
 };

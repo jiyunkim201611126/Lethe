@@ -8,10 +8,10 @@
 
 void ULetheProgressBar::NativeDestruct()
 {
-	if (GetWorld())
+	if (const UWorld* World = GetWorld())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(GhostPercentSetTimerHandle);
-		GetWorld()->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
+		World->GetTimerManager().ClearTimer(GhostPercentSetTimerHandle);
+		World->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
 	}
 	
 	Super::NativeDestruct();
@@ -53,12 +53,15 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 		{
 			BarPercentSet(InPercent);
 		});
-		
-		GetWorld()->GetTimerManager().SetTimer(
-			GhostPercentSetTimerHandle,
-			TimerDelegate,
-			GhostStartDelay,
-			false);
+
+		if (const UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().SetTimer(
+				GhostPercentSetTimerHandle,
+				TimerDelegate,
+				GhostStartDelay,
+				false);
+		}
 	}
 	else
 	{
@@ -68,7 +71,10 @@ void ULetheProgressBar::SetBarPercent(const float InPercent, const bool bShouldI
 
 void ULetheProgressBar::SetPreviewBarPercent(const float InPercent)
 {
-	PlayPreviewBlinking(GetWorld()->GetTimeSeconds());
+	if (const UWorld* World = GetWorld())
+	{
+		PlayPreviewBlinking(World->GetTimeSeconds());
+	}
 	PreviewProgressBar->SetPercent(FrontProgressBar->GetPercent());
 	PreviewProgressBar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	FrontProgressBar->SetPercent(InPercent);
@@ -84,23 +90,29 @@ void ULetheProgressBar::BarPercentSet(const float InPercent)
 {
 	GhostPercentTarget = InPercent;
 
-	GetWorld()->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		PercentInterpTimerHandle,
-		this,
-		&ThisClass::InterpGhostBar,
-		GhostInterpDelay,
-		true);
+	if (const UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
+		World->GetTimerManager().SetTimer(
+			PercentInterpTimerHandle,
+			this,
+			&ThisClass::InterpGhostBar,
+			GhostInterpDelay,
+			true);
+	}
 }
 
 void ULetheProgressBar::InterpGhostBar()
 {
-	const float CurrentGhostBarPercent = GhostProgressBar->GetPercent();
-	const float NextGhostBarPercent = UKismetMathLibrary::FInterpTo(CurrentGhostBarPercent, GhostPercentTarget, GetWorld()->GetDeltaSeconds(), GhostInterpSpeed);
-	GhostProgressBar->SetPercent(NextGhostBarPercent);
-
-	if (UKismetMathLibrary::NearlyEqual_FloatFloat(NextGhostBarPercent, GhostPercentTarget))
+	if (const UWorld* World = GetWorld())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
+		const float CurrentGhostBarPercent = GhostProgressBar->GetPercent();
+		const float NextGhostBarPercent = UKismetMathLibrary::FInterpTo(CurrentGhostBarPercent, GhostPercentTarget, World->GetDeltaSeconds(), GhostInterpSpeed);
+		GhostProgressBar->SetPercent(NextGhostBarPercent);
+
+		if (UKismetMathLibrary::NearlyEqual_FloatFloat(NextGhostBarPercent, GhostPercentTarget))
+		{
+			World->GetTimerManager().ClearTimer(PercentInterpTimerHandle);
+		}
 	}
 }

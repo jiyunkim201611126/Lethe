@@ -2,7 +2,6 @@
 
 #include "GASManagerComponent.h"
 
-#include "AbilitySystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 #include "UObject/Object.h"
 #include "CardPrimaryDataAssetLoader.generated.h"
 
@@ -11,7 +11,6 @@ class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
 class UDataLoadManagerSubsystem;
-struct FSavedCard;
 
 USTRUCT(BlueprintType)
 struct FLoadedCardInfo
@@ -26,6 +25,8 @@ struct FLoadedCardInfo
 
 	UPROPERTY()
 	UCharacterDefinitionData* CharacterDefinition;
+
+	FSavedCard SavedCardInfo;
 };
 
 DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /*CharacterTag*/, const TArray<FLoadedCardInfo>& /*LoadedCards*/, const bool /*bEquipped*/);
@@ -60,6 +61,7 @@ private:
 	FGameplayTag ForCharacterTag;
 	bool bIsFromEquippedDeck;
 	FOnAllCardDataLoaded OnAllDataLoaded;
+	TArray<FSavedCard> LoadRequestedCards;
 
 	UPROPERTY()
 	TArray<FLoadedCardInfo> LoadedCardInfos;

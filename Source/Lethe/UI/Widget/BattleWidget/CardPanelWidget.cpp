@@ -305,8 +305,10 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 				// 카드를 핸드에 추가하고 그에 맞게 정렬될 수 있도록 합니다.
 				CharacterCards->Hands.Emplace(DrawnCardWidget);
 				DrawnCardWidget->SetCardContainer(ECardContainer::Hand);
-				UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(DrawnCardWidget->Slot);
-				CardSlot->SetZOrder(HandZOrder++);
+				if (UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(DrawnCardWidget->Slot))
+				{
+					CardSlot->SetZOrder(HandZOrder++);
+				}
 
 				// UpdateAllCardTranslation에 의해 배열은 Reset 후 다시 채워지지만, 드로우 페이즈가 끝났는지 확인하기 위해 임시로 1개 채워줍니다.
 				CurrentHands.Emplace(DrawnCardWidget);

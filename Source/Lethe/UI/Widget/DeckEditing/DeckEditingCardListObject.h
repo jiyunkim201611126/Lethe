@@ -13,7 +13,7 @@ class LETHE_API UDeckEditingCardListObject : public UObject
 	GENERATED_BODY()
 
 public:
-	FSavedCard CardInfo;
+	FSavedCard SavedCardInfo;
 	
 	FLinearColor* CardTypeColor;
 	

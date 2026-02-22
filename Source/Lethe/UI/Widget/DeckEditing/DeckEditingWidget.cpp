@@ -9,6 +9,7 @@
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Data/CardPrimaryDataAssetLoader.h"
+#include "Lethe/Manager/DataLoadManagerSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
 
@@ -16,7 +17,8 @@ void UDeckEditingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	ShouldLoadCardCount = 0;
+	LoadRequestCount = 0;
+	LoadCompletedCount = 0;
 	
 	if (UnequippedDeckTileView)
 	{
@@ -56,9 +58,11 @@ void UDeckEditingWidget::StartLoadAllCards()
 	{
 		// 로드되어 있는 Deck들을 가져온 뒤, 필요한 카드 관련 에셋 로드를 시작합니다.
 		const TMap<FGameplayTag, FSavedCharacterDeck>& UnequippedDecks = DeckManagerSubsystem->GetUnequippedDecks();
-		StartLoadDecks(UnequippedDecks, false);
-
 		const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
+		LoadRequestCount += UnequippedDecks.Num();
+		LoadRequestCount += EquippedDecks.Num();
+		
+		StartLoadDecks(UnequippedDecks, false);
 		StartLoadDecks(EquippedDecks, true);
 	}
 }
@@ -73,58 +77,72 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 		CharacterEquippedDeckListObjects.FindOrAdd(CharacterTag);
 		CharacterUnequippedDeckListObjects.FindOrAdd(CharacterTag);
 
-		ShouldLoadCardCount += Deck.Value.Deck.Num();
-
-		if (UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this))
+		UDataLoadManagerSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
+		UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this);
+		if (DataLoadManagerSubsystem && Loader)
 		{
-			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &UDeckEditingWidget::OnAllCardsLoaded);
+			DataLoadManagerSubsystem->AddLoader(Loader);
+			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &ThisClass::OnAllCardsLoaded);
 			Loader->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);
+		}
+		else
+		{
+			// 여기서도 카운트를 증가시켜줘야 최종적으로 RequestCount와 동일해져 로직적 문제가 발생하지 않습니다.
+			++LoadCompletedCount;
+			CheckLoadedCount();
 		}
 	}
 }
 
 void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<FLoadedCardInfo>& LoadedCards, const bool bEquipped)
 {
+	++LoadCompletedCount;
+	
 	// 장착 상태에 따라 알맞은 위치에 추가될 수 있도록 TMap을 선택합니다.
 	TMap<FGameplayTag, FDeckListObjects>& TargetDeckListObjects = bEquipped ? CharacterEquippedDeckListObjects : CharacterUnequippedDeckListObjects;
 	FDeckListObjects* DeckListObjects = TargetDeckListObjects.Find(CharacterTag);
 
-	if (!DeckListObjects)
+	if (DeckListObjects)
 	{
-		return;
-	}
-	
-	for (const FLoadedCardInfo& CardInfo : LoadedCards)
-	{
-		// TileView에 추가할 UObject 객체를 생성합니다.
-		if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
+		for (const FLoadedCardInfo& CardInfo : LoadedCards)
 		{
-			// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
-			FSavedCard SavedCard;
-			SavedCard.CardId = CardInfo.CardDefinition->CardId;
-			SavedCard.CardTag = CardInfo.CardDefinition->CardTag;
-			SavedCard.CardLevel = 1;
+			if (!CardInfo.CardDefinition || !CardInfo.SelfViewData)
+			{
+				continue;
+			}
+		
+			// TileView에 추가할 UObject 객체를 생성합니다.
+			if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
+			{
+				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
+				FSavedCard SavedCard;
+				SavedCard.CardId = CardInfo.CardDefinition->CardId;
+				SavedCard.CardTag = CardInfo.CardDefinition->CardTag;
+				SavedCard.CardLevel = 1;
 			
-			CardListObject->CardInfo = SavedCard;
-			CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
-			CardListObject->CardTexture = CardInfo.SelfViewData->CardTexture;
+				CardListObject->SavedCardInfo = SavedCard;
+				CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
+				CardListObject->CardTexture = CardInfo.SelfViewData->CardTexture;
 
-			// 일단 캐싱해둔 후 유저의 조작에 맞춰 TileView에 추가/제거하면서 업데이트합니다.
-			DeckListObjects->CardListObjects.Emplace(CardListObject);
-
-			LoadedCardCount++;
+				// 일단 캐싱해둔 후 유저의 조작에 맞춰 TileView에 추가/제거하면서 업데이트합니다.
+				DeckListObjects->CardListObjects.Emplace(CardListObject);
+			}
 		}
+		CheckLoadedCount();
 	}
+}
 
-	if (LoadedCardCount >= ShouldLoadCardCount)
+void UDeckEditingWidget::CheckLoadedCount()
+{
+	if (LoadRequestCount <= LoadCompletedCount)
 	{
 		UpdateCardPage(0, 0);
-	}
 
-	// 로드가 안 끝났는데 BattleLevel로 넘어가버리는 대참사를 막기 위해 여기서 바인드합니다.
-	if (!GoToBattleButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnGoToBattleButtonClicked))
-	{
-		GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
+		// 로드가 안 끝났는데 BattleLevel로 넘어가버리는 대참사를 막기 위해 여기서 바인드합니다.
+		if (!GoToBattleButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnGoToBattleButtonClicked))
+		{
+			GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
+		}
 	}
 }
 
@@ -234,12 +252,12 @@ bool UDeckEditingWidget::CanAddCardToEquippedDeck(const FDeckListObjects* Equipp
 			return false;
 		}
 
-		const FGameplayTag& CardTag = DeckObject->CardInfo.CardTag;
+		const FGameplayTag& CardTag = DeckObject->SavedCardInfo.CardTag;
 		constexpr int32 MaxEqualCardCount = 3;
 		int32 EqualCardCount = 0;
 		for (const UDeckEditingCardListObject* EquippedDeckListObject : EquippedDeckListObjects->CardListObjects)
 		{
-			if (EquippedDeckListObject->CardInfo.CardTag == CardTag)
+			if (EquippedDeckListObject->SavedCardInfo.CardTag == CardTag)
 			{
 				++EqualCardCount;
 			}
@@ -271,7 +289,7 @@ void UDeckEditingWidget::OnGoToBattleButtonClicked()
 			FSavedCharacterDeck SavedCharacterDeck;
 			for (const auto& CardListObject : EquippedDeckListObjects.Value.CardListObjects)
 			{
-				SavedCharacterDeck.Deck.Emplace(CardListObject->CardInfo);
+				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCardInfo);
 			}
 
 			EquippedDecks.Emplace(EquippedDeckListObjects.Key, SavedCharacterDeck);
@@ -282,7 +300,7 @@ void UDeckEditingWidget::OnGoToBattleButtonClicked()
 			FSavedCharacterDeck SavedCharacterDeck;
 			for (const auto& CardListObject : UnequippedDeckListObjects.Value.CardListObjects)
 			{
-				SavedCharacterDeck.Deck.Emplace(CardListObject->CardInfo);
+				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCardInfo);
 			}
 
 			UnequippedDecks.Emplace(UnequippedDeckListObjects.Key, SavedCharacterDeck);

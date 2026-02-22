@@ -23,6 +23,8 @@ void UCardPrimaryDataAssetLoader::LoadCardData(const FGameplayTag& CharacterTag,
 {
 	if (!DataLoadManager || Cards.IsEmpty())
 	{
+		// 로드에 실패한 경우에도 콜백을 일단 호출해 완료 이벤트는 발생시켜줍니다.
+		OnLoadedCallback.ExecuteIfBound(CharacterTag, {}, bEquipped);
 		SelfDestruct();
 		return;
 	}
@@ -31,19 +33,17 @@ void UCardPrimaryDataAssetLoader::LoadCardData(const FGameplayTag& CharacterTag,
 	ForCharacterTag = CharacterTag;
 	bIsFromEquippedDeck = bEquipped;
 	OnAllDataLoaded = OnLoadedCallback;
-	TotalLoadCount = Cards.Num();
-	CurrentLoadCount = 0;
-	LoadedCardInfos.Reserve(TotalLoadCount);
+	TotalShouldLoadCount = 0;
+	CurrentLoadedCount = 0;
 
 	// 로드할 CardTag들을 가져옵니다.
 	TArray<FGameplayTag> CardTags;
-	CardTags.Reserve(TotalLoadCount);
 	for (const FSavedCard& SavedCard : Cards)
 	{
 		CardTags.Emplace(SavedCard.CardTag);
 	}
 
-	const FOnCardDefinitionsLoaded OnDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateUObject(this, &UCardPrimaryDataAssetLoader::OnCardDefinitionsLoaded);
+	const FOnCardDefinitionsLoaded OnDefinitionsLoaded = FOnCardDefinitionsLoaded::CreateUObject(this, &ThisClass::OnCardDefinitionsLoaded);
 	DataLoadManager->LoadCardDefinitionData(CardTags, OnDefinitionsLoaded);
 }
 
@@ -59,16 +59,12 @@ void UCardPrimaryDataAssetLoader::OnCardDefinitionsLoaded(const TArray<UCardDefi
 	{
 		if (CardDef)
 		{
+			++TotalShouldLoadCount;
 			const FOnCardViewLoaded OnViewLoaded = FOnCardViewLoaded::CreateWeakLambda(this, [this, CardDef](UCardSelfViewData* SelfView, UCharacterDefinitionData* CharacterDefinition)
 			{
 				OnViewDataLoaded(CardDef, SelfView, CharacterDefinition);
 			});
-			
 			DataLoadManager->LoadCardViewData(CardDef->CardTag, ForCharacterTag, OnViewLoaded);
-		}
-		else
-		{
-			TotalLoadCount--;
 		}
 	}
 	
@@ -83,14 +79,14 @@ void UCardPrimaryDataAssetLoader::OnViewDataLoaded(UCardDefinitionData* CardDefi
 	Info.CharacterDefinition = CharacterDefinition;
 	LoadedCardInfos.Emplace(Info);
 
-	CurrentLoadCount++;
+	++CurrentLoadedCount;
 	
 	CheckLoadFinished();
 }
 
 void UCardPrimaryDataAssetLoader::CheckLoadFinished()
 {
-	if (CurrentLoadCount >= TotalLoadCount)
+	if (CurrentLoadedCount >= TotalShouldLoadCount)
 	{
 		OnAllDataLoaded.ExecuteIfBound(ForCharacterTag, LoadedCardInfos, bIsFromEquippedDeck);
 		SelfDestruct();
@@ -101,9 +97,11 @@ void UCardPrimaryDataAssetLoader::SelfDestruct()
 {
 	if (IsValid(this))
 	{
+		if (DataLoadManager)
+		{
+			DataLoadManager->RemoveLoader(this);
+		}
 		DataLoadManager = nullptr;
 		OnAllDataLoaded = nullptr;
-		
-		ConditionalBeginDestroy();
 	}
 }

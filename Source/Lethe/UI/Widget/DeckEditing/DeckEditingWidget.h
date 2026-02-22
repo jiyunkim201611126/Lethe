@@ -41,6 +41,7 @@ private:
 	void StartLoadAllCards();
 	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, bool bEquipped);
 	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<struct FLoadedCardInfo>& LoadedCards, bool bEquipped);
+	void CheckLoadedCount();
 
 	UFUNCTION()
 	void OnNextPageButtonClicked();
@@ -106,10 +107,8 @@ private:
 	// TODO: 해상도에 따라 달라지는 로직이 필요합니다.
 	int32 MaxCardCountInOnePage = 14;
 
-	// 카드 로드 콜백에서 페이지를 표시하기 위해 사용하는 변수들입니다.
-	// 모든 Unequipped 카드 로드가 끝나면 첫 페이지를 표시하도록 조정합니다.
-	int32 ShouldLoadCardCount = 0;
-	int32 LoadedCardCount = 0;
+	int32 LoadRequestCount = 0;
+	int32 LoadCompletedCount = 0;
 
 	// Key는 CharacterTag입니다.
 	UPROPERTY()

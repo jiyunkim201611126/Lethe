@@ -32,10 +32,13 @@ ALethePawn::ALethePawn()
 void ALethePawn::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(Cast<APlayerController>(GetController())->GetLocalPlayer()))
+
+	if (const APlayerController* PlayerController = Cast<APlayerController>(NewController))
 	{
-		Subsystem->AddMappingContext(InputContext, 0);
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(InputContext, 0);
+		}
 	}
 }
 

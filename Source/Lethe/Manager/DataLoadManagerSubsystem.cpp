@@ -89,6 +89,16 @@ void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
+void UDataLoadManagerSubsystem::AddLoader(UObject* Loader)
+{
+	ActivatedLoaders.Emplace(Loader);
+}
+
+void UDataLoadManagerSubsystem::RemoveLoader(UObject* Loader)
+{
+	ActivatedLoaders.Remove(Loader);
+}
+
 void UDataLoadManagerSubsystem::LoadCardDefinitionData(const TArray<FGameplayTag>& InCardTags, FOnCardDefinitionsLoaded OnComplete)
 {
 	UAssetManager& AssetManager = UAssetManager::Get();

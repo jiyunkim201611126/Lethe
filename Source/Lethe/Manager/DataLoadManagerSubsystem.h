@@ -34,6 +34,9 @@ class LETHE_API UDataLoadManagerSubsystem : public UGameInstanceSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+	void AddLoader(UObject* Loader);
+	void RemoveLoader(UObject* Loader);
+
 	// AssetManager 효율을 위해 배열로 한 번에 CardDefinition 로드 요청하는 함수입니다.
 	void LoadCardDefinitionData(const TArray<FGameplayTag>& InCardTags, FOnCardDefinitionsLoaded OnComplete);
 	// CardTag와 CharacterTag를 받아 CardSelfView, CharacterDefinition를 각각 1개씩 로드 요청하는 함수입니다.
@@ -62,4 +65,7 @@ private:
 
 	// CardId를 Key, CardTag를 Value로 하는 TMap입니다.
 	TMap<uint64, FGameplayTag> CardIdToTags;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UObject>> ActivatedLoaders;
 };

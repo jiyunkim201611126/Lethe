@@ -64,6 +64,6 @@ private:
 	UPROPERTY()
 	TArray<FLoadedCardInfo> LoadedCardInfos;
 	
-	int32 TotalLoadCount = 0;
-	int32 CurrentLoadCount = 0;
+	int32 TotalShouldLoadCount = 0;
+	int32 CurrentLoadedCount = 0;
 };

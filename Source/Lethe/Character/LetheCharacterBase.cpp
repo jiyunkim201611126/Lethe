@@ -81,7 +81,6 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);
 	GASManagerComponent->SetAttributeSet(AttributeSet);
 	GASManagerComponent->InitAbilityActorInfo(AttributeWidgetComponent->GetWidget());
-	GASManagerComponent->AddCharacterAbilities(StartAbilities);
 }
 
 void ALetheCharacterBase::BindCameraHeightChanged(APawn* OldPawn, APawn* NewPawn)

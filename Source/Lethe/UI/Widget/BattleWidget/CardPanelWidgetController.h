@@ -19,7 +19,7 @@ class ULetheGameplayAbility;
 struct FCardSelfViewInfo;
 struct FGameplayAbilitySpec;
 struct FGameplayAbilitySpecHandle;
-enum class EPlayerPhaseState : uint8;
+enum class EPhaseState : uint8;
 
 /**
  * CardWidget을 생성해 초기화하는 시점에 필요한 데이터입니다.
@@ -47,7 +47,7 @@ struct FCardInitParams
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPlayerPhaseStateChanged, const EPlayerPhaseState);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCancelCardSelect);
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
@@ -73,13 +73,13 @@ public:
 	void SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoDrawPhase() const;
-	void GoBattlePhase() const;
+	void GoPlayerTurnPhase() const;
 	bool RequestTurnEnd() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
-	void OnPlayerPhaseChanged(const EPlayerPhaseState InState) const;
+	void OnPlayerPhaseChanged(const EPhaseState OldState, const EPhaseState NewState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
 	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess) const;

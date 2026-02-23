@@ -26,7 +26,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		if (LetheGameState.IsValid())
 		{
-			LetheGameState->OnChangePlayerTurnStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
+			LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
 		}
 		
 		bInitialized = true;
@@ -55,7 +55,7 @@ void UCardPanelWidgetController::BeginDestroy()
 
 	if (LetheGameState.IsValid())
 	{
-		LetheGameState->OnChangePlayerTurnStateDelegate.RemoveAll(this);
+		LetheGameState->OnChangeTurnStateDelegate.RemoveAll(this);
 	}
 }
 
@@ -90,11 +90,11 @@ void UCardPanelWidgetController::GoDrawPhase() const
 	}
 }
 
-void UCardPanelWidgetController::GoBattlePhase() const
+void UCardPanelWidgetController::GoPlayerTurnPhase() const
 {
 	if (LetheGameState.IsValid())
 	{
-		LetheGameState->GoBattlePhase();
+		LetheGameState->GoPlayerTurnPhase();
 	}
 }
 
@@ -123,9 +123,9 @@ void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* Ow
 	}
 }
 
-void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPlayerPhaseState InState) const
+void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
-	OnPlayerPhaseStateChangedDelegate.Broadcast(InState);
+	OnPlayerPhaseStateChangedDelegate.Broadcast(OldState, NewState);
 }
 
 void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const

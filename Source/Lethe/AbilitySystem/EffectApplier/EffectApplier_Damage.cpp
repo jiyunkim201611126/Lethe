@@ -11,7 +11,7 @@ void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 {
 	const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
-	if (TargetASC->HasMatchingGameplayTag(GameplayTags.CharacterState_Dead))
+	if (TargetASC->HasMatchingGameplayTag(GameplayTags.State_Character_Dead))
 	{
 		// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
 		return;

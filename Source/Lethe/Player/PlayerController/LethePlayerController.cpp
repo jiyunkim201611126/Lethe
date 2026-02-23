@@ -10,6 +10,7 @@
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
@@ -36,6 +37,12 @@ void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 {
 	if (SelectedCardAbility.IsValid() || !TileSelector)
+	{
+		return;
+	}
+
+	ALetheGameState* GameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
+	if (!GameState || GameState->GetTurnPhase() != EPhaseState::PlayerTurnPhase)
 	{
 		return;
 	}
@@ -79,34 +86,37 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	if (UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SelectedCharacter.Get()))
 	{
 		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
-		if (!AbilitySpecs.IsEmpty())
+		if (AbilitySpecs.IsEmpty())
 		{
-			TArray<ATile*> OutTiles;
-			if (const ULetheGameplayAbility* MoveAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability))
+			ResetSelectedCharacter();
+			return;
+		}
+		
+		TArray<ATile*> OutTiles;
+		if (const ULetheGameplayAbility* MoveAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability))
+		{
+			TileSelector->TryGetTilesByDepth(OutTiles, SelectedCharacter.Get(), MoveAbility->GetAbilityRange());
+		}
+		
+		if (!OutTiles.IsEmpty())
+		{
+			if (bIsSelectingCharacter)
 			{
-				TileSelector->TryGetTilesByDepth(OutTiles, SelectedCharacter.Get(), MoveAbility->GetAbilityRange());
+				// 캐릭터를 선택한 경우 들어오는 분기입니다.
+				TileSelector->HighlightTileByAbility(OutTiles, SelectedCharacter.Get(), EAbilityType::MoveAbility);
 			}
-			
-			if (!OutTiles.IsEmpty())
+			else
 			{
-				if (bIsSelectingCharacter)
+				// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
+				if (OutTiles.Contains(TileAndActor.Tile))
 				{
-					// 캐릭터를 선택한 경우 들어오는 분기입니다.
-					TileSelector->HighlightTileByAbility(OutTiles, SelectedCharacter.Get(), EAbilityType::MoveAbility);
+					// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
+					FGameplayEventData Payload;
+					Payload.Instigator = SelectedCharacter.Get();
+					Payload.OptionalObject = TileAndActor.Tile;
+					AbilitySystemComponent->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, AbilitySystemComponent->AbilityActorInfo.Get(), LetheGameplayTags.Ability_Move, &Payload, *AbilitySystemComponent);
 				}
-				else
-				{
-					// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
-					if (OutTiles.Contains(TileAndActor.Tile))
-					{
-						// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-						FGameplayEventData Payload;
-						Payload.Instigator = SelectedCharacter.Get();
-						Payload.OptionalObject = TileAndActor.Tile;
-						AbilitySystemComponent->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, AbilitySystemComponent->AbilityActorInfo.Get(), LetheGameplayTags.Ability_Move, &Payload, *AbilitySystemComponent);
-					}
-					ResetSelectedCharacter();
-				}
+				ResetSelectedCharacter();
 			}
 		}
 	}

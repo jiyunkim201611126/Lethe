@@ -4,8 +4,10 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Player/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
@@ -51,6 +53,8 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 				case ETeamSide::Enemy:
 					LetheHUD->InitEnemyUI(PlayerController, AbilitySystemComponent, AttributeSet, AttributeWidget);
 					break;
+				default:
+					break;
 				}
 			}
 		}
@@ -69,6 +73,16 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 				// Equipped Deck들을 실제 Ability로 부여합니다.
 				AddCharacterAbilities(CharacterDeck->Deck);
 			}
+		}
+	}
+	
+	AddCharacterAbilities(StartAbilities);
+
+	if (TeamSide == ETeamSide::Player)
+	{
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		{
+			LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		}
 	}
 }
@@ -93,4 +107,18 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	const FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
 	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
+}
+
+void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	if (OldPhase == EPhaseState::PlayerTurnPhase)
+	{
+		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Phase_PlayerTurn, 0);
+	}
+	if (NewPhase == EPhaseState::PlayerTurnPhase)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Phase_PlayerTurn);
+		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
+	}
 }

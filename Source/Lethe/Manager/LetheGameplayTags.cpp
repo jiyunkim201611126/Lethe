@@ -55,10 +55,15 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Card_Types_Util = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Types.Util"), FString(""));
 	
-	GameplayTags.CharacterState_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("CharacterState.Dead"), FString(""));
-	GameplayTags.CharacterState_MoveConsumed = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("CharacterState.MoveConsumed"), FString(""));
+	GameplayTags.State_Phase_Draw = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("State.Phase.Draw"), FString(""));
+	GameplayTags.State_Phase_PlayerTurn = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("State.Phase.PlayerTurn"), FString(""));
+	
+	GameplayTags.State_Character_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("State.Character.Dead"), FString(""));
+	GameplayTags.State_Character_MoveConsumed = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("State.Character.MoveConsumed"), FString(""));
 
 	GameplayTags.MontageEvent_ApplyEffect = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("MontageEvent.ApplyEffect"), FString(""));

@@ -74,4 +74,9 @@ protected:
 
 private:
 	TWeakObjectPtr<AActor> CachedTargetActor;
+
+#if WITH_EDITOR
+public:
+	virtual void PostInitProperties() override;
+#endif
 };

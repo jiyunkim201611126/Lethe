@@ -14,9 +14,10 @@ void ULetheGameplayAbility::PostInitProperties()
 {
 	Super::PostInitProperties();
 
+	// 어떤 Ability든 사망 시엔 발동할 수 없습니다.
 	if (HasAnyFlags(RF_ClassDefaultObject))
 	{
-		ActivationBlockedTags.AddTag(FLetheGameplayTags::Get().CharacterState_Dead);
+		ActivationBlockedTags.AddTag(FLetheGameplayTags::Get().State_Character_Dead);
 	}
 }
 #endif

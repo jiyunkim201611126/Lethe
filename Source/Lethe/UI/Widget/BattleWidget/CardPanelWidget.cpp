@@ -81,13 +81,13 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 
 void UCardPanelWidget::OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction)
 {	
-	switch (CurrentPlayerPhaseState)
+	switch (CurrentPhaseState)
 	{
-	case EPlayerPhaseState::DrawPhase:
+	case EPhaseState::DrawPhase:
 		OnMouseEventWhenDrawPhase(InCardWidget, InCardAction);
 		break;
-	case EPlayerPhaseState::BattlePhase:
-		OnMouseEventWhenBattlePhase(InCardWidget, InCardAction);
+	case EPhaseState::PlayerTurnPhase:
+		OnMouseEventWhenPlayerTurnPhase(InCardWidget, InCardAction);
 		break;
 	default:
 		break;
@@ -113,7 +113,7 @@ void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* InCardWidget
 	}
 }
 
-void UCardPanelWidget::OnMouseEventWhenBattlePhase(UCardWidget* InCardWidget, const ECardAction InCardAction)
+void UCardPanelWidget::OnMouseEventWhenPlayerTurnPhase(UCardWidget* InCardWidget, const ECardAction InCardAction)
 {
 	switch (InCardAction)
 	{
@@ -133,13 +133,13 @@ void UCardPanelWidget::OnMouseEventWhenBattlePhase(UCardWidget* InCardWidget, co
 
 void UCardPanelWidget::OnKeyboardEvent(const int32 InNumber)
 {
-	switch (CurrentPlayerPhaseState)
+	switch (CurrentPhaseState)
 	{
-	case EPlayerPhaseState::DrawPhase:
+	case EPhaseState::DrawPhase:
 		OnKeyboardEventWhenDrawPhase(InNumber);
 		break;
-	case EPlayerPhaseState::BattlePhase:
-		OnKeyboardEventWhenBattlePhase(InNumber);
+	case EPhaseState::PlayerTurnPhase:
+		OnKeyboardEventWhenPlayerTurnPhase(InNumber);
 		break;
 	default:
 		break;
@@ -162,7 +162,7 @@ void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 InNumber)
 	}
 }
 
-void UCardPanelWidget::OnKeyboardEventWhenBattlePhase(const int32 InNumber)
+void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 InNumber)
 {
 	if (CurrentHands.IsValidIndex(InNumber))
 	{
@@ -319,7 +319,7 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 	if (CurrentHands.Num() == MAX_HAND_COUNT)
 	{
 		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
-		CardPanelWidgetController->GoBattlePhase();
+		CardPanelWidgetController->GoPlayerTurnPhase();
 
 		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHovered가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
 		for (const auto& CharacterCards : AbilitySystemComponentToCards)
@@ -476,7 +476,7 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	if (CurrentPlayerPhaseState == EPlayerPhaseState::BattlePhase)
+	if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
 
@@ -507,16 +507,16 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 	}
 }
 
-void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPlayerPhaseState InState)
+void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
-	CurrentPlayerPhaseState = InState;
+	CurrentPhaseState = NewState;
 
-	switch (CurrentPlayerPhaseState)
+	switch (CurrentPhaseState)
 	{
-	case EPlayerPhaseState::DrawPhase:
+	case EPhaseState::DrawPhase:
 		OnDrawPhaseStarted();
 		break;
-	case EPlayerPhaseState::BattlePhase:
+	case EPhaseState::PlayerTurnPhase:
 		break;
 	default:
 		break;

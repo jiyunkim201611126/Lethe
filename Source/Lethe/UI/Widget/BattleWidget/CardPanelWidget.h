@@ -58,10 +58,10 @@ public:
 private:
 	void OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction);
 	void OnMouseEventWhenDrawPhase(const UCardWidget* InCardWidget, const ECardAction InCardAction);
-	void OnMouseEventWhenBattlePhase(UCardWidget* InCardWidget, const ECardAction InCardAction);
+	void OnMouseEventWhenPlayerTurnPhase(UCardWidget* InCardWidget, const ECardAction InCardAction);
 	void OnKeyboardEvent(const int32 InNumber);
 	void OnKeyboardEventWhenDrawPhase(const int32 InNumber);
-	void OnKeyboardEventWhenBattlePhase(const int32 InNumber);
+	void OnKeyboardEventWhenPlayerTurnPhase(const int32 InNumber);
 	
 	void CreateCard(const FCardInitParams& CardInitParams);
 	void UpdateAllCardTranslation();
@@ -81,7 +81,7 @@ private:
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
-	void OnPlayerPhaseStateChanged(const EPlayerPhaseState InState);
+	void OnPlayerPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	void OnDrawPhaseStarted() const;
 	
 protected:
@@ -108,7 +108,7 @@ private:
 	
 	uint8 bControllerInitialized : 1 = false;
 
-	EPlayerPhaseState CurrentPlayerPhaseState = EPlayerPhaseState::None;
+	EPhaseState CurrentPhaseState = EPhaseState::None;
 
 	int32 DeckZOrder = 100;
 	int32 HandZOrder = 200;

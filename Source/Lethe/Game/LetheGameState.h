@@ -7,14 +7,14 @@
 #include "LetheGameState.generated.h"
 
 UENUM()
-enum class EPlayerPhaseState : uint8
+enum class EPhaseState : uint8
 {
 	None,
 	DrawPhase,
-	BattlePhase,
+	PlayerTurnPhase,
 };
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangePlayerPhaseStateSignature, const EPlayerPhaseState);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 
 UCLASS()
 class LETHE_API ALetheGameState : public AGameStateBase
@@ -23,11 +23,17 @@ class LETHE_API ALetheGameState : public AGameStateBase
 
 public:
 	void GoDrawPhase();
-	void GoBattlePhase();
+	void GoPlayerTurnPhase();
 
-public:
-	FOnChangePlayerPhaseStateSignature OnChangePlayerTurnStateDelegate;
+	EPhaseState GetTurnPhase() const;
 
 private:
-	EPlayerPhaseState CurrentPlayerTurnState = EPlayerPhaseState::None;
+	void SetPhase(const EPhaseState NewPhase);
+	void OnPhaseEntered();
+
+public:
+	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;
+
+private:
+	EPhaseState CurrentTurnState = EPhaseState::None;
 };

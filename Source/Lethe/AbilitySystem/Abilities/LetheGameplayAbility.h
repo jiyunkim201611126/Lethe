@@ -22,9 +22,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	FAbilityRange AbilityRange;
 
-private:
 #if WITH_EDITOR
-	// 생성과 동시에 자동으로 ActivationBlockedTags에 CharacterState_Dead를 추가해주는 함수입니다.
+public:
 	virtual void PostInitProperties() override;
 #endif
 };

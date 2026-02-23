@@ -146,10 +146,14 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (CheckCost(Handle, ActorInfo))
 	{
-		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-		
 		if (TriggerEventData && TriggerEventData->Target)
 		{
+			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
+			
+			// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
+			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+			ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
+			
 			// 애니메이션 재생을 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
 			CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
 			
@@ -231,4 +235,17 @@ void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void ULetheCardAbility::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	// 어떤 CardAbility든 PlayerTurn에만 사용할 수 있습니다.
+	if (HasAnyFlags(RF_ClassDefaultObject))
+	{
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		
+		ActivationRequiredTags.AddTag(LetheGameplayTags.State_Phase_PlayerTurn);
+	}
 }

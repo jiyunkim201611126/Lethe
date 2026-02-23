@@ -59,13 +59,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
 
-	/**
-	 * MoveAbility를 포함, 시작과 동시에 부여되는 Ability입니다.
-	 * 캐릭터의 Passive Ability처럼 카드로 발동하지 않는 능력을 구현할 때 활용할 수 있습니다.
-	 */
-	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
-
 private:
 	FDelegateHandle OnCameraHeightChangedDelegateHandle;
 };

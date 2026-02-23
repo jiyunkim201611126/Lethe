@@ -4,22 +4,41 @@
 
 void ALetheGameState::GoDrawPhase()
 {
-	if (CurrentPlayerTurnState == EPlayerPhaseState::DrawPhase)
-	{
-		return;
-	}
-	
-	CurrentPlayerTurnState = EPlayerPhaseState::DrawPhase;
-	OnChangePlayerTurnStateDelegate.Broadcast(CurrentPlayerTurnState);
+	SetPhase(EPhaseState::DrawPhase);
 }
 
-void ALetheGameState::GoBattlePhase()
+void ALetheGameState::GoPlayerTurnPhase()
 {
-	if (CurrentPlayerTurnState == EPlayerPhaseState::BattlePhase)
+	SetPhase(EPhaseState::PlayerTurnPhase);
+}
+
+void ALetheGameState::SetPhase(const EPhaseState NewPhase)
+{
+	const EPhaseState OldPhase = CurrentTurnState;
+	if (OldPhase == NewPhase)
 	{
 		return;
 	}
 	
-	CurrentPlayerTurnState = EPlayerPhaseState::BattlePhase;
-	OnChangePlayerTurnStateDelegate.Broadcast(CurrentPlayerTurnState);
+	CurrentTurnState = NewPhase;
+	
+	OnChangeTurnStateDelegate.Broadcast(OldPhase, NewPhase);
+}
+
+void ALetheGameState::OnPhaseEntered()
+{
+	switch (CurrentTurnState)
+	{
+	case EPhaseState::DrawPhase:
+		break;
+	case EPhaseState::PlayerTurnPhase:
+		break;
+	default:
+		break;
+	}
+}
+
+EPhaseState ALetheGameState::GetTurnPhase() const
+{
+	return CurrentTurnState;
 }

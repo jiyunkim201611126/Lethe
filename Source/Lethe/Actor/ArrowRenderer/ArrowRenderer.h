@@ -21,7 +21,7 @@ public:
 	virtual void BeginPlay() override;
 	//~ End of AActor Interface
 
-	void SetPoints(const FVector& StartLocation, const FVector& EndLocation) const;
+	void SetPoints(const AActor* SourceActor, const AActor* TargetActor) const;
 	void SetActive(bool bActive) const;
 
 protected:

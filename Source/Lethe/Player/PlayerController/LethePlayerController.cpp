@@ -4,7 +4,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "TileSelectorComponent.h"
-#include "GameFramework/Character.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
@@ -244,13 +243,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 		const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor();
 		if (SelectedCardOwnerActor && CurrentActor)
 		{
-			const FVector SourceLocation = SelectedCardOwnerActor->GetActorLocation();
-			FVector TargetLocation = CurrentActor->GetActorLocation();
-			if (const ACharacter* TargetCharacter = Cast<ACharacter>(CurrentActor))
-			{
-				TargetLocation.Z += TargetCharacter->GetDefaultHalfHeight() / 2.f;
-			}
-			ArrowRenderer->SetPoints(SourceLocation, TargetLocation);
+			ArrowRenderer->SetPoints(SelectedCardOwnerActor, CurrentActor);
 		}
 		else
 		{

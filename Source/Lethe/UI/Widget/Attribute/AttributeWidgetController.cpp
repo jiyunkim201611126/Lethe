@@ -153,6 +153,9 @@ void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, co
 		bShouldPreview = true;
 	}
 
+	PreviewMaxValue = PreviewMaxValue <= 0.f ? 0.f : PreviewMaxValue;
+	PreviewCurrentValue = FMath::Clamp(PreviewCurrentValue, 0.f, PreviewMaxValue);
+
 	// Preview 여부를 AttributeWidget에게 알려줍니다.
 	if (bShouldPreview)
 	{

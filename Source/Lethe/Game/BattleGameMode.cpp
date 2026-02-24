@@ -45,11 +45,10 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 {
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		// 가장 왼쪽에 있는 타일을 가져오는 과정입니다.
 		FCubeCoord MostLeftTileCoord(0, 0, 0);
 		
 		TSet<FCubeCoord> SelectedCoord;
-		TileManagerSubsystem->TileBFS(MostLeftTileCoord, INT32_MAX, EBFSType::Through, SelectedCoord,
+		TileManagerSubsystem->TileBFS(MostLeftTileCoord, 3, EBFSType::Through, SelectedCoord,
 			[]()
 			{
 				return true;
@@ -58,9 +57,9 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{
-					// 중앙 일렬 타일 중 좌측에 있는 것만 가져옵니다.
+					// 중앙 가로 일렬 타일만 가져옵니다.
 					const FCubeCoord& CubeCoord = TileData->TileActor->GetCubeCoord();
-					return CubeCoord.R == 0 && CubeCoord.Q < 0;
+					return CubeCoord.R == 0;
 				}
 				return false;
 			});
@@ -87,7 +86,6 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
 			if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
 			{
-				// 캐릭터 절반 높이만큼 위로 올려줍니다.
 				FVector SpawnLocation = TileActor->GetActorLocation();
 				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
@@ -97,17 +95,32 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			}
 		}
 
-		// 테스트용으로 중앙에 적을 하나 스폰합니다.
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (ATile* TileActor = TileManagerSubsystem->GetTile(FCubeCoord(0, 0, 0)))
+		for (int32 TileIndex = 0; TileIndex < 5; TileIndex++)
 		{
-			// 캐릭터 절반 높이만큼 위로 올려줍니다.
-			FVector SpawnLocation = TileActor->GetActorLocation();
-			if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+			FCubeCoord SpawnEnemyCoord;
+			int32 Offset = TileIndex / 2 + 1;
+			if (TileIndex % 2 == 0)
 			{
-				TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedEnemy);
-				SpawnedEnemy->SetLocationOnTile(SpawnLocation);
+				SpawnEnemyCoord = FCubeCoord(0, 1, -1);
+				SpawnEnemyCoord.R -= Offset;
+				SpawnEnemyCoord.S += Offset;
+			}
+			else
+			{
+				SpawnEnemyCoord = FCubeCoord(0, 0, 0);
+				SpawnEnemyCoord.Q -= Offset;
+				SpawnEnemyCoord.R += Offset;
+			}
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			if (ATile* TileActor = TileManagerSubsystem->GetTile(SpawnEnemyCoord))
+			{
+				FVector SpawnLocation = TileActor->GetActorLocation();
+				if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+				{
+					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedEnemy);
+					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
+				}
 			}
 		}
 	}

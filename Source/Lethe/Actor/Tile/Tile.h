@@ -18,7 +18,7 @@ class LETHE_API ATile : public AActor, public IHighlightInterface
 public:
 	ATile(const FObjectInitializer& ObjectInitializer);
 	
-	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const bool bIsTop);
+	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const bool bIsTop, const int32 UVOffsetType[]);
 	void SetTopTile(ATile* InTile);
 	ATile* GetTopTile();
 
@@ -36,7 +36,7 @@ protected:
 	bool IsTopTile();
 
 private:
-	void SetTileMesh(const TArray<UStaticMesh*>& Meshes) const;
+	void SetTileMesh(const TArray<UStaticMesh*>& Meshes, const bool bIsTop, const int32 UVOffsetType[]) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere)

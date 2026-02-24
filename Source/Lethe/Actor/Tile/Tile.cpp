@@ -9,10 +9,10 @@ ATile::ATile(const FObjectInitializer& ObjectInitializer)
 	MainTile->SetupAttachment(Root);
 }
 
-void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const bool bIsTop)
+void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const bool bIsTop, const int32 UVOffsetType[])
 {
 	TextRender = FindComponentByClass<UTextRenderComponent>();
-	SetTileMesh(Meshes);
+	SetTileMesh(Meshes, bIsTop, UVOffsetType);
 
 	CubeCoord = InCubeCoord;
 	
@@ -110,15 +110,34 @@ bool ATile::IsTopTile()
 	return !TopTile.IsValid();
 }
 
-void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes) const
+void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const bool bIsTop, const int32 UVOffsetType[]) const
 {
 	TArray<UStaticMeshComponent*> Components;
 	GetComponents(Components);
-	int32 Index = 0;
 
 	for (UStaticMeshComponent* Component : Components)
 	{
+		int32 Index = FCString::Atoi(*Component->ComponentTags[0].ToString());
 		Component->SetStaticMesh(Meshes[Index]);
-		Index++;
+	}
+
+	if (!bIsTop)
+	{
+		return;
+	}
+	
+	//UV Offset 전달
+	// 0 -> 값 변화 없음 (막힌 타일)
+	// 1 -> 1단계 오프셋 이동 (서로 연결된 같은 높이의 타일)
+	// 2 -> 2단계 오프셋 이동 (서로 연결된 다른 높이의 타일)
+	for (int i = 0; i < 6; i++)
+	{
+		Components[0]->SetCustomPrimitiveDataFloat(i, UVOffsetType[i]); //메인 타일의 스태틱 메시 머터리얼에 데이터 전송
+
+		if (UVOffsetType[i] == 1)
+		{
+			//이거 왜 잘돌아가는지 모르겠음
+			Components[i + 1]->SetCustomPrimitiveDataFloat(0, 1); //테두리 타일의 스태틱 메시 머터리얼에 데이터 전송
+		}
 	}
 }

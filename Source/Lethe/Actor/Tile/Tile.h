@@ -31,6 +31,10 @@ public:
 	
 	FCubeCoord GetCubeCoord() const;
 
+protected:
+	UFUNCTION(BlueprintCallable)
+	bool IsTopTile();
+
 private:
 	void SetTileMesh(const TArray<UStaticMesh*>& Meshes) const;
 	

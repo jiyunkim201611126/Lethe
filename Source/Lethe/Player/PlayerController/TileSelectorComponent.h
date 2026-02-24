@@ -18,10 +18,10 @@ struct FTileAndActor
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ATile* Tile;
+	ATile* Tile = nullptr;
 
 	UPROPERTY()
-	AActor* Actor;
+	AActor* Actor = nullptr;
 };
 
 UENUM()

@@ -105,6 +105,11 @@ FCubeCoord ATile::GetCubeCoord() const
 	return CubeCoord;
 }
 
+bool ATile::IsTopTile()
+{
+	return !TopTile.IsValid();
+}
+
 void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes) const
 {
 	TArray<UStaticMeshComponent*> Components;

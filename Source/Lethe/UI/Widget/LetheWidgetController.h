@@ -22,16 +22,16 @@ struct FWidgetControllerParams
 	: PlayerController(PC), PlayerState(PS), AbilitySystemComponent(ASC), AttributeSet(AS) {}
 
 	UPROPERTY()
-	TObjectPtr<APlayerController> PlayerController;
+	APlayerController* PlayerController = nullptr;
 
 	UPROPERTY()
-	TObjectPtr<APlayerState> PlayerState;
+	APlayerState* PlayerState = nullptr;
 
 	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	UAbilitySystemComponent* AbilitySystemComponent = nullptr;
 
 	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
+	UAttributeSet* AttributeSet = nullptr;
 };
 
 // 프로젝트 특성상 플레이어와 캐릭터의 수가 1:4 매칭이기 때문에, WidgetController에서 ASC와 AS를 여러 개 관리해야 합니다.

@@ -57,7 +57,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	}
 
 	bool bIsSelectingCharacter = false;
-	if ((!SelectedCharacter.IsValid() && !TileAndActor.Actor) || TileAndActor.Actor == SelectedCharacter)
+	if ((!SelectedCharacter.IsValid() && !TileAndActor.Actor) || (SelectedCharacter.IsValid() && SelectedCharacter == TileAndActor.Actor))
 	{
 		// 캐릭터 미선택 상태에서 빈 타일을 클릭했거나, 이미 선택된 캐릭터와 동일한 캐릭터를 선택한 경우 얼리리턴합니다.
 		return;

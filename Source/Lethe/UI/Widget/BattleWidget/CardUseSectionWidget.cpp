@@ -8,6 +8,7 @@ void UCardUseSectionWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
 
+	OnMouseButtonDown.Unbind();
 	OnMouseButtonUp.Unbind();
 }
 

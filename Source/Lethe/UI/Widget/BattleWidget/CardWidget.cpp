@@ -61,6 +61,14 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	CardName = InitParams.CardSelfViewData->CardNameText;
 	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->CardBacksideColor));
+	
+	// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐, 텍스트가 깨져버립니다.
+	// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
+	// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
+	BaseRenderScale = 1.f / InitParams.CardViewData->GetCardExpandScale();
+	SetSize(InitParams.CardViewData->GetCardSize() / BaseRenderScale);
+	SetCardImageSize(InitParams.CardViewData->GetCardImageSize() / BaseRenderScale, BaseRenderScale);
+	SetRenderScale(FVector2D(BaseRenderScale));
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
@@ -87,7 +95,7 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	switch (InCardContainer)
 	{
 	case ECardContainer::Deck:
-		SetRenderScale(FVector2D(0.5f));
+		SetRenderScale(FVector2D(BaseRenderScale));
 		break;
 	case ECardContainer::Hand:
 		{

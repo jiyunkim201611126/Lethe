@@ -104,7 +104,7 @@ private:
 	// Key를 OwnerASC로, Value로 CardWidget(Deck)을 매핑한 변수입니다.
 	// 이미 CardWidget도 OwnerASC를 멤버 변수로 갖고 있으나, CardPanelWidget도 정렬 및 접근 효율을 위해 매핑해두는 편이 좋습니다.
 	UPROPERTY()
-	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FCharacterCards> AbilitySystemComponentToCards;
+	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FCharacterCards> ASCToCards;
 	
 	uint8 bControllerInitialized : 1 = false;
 
@@ -119,7 +119,6 @@ private:
 	FVector2D GravesCardTranslation = FVector2D(1760.f, -40.f);
 	float PaddingDeckAndHand = 25.f;
 	float PaddingHandAndHand = 10.f;
-	float CardBaseRenderScale;
 
 	UPROPERTY()
 	TObjectPtr<UCardWidget> CurrentSelectedCard;

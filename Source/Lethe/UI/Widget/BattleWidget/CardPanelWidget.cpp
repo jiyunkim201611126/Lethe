@@ -16,7 +16,7 @@ void UCardPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	AbilitySystemComponentToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
+	ASCToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
 	CurrentHands.Reserve(MAX_HAND_COUNT);
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 	
@@ -70,11 +70,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
 		
 		CardPanelWidgetController->BroadcastInitialValue();
-		
-		// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐, 텍스트가 깨져버립니다.
-		// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
-		// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-		CardBaseRenderScale = 1.f / CardPanelWidgetController->GetCardExpandScale();
 		bControllerInitialized = true;
 	}
 }
@@ -151,7 +146,7 @@ void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 InNumber)
 	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
 	if (AbilitySystemReferences.IsValidIndex(InNumber))
 	{
-		if (const FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReferences[InNumber].AbilitySystemComponent))
+		if (const FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReferences[InNumber].AbilitySystemComponent))
 		{
 			if (!CharacterCards->Deck.IsEmpty())
 			{
@@ -180,16 +175,12 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
 	{
 		// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
-		FCharacterCards& CharacterCards = AbilitySystemComponentToCards.FindOrAdd(CardInitParams.OwnerASC);
+		FCharacterCards& CharacterCards = ASCToCards.FindOrAdd(CardInitParams.OwnerASC);
 		CharacterCards.Deck.Emplace(CreatedCard);
 		
 		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
-			// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.
-			CreatedCard->SetSize(CardInitParams.CardViewData->GetCardSize() / CardBaseRenderScale);
-			CreatedCard->SetCardImageSize(CardInitParams.CardViewData->GetCardImageSize() / CardBaseRenderScale, CardBaseRenderScale);
-			CreatedCard->SetRenderScale(FVector2D(CardBaseRenderScale));
-			
+			// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.			
 			CreatedCard->SetWidgetController(WidgetController);
 			CreatedCard->SetCardInfo(CardInitParams);
 			CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
@@ -219,7 +210,7 @@ void UCardPanelWidget::UpdateAllCardTranslation()
 	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
 	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
 	{
-		FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReference.AbilitySystemComponent);
+		FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReference.AbilitySystemComponent);
 		if (!CharacterCards)
 		{
 			continue;
@@ -282,13 +273,16 @@ void UCardPanelWidget::OnDeckHovered(const UCardWidget* InCardWidget, const bool
 {
 	if (ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC())
 	{
-		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(OwnerASC))
+		if (FCharacterCards* CharacterCards = ASCToCards.Find(OwnerASC))
 		{
-			// 덱 가장 윗장을 가져옵니다.
-			if (UCardWidget* DeckOnTopCard = CharacterCards->Deck.Last())
+			if (!CharacterCards->Deck.IsEmpty())
 			{
-				// 마우스 Hovered 여부에 따라 카드를 위로 살짝 올려줍니다.
-				DeckOnTopCard->MouseHovered(bInHovered);
+				// 덱 가장 윗장을 가져옵니다.
+				if (UCardWidget* DeckOnTopCard = CharacterCards->Deck.Last())
+				{
+					// 마우스 Hovered 여부에 따라 카드를 위로 살짝 올려줍니다.
+					DeckOnTopCard->MouseHovered(bInHovered);
+				}
 			}
 		}
 	}
@@ -298,7 +292,7 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 {
 	if (ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC())
 	{
-		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(OwnerASC))
+		if (FCharacterCards* CharacterCards = ASCToCards.Find(OwnerASC))
 		{
 			if (UCardWidget* DrawnCardWidget = CharacterCards->Deck.Pop(EAllowShrinking::No))
 			{
@@ -322,7 +316,7 @@ void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
 		CardPanelWidgetController->GoPlayerTurnPhase();
 
 		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHovered가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
-		for (const auto& CharacterCards : AbilitySystemComponentToCards)
+		for (const auto& CharacterCards : ASCToCards)
 		{
 			if (!CharacterCards.Value.Deck.IsEmpty())
 			{
@@ -454,7 +448,7 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 	{
 		// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
 		// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 CurrentHands 배열은 그대로 두고, 나중에 턴 종료 시 정리합니다.
-		if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(CardWidget->GetOwnerASC()))
+		if (FCharacterCards* CharacterCards = ASCToCards.Find(CardWidget->GetOwnerASC()))
 		{
 			CharacterCards->Graves.Emplace(CardWidget);
 		}
@@ -486,7 +480,7 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 			const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
 			for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
 			{
-				if (FCharacterCards* CharacterCards = AbilitySystemComponentToCards.Find(AbilitySystemReference.AbilitySystemComponent))
+				if (FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReference.AbilitySystemComponent))
 				{
 					// 핸드에 남아있던 카드를 묘지로 보내고 완전히 비웁니다.
 					for (UCardWidget* CardInHand : CharacterCards->Hands)
@@ -528,5 +522,20 @@ void UCardPanelWidget::OnDrawPhaseStarted() const
 	if (CardPanelWidgetController)
 	{
 		CardPanelWidgetController->SetCardSelected(false);
+	}
+	
+	bool bShouldResetDecks = true;
+	for (const auto& Cards : ASCToCards)
+	{
+		if (!Cards.Value.Deck.IsEmpty())
+		{
+			bShouldResetDecks = false;
+			break;
+		}
+	}
+
+	if (bShouldResetDecks)
+	{
+		// TODO: 셔플하고 덱 초기화
 	}
 }

@@ -8,7 +8,6 @@
 #include "Lethe/UI/Widget/BattleWidget/CardWidget.h"
 #include "CardPanelWidgetController.generated.h"
 
-struct FGameplayEventData;
 class ALethePlayerController;
 class ALetheGameState;
 class UCardDefinitionData;
@@ -16,6 +15,7 @@ class UCardSelfViewData;
 class UCardViewData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
+struct FGameplayEventData;
 struct FCardSelfViewInfo;
 struct FGameplayAbilitySpec;
 struct FGameplayAbilitySpecHandle;

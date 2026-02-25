@@ -133,6 +133,8 @@ protected:
 private:
 	FText CardName;
 	FGameplayTag CardTag;
+
+	float BaseRenderScale = 0.5f;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 

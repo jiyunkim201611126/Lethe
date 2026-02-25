@@ -73,7 +73,7 @@ public:
 	//~ End of UUserWidget Interface
 
 	void SetSize(const FVector2D& InSize) const;
-	void SetCardImageSize(const FVector2D& InCardImageSize, const float BaseRenderScale) const;
+	void SetCardImageSize(const FVector2D& InCardImageSize) const;
 	void SetCardInfo(const FCardInitParams& InitParams);
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;

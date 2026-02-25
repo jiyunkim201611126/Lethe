@@ -41,7 +41,7 @@ void UCardWidget::SetSize(const FVector2D& InSize) const
 	RootSizeBox->SetHeightOverride(InSize.Y);
 }
 
-void UCardWidget::SetCardImageSize(const FVector2D& InCardImageSize, const float BaseRenderScale) const
+void UCardWidget::SetCardImageSize(const FVector2D& InCardImageSize) const
 {
 	// 카드 확대 기능 수행을 위해 RenderScale을 1보다 낮은 수치로 할당했기 때문에, 디자이너탭에서 설정한 값들을 그대로 사용하면 문제가 생기므로 여기서 보정합니다.
 	CardImage->SetDesiredSizeOverride(InCardImageSize);
@@ -67,7 +67,7 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
 	BaseRenderScale = 1.f / InitParams.CardViewData->GetCardExpandScale();
 	SetSize(InitParams.CardViewData->GetCardSize() / BaseRenderScale);
-	SetCardImageSize(InitParams.CardViewData->GetCardImageSize() / BaseRenderScale, BaseRenderScale);
+	SetCardImageSize(InitParams.CardViewData->GetCardImageSize() / BaseRenderScale);
 	SetRenderScale(FVector2D(BaseRenderScale));
 }
 

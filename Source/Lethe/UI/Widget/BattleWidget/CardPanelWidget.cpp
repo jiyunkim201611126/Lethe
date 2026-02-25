@@ -7,26 +7,22 @@
 #include "CardWidget.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
-#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/Data/Card/CardViewData.h"
 
 void UCardPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	ASCToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
-	CurrentHands.Reserve(MAX_HAND_COUNT);
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 	
 	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
-	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDown);
-	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::TryUseCard);
+	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDownInCardUseSection);
+	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::OnMouseButtonUpInCardUseSection);
 }
 
 void UCardPanelWidget::NativeDestruct()
 {
+	CardLayoutManager = nullptr;
 	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
 	
 	Super::NativeDestruct();
@@ -51,17 +47,13 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 아래 로직이 실행되도록 막아줍니다.
 	if (!bControllerInitialized && CardPanelWidgetController)
 	{
-		// 카드 사이즈에 따라 균일하게 배치될 수 있도록 각종 변수를 조정합니다.
-		// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
-		const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
-		PaddingDeckAndHand += CardSize.X;
-		PaddingHandAndHand += CardSize.X;
-		FirstCardTranslation.X += CardSize.X / 2.f;
-		FirstCardTranslation.Y -= CardSize.Y / 2.f;
-		NextCardTranslation.X += CardSize.X / 2.f;
-		NextCardTranslation.Y -= CardSize.Y / 2.f;
-		GravesCardTranslation.X += CardSize.X / 2.f;
-		GravesCardTranslation.Y -= CardSize.Y / 2.f;
+		CardLayoutManager = NewObject<UCardLayoutManager>(this);
+		if (CardLayoutManager)
+		{			
+			// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
+			const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
+			CardLayoutManager->Initialize(CardSize);
+		}
 		
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
@@ -74,95 +66,98 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	}
 }
 
-void UCardPanelWidget::OnMouseEvent(UCardWidget* InCardWidget, const ECardAction InCardAction)
+void UCardPanelWidget::OnMouseEvent(UCardWidget* CardWidget, const ECardAction CardAction)
 {	
 	switch (CurrentPhaseState)
 	{
 	case EPhaseState::DrawPhase:
-		OnMouseEventWhenDrawPhase(InCardWidget, InCardAction);
+		OnMouseEventWhenDrawPhase(CardWidget, CardAction);
 		break;
 	case EPhaseState::PlayerTurnPhase:
-		OnMouseEventWhenPlayerTurnPhase(InCardWidget, InCardAction);
+		OnMouseEventWhenPlayerTurnPhase(CardWidget, CardAction);
 		break;
 	default:
 		break;
 	}
 }
 
-void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* InCardWidget, const ECardAction InCardAction)
+void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction)
 {
-	switch (InCardAction)
+	switch (CardAction)
 	{
 	case ECardAction::DeckHovered:
-		OnDeckHovered(InCardWidget, true);
+		OnDeckHovered(CardWidget, true);
 		break;
 	case ECardAction::DeckUnhovered:
-		OnDeckHovered(InCardWidget, false);
+		OnDeckHovered(CardWidget, false);
 		break;
 	case ECardAction::Draw:
-		Draw(InCardWidget);
-		UpdateAllCardTranslation();
+		TryDraw(CardWidget ? CardWidget->GetOwnerASC() : nullptr);
 		break;
 	default:
 		break;
 	}
 }
 
-void UCardPanelWidget::OnMouseEventWhenPlayerTurnPhase(UCardWidget* InCardWidget, const ECardAction InCardAction)
+void UCardPanelWidget::OnMouseEventWhenPlayerTurnPhase(UCardWidget* CardWidget, const ECardAction CardAction)
 {
-	switch (InCardAction)
+	switch (CardAction)
 	{
 	case ECardAction::HandHovered:
-		OnHandHovered(InCardWidget, true);
+		OnHandHovered(CardWidget, true);
 		break;
 	case ECardAction::HandUnhovered:
-		OnHandHovered(InCardWidget, false);
+		OnHandHovered(CardWidget, false);
 		break;
 	case ECardAction::Selected:
-		SelectCard(InCardWidget);
+		SelectCard(CardWidget);
 		break;
 	default:
 		break;
 	}
 }
 
-void UCardPanelWidget::OnKeyboardEvent(const int32 InNumber)
+void UCardPanelWidget::OnKeyboardEvent(const int32 Number)
 {
 	switch (CurrentPhaseState)
 	{
 	case EPhaseState::DrawPhase:
-		OnKeyboardEventWhenDrawPhase(InNumber);
+		OnKeyboardEventWhenDrawPhase(Number);
 		break;
 	case EPhaseState::PlayerTurnPhase:
-		OnKeyboardEventWhenPlayerTurnPhase(InNumber);
+		OnKeyboardEventWhenPlayerTurnPhase(Number);
 		break;
 	default:
 		break;
 	}
 }
 
-void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 InNumber)
+void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 Number) const
 {
-	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-	if (AbilitySystemReferences.IsValidIndex(InNumber))
+	if (!CardLayoutManager || !CardPanelWidgetController)
 	{
-		if (const FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReferences[InNumber].AbilitySystemComponent))
-		{
-			if (!CharacterCards->Deck.IsEmpty())
-			{
-				Draw(CharacterCards->Deck[0]);
-				UpdateAllCardTranslation();
-			}
-		}
+		return;
+	}
+
+	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+	if (AbilitySystemReferences.IsValidIndex(Number))
+	{
+		TryDraw(AbilitySystemReferences[Number].AbilitySystemComponent);
 	}
 }
 
-void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 InNumber)
+void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 {
-	if (CurrentHands.IsValidIndex(InNumber))
+	if (!CardLayoutManager)
+	{
+		return;
+	}
+
+	const TArray<TObjectPtr<UCardWidget>>& CurrentHands = CardLayoutManager->GetCurrentHands();
+	if (CurrentHands.IsValidIndex(Number))
 	{
 		ResetSelectedCard();
-		UCardWidget* SelectedCard = CurrentHands[InNumber];
+		UCardWidget* SelectedCard = CurrentHands[Number];
 		if (SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
 		{
 			SelectCard(SelectedCard);
@@ -173,25 +168,18 @@ void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 InNumber)
 void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 {
 	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
-	{
-		// 만들어진 Card를 OwnerASC와 매핑된 Deck 배열에 추가합니다.			
-		FCharacterCards& CharacterCards = ASCToCards.FindOrAdd(CardInitParams.OwnerASC);
-		CharacterCards.Deck.Emplace(CreatedCard);
-		
+	{		
 		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
 		{
-			// Card의 위치, 회전, 크기를 다루기 위한 값들을 설정합니다.			
 			CreatedCard->SetWidgetController(WidgetController);
 			CreatedCard->SetCardInfo(CardInitParams);
 			CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
-			
-			// 앵커를 좌하단에 박습니다.
-			CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
-			CardSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-			CardSlot->SetAutoSize(true);
-			// 덱은 완전히 겹쳐있기 때문에 가장 윗장을 제외하면 ZOrder를 굳이 다르게 할 필요가 없습니다.
-			// 따라서 가능한 경우 언리얼이 DrawCall을 병합시킬 수 있도록 ZOrder를 같게 설정해 최적화를 챙깁니다.
-			CardSlot->SetZOrder(DeckZOrder);
+
+			if (CardLayoutManager)
+			{
+				CardLayoutManager->SetupCardSlot(CardSlot);
+				CardLayoutManager->AddCardToDeck(CreatedCard);
+			}
 		}
 
 		// 일단 1장 만들어질 때마다 호출하지만,
@@ -200,188 +188,110 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 	}
 }
 
-void UCardPanelWidget::UpdateAllCardTranslation()
+void UCardPanelWidget::UpdateAllCardTranslation() const
 {
-	// 변수들을 초기화합니다.
-	HandZOrder = 200;
-	CurrentHands.Reset();
-	
-	// ASC를 순서대로 순회합니다.
-	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-	for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
+	if (CardLayoutManager && CardPanelWidgetController)
 	{
-		FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReference.AbilitySystemComponent);
-		if (!CharacterCards)
-		{
-			continue;
-		}
-
-		for (UCardWidget* CardInDeck : CharacterCards->Deck)
-		{
-			FWidgetTransform WidgetTransform = CardInDeck->GetRenderTransform();
-			WidgetTransform.Translation = NextCardTranslation;
-			CardInDeck->SetTargetTransform(WidgetTransform);
-			
-			if (UCanvasPanelSlot* LastDeckCardSlot = Cast<UCanvasPanelSlot>(CardInDeck->Slot))
-			{
-				LastDeckCardSlot->SetZOrder(DeckZOrder);
-			}
-		}
-
-		if (!CharacterCards->Deck.IsEmpty())
-		{
-			if (UCanvasPanelSlot* LastDeckCardSlot = Cast<UCanvasPanelSlot>(CharacterCards->Deck.Last()->Slot))
-			{
-				// 덱의 가장 윗장은 덱 아랫장을 가릴 수 있도록 ZOrder를 1 높게 설정합니다.
-				LastDeckCardSlot->SetZOrder(DeckZOrder + 1);
-			}
-		}
-
-		NextCardTranslation.X += PaddingDeckAndHand;
-		
-		for (uint8 HandIndex = 0; HandIndex < CharacterCards->Hands.Num(); ++HandIndex)
-		{
-			if (UCardWidget* CardInHand = CharacterCards->Hands[HandIndex])
-			{
-				if (CardInHand->GetCurrentCardContainer() == ECardContainer::Hand)
-				{
-					// 사용한 카드는 로직상으로는 아직 배열에 남아있지만 View 상으로는 무덤 위치로 가있어야 합니다.
-					// 따라서 CurrentCardContainer가 Hand인 경우만 아래 위치 이동 로직을 수행합니다.
-					FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
-					WidgetTransform.Translation = NextCardTranslation;
-					CardInHand->SetTargetTransform(WidgetTransform);
-				}
-			
-				if (UCanvasPanelSlot* HandCardSlot = Cast<UCanvasPanelSlot>(CardInHand->Slot))
-				{
-					HandCardSlot->SetZOrder(HandZOrder++);
-				}
-				
-				// 핸드의 마지막 장이면 DeckAndHand로, 아니라면 HandAndHand로 사이 공간을 띄워줍니다.
-				NextCardTranslation.X += HandIndex == CharacterCards->Hands.Num() - 1 ? PaddingDeckAndHand : PaddingHandAndHand;
-
-				// 키보드 이벤트에 대해 효율적으로 반응할 수 있도록 캐싱합니다.
-				CurrentHands.Emplace(CardInHand);
-			}
-		}
+		CardLayoutManager->MoveAllCards(CardPanelWidgetController->GetAbilitySystemReferences());
 	}
-
-	NextCardTranslation = FirstCardTranslation;
 }
 
-void UCardPanelWidget::OnDeckHovered(const UCardWidget* InCardWidget, const bool bInHovered)
+void UCardPanelWidget::OnDeckHovered(const UCardWidget* CardWidget, const bool bHovered) const
 {
-	if (ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC())
+	if (!CardLayoutManager || !CardWidget)
 	{
-		if (FCharacterCards* CharacterCards = ASCToCards.Find(OwnerASC))
+		return;
+	}
+
+	if (ULetheAbilitySystemComponent* OwnerASC = CardWidget->GetOwnerASC())
+	{
+		if (UCardWidget* DeckOnTopCard = CardLayoutManager->GetTopDeckCard(OwnerASC))
 		{
-			if (!CharacterCards->Deck.IsEmpty())
-			{
-				// 덱 가장 윗장을 가져옵니다.
-				if (UCardWidget* DeckOnTopCard = CharacterCards->Deck.Last())
-				{
-					// 마우스 Hovered 여부에 따라 카드를 위로 살짝 올려줍니다.
-					DeckOnTopCard->MouseHovered(bInHovered);
-				}
-			}
+			DeckOnTopCard->MouseHovered(bHovered);
 		}
 	}
 }
 
-void UCardPanelWidget::Draw(const UCardWidget* InCardWidget)
+void UCardPanelWidget::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 {
-	if (ULetheAbilitySystemComponent* OwnerASC = InCardWidget->GetOwnerASC())
+	if (!CardLayoutManager || !CardPanelWidgetController || !OwnerASC)
 	{
-		if (FCharacterCards* CharacterCards = ASCToCards.Find(OwnerASC))
-		{
-			if (UCardWidget* DrawnCardWidget = CharacterCards->Deck.Pop(EAllowShrinking::No))
-			{
-				// 카드를 핸드에 추가하고 그에 맞게 정렬될 수 있도록 합니다.
-				CharacterCards->Hands.Emplace(DrawnCardWidget);
-				DrawnCardWidget->SetCardContainer(ECardContainer::Hand);
-				if (UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(DrawnCardWidget->Slot))
-				{
-					CardSlot->SetZOrder(HandZOrder++);
-				}
-
-				// UpdateAllCardTranslation에 의해 배열은 Reset 후 다시 채워지지만, 드로우 페이즈가 끝났는지 확인하기 위해 임시로 1개 채워줍니다.
-				CurrentHands.Emplace(DrawnCardWidget);
-			}
-		}
+		return;
 	}
 
-	if (CurrentHands.Num() == MAX_HAND_COUNT)
+	if (CardLayoutManager->TryDraw(OwnerASC))
+	{
+		UpdateAllCardTranslation();
+	}
+
+	if (CardLayoutManager->GetCurrentHandsNum() == MAX_HAND_COUNT)
 	{
 		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
 		CardPanelWidgetController->GoPlayerTurnPhase();
 
 		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHovered가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
-		for (const auto& CharacterCards : ASCToCards)
+		const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
+		for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
 		{
-			if (!CharacterCards.Value.Deck.IsEmpty())
+			if (UCardWidget* DeckOnTopCard = CardLayoutManager->GetTopDeckCard(AbilitySystemReference.AbilitySystemComponent))
 			{
-				OnDeckHovered(CharacterCards.Value.Deck[0], false);
+				DeckOnTopCard->MouseHovered(false);
 			}
 		}
 	}
 }
 
-void UCardPanelWidget::OnHandHovered(UCardWidget* InCardWidget, const bool bInHovered) const
-{	
-	// 마우스가 Hovered 상태에 따라 카드 위치를 조정합니다.
-	InCardWidget->MouseHovered(bInHovered);
+void UCardPanelWidget::OnHandHovered(UCardWidget* CardWidget, const bool bHovered) const
+{
+	CardWidget->MouseHovered(bHovered);
 }
 
-void UCardPanelWidget::SelectCard(UCardWidget* InCardWidget)
+void UCardPanelWidget::SelectCard(UCardWidget* CardWidget)
 {
 	// 다른 카드가 선택되어 있었다면 선택을 취소합니다.
 	ResetSelectedCard();
 
 	// 이미 사용 대기 상태인 카드라면 선택하지 않고 얼리 리턴합니다.
-	const int32 HandIndex = CurrentHands.Find(InCardWidget);
+	const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CardWidget) : INDEX_NONE;
 	if (UseRequestedCards.Contains(HandIndex))
 	{
 		return;
 	}
 
 	// 이미 사용했거나, 선택된 카드라면 얼리 리턴합니다.
-	if (InCardWidget->GetCurrentCardContainer() == ECardContainer::Grave || InCardWidget->GetCurrentCardContainer() == ECardContainer::Selected)
+	if (CardWidget->GetCurrentCardContainer() == ECardContainer::Grave || CardWidget->GetCurrentCardContainer() == ECardContainer::Selected)
 	{
 		return;
 	}
 	
-	CurrentSelectedCard = InCardWidget;
+	CurrentSelectedCard = CardWidget;
 	if (CurrentSelectedCard)
 	{
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
-		
-		if (UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(CurrentSelectedCard->Slot))
-		{
-			CardSlot->SetZOrder(SelectedZOrder);
-		}
 
 		if (CardPanelWidgetController)
 		{
 			CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
 		}
+
+		if (CardLayoutManager)
+		{
+			CardLayoutManager->OnCardSelected(CurrentSelectedCard);
+		}
 	}
 }
 
-bool UCardPanelWidget::OnMouseButtonDown() const
+bool UCardPanelWidget::OnMouseButtonDownInCardUseSection() const
 {
-	if (CurrentSelectedCard)
-	{
-		return true;
-	}
-	return false;
+	return CurrentSelectedCard != nullptr;
 }
 
-bool UCardPanelWidget::TryUseCard()
+bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
 {
 	if (CurrentSelectedCard && CardPanelWidgetController)
 	{
 		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
-		const int32 HandIndex = CurrentHands.Find(CurrentSelectedCard);
+		const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CurrentSelectedCard) : INDEX_NONE;
 		if (HandIndex == INDEX_NONE)
 		{
 			ResetSelectedCard();
@@ -446,17 +356,11 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 	
 	if (bSuccess)
 	{
-		// 사용에 성공했으므로 해당하는 카드를 무덤 배열에 추가합니다.
-		// 비주얼상 핸드의 위치가 남아있어야 하기 때문에 CurrentHands 배열은 그대로 두고, 나중에 턴 종료 시 정리합니다.
-		if (FCharacterCards* CharacterCards = ASCToCards.Find(CardWidget->GetOwnerASC()))
+		// 사용에 성공했으므로 카드 상태와 위치를 Grave로 갱신합니다.
+		if (CardLayoutManager)
 		{
-			CharacterCards->Graves.Emplace(CardWidget);
+			CardLayoutManager->AddCardToGrave(CardWidget);
 		}
-
-		FWidgetTransform WidgetTransform = CardWidget->GetRenderTransform();
-		WidgetTransform.Translation = GravesCardTranslation;
-		CardWidget->SetTargetTransform(WidgetTransform);
-		CardWidget->SetCardContainer(ECardContainer::Grave);
 	}
 	else
 	{
@@ -476,24 +380,9 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 
 		if (bRequestResult)
 		{
-			// 성공적으로 턴을 마치면 들어오는 분기입니다.
-			const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-			for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
+			if (CardLayoutManager)
 			{
-				if (FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemReference.AbilitySystemComponent))
-				{
-					// 핸드에 남아있던 카드를 묘지로 보내고 완전히 비웁니다.
-					for (UCardWidget* CardInHand : CharacterCards->Hands)
-					{
-						CharacterCards->Graves.AddUnique(CardInHand);
-
-						FWidgetTransform WidgetTransform = CardInHand->GetRenderTransform();
-						WidgetTransform.Translation = GravesCardTranslation;
-						CardInHand->SetTargetTransform(WidgetTransform);
-						CardInHand->SetCardContainer(ECardContainer::Grave);
-					}
-					CharacterCards->Hands.Reset();
-				}
+				CardLayoutManager->AddAllHandsToGrave();
 			}
 
 			UpdateAllCardTranslation();
@@ -524,17 +413,7 @@ void UCardPanelWidget::OnDrawPhaseStarted() const
 		CardPanelWidgetController->SetCardSelected(false);
 	}
 	
-	bool bShouldResetDecks = true;
-	for (const auto& Cards : ASCToCards)
-	{
-		if (!Cards.Value.Deck.IsEmpty())
-		{
-			bShouldResetDecks = false;
-			break;
-		}
-	}
-
-	if (bShouldResetDecks)
+	if (CardLayoutManager && CardLayoutManager->AreAllDecksEmpty())
 	{
 		// TODO: 셔플하고 덱 초기화
 	}

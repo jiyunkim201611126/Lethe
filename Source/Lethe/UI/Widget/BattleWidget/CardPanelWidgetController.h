@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Lethe/UI/Widget/LetheWidgetController.h"
-#include "Lethe/UI/Widget/BattleWidget/CardPanelWidget.h"
-#include "Lethe/UI/Widget/BattleWidget/CardWidget.h"
 #include "CardPanelWidgetController.generated.h"
 
 class ALethePlayerController;

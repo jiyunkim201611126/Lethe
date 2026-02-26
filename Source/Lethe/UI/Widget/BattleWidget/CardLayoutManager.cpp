@@ -124,6 +124,21 @@ void UCardLayoutManager::AddAllHandsToGrave()
 	}
 }
 
+void UCardLayoutManager::RefillDeck()
+{
+	for (auto& Cards : ASCToCards)
+	{
+		TArray<TObjectPtr<UCardWidget>>& Deck = Cards.Value.Deck;
+		TArray<TObjectPtr<UCardWidget>>& Graves = Cards.Value.Graves;
+		
+		check(Deck.IsEmpty());
+		check(!Graves.IsEmpty());
+		
+		Deck = Cards.Value.Graves;
+		Graves.Reset();
+	}
+}
+
 void UCardLayoutManager::MoveCardToGrave(UCardWidget* CardWidget) const
 {
 	if (CardWidget)
@@ -197,7 +212,7 @@ void UCardLayoutManager::MoveAllCards(const TArray<FAbilitySystemReference>& Abi
 	NextCardTranslation = FirstCardTranslation;
 }
 
-bool UCardLayoutManager::AreAllDeckFull() const
+bool UCardLayoutManager::AreAllDecksFull() const
 {
 	for (const auto& Cards : ASCToCards)
 	{

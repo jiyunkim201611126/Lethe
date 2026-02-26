@@ -180,7 +180,7 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 				CardLayoutManager->SetupCardSlot(CardSlot);
 				CardLayoutManager->AddCardToDeck(CreatedCard);
 				
-				if (CardLayoutManager->AreAllDeckFull())
+				if (CardLayoutManager->AreAllDecksFull())
 				{
 					CardLayoutManager->ShuffleDeck();
 					UpdateAllCardTranslation();
@@ -417,6 +417,8 @@ void UCardPanelWidget::OnDrawPhaseStarted() const
 	
 	if (CardLayoutManager && CardLayoutManager->AreAllDecksEmpty())
 	{
-		// TODO: 셔플하고 덱 초기화
+		CardLayoutManager->RefillDeck();
+		CardLayoutManager->ShuffleDeck();
+		UpdateAllCardTranslation();
 	}
 }

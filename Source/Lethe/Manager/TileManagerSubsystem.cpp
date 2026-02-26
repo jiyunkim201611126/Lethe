@@ -187,14 +187,24 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 					NextTileData->bConnections[(Dir + 3) % 6] = false;
 				}
 			}
-
-			UE_LOG(LogTemp, Warning, TEXT("BoundCoord : [%d, %d, %d]"), BoundCoord.Q, BoundCoord.R, BoundCoord.S);
 		}
 	}
 }
 
 void UTileManagerSubsystem::MakeEventData(const FStageData* StageData, const UStageInitData* StageInitData)
 {
+	//1. 모든 타일을 순차적으로 BFS를 돌아서 RoomNum 기준으로 묶는다.
+	//2. 서로 다른 RoomNum을 가진 지역이 있을 경우 (대부분 고립된 지역임) 더 큰 Size를 가진 쪽이 RoomNum을 승계한다.
+	//3. 고립된 지역에 새로운 RoomNum을 부여한다.
+	//4. Room 단위로 BFS를 돌아서 길이 연결될 가능성이 있는 구역을 탐색한다 (Floor 차이가 1이면서 RoomNum이 다른 구역)
+	//5. 각 Room마다 적절한 양의 길을 연결한다. 알고리즘이 잘 짜여졌다면 추가로 고립 여부를 BFS로 확인할 필요가 없다.
+	//7. 구조물 및 이벤트 룸을 정의하고 조건을 작성한다. Floor, RoomSize 등이 조건이 되며, 핵심 구조물 및 이벤트 타일이 배치 가능한지 우선 확인해야 한다.
+	//8. 조건이 맞는 Room에 필수 Event부터 선택하여 배치한다.
+	//9. 이벤트가 없는 나머지 룸들에 비필수 Event들을 랜덤하게 배치한다.
+	//10. 아무 이벤트가 없는 룸들에게 약간의 이벤트라도 배치한다.
+
+	//RoomSize, RoomNum 등을 가진 Room 구조체 필요
+	//예전에 만들었다 지웠던 RoomInitData 데이터 에셋 필요
 }
 
 void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const UStageInitData* StageInitData)

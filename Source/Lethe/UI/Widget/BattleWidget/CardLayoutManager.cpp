@@ -5,6 +5,7 @@
 #include "CardWidget.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
+#include "Lethe/Util.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 
 void UCardLayoutManager::Initialize(const FVector2D& CardSize)
@@ -41,6 +42,15 @@ void UCardLayoutManager::AddCardToDeck(UCardWidget* CardWidget)
 			FCharacterCards& CharacterCards = ASCToCards.FindOrAdd(LetheASC);
 			CharacterCards.Deck.Emplace(CardWidget);
 		}
+	}
+}
+
+void UCardLayoutManager::ShuffleDeck()
+{
+	for (auto& Cards : ASCToCards)
+	{
+		FRandomStream Stream(12345);
+		ArrayShuffle::ShuffleWithSeed(Cards.Value.Deck, Stream);
 	}
 }
 
@@ -185,6 +195,18 @@ void UCardLayoutManager::MoveAllCards(const TArray<FAbilitySystemReference>& Abi
 	}
 
 	NextCardTranslation = FirstCardTranslation;
+}
+
+bool UCardLayoutManager::AreAllDeckFull() const
+{
+	for (const auto& Cards : ASCToCards)
+	{
+		if (Cards.Value.Deck.Num() != MAX_DECK_COUNT)
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 bool UCardLayoutManager::AreAllDecksEmpty() const

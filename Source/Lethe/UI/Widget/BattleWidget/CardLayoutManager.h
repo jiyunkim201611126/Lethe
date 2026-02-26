@@ -49,6 +49,7 @@ public:
 	void SetupCardSlot(UCanvasPanelSlot* CardSlot) const;
 	
 	void AddCardToDeck(UCardWidget* CardWidget);
+	void ShuffleDeck();
 	UCardWidget* GetTopDeckCard(ULetheAbilitySystemComponent* OwnerASC) const;
 	bool TryDraw(ULetheAbilitySystemComponent* OwnerASC);
 	
@@ -59,6 +60,7 @@ public:
 	// 캐릭터 순서대로 순회할 필요가 있어 매개변수로 AbilitySystemReferences를 받아 순회하면서 ASCToCards에서 가져옵니다.
 	void MoveAllCards(const TArray<FAbilitySystemReference>& AbilitySystemReferences);
 	
+	bool AreAllDeckFull() const;
 	bool AreAllDecksEmpty() const;
 	
 	const TArray<TObjectPtr<UCardWidget>>& GetCurrentHands() const;

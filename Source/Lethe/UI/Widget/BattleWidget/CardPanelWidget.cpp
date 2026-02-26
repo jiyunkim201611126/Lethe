@@ -179,12 +179,14 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
 			{
 				CardLayoutManager->SetupCardSlot(CardSlot);
 				CardLayoutManager->AddCardToDeck(CreatedCard);
+				
+				if (CardLayoutManager->AreAllDeckFull())
+				{
+					CardLayoutManager->ShuffleDeck();
+					UpdateAllCardTranslation();
+				}
 			}
 		}
-
-		// 일단 1장 만들어질 때마다 호출하지만,
-		// TODO: 추후 덱의 크기가 40장으로 고정되면 40장이 만들어졌을 때, 혹은 게임 시작 시 등 이벤트를 받아 한 번만 호출하도록 변경합니다.
-		UpdateAllCardTranslation();
 	}
 }
 

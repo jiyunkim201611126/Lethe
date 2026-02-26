@@ -236,7 +236,8 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 			TileMeshes.Emplace(StageData->TileMeshes[Key].LoadSynchronous());
 
 			int32 Index = 0;
-			int32 UVOffsetType[6] = {}; // UV Offset 기능을 위해서 추가
+			TArray<int32> UVOffsetType; // UV Offset 기능을 위해서 추가
+			UVOffsetType.SetNum(6);
 			//테두리 타일의 메쉬 결정을 위한 루프
 			for (int32 Dir = 0; Dir < 6; ++Dir)
 			{
@@ -274,8 +275,6 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 				TileMeshes.Emplace(StageData->TileMeshes[Key].LoadSynchronous());
 				++Index;
 			}
-			
-			TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomID, Floor == Pair.Value.Floor, UVOffsetType);
 
 			if (Floor == Pair.Value.Floor)
 			{
@@ -297,6 +296,8 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 			{
 				NonTopTiles.Emplace(TileActor);
 			}
+			
+			TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomID, UVOffsetType);
 		}
 	}
 }

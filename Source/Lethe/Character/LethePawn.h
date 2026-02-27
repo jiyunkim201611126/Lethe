@@ -12,8 +12,6 @@ class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChanged, float);
-
 /**
  * 카메라와 월드 입력을 담당하는 기본 Pawn입니다.
  */
@@ -43,9 +41,6 @@ private:
 	void NumberKeyPressed(const FInputActionValue& InputActionValue);
 	void LeftMouseButtonClicked();
 	void RightMouseButtonClicked();
-
-public:
-	FOnCameraHeightChanged OnCameraHeightChanged;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")

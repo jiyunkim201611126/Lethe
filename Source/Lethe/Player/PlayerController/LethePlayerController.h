@@ -36,10 +36,11 @@ struct FUseCardData
 };
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */)
-DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */)
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
+DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float /* AttributeWidgetSize */);
 
 UCLASS()
 class LETHE_API ALethePlayerController : public APlayerController
@@ -50,6 +51,7 @@ public:
 	ALethePlayerController();
 
 	void OnNumberPressed(const int32 InNumber) const;
+	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
 	
@@ -81,6 +83,7 @@ public:
 	FOnCardSelectCanceledSignature OnCancelCardSelectDelegate;
 	FOnOtherTileDetected OnOtherTileDetectedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
+	FOnCameraHeightChangedSignature OnCameraHeightChangedDelegate;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = LetheHUD)

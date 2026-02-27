@@ -71,12 +71,15 @@ void ALethePawn::Zoom(const FInputActionValue& InputActionValue)
 	const float DesiredTargetArmLength = FMath::Clamp(SpringArmComponent->TargetArmLength + InputValue * MoveSpeed, 400.f, 1000.f);
 	SpringArmComponent->TargetArmLength = DesiredTargetArmLength;
 	
-	OnCameraHeightChanged.Broadcast(GetAttributeWidgetSize());
+	if (const ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
+	{
+		PlayerController->OnWheeled(GetAttributeWidgetSize());
+	}
 }
 
 float ALethePawn::GetAttributeWidgetSize() const
 {
-	return FMath::Clamp((1000.f - SpringArmComponent->TargetArmLength) / 400.f, 0.6f, 1.5f);
+	return FMath::Clamp((1000.f - SpringArmComponent->TargetArmLength) / 600.f, 0.4f, 1.f);
 }
 
 void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)

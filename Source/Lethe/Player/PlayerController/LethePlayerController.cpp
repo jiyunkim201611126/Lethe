@@ -33,6 +33,14 @@ void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
 	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
 
+void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
+{
+	if (OnCameraHeightChangedDelegate.IsBound())
+	{
+		OnCameraHeightChangedDelegate.Broadcast(AttributeWidgetSize);
+	}
+}
+
 void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 {
 	if (SelectedCardAbility.IsValid() || !TileSelector)
@@ -167,7 +175,10 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 					TileSelector->HighlightTileByAbility(OutTiles, CardOwner, EAbilityType::CardAbility);
 
 					// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
-					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
+					if (OnCardSelectedDelegate.IsBound())
+					{
+						OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
+					}
 				}
 			}
 		}
@@ -186,7 +197,10 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		TileSelector->UnhighlightTileByAbility(EAbilityType::CardAbility);
 		TileSelector->UnhighlightTileByMouse();
 		ArrowRenderer->SetActive(false);
-		OnCancelCardSelectDelegate.Broadcast();
+		if (OnCancelCardSelectDelegate.IsBound())
+		{
+			OnCancelCardSelectDelegate.Broadcast();
+		}
 	}
 }
 
@@ -249,8 +263,11 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 		{
 			ArrowRenderer->SetActive(false);
 		}
-		
-		OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardOwnerASC.Get(), SelectedCardAbility.Get());
+
+		if (OnOtherTileDetectedDelegate.IsBound())
+		{
+			OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardOwnerASC.Get(), SelectedCardAbility.Get());
+		}
 	}
 }
 

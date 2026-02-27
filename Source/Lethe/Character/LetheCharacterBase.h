@@ -36,10 +36,6 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActor Interface
 
-	UFUNCTION()
-	void BindCameraHeightChanged(APawn* OldPawn, APawn* NewPawn);
-	void UnbindCameraHeightChanged(APawn* OldPawn) const;
-
 protected:
 	void InitAbilityActorInfo() const;
 

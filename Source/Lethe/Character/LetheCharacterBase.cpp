@@ -8,6 +8,7 @@
 #include "Lethe/AbilitySystem/GASManagerComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -46,31 +47,21 @@ void ALetheCharacterBase::BeginPlay()
 
 	InitAbilityActorInfo();
 
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		PlayerController->OnPossessedPawnChanged.AddDynamic(this, &ThisClass::BindCameraHeightChanged);
-	
-		if (APawn* Pawn = PlayerController->GetPawn())
+		OnCameraHeightChangedDelegateHandle = PlayerController->OnCameraHeightChangedDelegate.AddUObject(this, &ALetheCharacterBase::OnCameraHeightChanged);
+		if (const ALethePawn* LethePawn = Cast<ALethePawn>(PlayerController->GetPawn()))
 		{
-			if (ALethePawn* PlayerPawn = Cast<ALethePawn>(Pawn))
-			{
-				BindCameraHeightChanged(nullptr, PlayerPawn);
-				OnCameraHeightChanged(PlayerPawn->GetAttributeWidgetSize());
-			}
+			OnCameraHeightChanged(LethePawn->GetAttributeWidgetSize());
 		}
 	}
 }
 
 void ALetheCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		PlayerController->OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::BindCameraHeightChanged);
-	
-		if (APawn* Pawn = PlayerController->GetPawn())
-		{
-			UnbindCameraHeightChanged(Pawn);
-		}
+		PlayerController->OnCameraHeightChangedDelegate.Remove(OnCameraHeightChangedDelegateHandle);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -81,23 +72,6 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);
 	GASManagerComponent->SetAttributeSet(AttributeSet);
 	GASManagerComponent->InitAbilityActorInfo(AttributeWidgetComponent->GetWidget());
-}
-
-void ALetheCharacterBase::BindCameraHeightChanged(APawn* OldPawn, APawn* NewPawn)
-{
-	UnbindCameraHeightChanged(OldPawn);
-	if (ALethePawn* NewPlayerPawn = Cast<ALethePawn>(NewPawn))
-	{
-		OnCameraHeightChangedDelegateHandle = NewPlayerPawn->OnCameraHeightChanged.AddUObject(this, &ThisClass::OnCameraHeightChanged);
-	}
-}
-
-void ALetheCharacterBase::UnbindCameraHeightChanged(APawn* OldPawn) const
-{
-	if (ALethePawn* OldPlayerPawn = Cast<ALethePawn>(OldPawn))
-	{
-		OldPlayerPawn->OnCameraHeightChanged.Remove(OnCameraHeightChangedDelegateHandle);
-	}
 }
 
 void ALetheCharacterBase::OnCameraHeightChanged(const float InWidgetSize) const

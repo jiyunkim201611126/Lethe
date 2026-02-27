@@ -14,15 +14,17 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/BP_EnemyBase.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/BP_EnemyBase.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/BP_PlayerCharacterBase.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/BP_PlayerCharacterBase.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Lethe.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/Lethe.sln.DotSettings.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/Stage/TileData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/Stage/TileData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Attribute/WBP_Attribute.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Attribute/WBP_Attribute.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Attribute/WBP_PlayerAttribute.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/Attribute/WBP_PlayerAttribute.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Player/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Player/PlayerController/LethePlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Player/PlayerController/LethePlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Player/PlayerController/LethePlayerController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +38,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://23" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://29" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Editor/ConsoleVariablesEditor/Source/ConsoleVariablesEditor/Private/Views/List/ConsoleVariablesEditorListFilters/ConsoleVariablesEditorListFilter_SetByCurrentPreset.h" root0="SKIP_HIGHLIGHTING" />
@@ -612,7 +614,7 @@
       <workItem from="1771938538110" duration="8036000" />
       <workItem from="1772023417660" duration="11787000" />
       <workItem from="1772111103298" duration="9258000" />
-      <workItem from="1772198790510" duration="7943000" />
+      <workItem from="1772198790510" duration="9948000" />
     </task>
     <servers />
   </component>

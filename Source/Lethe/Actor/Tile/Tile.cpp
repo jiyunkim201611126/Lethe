@@ -9,7 +9,7 @@ ATile::ATile(const FObjectInitializer& ObjectInitializer)
 	MainTile->SetupAttachment(Root);
 }
 
-void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<int32>& UVOffsetType)
+void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<ETileConnectionState>& UVOffsetType)
 {
 	TextRender = FindComponentByClass<UTextRenderComponent>();
 	SetTileMesh(Meshes, UVOffsetType);
@@ -111,7 +111,7 @@ bool ATile::IsTopTile() const
 	return !TopTile.IsValid();
 }
 
-void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<int32>& UVOffsetType) const
+void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileConnectionState>& UVOffsetType) const
 {
 	TArray<UStaticMeshComponent*> Components;
 	GetComponents<UStaticMeshComponent>(Components);
@@ -136,13 +136,10 @@ void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<int32>&
 
 			if (IsTopTile())
 			{
-				// UV Offset 전달
-				// 0 -> 값 변화 없음 (막힌 타일)
-				// 1 -> 1단계 오프셋 이동 (서로 연결된 같은 높이의 타일)
-				// 2 -> 2단계 오프셋 이동 (서로 연결된 다른 높이의 타일)
 				// 주변부 타일과의 연결 여부를 머티리얼이 가져갈 수 있도록 내부적으로 값을 할당합니다.
-				MainTile->SetCustomPrimitiveDataFloat(Direction, UVOffsetType[Direction]);
-				Component->SetCustomPrimitiveDataFloat(0, UVOffsetType[Direction]);
+				const float UVOffset = static_cast<float>(UVOffsetType[Direction]);
+				MainTile->SetCustomPrimitiveDataFloat(Direction, UVOffset);
+				Component->SetCustomPrimitiveDataFloat(0, UVOffset);
 			}
 		}
 	}

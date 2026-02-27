@@ -10,6 +10,14 @@
 #include "Lethe/Interface/HighlightInterface.h"
 #include "Tile.generated.h"
 
+UENUM()
+enum class ETileConnectionState
+{
+	Block,
+	Connected,
+	VerticalConnected,
+};
+
 UCLASS()
 class LETHE_API ATile : public AActor, public IHighlightInterface
 {
@@ -18,7 +26,7 @@ class LETHE_API ATile : public AActor, public IHighlightInterface
 public:
 	ATile(const FObjectInitializer& ObjectInitializer);
 	
-	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<int32>& UVOffsetType);
+	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<ETileConnectionState>& UVOffsetType);
 	void SetTopTile(ATile* InTile);
 	ATile* GetTopTile();
 
@@ -36,7 +44,7 @@ protected:
 	bool IsTopTile() const;
 
 private:
-	void SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<int32>& UVOffsetType) const;
+	void SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileConnectionState>& UVOffsetType) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere)

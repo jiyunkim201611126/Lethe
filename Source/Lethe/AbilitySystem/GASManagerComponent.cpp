@@ -116,7 +116,15 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	{
 		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Phase_PlayerTurn, 0);
 	}
-	if (NewPhase == EPhaseState::PlayerTurnPhase)
+	
+	if (NewPhase == EPhaseState::DrawPhase)
+	{
+		if (TurnStartRecovery)
+		{
+			ApplyEffectToSelf(TurnStartRecovery, 1.f);
+		}
+	}
+	else if (NewPhase == EPhaseState::PlayerTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Phase_PlayerTurn);
 		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);

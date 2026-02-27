@@ -104,7 +104,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 			},
 			[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
-				if (CurrentTileData->RoomID != RootTileData->RoomID)
+				if (CurrentTileData->RoomId != RootTileData->RoomId)
 				{
 					return false;
 				}
@@ -148,7 +148,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		for (auto& SelectedCoord : SelectedCoords)
 		{
 			FTileData* TileData = TileDataMap.Find(SelectedCoord);
-			TileData->RoomID = RoomId;
+			TileData->RoomId = RoomId;
 			TileData->Floor++;
 		}
 
@@ -161,7 +161,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 			},
 			[&RoomId](const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
-				if (CurrentTileData->RoomID != RoomId) //이새끼가 문제임
+				if (CurrentTileData->RoomId != RoomId) //이새끼가 문제임
 				{
 					return true;
 				}
@@ -171,20 +171,20 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 
 		for (FCubeCoord BoundCoord : BoundCoords)
 		{
-			for (int32 Dir = 0; Dir < 6; ++Dir)
+			for (int32 Direction = 0; Direction < 6; ++Direction)
 			{
 				FTileData* CurrentTileData = TileDataMap.Find(BoundCoord);
-				FTileData* NextTileData = TileDataMap.Find(BoundCoord + FCubeCoord::GetDirection(Dir));
+				FTileData* NextTileData = TileDataMap.Find(BoundCoord + FCubeCoord::GetDirection(Direction));
 
-				if (NextTileData == nullptr)
+				if (!CurrentTileData || !NextTileData)
 				{
 					continue;
 				}
 
-				if (CurrentTileData->RoomID != NextTileData->RoomID)
+				if (CurrentTileData->RoomId != NextTileData->RoomId)
 				{
-					CurrentTileData->bConnections[Dir] = false;
-					NextTileData->bConnections[(Dir + 3) % 6] = false;
+					CurrentTileData->Connections[Direction] = false;
+					NextTileData->Connections[(Direction + 3) % 6] = false;
 				}
 			}
 		}
@@ -212,7 +212,6 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 	for (auto& Pair : TileDataMap)
 	{
 		FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
-		//WorldPosition.Z = pair.Value.Floor * 40;
 
 		TArray<ATile*> NonTopTiles;
 		NonTopTiles.Reserve(Pair.Value.Floor);
@@ -221,58 +220,63 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 		{
 			WorldPosition.Z += 40.f;
 			
-			ATile* TileActor = GetWorld()->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator(0, 0, 0));
+			ATile* TileActor = GetWorld()->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
 	
 			//타일의 중심 메쉬 결정을 위한 코드
 			TArray<UStaticMesh*> TileMeshes;
-			ETileMeshType Key = ETileMeshType::Main;
+			TileMeshes.Reserve(7);
+			ETileMeshType MeshKey = ETileMeshType::Main;
 			
 			//꼭대기 층이 아닌 모든 경우에, key + 1을 하여 해당 메쉬의 Under 버전으로 변경 
 			if (Floor < Pair.Value.Floor)
 			{
-				Key = static_cast<ETileMeshType>(static_cast<int32>(Key) + 1);
+				MeshKey = static_cast<ETileMeshType>(static_cast<int32>(MeshKey) + 1);
 			}
 
-			TileMeshes.Emplace(StageData->TileMeshes[Key].LoadSynchronous());
+			TileMeshes.Emplace(StageData->TileMeshes[MeshKey].LoadSynchronous());
 
 			int32 Index = 0;
-			TArray<int32> UVOffsetType; // UV Offset 기능을 위해서 추가
-			UVOffsetType.SetNum(6);
+			TArray<ETileConnectionState> UVOffsetType; // UV Offset 기능을 위해서 추가
+			UVOffsetType.Init(ETileConnectionState::Block, 6);
+			
 			//테두리 타일의 메쉬 결정을 위한 루프
-			for (int32 Dir = 0; Dir < 6; ++Dir)
+			for (int32 Direction = 0; Direction < 6; ++Direction)
 			{
-				FCubeCoord Offset = FCubeCoord::GetDirection(Dir);
+				FCubeCoord Offset = FCubeCoord::GetDirection(Direction);
 				
-				Key = ETileMeshType::Side_Under3; //기본 선택은 막힌 메쉬로, 조건에 부합할 경우 해당 메쉬로 변경
+				MeshKey = ETileMeshType::Side_Under3; //기본 선택은 막힌 메쉬로, 조건에 부합할 경우 해당 메쉬로 변경
 
-				if (TileDataMap.Contains(Pair.Key + Offset) && TileDataMap[Pair.Key].bConnections[Index])
+				const FTileData* CurrentTileData = TileDataMap.Find(Pair.Key);
+				const FTileData* NeighborTileData = TileDataMap.Find(Pair.Key + Offset);
+				if (NeighborTileData && CurrentTileData && CurrentTileData->Connections[Index])
 				{
-					if (TileDataMap[Pair.Key + Offset].Floor > Pair.Value.Floor)
+					if (NeighborTileData->Floor > Pair.Value.Floor)
 					{
-						Key = ETileMeshType::Side_Upper;
-						UVOffsetType[Dir] = 2;
+						MeshKey = ETileMeshType::Side_Upper;
+						UVOffsetType[Direction] = ETileConnectionState::VerticalConnected;
 					}
-					else if (TileDataMap[Pair.Key + Offset].Floor < Pair.Value.Floor)
+					else if (NeighborTileData->Floor < Pair.Value.Floor)
 					{
-						Key = ETileMeshType::Side_Lower;
-						UVOffsetType[Dir] = 2;
+						MeshKey = ETileMeshType::Side_Lower;
+						UVOffsetType[Direction] = ETileConnectionState::VerticalConnected;
 					}
 					else
 					{
-						if (TileDataMap[Pair.Key + Offset].RoomID == Pair.Value.RoomID) //같은 층 같은 룸이면 연결
+						if (NeighborTileData->RoomId == Pair.Value.RoomId) //같은 층 같은 룸이면 연결
 						{
-							Key = ETileMeshType::Side;
-							UVOffsetType[Dir] = 1;
+							MeshKey = ETileMeshType::Side;
+							UVOffsetType[Direction] = ETileConnectionState::Connected;
 						}
 					}
 				}
+				
 				//꼭대기 층이 아닌 모든 경우에, key + 1을 하여 해당 메쉬의 Under 버전으로 변경 
 				if (Floor < Pair.Value.Floor)
 				{
-					Key = static_cast<ETileMeshType>(static_cast<int32>(Key) + 1);
+					MeshKey = static_cast<ETileMeshType>(static_cast<int32>(MeshKey) + 1);
 				}
 
-				TileMeshes.Emplace(StageData->TileMeshes[Key].LoadSynchronous());
+				TileMeshes.Emplace(StageData->TileMeshes[MeshKey].LoadSynchronous());
 				++Index;
 			}
 
@@ -297,7 +301,7 @@ void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const USt
 				NonTopTiles.Emplace(TileActor);
 			}
 			
-			TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomID, UVOffsetType);
+			TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomId, UVOffsetType);
 		}
 	}
 }

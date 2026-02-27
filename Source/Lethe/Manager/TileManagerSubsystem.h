@@ -125,17 +125,15 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 			continue;
 		}
 		
-		for (int32 Dir = 0; Dir < 6; ++Dir)
+		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
-			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Dir);
-			
+			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Direction);
 			if (Visited.Contains(NextCoord))
 			{
 				continue;
 			}
 
 			const FTileData* NextTileData = TileDataMap.Find(NextCoord);
-
 			if (!NextTileData)
 			{
 				continue;
@@ -144,7 +142,7 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 			switch (BFSType)
 			{
 				case EBFSType::Connection:
-					if (!CurrentTileData->bConnections[Dir])
+					if (!CurrentTileData->Connections[Direction])
 					{
 						continue;
 					}

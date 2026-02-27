@@ -7,9 +7,6 @@
 
 class ATile;
 
-/**
- * Tile 시스템에서 사용되는 Enum 모음
- */
 UENUM()
 enum class EBFSType : uint8
 {
@@ -44,17 +41,6 @@ enum class ETileMeshType : uint8
 	Side_Under4,
 };
 
-UENUM()
-enum class ETileDirection : uint8
-{
-	LeftTop,
-	Left,
-	LeftBottom,
-	RightBottom,
-	Right,
-	RightTop,
-};
-
 /**
  * 타일 정보를 담은 구조체
  */
@@ -63,13 +49,15 @@ struct FTileData
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	int32 Floor = 1; // 층 수, 기본은 1층
+	// 층 수, 기본은 1층
+	int32 Floor = 1;
+
+	// true면 Connected와 VerticalConnected 중 하나인 상태입니다.
+	TStaticArray<bool, 6> Connections = {true, true, true, true, true, true};
 	
-	bool bConnections[6] = {true, true, true, true, true, true};
-	int32 RoomID = 0; //ID값은 일단 넣었지만, Room이라는 구조체가 필요한지 잘 모르겠어서 생성시점 외에 사용되진 않음
+	// ID값은 일단 넣었지만, Room이라는 구조체가 필요한지 잘 모르겠어서 생성시점 외에 사용되진 않음
+	int32 RoomId = 0;
 	
 	// 타일 생성 시 동적으로 할당되는 포인터입니다.
-	UPROPERTY()
 	TWeakObjectPtr<ATile> TileActor;
 };

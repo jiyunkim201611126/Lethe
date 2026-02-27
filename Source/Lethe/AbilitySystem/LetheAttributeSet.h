@@ -108,6 +108,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData MaxCost;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxCost);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData ManaRecovery;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, ManaRecovery);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData CostRecovery;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, CostRecovery);
 
 	/**
 	 * Stat Attributes

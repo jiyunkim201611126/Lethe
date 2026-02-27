@@ -12,7 +12,7 @@ ULetheAttributeSet::ULetheAttributeSet()
 {
 	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
 	
-	AttributesToTags.Reserve(7);
+	AttributesToTags.Reserve(9);
 
 	AttributesToTags.Emplace(GetHealthAttribute(), GameplayTags.Attributes_Vital_Health);
 	AttributesToTags.Emplace(GetMaxHealthAttribute(), GameplayTags.Attributes_Vital_MaxHealth);
@@ -20,6 +20,8 @@ ULetheAttributeSet::ULetheAttributeSet()
 	AttributesToTags.Emplace(GetMaxManaAttribute(), GameplayTags.Attributes_Vital_MaxMana);
 	AttributesToTags.Emplace(GetCostAttribute(), GameplayTags.Attributes_Vital_Cost);
 	AttributesToTags.Emplace(GetMaxCostAttribute(), GameplayTags.Attributes_Vital_MaxCost);
+	AttributesToTags.Emplace(GetManaRecoveryAttribute(), GameplayTags.Attributes_Vital_ManaRecovery);
+	AttributesToTags.Emplace(GetCostRecoveryAttribute(), GameplayTags.Attributes_Vital_CostRecovery);
 	AttributesToTags.Emplace(GetIncomingDamageAttribute(), GameplayTags.Damage);
 }
 

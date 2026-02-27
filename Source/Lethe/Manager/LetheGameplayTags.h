@@ -24,6 +24,8 @@ struct FLetheGameplayTags
 	FGameplayTag Attributes_Vital_MaxMana;
 	FGameplayTag Attributes_Vital_Cost;
 	FGameplayTag Attributes_Vital_MaxCost;
+	FGameplayTag Attributes_Vital_ManaRecovery;
+	FGameplayTag Attributes_Vital_CostRecovery;
 	//~ End of Attributes
 	
 	//~ Begin Damage Types

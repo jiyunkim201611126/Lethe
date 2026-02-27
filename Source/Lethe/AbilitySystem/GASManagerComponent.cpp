@@ -2,6 +2,7 @@
 
 #include "GASManagerComponent.h"
 
+#include "LetheAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Game/LetheGameState.h"
@@ -15,6 +16,19 @@ UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectIniti
 	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UGASManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (TeamSide == ETeamSide::Player)
+	{
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		{
+			LetheGameState->OnChangeTurnStateDelegate.Remove(OnPhaseStateChangedDelegateHandle);
+		}
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void UGASManagerComponent::SetAbilitySystemComponent(UAbilitySystemComponent* InAbilitySystemComponent)
@@ -82,7 +96,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	{
 		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+			OnPhaseStateChangedDelegateHandle = LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		}
 	}
 }
@@ -119,14 +133,29 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	
 	if (NewPhase == EPhaseState::DrawPhase)
 	{
-		if (TurnStartRecovery)
-		{
-			ApplyEffectToSelf(TurnStartRecovery, 1.f);
-		}
+		ApplyRecoveryEffect();
 	}
 	else if (NewPhase == EPhaseState::PlayerTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Phase_PlayerTurn);
 		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
+	}
+}
+
+void UGASManagerComponent::ApplyRecoveryEffect() const
+{
+	if (!TurnStartRecovery)
+	{
+		return;
+	}
+
+	const FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(TurnStartRecovery, 1.f, ContextHandle);
+	if (SpecHandle.IsValid())
+	{
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetManaRecoveryAttribute()));
+		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetCostRecoveryAttribute()));
+		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 	}
 }

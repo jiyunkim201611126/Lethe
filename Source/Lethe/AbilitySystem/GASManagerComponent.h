@@ -30,6 +30,10 @@ class LETHE_API UGASManagerComponent : public UPawnComponent, public IAbilitySys
 public:
 	UGASManagerComponent(const FObjectInitializer& ObjectInitializer);
 
+	//~ Begin AActorComponent Interface
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//~ End of AActorComponent Interface
+
 	// 해당 프로젝트는 PlayerState가 아닌 Character가 두 객체를 직접 생성하기 때문에, 아래 함수로 넘겨받아 할당합니다.
 	void SetAbilitySystemComponent(UAbilitySystemComponent* InAbilitySystemComponent);
 	void SetAttributeSet(UAttributeSet* InAttributeSet);
@@ -46,6 +50,7 @@ protected:
 
 private:
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
+	void ApplyRecoveryEffect() const;
 
 protected:
 	// 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다.
@@ -71,4 +76,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+private:
+	FDelegateHandle OnPhaseStateChangedDelegateHandle;
 };

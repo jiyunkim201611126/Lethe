@@ -5,6 +5,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -143,6 +144,22 @@ FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclass
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	
+	// 애니메이션 재생 후 트리거를 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
+	CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
+	if (!CachedTargetActor.IsValid())
+	{
+		return;
+	}
+
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CachedTargetActor);
+	const UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))
+	{
+		// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
+		return;
+	}
 
 	if (CheckCost(Handle, ActorInfo))
 	{
@@ -151,16 +168,11 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
 			
 			// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
-			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 			ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
 			
-			// 애니메이션 재생을 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
-			CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
-			
-			const FLetheGameplayTags& LetheCardTags = FLetheGameplayTags::Get();
 			UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 				this,
-				LetheCardTags.MontageEvent_ApplyEffect,
+				LetheGameplayTags.MontageEvent_ApplyEffect,
 				nullptr,
 				true,
 				true);
@@ -169,7 +181,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		
 			UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 				this,
-				LetheCardTags.MontageEvent_EndUseCard,
+				LetheGameplayTags.MontageEvent_EndUseCard,
 				nullptr,
 				true,
 				true);
@@ -191,9 +203,9 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 {
-	const FLetheGameplayTags& LetheCardTags = FLetheGameplayTags::Get();
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
-	if (Payload.EventTag.MatchesTagExact(LetheCardTags.MontageEvent_ApplyEffect))
+	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_ApplyEffect))
 	{
 		if (CachedTargetActor.IsValid())
 		{
@@ -201,7 +213,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 			CachedTargetActor.Reset();
 		}
 	}
-	else if (Payload.EventTag.MatchesTagExact(LetheCardTags.MontageEvent_EndUseCard))
+	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_EndUseCard))
 	{
 		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 		{

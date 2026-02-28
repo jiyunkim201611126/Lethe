@@ -26,11 +26,12 @@ struct FLetheGameplayTags
 	FGameplayTag Attributes_Vital_MaxCost;
 	FGameplayTag Attributes_Vital_ManaRecovery;
 	FGameplayTag Attributes_Vital_CostRecovery;
+	FGameplayTag Attributes_Meta_IncomingDamage;
 	//~ End of Attributes
 	
 	//~ Begin Damage Types
 	FGameplayTag Damage;
-	FGameplayTag Damage_Physical;
+	FGameplayTag Damage_Physical_Thrust;
 
 	TArray<FGameplayTag> DamageTypeTags;
 	//~ End of Damage Types
@@ -38,13 +39,6 @@ struct FLetheGameplayTags
 	//~ Begin Ability
 	FGameplayTag Ability_Move;
 	//~ End of Ability
-	
-	//~ Begin Card Ability
-	FGameplayTag Card_Ability_PhysicalTest;
-	FGameplayTag Card_Ability_MagicTest;
-	FGameplayTag Card_Ability_UtilTest;
-	FGameplayTag Card_Ability_JustTest;
-	//~ End of Card Ability
 	
 	//~ Begin Card Types
 	FGameplayTag Card_Types_Physical;

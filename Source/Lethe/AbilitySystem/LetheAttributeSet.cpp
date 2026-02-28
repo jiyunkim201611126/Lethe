@@ -10,19 +10,19 @@
 
 ULetheAttributeSet::ULetheAttributeSet()
 {
-	const FLetheGameplayTags& GameplayTags = FLetheGameplayTags::Get();
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
 	AttributesToTags.Reserve(9);
 
-	AttributesToTags.Emplace(GetHealthAttribute(), GameplayTags.Attributes_Vital_Health);
-	AttributesToTags.Emplace(GetMaxHealthAttribute(), GameplayTags.Attributes_Vital_MaxHealth);
-	AttributesToTags.Emplace(GetManaAttribute(), GameplayTags.Attributes_Vital_Mana);
-	AttributesToTags.Emplace(GetMaxManaAttribute(), GameplayTags.Attributes_Vital_MaxMana);
-	AttributesToTags.Emplace(GetCostAttribute(), GameplayTags.Attributes_Vital_Cost);
-	AttributesToTags.Emplace(GetMaxCostAttribute(), GameplayTags.Attributes_Vital_MaxCost);
-	AttributesToTags.Emplace(GetManaRecoveryAttribute(), GameplayTags.Attributes_Vital_ManaRecovery);
-	AttributesToTags.Emplace(GetCostRecoveryAttribute(), GameplayTags.Attributes_Vital_CostRecovery);
-	AttributesToTags.Emplace(GetIncomingDamageAttribute(), GameplayTags.Damage);
+	AttributesToTags.Emplace(GetHealthAttribute(), LetheGameplayTags.Attributes_Vital_Health);
+	AttributesToTags.Emplace(GetMaxHealthAttribute(), LetheGameplayTags.Attributes_Vital_MaxHealth);
+	AttributesToTags.Emplace(GetManaAttribute(), LetheGameplayTags.Attributes_Vital_Mana);
+	AttributesToTags.Emplace(GetMaxManaAttribute(), LetheGameplayTags.Attributes_Vital_MaxMana);
+	AttributesToTags.Emplace(GetCostAttribute(), LetheGameplayTags.Attributes_Vital_Cost);
+	AttributesToTags.Emplace(GetMaxCostAttribute(), LetheGameplayTags.Attributes_Vital_MaxCost);
+	AttributesToTags.Emplace(GetManaRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_ManaRecovery);
+	AttributesToTags.Emplace(GetCostRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_CostRecovery);
+	AttributesToTags.Emplace(GetIncomingDamageAttribute(), LetheGameplayTags.Attributes_Meta_IncomingDamage);
 }
 
 void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

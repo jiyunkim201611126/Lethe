@@ -32,25 +32,19 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Attributes.Vital.ManaRecovery"), FString(""));
 	GameplayTags.Attributes_Vital_CostRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attributes.Vital.CostRecovery"), FString(""));
+	
+	GameplayTags.Attributes_Meta_IncomingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attributes.Meta.IncomingDamage"), FString(""));
 
 	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Damage"), FString(""));
-	GameplayTags.Damage_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Damage.Physical"), FString(""));
+	GameplayTags.Damage_Physical_Thrust = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Damage.Physical.Thrust"), FString(""));
 
-	GameplayTags.DamageTypeTags.Emplace(GameplayTags.Damage_Physical);
+	GameplayTags.DamageTypeTags.Emplace(GameplayTags.Damage_Physical_Thrust);
 	
 	GameplayTags.Ability_Move = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Ability.Move"), FString(""));
-	
-	GameplayTags.Card_Ability_PhysicalTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Ability.PhysicalTest"), FString(""));
-	GameplayTags.Card_Ability_MagicTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Ability.MagicTest"), FString(""));
-	GameplayTags.Card_Ability_UtilTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Ability.UtilTest"), FString(""));
-	GameplayTags.Card_Ability_JustTest = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Ability.JustTest"), FString(""));
 	
 	GameplayTags.Card_Types_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Types.Physical"), FString(""));

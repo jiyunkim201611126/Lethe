@@ -64,18 +64,18 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 	}
 
 	UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
-	const IAbilitySystemInterface* LastAbilitySystem = Cast<IAbilitySystemInterface>(LastActor);
-	const IAbilitySystemInterface* CurrentAbilitySystem = Cast<IAbilitySystemInterface>(CurrentActor);
+	const IAbilitySystemInterface* LastAbilitySystemInterface = Cast<IAbilitySystemInterface>(LastActor);
+	const IAbilitySystemInterface* CurrentAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
 
 	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (LastAbilitySystem && LastAbilitySystem->GetAbilitySystemComponent() == ThisASC)
+	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
 		StopAllPreview();
 		return;
 	}
 
 	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (CurrentAbilitySystem && CurrentAbilitySystem->GetAbilitySystemComponent() == ThisASC)
+	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
 		StopAllPreview();
 		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
@@ -117,7 +117,7 @@ void UAttributeWidgetController::ConvertAttributeToTag(const TMap<FGameplayAttri
 			if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(Elem.Key))
 			{
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				if (AttributeTag->MatchesTagExact(LetheGameplayTags.Damage))
+				if (AttributeTag->MatchesTag(LetheGameplayTags.Attributes_Meta_IncomingDamage))
 				{
 					// Damage Attribute인 경우 Health Attribute로 바꾸고, 값도 음수로 바꿔서 넣어줍니다.
 					OutMap.FindOrAdd(LetheGameplayTags.Attributes_Vital_Health) -= Elem.Value;

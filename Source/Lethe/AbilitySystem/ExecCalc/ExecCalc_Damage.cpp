@@ -5,6 +5,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
+/*
 struct FSVDamageStatics
 {
 	// 해당 클래스의 로직 내에서 사용할 Attribute를 여기에서 선언합니다.
@@ -24,6 +25,7 @@ static const FSVDamageStatics& DamageStatics()
 	static FSVDamageStatics DStatics;
 	return DStatics;
 }
+*/
 
 UExecCalc_Damage::UExecCalc_Damage()
 {
@@ -45,14 +47,14 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	EvaluationParameters.TargetTags = TargetTags;
 
 	// 구조체와 생성자에서 명시한 규칙대로 Attribute 값을 가져옵니다.
-	float SourceAttack = 0.f;
+	//float SourceAttack = 0.f;
 	//ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().SourceAttack, EvaluationParameters, SourceAttack);
 
-	float TargetArmor = 0.f;
+	//float TargetArmor = 0.f;
 	//ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().TargetArmor, EvaluationParameters, TargetArmor);
 
-	float Damage = SourceAttack - TargetArmor;
-	Damage = FMath::Clamp(Damage, 0.f, Damage);
+	float Damage = 0;
+	//Damage = FMath::Clamp(Damage, 0.f, Damage);
 
 	// 현재 데미지 타입과 일치하는 데미지를 탐색합니다.
 	for (const FGameplayTag& DamageTypeTag : FLetheGameplayTags::Get().DamageTypeTags)
@@ -61,7 +63,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 		if (DamageTypeValue > 0.f)
 		{
-			// 속성 데미지 계산 결과 반영 후 반복문을 빠져나갑니다.
+			// 데미지 계산 결과 반영 후 반복문을 빠져나갑니다.
 			Damage += DamageTypeValue;
 			break;
 		}

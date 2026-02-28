@@ -56,7 +56,7 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 	}
 }
 
-void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
+void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
@@ -80,7 +80,7 @@ void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, co
 		StopAllPreview();
 		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
 		TMap<FGameplayTag, float> OutPreviewData;
-		if (CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
+		if (CardAbility->TryGetAbilityEffectsForTargetPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
 		{
 			ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
 		}

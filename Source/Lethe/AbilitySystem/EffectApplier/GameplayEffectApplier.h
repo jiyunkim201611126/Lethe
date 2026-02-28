@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemComponent.h"
 #include "GameplayEffectTypes.h"
 #include "UObject/Object.h"
 #include "GameplayEffectApplier.generated.h"
@@ -23,7 +24,8 @@ public:
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(ULetheEffectApplier::ApplyEffect, );
 	virtual void CancelAbility();
 	virtual void EndAbility();
-	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
+	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 	virtual FText GetDescriptionText(const int32 InLevel) const;
 
 	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
@@ -31,6 +33,8 @@ public:
 	
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
+
+	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

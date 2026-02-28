@@ -43,7 +43,7 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility);
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility);
 	void OnCancelCardSelect();
 
 	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);

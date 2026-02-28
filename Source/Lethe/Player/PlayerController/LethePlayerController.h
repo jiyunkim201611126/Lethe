@@ -36,9 +36,9 @@ struct FUseCardData
 };
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, const ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnCardSelectedSignature, ULetheAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, const UAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
+DECLARE_MULTICAST_DELEGATE_FourParams(FOnOtherTileDetected, const AActor* /* LastActor */, const AActor* /* CurrentActor */, UAbilitySystemComponent* /* CardOwnerASC */, const ULetheCardAbility* /* CardAbility */);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float /* AttributeWidgetSize */);
 

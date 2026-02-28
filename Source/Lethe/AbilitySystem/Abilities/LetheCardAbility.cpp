@@ -53,7 +53,7 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 	return false;
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
@@ -65,9 +65,29 @@ bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(const UAbilitySystemComp
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandles(SourceASC, this, PreviewContextHandle, SpecHandles, true))
+			if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 			{
 				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
+			}
+		}
+	}
+	return !OutPreviewData.IsEmpty();
+}
+
+bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+{
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	{
+		if (EffectApplier)
+		{
+			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
+			
+			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
+			PreviewContextHandle.SetAbility(this);
+			TArray<FGameplayEffectSpecHandle> SpecHandles;
+			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, TargetASC, PreviewContextHandle, SpecHandles))
+			{
+				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
 		}
 	}

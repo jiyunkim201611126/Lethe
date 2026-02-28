@@ -17,7 +17,9 @@ class LETHE_API UEffectApplier_DamageWithConsumeAllCost : public UEffectApplier_
 public:
 	//~ Begin FGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
-	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const override;
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const override;
+	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
+	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const override;
 	//~ End of FGameplayEffectApplier Interface
 
 private:

@@ -19,9 +19,9 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	void OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility);
+	void OnCardSelected(ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility);
 
-	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility) override;
+	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility) override;
 	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;
 	virtual void StopAllPreview() override;
 

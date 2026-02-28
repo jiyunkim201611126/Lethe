@@ -59,29 +59,26 @@ void UPlayerAttributeWidgetController::BroadcastCostChanged() const
 	}
 }
 
-void UPlayerAttributeWidgetController::OnCardSelected(const ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility)
+void UPlayerAttributeWidgetController::OnCardSelected(ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility)
 {
 	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AbilitySystemComponent == CardOwnerASC)
 	{
 		// 해당 WidgetController와 관련 있는 ASC의 카드가 선택된 경우 들어오는 분기입니다.
 		if (CardAbility && !AbilitySystemReferences.IsEmpty())
 		{
-			if (const UAbilitySystemComponent* OwnerASC = AbilitySystemReferences[0].AbilitySystemComponent)
+			// Owner의 카드가 선택된 경우 Cost에 대한 Preview를 수행합니다.
+			TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
+			TMap<FGameplayTag, float> OutPreviewData;
+			if (CardAbility->TryGetAbilityCostEffectPreviewData(CardOwnerASC, OutAbilityCostPreviewData))
 			{
-				// Owner의 카드가 선택된 경우 Cost에 대한 Preview를 수행합니다.
-				TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
-				TMap<FGameplayTag, float> OutPreviewData;
-				if (CardAbility->TryGetAbilityCostEffectPreviewData(OwnerASC, OutAbilityCostPreviewData))
-				{
-					ConvertAttributeToTag(OutAbilityCostPreviewData, OutPreviewData);
-				}
-				StartAllPreview(OutPreviewData);
+				ConvertAttributeToTag(OutAbilityCostPreviewData, OutPreviewData);
 			}
+			StartAllPreview(OutPreviewData);
 		}
 	}
 }
 
-void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, const UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
+void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
@@ -102,6 +99,17 @@ void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastAct
 		{
 			ConvertAttributeToTag(OutAbilityCostPreviewData, OutPreviewData);
 		}
+		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
+		if (CurrentAbilitySystemInterface)
+		{
+			if (UAbilitySystemComponent* TargetASC = CurrentAbilitySystemInterface->GetAbilitySystemComponent())
+			{
+				if (CardAbility->TryGetAbilityEffectsForSourcePreviewData(SourceASC, TargetASC, OutAbilityEffectPreviewData))
+				{
+					ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
+				}
+			}
+		}
 	}
 	
 	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
@@ -114,7 +122,7 @@ void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastAct
 	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
 	{
 		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
-		if (CardAbility->TryGetAbilityEffectsPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
+		if (CardAbility->TryGetAbilityEffectsForTargetPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
 		{
 			ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
 		}

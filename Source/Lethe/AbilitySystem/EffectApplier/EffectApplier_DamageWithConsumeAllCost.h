@@ -17,15 +17,13 @@ class LETHE_API UEffectApplier_DamageWithConsumeAllCost : public UEffectApplier_
 public:
 	//~ Begin FGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
+	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const override;
 	//~ End of FGameplayEffectApplier Interface
 
-	//~ Begin UEffectApplier_Damage Interface
-	//~ End of UEffectApplier_Damage Interface
-
 private:
-	void ApplyCostMinusOneToSelf(UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility) const;
+	void ApplyCost(UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cost")
-	TSubclassOf<UGameplayEffect> CostMinusOneEffectClass;
+	TSubclassOf<UGameplayEffect> CostEffectClass;
 };

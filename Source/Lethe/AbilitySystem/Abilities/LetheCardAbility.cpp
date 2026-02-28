@@ -65,7 +65,7 @@ bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(const UAbilitySystemComp
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandles(SourceASC, this, PreviewContextHandle, SpecHandles))
+			if (EffectApplier->TryMakeSpecHandles(SourceASC, this, PreviewContextHandle, SpecHandles, true))
 			{
 				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
 			}
@@ -149,6 +149,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
 	if (!CachedTargetActor.IsValid())
 	{
+		ActiveFailed();
 		return;
 	}
 
@@ -157,7 +158,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 	if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))
 	{
-		// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
+		ActiveFailed();
 		return;
 	}
 
@@ -199,6 +200,10 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			PlayMontageAndWaitTask->ReadyForActivation();
 		}
 	}
+	else
+	{
+		ActiveFailed();
+	}
 }
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
@@ -217,14 +222,25 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	{
 		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 		{
-			LethePlayerController->OnAbilityEnded();
+			LethePlayerController->OnAbilityEnded(true);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 		}
 	}
 }
 
+void ULetheCardAbility::ActiveFailed()
+{
+	// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
+	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		LethePlayerController->OnAbilityEnded(false);
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+	}
+}
+
 void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
+	// 프로젝트 특성상 한 번 발동된 Ability가 Cancel될 수는 없으나 일단 구현해두었습니다.
 	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
 		if (EffectApplier)

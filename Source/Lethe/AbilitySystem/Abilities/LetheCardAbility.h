@@ -63,6 +63,8 @@ private:
 
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);
+
+	void ActiveFailed();
 	
 protected:
 	// Composite 패턴으로 조합해 사용할 수 있으며, 구조체 내부의 ApplyEffect나 Ability의 ApplyAllEffects를 호출해 사용합니다.

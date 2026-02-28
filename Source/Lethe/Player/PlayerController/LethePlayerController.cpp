@@ -349,9 +349,20 @@ void ALethePlayerController::TryUseNextCardAbility()
 	}
 }
 
-void ALethePlayerController::OnAbilityEnded()
+void ALethePlayerController::OnAbilityEnded(const bool bUseSuccess)
 {
-	TryUseNextCardAbility();
+	if (bUseSuccess)
+	{
+		TryUseNextCardAbility();
+	}
+	else
+	{
+		for (const FUseCardData& WaitingCardData : WaitingForUseCardsQueue)
+		{
+			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
+		}
+		WaitingForUseCardsQueue.Reset();
+	}
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

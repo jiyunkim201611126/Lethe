@@ -58,7 +58,7 @@ public:
 	void SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex);
-	void OnAbilityEnded();
+	void OnAbilityEnded(const bool bUseSuccess);
 
 	ULetheHUD* GetLetheHUD() const;
 	bool IsProgressingCardAbility() const;

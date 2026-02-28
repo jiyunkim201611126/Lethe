@@ -113,6 +113,9 @@ protected:
 	TObjectPtr<USizeBox> RootSizeBox;
 	
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> CardBoard;
+	
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardImage;
 
 	UPROPERTY(meta = (BindWidget))
@@ -120,6 +123,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardBacksideBorderImage;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> CardBacksideImage;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> OutlineImage;
@@ -134,7 +140,7 @@ private:
 	FText CardName;
 	FGameplayTag CardTag;
 
-	float BaseRenderScale = 0.5f;
+	float BaseRenderScale;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 
@@ -153,4 +159,10 @@ private:
 	uint8 bShouldMove : 1 = false;
 	uint8 bBlockHandHovered : 1 = false;
 	uint8 bMouseHovered : 1 = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CardView")
+	float CardBoardPadding = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CardView")
+	float CardBacksideImagePadding = 6.f;
 };

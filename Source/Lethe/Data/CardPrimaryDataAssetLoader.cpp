@@ -112,15 +112,17 @@ void UCardPrimaryDataAssetLoader::CheckLoadFinished()
 	}
 }
 
+void UCardPrimaryDataAssetLoader::Destruct()
+{
+	DataLoadManager = nullptr;
+	OnAllDataLoaded.Unbind();
+}
+
 void UCardPrimaryDataAssetLoader::SelfDestruct()
 {
-	if (IsValid(this))
+	if (DataLoadManager)
 	{
-		if (DataLoadManager)
-		{
-			DataLoadManager->RemoveLoader(this);
-		}
-		DataLoadManager = nullptr;
-		OnAllDataLoaded = nullptr;
+		DataLoadManager->RemoveLoader(this);
 	}
+	Destruct();
 }

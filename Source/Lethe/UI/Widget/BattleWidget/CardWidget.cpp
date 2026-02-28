@@ -69,6 +69,17 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	SetSize(InitParams.CardViewData->GetCardSize() / BaseRenderScale);
 	SetCardImageSize(InitParams.CardViewData->GetCardImageSize() / BaseRenderScale);
 	SetRenderScale(FVector2D(BaseRenderScale));
+
+	// GetPadding은 실제 위젯 생성 후에 제대로 값을 가져올 수 있어, SetCardInfo에서 아래 구문을 수행하면 0으로 할당되는 현상이 있습니다.
+	const float CardExpandScale = 1.f / BaseRenderScale;
+	if (UOverlaySlot* CardBoardSlot = Cast<UOverlaySlot>(CardBoard->Slot))
+	{
+		CardBoardSlot->SetPadding(CardBoardPadding * CardExpandScale);
+	}
+	if (UOverlaySlot* CardBacksideImageSlot = Cast<UOverlaySlot>(CardBacksideImage->Slot))
+	{
+		CardBacksideImageSlot->SetPadding(CardBacksideImagePadding * CardExpandScale);
+	}
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const

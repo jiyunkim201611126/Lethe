@@ -32,7 +32,10 @@ class LETHE_API UDataLoadManagerSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
+	//~ Begin USubsystem Interface
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+	//~ End of USubsystem Interface
 
 	void AddLoader(UObject* Loader);
 	void RemoveLoader(UObject* Loader);

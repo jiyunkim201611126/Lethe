@@ -74,12 +74,13 @@ float UCardPanelWidgetController::GetCardExpandScale() const
 	return CardViewData->GetCardExpandScale();
 }
 
-void UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->SetCardSelected(bInCardSelected, OwnerASC, CardTag);
+		return LethePlayerController->SetCardSelected(bInCardSelected, OwnerASC, CardTag);
 	}
+	return false;
 }
 
 void UCardPanelWidgetController::GoDrawPhase() const

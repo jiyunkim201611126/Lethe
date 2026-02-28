@@ -269,16 +269,16 @@ void UCardPanelWidget::SelectCard(UCardWidget* CardWidget)
 	CurrentSelectedCard = CardWidget;
 	if (CurrentSelectedCard)
 	{
-		CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
-
 		if (CardPanelWidgetController)
 		{
-			CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag());
-		}
-
-		if (CardLayoutManager)
-		{
-			CardLayoutManager->OnCardSelected(CurrentSelectedCard);
+			if (CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
+			{
+				CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
+				if (CardLayoutManager)
+				{
+					CardLayoutManager->OnCardSelected(CurrentSelectedCard);
+				}
+			}
 		}
 	}
 }

@@ -47,6 +47,7 @@ public:
 	static UCardPrimaryDataAssetLoader* CreateLoader(UObject* Outer);
 
 	void LoadCardData(const FGameplayTag& CharacterTag, const TArray<FSavedCard>& Cards, bool bEquipped, const FOnAllCardDataLoaded& OnLoadedCallback);
+	void Destruct();
 
 private:
 	void OnCardDefinitionsLoaded(const TArray<UCardDefinitionData*>& LoadedDefinitions);

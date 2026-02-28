@@ -135,11 +135,11 @@ void ALethePlayerController::ResetSelectedCharacter()
 	TileSelector->UnhighlightTileByAbility(EAbilityType::MoveAbility);
 }
 
-void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
+bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	if (!TileSelector && !ArrowRenderer)
 	{
-		return;
+		return false;
 	}
 	
 	if (bInCardSelected && OwnerASC && CardTag.IsValid())
@@ -147,38 +147,38 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
 		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
-
-		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
-		if (!AbilitySpecs.IsEmpty())
+		if (AbilitySpecs.IsEmpty())
 		{
-			ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
-			const AActor* CardOwner = OwnerASC->GetOwner();
-			if (LetheCardAbility && CardOwner)
+			return false;
+		}
+		
+		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
+		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
+		const AActor* CardOwner = OwnerASC->GetOwner();
+		if (LetheCardAbility && CardOwner)
+		{
+			if (OwnerASC->AbilityActorInfo.IsValid())
 			{
-				if (OwnerASC->AbilityActorInfo.IsValid())
+				// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
+				const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
+				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
+				if (!bCanUse)
 				{
-					// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
-					const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
-					const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
-					if (!bCanUse)
-					{
-						SetCardSelected(false);
-						return;
-					}
+					SetCardSelected(false);
+				}
 				
-					// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
-					SelectedCardAbility = LetheCardAbility;
-					SelectedCardOwnerASC = OwnerASC;
+				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
+				SelectedCardAbility = LetheCardAbility;
+				SelectedCardOwnerASC = OwnerASC;
 				
-					TArray<ATile*> OutTiles;
-					TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
-					TileSelector->HighlightTileByAbility(OutTiles, CardOwner, EAbilityType::CardAbility);
+				TArray<ATile*> OutTiles;
+				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
+				TileSelector->HighlightTileByAbility(OutTiles, CardOwner, EAbilityType::CardAbility);
 
-					// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
-					if (OnCardSelectedDelegate.IsBound())
-					{
-						OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
-					}
+				// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
+				if (OnCardSelectedDelegate.IsBound())
+				{
+					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
 				}
 			}
 		}
@@ -189,19 +189,19 @@ void ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 			OnOtherTileDetected(nullptr, TileSelector->GetActorOnTileUnderCursor());
 			ResetSelectedCharacter();
 		}
+		return true;
 	}
-	else
+	
+	SelectedCardAbility = nullptr;
+	SelectedCardOwnerASC = nullptr;
+	TileSelector->UnhighlightTileByAbility(EAbilityType::CardAbility);
+	TileSelector->UnhighlightTileByMouse();
+	ArrowRenderer->SetActive(false);
+	if (OnCancelCardSelectDelegate.IsBound())
 	{
-		SelectedCardAbility = nullptr;
-		SelectedCardOwnerASC = nullptr;
-		TileSelector->UnhighlightTileByAbility(EAbilityType::CardAbility);
-		TileSelector->UnhighlightTileByMouse();
-		ArrowRenderer->SetActive(false);
-		if (OnCancelCardSelectDelegate.IsBound())
-		{
-			OnCancelCardSelectDelegate.Broadcast();
-		}
+		OnCancelCardSelectDelegate.Broadcast();
 	}
+	return false;
 }
 
 void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)

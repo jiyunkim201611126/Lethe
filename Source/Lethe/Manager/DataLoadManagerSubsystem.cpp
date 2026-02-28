@@ -3,6 +3,7 @@
 #include "DataLoadManagerSubsystem.h"
 
 #include "Engine/AssetManager.h"
+#include "Lethe/Data/CardPrimaryDataAssetLoader.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
@@ -88,6 +89,19 @@ void UDataLoadManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			CharacterDefinitionDataAssetIds.Emplace(CharacterTag, AssetId);
 		}
 	}
+}
+
+void UDataLoadManagerSubsystem::Deinitialize()
+{
+	for (UObject* Loader : ActivatedLoaders)
+	{
+		if (UCardPrimaryDataAssetLoader* DataAssetLoader = Cast<UCardPrimaryDataAssetLoader>(Loader))
+		{
+			DataAssetLoader->Destruct();
+		}
+	}
+	ActivatedLoaders.Empty();
+	Super::Deinitialize();
 }
 
 void UDataLoadManagerSubsystem::AddLoader(UObject* Loader)

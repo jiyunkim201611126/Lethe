@@ -6,8 +6,8 @@
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {
@@ -91,7 +91,7 @@ void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastAct
 
 	TMap<FGameplayTag, float> OutPreviewData;
 
-	// 선택된 Card의 Owner가 이 WidgetController와 관련이 있으면 들어가는 분기입니다.
+	// 선택된 Card의 OwnerASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
 	if (SourceASC == ThisASC)
 	{
 		// Target 유무에 따라 Preview 데이터가 결정되는 경우가 있습니다.

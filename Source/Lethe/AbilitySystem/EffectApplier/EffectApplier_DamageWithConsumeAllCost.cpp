@@ -21,8 +21,12 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyEffect(UGameplayAbility* Owni
 		ApplyCost(SourceASC, OwningAbility);
 		const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
 
-		// 매 반복 시마다 반드시 감소해야 합니다.
-		check(NewCost < PrevCost)
+		// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
+		if (PrevCost == NewCost)
+		{
+			break;
+		}
+		
 		Super::ApplyEffect(OwningAbility, TargetActor);
 	}
 }

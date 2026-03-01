@@ -23,6 +23,8 @@ public class Lethe : ModuleRules
 			"ModularGameplay",
 			
 			"GameplayAbilities",
+			
+			"AIModule",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -30,6 +32,9 @@ public class Lethe : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"Niagara",
+			
+			"StateTreeModule",
+			"GameplayStateTreeModule",
 		});
 
 		// Uncomment if you are using Slate UI

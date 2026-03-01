@@ -3,7 +3,7 @@
 #include "LetheAbilitySystemLibrary.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UOverlayWidgetController* ULetheAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)

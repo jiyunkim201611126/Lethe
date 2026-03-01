@@ -8,7 +8,7 @@
 #include "Lethe/AbilitySystem/GASManagerComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 
 ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

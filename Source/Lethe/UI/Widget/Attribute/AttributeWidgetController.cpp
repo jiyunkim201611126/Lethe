@@ -6,8 +6,8 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {

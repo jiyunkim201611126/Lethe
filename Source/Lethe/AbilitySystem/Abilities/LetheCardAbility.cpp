@@ -8,9 +8,9 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 {
@@ -25,7 +25,7 @@ void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 
 bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
 {
-	if (CostGameplayEffectClass)
+	if (CostGameplayEffectClass && SourceASC)
 	{
 		// Ability Cost는 Ability가 소유자이므로, EffectSpec을 직접 만들어서 Preview Data를 추출합니다.
 		FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
@@ -40,8 +40,38 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 	return false;
 }
 
+bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+{
+	if (!SourceASC || !TargetASC)
+	{
+		return false;
+	}
+	
+	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	{
+		if (EffectApplier)
+		{
+			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
+			
+			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
+			PreviewContextHandle.SetAbility(this);
+			TArray<FGameplayEffectSpecHandle> SpecHandles;
+			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, TargetASC, PreviewContextHandle, SpecHandles))
+			{
+				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
+			}
+		}
+	}
+	return !OutPreviewData.IsEmpty();
+}
+
 bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
+	if (!SourceASC || !TargetASC)
+	{
+		return false;
+	}
+	
 	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
 		// Ability 사용 시 효과는 대행자가 있으므로, EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
@@ -55,26 +85,6 @@ bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(const UAbilityS
 			if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 			{
 				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
-			}
-		}
-	}
-	return !OutPreviewData.IsEmpty();
-}
-
-bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
-{
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
-			
-			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
-			PreviewContextHandle.SetAbility(this);
-			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, TargetASC, PreviewContextHandle, SpecHandles))
-			{
-				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
 		}
 	}
@@ -151,6 +161,12 @@ FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclass
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (!TriggerEventData || !TriggerEventData->Target)
+	{
+		ActiveFailed();
+		return;
+	}
 	
 	// 애니메이션 재생 후 트리거를 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
 	CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
@@ -171,41 +187,38 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (CheckCost(Handle, ActorInfo))
 	{
-		if (TriggerEventData && TriggerEventData->Target)
-		{
-			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-			
-			// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
-			ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
-			
-			UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-				this,
-				LetheGameplayTags.MontageEvent_ApplyEffect,
-				nullptr,
-				true,
-				true);
-			WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-			WaitApplyEffectEventTask->ReadyForActivation();
+		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
 		
-			UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-				this,
-				LetheGameplayTags.MontageEvent_EndUseCard,
-				nullptr,
-				true,
-				true);
-			WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-			WaitEndUseCardEventTask->ReadyForActivation();
+		// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
+		ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
+		
+		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			LetheGameplayTags.MontageEvent_ApplyEffect,
+			nullptr,
+			true,
+			true);
+		WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+		WaitApplyEffectEventTask->ReadyForActivation();
+	
+		UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			LetheGameplayTags.MontageEvent_EndUseCard,
+			nullptr,
+			true,
+			true);
+		WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+		WaitEndUseCardEventTask->ReadyForActivation();
 
-			UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-				this,
-				NAME_None,
-				AbilityAnimMontage,
-				1.f,
-				NAME_None,
-				false,
-				1.f);
-			PlayMontageAndWaitTask->ReadyForActivation();
-		}
+		UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this,
+			NAME_None,
+			AbilityAnimMontage,
+			1.f,
+			NAME_None,
+			false,
+			1.f);
+		PlayMontageAndWaitTask->ReadyForActivation();
 	}
 	else
 	{

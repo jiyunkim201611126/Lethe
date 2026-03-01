@@ -137,7 +137,7 @@ void ALethePlayerController::ResetSelectedCharacter()
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
-	if (!TileSelector && !ArrowRenderer)
+	if (!TileSelector || !ArrowRenderer)
 	{
 		return false;
 	}
@@ -375,15 +375,12 @@ void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemCom
 			continue;
 		}
 
-		if (UGameplayAbility* AbilityCDO = Spec->Ability)
+		if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
 		{
-			if (AbilityCDO->AbilityTags.HasAllExact(CardTag.GetSingleTagContainer()))
+			if (CardAbility->GetAssetTags().HasAllExact(CardTag.GetSingleTagContainer()))
 			{
-				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilityCDO))
-				{
-					OutText = CardAbility->GetCardDescription(OwnerASC, 1);
-					return;
-				}
+				OutText = CardAbility->GetCardDescription(OwnerASC, 1);
+				return;
 			}
 		}
 	}

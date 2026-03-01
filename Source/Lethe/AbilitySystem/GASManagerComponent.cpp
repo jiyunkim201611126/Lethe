@@ -5,11 +5,11 @@
 #include "LetheAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)

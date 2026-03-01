@@ -2,7 +2,7 @@
 
 #include "CardUseSectionWidget.h"
 
-#include "Lethe/Player/PlayerController/LethePlayerController.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 
 void UCardUseSectionWidget::NativeDestruct()
 {

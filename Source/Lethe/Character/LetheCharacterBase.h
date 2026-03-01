@@ -54,7 +54,4 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
-
-private:
-	FDelegateHandle OnCameraHeightChangedDelegateHandle;
 };

@@ -276,11 +276,12 @@ void UCardPanelWidget::SelectCard(UCardWidget* CardWidget)
 	}
 	
 	CurrentSelectedCard = CardWidget;
-	if (CurrentSelectedCard)
+	if (CurrentSelectedCard && CardPanelWidgetController)
 	{
-		if (CardPanelWidgetController)
+		if (CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
 		{
-			if (CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
+			// SetCardSelected에서 선택이 취소됐을 가능성이 있으므로, (그 경우 false를 반환하긴 하지만) CurrentSelectedCard에 대한 null체크를 한 번 더 해줍니다.
+			if (CurrentSelectedCard)
 			{
 				CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
 				if (CardLayoutManager)

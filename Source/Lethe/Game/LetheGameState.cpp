@@ -12,6 +12,11 @@ void ALetheGameState::GoPlayerTurnPhase()
 	SetPhase(EPhaseState::PlayerTurnPhase);
 }
 
+void ALetheGameState::GoEnemyTurnPhase()
+{
+	SetPhase(EPhaseState::EnemyTurnPhase);
+}
+
 void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 {
 	const EPhaseState OldPhase = CurrentTurnState;
@@ -23,19 +28,6 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	CurrentTurnState = NewPhase;
 	
 	OnChangeTurnStateDelegate.Broadcast(OldPhase, NewPhase);
-}
-
-void ALetheGameState::OnPhaseEntered()
-{
-	switch (CurrentTurnState)
-	{
-	case EPhaseState::DrawPhase:
-		break;
-	case EPhaseState::PlayerTurnPhase:
-		break;
-	default:
-		break;
-	}
 }
 
 EPhaseState ALetheGameState::GetTurnPhase() const

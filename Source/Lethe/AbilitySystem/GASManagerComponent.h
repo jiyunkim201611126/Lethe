@@ -76,7 +76,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
-
-private:
-	FDelegateHandle OnPhaseStateChangedDelegateHandle;
 };

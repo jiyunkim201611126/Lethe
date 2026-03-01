@@ -166,7 +166,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
 				if (!bCanUse)
 				{
-					SetCardSelected(false);
+					return SetCardSelected(false);
 				}
 				
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
@@ -271,7 +271,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex)
 {
-	// 이미 사용 대기 상태인 카드라면 선택하지 않고 얼리 리턴합니다.(이미 CardPanelWidget에서도 하고 있으나 한 번 더 방어 코드 작성)
+	// 이미 사용 대기 상태인 카드라면 아무 동작도 하지 않고 얼리 리턴합니다.(이미 CardPanelWidget에서도 하고 있으나 한 번 더 방어 코드 작성)
 	for (const FUseCardData& WaitingForUseCardData : WaitingForUseCardsQueue)
 	{
 		if (WaitingForUseCardData.HandIndex == InHandIndex)
@@ -279,9 +279,16 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 			return;
 		}
 	}
-	
-	AActor* TargetActor = TileSelector->GetActorOnTileUnderCursor();
-	if (OwnerASC && TargetActor)
+
+	if (!TileSelector)
+	{
+		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
+		return;
+	}
+
+	FTileAndActor TileAndActor;
+	TileSelector->GetTileAndActorUnderCursor(TileAndActor);
+	if (OwnerASC && TileAndActor.Actor)
 	{
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
@@ -292,23 +299,34 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 		
 		if (!AbilitySpecs.IsEmpty())
 		{
-			// Ability가 발동될 수 있도록 이벤트 데이터를 생성합니다.
-			FGameplayEventData Payload;
-			Payload.Instigator = OwnerASC->GetAvatarActor();
-			Payload.Target = TargetActor;
-
-			// Queue에 넣고 Ability 발동을 시작합니다.
-			FUseCardData UseCardData;
-			UseCardData.HandIndex = InHandIndex;
-			UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-			UseCardData.CardTag = CardTag;
-			UseCardData.Payload = Payload;
-			UseCardData.AbilityOwnerASC = OwnerASC;
-
-			WaitingForUseCardsQueue.Emplace(UseCardData);
-			if (!bIsProgressingCardAbility)
+			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
 			{
-				TryUseNextCardAbility();
+				TArray<ATile*> OutTiles;
+				TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetOwner(), CardAbility->GetAbilityRange());
+				if (!OutTiles.Contains(TileAndActor.Tile))
+				{
+					OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
+					return;
+				}
+				
+				// Ability가 발동될 수 있도록 이벤트 데이터를 생성합니다.
+				FGameplayEventData Payload;
+				Payload.Instigator = OwnerASC->GetAvatarActor();
+				Payload.Target = TileAndActor.Actor;
+
+				// Queue에 넣고 Ability 발동을 시작합니다.
+				FUseCardData UseCardData;
+				UseCardData.HandIndex = InHandIndex;
+				UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+				UseCardData.CardTag = CardTag;
+				UseCardData.Payload = Payload;
+				UseCardData.AbilityOwnerASC = OwnerASC;
+
+				WaitingForUseCardsQueue.Emplace(UseCardData);
+				if (!bIsProgressingCardAbility)
+				{
+					TryUseNextCardAbility();
+				}
 			}
 		}
 	}

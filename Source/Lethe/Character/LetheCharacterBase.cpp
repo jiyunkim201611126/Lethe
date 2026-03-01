@@ -49,7 +49,7 @@ void ALetheCharacterBase::BeginPlay()
 
 	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		OnCameraHeightChangedDelegateHandle = PlayerController->OnCameraHeightChangedDelegate.AddUObject(this, &ALetheCharacterBase::OnCameraHeightChanged);
+		PlayerController->OnCameraHeightChangedDelegate.AddUObject(this, &ALetheCharacterBase::OnCameraHeightChanged);
 		if (const ALethePawn* LethePawn = Cast<ALethePawn>(PlayerController->GetPawn()))
 		{
 			OnCameraHeightChanged(LethePawn->GetAttributeWidgetSize());
@@ -61,7 +61,7 @@ void ALetheCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		PlayerController->OnCameraHeightChangedDelegate.Remove(OnCameraHeightChangedDelegateHandle);
+		PlayerController->OnCameraHeightChangedDelegate.RemoveAll(this);
 	}
 	
 	Super::EndPlay(EndPlayReason);

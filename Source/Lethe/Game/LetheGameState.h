@@ -12,6 +12,7 @@ enum class EPhaseState : uint8
 	None,
 	DrawPhase,
 	PlayerTurnPhase,
+	EnemyTurnPhase,
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
@@ -24,12 +25,12 @@ class LETHE_API ALetheGameState : public AGameStateBase
 public:
 	void GoDrawPhase();
 	void GoPlayerTurnPhase();
+	void GoEnemyTurnPhase();
 
 	EPhaseState GetTurnPhase() const;
 
 private:
 	void SetPhase(const EPhaseState NewPhase);
-	void OnPhaseEntered();
 
 public:
 	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;

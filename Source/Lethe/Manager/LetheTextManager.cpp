@@ -4,8 +4,8 @@ FName FLetheTextManager::GetPath(const EStringTableType Type)
 {
 	switch (Type)
 	{
-	case EStringTableType::Card:
-		return TEXT("/Game/Data/StringTable/ST_Card");
+	case EStringTableType::CardDescription:
+		return TEXT("/Game/Data/StringTable/ST_CardDescription");
 	default:
 		break;
 	}

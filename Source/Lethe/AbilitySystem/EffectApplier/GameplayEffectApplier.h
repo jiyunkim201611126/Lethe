@@ -26,7 +26,9 @@ public:
 	virtual void EndAbility();
 	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
 	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
-	virtual FText GetDescriptionText(const int32 InLevel) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Effect")
+	virtual int32 GetValueForDescription(const int32 InLevel) const;
 
 	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
 	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);

@@ -4,7 +4,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "Lethe/Manager/LetheTextManager.h"
 
 void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
@@ -17,6 +16,7 @@ void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 
 bool UEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview) const
 {
+	OutSpecHandles.Reserve(DamageValues.Num());
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())
@@ -60,23 +60,12 @@ void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 	}
 }
 
-FText UEffectApplier_Damage::GetDescriptionText(const int32 InLevel) const
+int32 UEffectApplier_Damage::GetValueForDescription(const int32 InLevel) const
 {
-	TArray<FText> DamageTexts;
+	float AllDamage = 0.f;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
-		DamageTexts.Emplace(GetDamageText(InLevel, Pair.Key));
+		AllDamage += Pair.Value.GetValueAtLevel(InLevel);
 	}
-
-	return FText::Join(FText::FromString(TEXT(" ")), DamageTexts);
-}
-
-FText UEffectApplier_Damage::GetDamageText(const int32 InLevel, const FGameplayTag& InDamageTag) const
-{
-	const FScalableFloat* DamageValue = DamageValues.Find(InDamageTag);
-	check(DamageValue);
-	
-	const float ScaledDamage = DamageValue->GetValueAtLevel(InLevel);
-	FText DamageText = FLetheTextManager::GetText(EStringTableType::Card, InDamageTag.ToString(), ScaledDamage);
-	return DamageText;
+	return AllDamage;
 }

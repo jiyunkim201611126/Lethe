@@ -5,7 +5,7 @@
 UENUM()
 enum class EStringTableType : uint8
 {
-	Card,
+	CardDescription,
 };
 
 /**
@@ -18,7 +18,7 @@ class FLetheTextManager
 {
 public:
 	template <typename... ArgTypes>
-	static FORCEINLINE FText GetText(EStringTableType Type, const FString& Key, ArgTypes... Args)
+	static FORCEINLINE FText GetText(const EStringTableType Type, const FString& Key, ArgTypes... Args)
 	{
 		const FName TableId = GetPath(Type);
 		FTextFormat Text = FText::FromStringTable(TableId, *Key);

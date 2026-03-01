@@ -20,9 +20,9 @@ bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySy
 	return false;
 }
 
-FText UGameplayEffectApplier::GetDescriptionText(const int32 InLevel) const
+int32 UGameplayEffectApplier::GetValueForDescription(const int32 InLevel) const
 {
-	return FText();
+	return 0;
 }
 
 bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)

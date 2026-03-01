@@ -9,6 +9,7 @@
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/LetheTextManager.h"
 #include "Lethe/Player/PlayerController/LethePlayerController.h"
 
 void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
@@ -20,20 +21,6 @@ void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 			EffectApplier->ApplyEffect(this, TargetActor);
 		}
 	}
-}
-
-FText ULetheCardAbility::GetCardDescription(const int32 InLevel) const
-{
-	TArray<FText> ResultTexts;
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			ResultTexts.Emplace(EffectApplier->GetDescriptionText(InLevel));
-		}
-	}
-
-	return FText::Join(FText::FromString(TEXT(" ")), ResultTexts);
 }
 
 bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -283,6 +270,22 @@ void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+FText ULetheCardAbility::GetRangeDescription() const
+{
+	FString RangeDescriptionKey;
+	switch (AbilityRange.BFSType)
+	{
+	case EBFSType::Connection:
+		RangeDescriptionKey = TEXT("Range.Connection");
+		break;
+	case EBFSType::Through:
+		RangeDescriptionKey = TEXT("Range.Through");
+		break;
+	}
+	
+	return FLetheTextManager::GetText(EStringTableType::CardDescription, RangeDescriptionKey, AbilityRange.Depth);
 }
 
 void ULetheCardAbility::PostInitProperties()

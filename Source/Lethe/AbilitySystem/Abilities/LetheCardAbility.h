@@ -24,6 +24,7 @@ public:
 	void ApplyAllEffects(AActor* TargetActor);
 
 	// Card에 대한 설명을 반환하는 함수로, 갖고 있는 EffectAppliers를 순회하며 설명을 가져옵니다.
+	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const int32 InLevel) const;
 
 	bool TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -58,6 +59,9 @@ protected:
 	 */ 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FGameplayEffectContextHandle GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const;
+
+	UFUNCTION(BlueprintPure, Category = "Effect")
+	FText GetRangeDescription() const;
 
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;

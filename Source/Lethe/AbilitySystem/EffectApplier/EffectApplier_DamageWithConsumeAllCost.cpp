@@ -17,7 +17,12 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyEffect(UGameplayAbility* Owni
 
 	while (SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) >= 1.f)
 	{
+		const float PrevCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
 		ApplyCost(SourceASC, OwningAbility);
+		const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+
+		// 매 반복 시마다 반드시 감소해야 합니다.
+		check(NewCost < PrevCost)
 		Super::ApplyEffect(OwningAbility, TargetActor);
 	}
 }
@@ -28,7 +33,8 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(const UAbilityS
 	{
 		return Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles, bIsPreview);
 	}
-	
+
+	OutSpecHandles.Reserve(DamageValues.Num());
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())
@@ -50,6 +56,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(const UAbilityS
 bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	const int32 CurrentCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+	OutSpecHandles.Reserve(CurrentCost);
 	for (int32 Index = 0; Index < CurrentCost; ++Index)
 	{
 		FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);

@@ -60,7 +60,7 @@ void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 	}
 }
 
-int32 UEffectApplier_Damage::GetValueForDescription(const int32 InLevel) const
+int32 UEffectApplier_Damage::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	float AllDamage = 0.f;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)

@@ -14,6 +14,7 @@ class UCardPanelWidgetController;
 class UCardUseSectionWidget;
 class UCardWidget;
 class ULetheAbilitySystemComponent;
+class UViewCardDetailWidget;
 struct FCardInitParams;
 enum class ECardAction : uint8;
 
@@ -23,19 +24,20 @@ class LETHE_API UCardPanelWidget : public ULetheUserWidget
 	GENERATED_BODY()
 
 public:
+	//~ Begin ULetheUserWidget Interface
+	virtual void WidgetControllerSet_Implementation() override;
+	//~ End of ULetheUserWidget Interface
+
+protected:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
 
-	//~ Begin ULetheUserWidget Interface
-	virtual void WidgetControllerSet_Implementation() override;
-	//~ End of ULetheUserWidget Interface
-
 private:
 	void OnMouseEvent(UCardWidget* CardWidget, const ECardAction CardAction);
-	void OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction);
+	void OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction) const;
 	void OnMouseEventWhenPlayerTurnPhase(UCardWidget* CardWidget, const ECardAction CardAction);
 	void OnKeyboardEvent(const int32 Number);
 	void OnKeyboardEventWhenDrawPhase(const int32 Number) const;
@@ -56,6 +58,8 @@ private:
 
 	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess);
 
+	void StartViewCardDetail(const UCardWidget* CardWidget) const;
+
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
@@ -74,6 +78,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> TurnEndButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
 
 private:
 	UPROPERTY()

@@ -24,14 +24,6 @@ struct FTileAndActor
 	AActor* Actor = nullptr;
 };
 
-UENUM()
-enum class EAbilityType : uint8
-{
-	MoveAbility,
-	CardAbility,
-	None,
-};
-
 DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, const AActor*, const AActor*);
 
 /**
@@ -47,8 +39,8 @@ public:
 
 	void HighlightTileByMouse(AActor* Tile);
 	void UnhighlightTileByMouse();
-	void HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner, const EAbilityType InAbilityType);
-	void UnhighlightTileByAbility(const EAbilityType InAbilityType);
+	void HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner);
+	void UnhighlightTileByAbility();
 
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	AActor* GetActorOnTileUnderCursor() const;
@@ -68,6 +60,4 @@ private:
 	 * CPU 부담을 키우지 않기 위해 메모리 사용을 감수합니다.
 	 */
 	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedTilesByAbility;
-
-	EAbilityType CurrentAbilityType = EAbilityType::None;
 };

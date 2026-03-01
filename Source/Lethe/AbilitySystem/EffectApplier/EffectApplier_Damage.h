@@ -16,7 +16,7 @@ public:
 	//~ Begin UGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
 	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const override;
-	virtual int32 GetValueForDescription(const int32 InLevel) const override;
+	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
 	//~ End of UGameplayEffectApplier Interface
 	
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);

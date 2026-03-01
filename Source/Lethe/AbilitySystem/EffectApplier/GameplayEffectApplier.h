@@ -28,7 +28,7 @@ public:
 	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
-	virtual int32 GetValueForDescription(const int32 InLevel) const;
+	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
 	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
 	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);

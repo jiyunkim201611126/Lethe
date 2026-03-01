@@ -87,3 +87,14 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent*
 		SourceASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
+
+int32 UEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+{
+	float AllDamage = 0.f;
+	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
+	{
+		AllDamage += Pair.Value.GetValueAtLevel(InLevel);
+	}
+	// Preview와 흡사한 상황으로, 설명에 텍스트를 표시하기 위한 값을 가져가는 상황이기 때문에 Cost와 곱해서 반환합니다.
+	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) : 1.f);
+}

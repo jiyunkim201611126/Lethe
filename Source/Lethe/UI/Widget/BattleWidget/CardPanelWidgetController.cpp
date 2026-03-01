@@ -69,11 +69,6 @@ FVector2D UCardPanelWidgetController::GetCardSize() const
 	return CardViewData->GetCardSize();
 }
 
-float UCardPanelWidgetController::GetCardExpandScale() const
-{
-	return CardViewData->GetCardExpandScale();
-}
-
 bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (LethePlayerController)
@@ -109,6 +104,7 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 		if (!LethePlayerController->IsProgressingCardAbility())
 		{
 			// Ability 발동 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
+			LethePlayerController->SetCardSelected(false);
 			GoDrawPhase();
 			return true;
 		}
@@ -121,6 +117,14 @@ void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* Ow
 	if (LethePlayerController)
 	{
 		LethePlayerController->RequestUseCard(OwnerASC, CardTag, InHandIndex);
+	}
+}
+
+void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->GetCardDescriptionText(OwnerASC, CardTag, OutText);
 	}
 }
 

@@ -67,7 +67,6 @@ public:
 	//~ End of UObject Interface
 
 	FVector2D GetCardSize() const;
-	float GetCardExpandScale() const;
 	
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
@@ -75,6 +74,8 @@ public:
 	void GoPlayerTurnPhase() const;
 	bool RequestTurnEnd() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
+
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;

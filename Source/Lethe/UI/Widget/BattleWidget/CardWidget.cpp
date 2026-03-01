@@ -4,7 +4,6 @@
 
 #include "CardPanelWidgetController.h"
 #include "Animation/WidgetAnimation.h"
-#include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -41,45 +40,21 @@ void UCardWidget::SetSize(const FVector2D& InSize) const
 	RootSizeBox->SetHeightOverride(InSize.Y);
 }
 
-void UCardWidget::SetCardImageSize(const FVector2D& InCardImageSize) const
-{
-	// 카드 확대 기능 수행을 위해 RenderScale을 1보다 낮은 수치로 할당했기 때문에, 디자이너탭에서 설정한 값들을 그대로 사용하면 문제가 생기므로 여기서 보정합니다.
-	CardImage->SetDesiredSizeOverride(InCardImageSize);
-	if (UOverlaySlot* CardImageSlot = Cast<UOverlaySlot>(CardImage->Slot))
-	{
-		FMargin DesiredPadding = CardImageSlot->GetPadding();
-		DesiredPadding.Top /= BaseRenderScale;
-		CardImageSlot->SetPadding(DesiredPadding);
-	}
-}
-
 void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 {
 	OwnerASC = InitParams.OwnerASC;
 	CardTag = InitParams.CardDefinition->CardTag;
 	CardImage->SetBrushFromTexture(InitParams.CardSelfViewData->CardTexture);
-	CardName = InitParams.CardSelfViewData->CardNameText;
+	CardNameText = InitParams.CardSelfViewData->CardNameText;
 	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->CardBacksideColor));
-	
-	// 카드 크기 조정이 필요할 때, RenderScale을 1.f 이상 수치로 사용하면 텍스쳐, 텍스트가 깨져버립니다.
-	// 그렇다고 CanvasPanelSlot을 사용하면 CanvasPanel이 CPU한테 염병을 떨기 때문에, Slot은 최대한 건드리지 않는 게 좋습니다.
-	// 따라서 기본 사이즈를 1.f 미만 수치로 사용하고, 확대가 필요할 때 1.f로 설정합니다.
-	BaseRenderScale = 1.f / InitParams.CardViewData->GetCardExpandScale();
-	SetSize(InitParams.CardViewData->GetCardSize() / BaseRenderScale);
-	SetCardImageSize(InitParams.CardViewData->GetCardImageSize() / BaseRenderScale);
-	SetRenderScale(FVector2D(BaseRenderScale));
+}
 
-	// GetPadding은 실제 위젯 생성 후에 제대로 값을 가져올 수 있어, SetCardInfo에서 아래 구문을 수행하면 0으로 할당되는 현상이 있습니다.
-	const float CardExpandScale = 1.f / BaseRenderScale;
-	if (UOverlaySlot* CardBoardSlot = Cast<UOverlaySlot>(CardBoard->Slot))
-	{
-		CardBoardSlot->SetPadding(CardBoardPadding * CardExpandScale);
-	}
-	if (UOverlaySlot* CardBacksideImageSlot = Cast<UOverlaySlot>(CardBacksideImage->Slot))
-	{
-		CardBacksideImageSlot->SetPadding(CardBacksideImagePadding * CardExpandScale);
-	}
+void UCardWidget::TryMakeViewDetailData(FViewDetailData& OutData) const
+{
+	OutData.CardNameText = CardNameText;
+	OutData.CardImage = CardImage->GetBrush().GetResourceObject();
+	OutData.CardFrontsideBorderColor = CardFrontsideBorderImage->GetColorAndOpacity();
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
@@ -88,7 +63,6 @@ ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const
 	{
 		return OwnerASC.Get();
 	}
-	
 	return nullptr;
 }
 
@@ -103,10 +77,9 @@ void UCardWidget::SetCardContainer(const ECardContainer InCardContainer, const b
 	TurnOffHighlightOutline();
 	
 	CurrentCardContainer = InCardContainer;
-	switch (InCardContainer)
+	switch (CurrentCardContainer)
 	{
 	case ECardContainer::Deck:
-		SetRenderScale(FVector2D(BaseRenderScale));
 		break;
 	case ECardContainer::Hand:
 		{
@@ -190,12 +163,10 @@ void UCardWidget::OnUpdatedTimeline(const float InValue)
 	const FVector2D HoveredTranslation = bMouseHovered ? FVector2D(0.f, AddHoveredTranslation) : FVector2D::ZeroVector;
 	const FVector2D LerpedTranslation = FMath::Lerp(StartTransform.Translation, TargetTransform.Translation + HoveredTranslation, InValue);
 	const float LerpedAngle = FMath::Lerp(StartTransform.Angle, TargetTransform.Angle, InValue);
-	const FVector2D LerpedScale = FMath::Lerp(StartTransform.Scale, TargetTransform.Scale, InValue);
 
 	FWidgetTransform NewTransform;
 	NewTransform.Translation = LerpedTranslation;
 	NewTransform.Angle = LerpedAngle;
-	NewTransform.Scale = LerpedScale;
 	NewTransform.Shear = FVector2D::Zero();
 
 	SetRenderTransform(NewTransform);
@@ -221,9 +192,10 @@ void UCardWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointer
 
 void UCardWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-	Super::NativeOnMouseLeave(InMouseEvent);
-	
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseLeave));
+	bMouseButtonDown = false;
+	
+	Super::NativeOnMouseLeave(InMouseEvent);
 }
 
 FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -232,21 +204,35 @@ FReply UCardWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 	{
 		OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonDown));
 	}
+	bMouseButtonDown = true;
+	
 	return FReply::Handled();
 }
 
 FReply UCardWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	if (!bMouseButtonDown)
+	{
+		return FReply::Handled();
+	}
+	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
-		OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseButtonUp));
+		OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::LeftMouseButtonUp));
 	}
+	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	{
+		OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::RightMouseButtonUp));
+	}
+	bMouseButtonDown = false;
+	
 	return FReply::Handled();
 }
 
 void UCardWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {	
 	OnCardMouseEventDelegate.ExecuteIfBound(this, OnMouseEventForCardAction(ECardMouseEvent::MouseCaptureLost));
+	bMouseButtonDown = false;
 	
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
@@ -294,11 +280,13 @@ void UCardWidget::GetCardActionWhenDeckState(const ECardMouseEvent InMouseEvent,
 			// 덱 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
 		}
 		break;
-	case ECardMouseEvent::MouseButtonUp:
+	case ECardMouseEvent::LeftMouseButtonUp:
 		{
-			// 덱 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
+			// 덱 위에서 왼쪽 마우스 버튼을 뗄 때 들어오는 분기입니다.
 			OutCardAction = ECardAction::Draw;
 		}
+		break;
+	case ECardMouseEvent::RightMouseButtonUp:
 		break;
 	case ECardMouseEvent::MouseCaptureLost:
 		{
@@ -336,10 +324,16 @@ void UCardWidget::GetCardActionWhenHandState(const ECardMouseEvent InMouseEvent,
 			// 핸드 위에서 마우스 버튼을 누를 때 들어오는 분기입니다.
 		}
 		break;
-	case ECardMouseEvent::MouseButtonUp:
+	case ECardMouseEvent::LeftMouseButtonUp:
 		{
-			// 핸드 위에서 마우스 버튼을 뗄 때 들어오는 분기입니다.
+			// 핸드 위에서 왼쪽 마우스 버튼을 뗄 때 들어오는 분기입니다.
 			OutCardAction = ECardAction::Selected;
+		}
+		break;
+	case ECardMouseEvent::RightMouseButtonUp:
+		{
+			// 핸드 위에서 오른쪽 마우스 버튼을 뗄 때 들어오는 분기입니다.
+			OutCardAction = ECardAction::ViewDetail;
 		}
 		break;
 	case ECardMouseEvent::MouseCaptureLost:

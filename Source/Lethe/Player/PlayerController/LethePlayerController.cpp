@@ -110,7 +110,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			if (bIsSelectingCharacter)
 			{
 				// 캐릭터를 선택한 경우 들어오는 분기입니다.
-				TileSelector->HighlightTileByAbility(OutTiles, SelectedCharacter.Get(), EAbilityType::MoveAbility);
+				TileSelector->HighlightTileByAbility(OutTiles, SelectedCharacter.Get());
 			}
 			else
 			{
@@ -132,7 +132,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 void ALethePlayerController::ResetSelectedCharacter()
 {
 	SelectedCharacter.Reset();
-	TileSelector->UnhighlightTileByAbility(EAbilityType::MoveAbility);
+	TileSelector->UnhighlightTileByAbility();
 }
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
@@ -151,6 +151,8 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		{
 			return false;
 		}
+		
+		ResetSelectedCharacter();
 		
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
@@ -173,7 +175,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
-				TileSelector->HighlightTileByAbility(OutTiles, CardOwner, EAbilityType::CardAbility);
+				TileSelector->HighlightTileByAbility(OutTiles, CardOwner);
 
 				// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
 				if (OnCardSelectedDelegate.IsBound())
@@ -183,18 +185,14 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 			}
 		}
 
-		if (SelectedCharacter.IsValid())
-		{
-			// 선택된 캐릭터가 있었던 경우, Arrow가 나타날 수 있도록 명시적으로 아래 함수를 호출합니다.
-			OnOtherTileDetected(nullptr, TileSelector->GetActorOnTileUnderCursor());
-			ResetSelectedCharacter();
-		}
+		OnOtherTileDetected(nullptr, TileSelector->GetActorOnTileUnderCursor());
+		
 		return true;
 	}
 	
 	SelectedCardAbility = nullptr;
 	SelectedCardOwnerASC = nullptr;
-	TileSelector->UnhighlightTileByAbility(EAbilityType::CardAbility);
+	TileSelector->UnhighlightTileByAbility();
 	TileSelector->UnhighlightTileByMouse();
 	ArrowRenderer->SetActive(false);
 	if (OnCancelCardSelectDelegate.IsBound())
@@ -362,6 +360,32 @@ void ALethePlayerController::OnAbilityEnded(const bool bUseSuccess)
 			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
 		}
 		WaitingForUseCardsQueue.Reset();
+	}
+}
+
+void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
+{
+	TArray<FGameplayAbilitySpecHandle> OutAbilityHandles;
+	OwnerASC->GetAllAbilities(OutAbilityHandles);
+	for (const FGameplayAbilitySpecHandle& Handle : OutAbilityHandles)
+	{
+		const FGameplayAbilitySpec* Spec = OwnerASC->FindAbilitySpecFromHandle(Handle);
+		if (!Spec || !Spec->Ability)
+		{
+			continue;
+		}
+
+		if (UGameplayAbility* AbilityCDO = Spec->Ability)
+		{
+			if (AbilityCDO->AbilityTags.HasAllExact(CardTag.GetSingleTagContainer()))
+			{
+				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilityCDO))
+				{
+					OutText = CardAbility->GetCardDescription(OwnerASC, 1);
+					return;
+				}
+			}
+		}
 	}
 }
 

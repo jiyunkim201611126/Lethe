@@ -60,6 +60,8 @@ public:
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex);
 	void OnAbilityEnded(const bool bUseSuccess);
 
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
+
 	ULetheHUD* GetLetheHUD() const;
 	bool IsProgressingCardAbility() const;
 

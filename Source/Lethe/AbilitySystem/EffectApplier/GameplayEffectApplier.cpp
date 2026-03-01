@@ -20,7 +20,7 @@ bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySy
 	return false;
 }
 
-int32 UGameplayEffectApplier::GetValueForDescription(const int32 InLevel) const
+int32 UGameplayEffectApplier::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	return 0;
 }

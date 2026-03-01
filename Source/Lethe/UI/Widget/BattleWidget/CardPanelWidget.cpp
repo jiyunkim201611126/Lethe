@@ -2,6 +2,7 @@
 
 #include "CardPanelWidget.h"
 
+#include "ViewCardDetailWidget.h"
 #include "CardPanelWidgetController.h"
 #include "CardUseSectionWidget.h"
 #include "CardWidget.h"
@@ -32,7 +33,10 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		ResetSelectedCard();
+		if (CurrentSelectedCard)
+		{
+			ResetSelectedCard();
+		}
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -62,6 +66,8 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
 		
 		CardPanelWidgetController->BroadcastInitialValue();
+
+		ViewCardDetail->SetWidgetController(WidgetController);
 		bControllerInitialized = true;
 	}
 }
@@ -81,7 +87,7 @@ void UCardPanelWidget::OnMouseEvent(UCardWidget* CardWidget, const ECardAction C
 	}
 }
 
-void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction)
+void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction) const
 {
 	switch (CardAction)
 	{
@@ -111,6 +117,9 @@ void UCardPanelWidget::OnMouseEventWhenPlayerTurnPhase(UCardWidget* CardWidget, 
 		break;
 	case ECardAction::Selected:
 		SelectCard(CardWidget);
+		break;
+	case ECardAction::ViewDetail:
+		StartViewCardDetail(CardWidget);
 		break;
 	default:
 		break;
@@ -372,6 +381,11 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 
 	// 성공 여부와 관계 없이 사용을 요청했던 카드는 사용 대기 상태를 해제합니다.
 	UseRequestedCards.Remove(HandIndex);
+}
+
+void UCardPanelWidget::StartViewCardDetail(const UCardWidget* CardWidget) const
+{
+	ViewCardDetail->StartViewDetail(CardWidget);
 }
 
 void UCardPanelWidget::OnTurnEndButtonClicked()

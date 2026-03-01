@@ -57,11 +57,11 @@ void UTileSelectorComponent::UnhighlightTileByMouse()
 	}
 }
 
-void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner, const EAbilityType InAbilityType)
+void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner)
 {
+	UnhighlightTileByAbility();
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		CurrentAbilityType = InAbilityType;
 		for (ATile* Tile : Tiles)
 		{
 			// 타일 위에 카드 주인이 있다면 검은색, 다른 게 있다면 초록색으로, 아무것도 없다면 파란색으로 아웃라인을 표시합니다.
@@ -81,16 +81,16 @@ void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles,
 	}
 }
 
-void UTileSelectorComponent::UnhighlightTileByAbility(const EAbilityType InAbilityType)
+void UTileSelectorComponent::UnhighlightTileByAbility()
 {
-	if (CurrentAbilityType == InAbilityType)
+	for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedTilesByAbility)
 	{
-		for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedTilesByAbility)
+		if (HighlightTile)
 		{
 			IHighlightInterface::Execute_UnhighlightActorByCard(HighlightTile.GetObject());
 		}
-		CurrentHighlightedTilesByAbility.Reset();
 	}
+	CurrentHighlightedTilesByAbility.Reset();
 }
 
 void UTileSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const

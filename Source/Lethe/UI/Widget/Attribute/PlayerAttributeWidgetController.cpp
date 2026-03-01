@@ -94,6 +94,9 @@ void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastAct
 	// 선택된 Card의 Owner가 이 WidgetController와 관련이 있으면 들어가는 분기입니다.
 	if (SourceASC == ThisASC)
 	{
+		// Target 유무에 따라 Preview 데이터가 결정되는 경우가 있습니다.
+		// 이전에 Preview가 있다가 이번에 없는 경우, 해당 함수 최하단 분기를 통과하지 못 하므로 여기서 명시적으로 Preview를 중단합니다.
+		StopAllPreview();
 		TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
 		if (CardAbility->TryGetAbilityCostEffectPreviewData(ThisASC, OutAbilityCostPreviewData))
 		{

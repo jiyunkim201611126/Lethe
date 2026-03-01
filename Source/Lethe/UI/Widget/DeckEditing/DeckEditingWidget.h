@@ -31,7 +31,7 @@ class LETHE_API UDeckEditingWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
+protected:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;

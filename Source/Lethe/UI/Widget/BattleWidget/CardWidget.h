@@ -31,7 +31,8 @@ enum class ECardMouseEvent : uint8
 	MouseEnter,
 	MouseLeave,
 	MouseButtonDown,
-	MouseButtonUp,
+	LeftMouseButtonUp,
+	RightMouseButtonUp,
 	MouseCaptureLost
 };
 
@@ -49,8 +50,22 @@ enum class ECardAction : uint8
 	HandHovered,
 	HandUnhovered,
 	Selected,
+	ViewDetail,
 
 	None,
+};
+
+USTRUCT()
+struct FViewDetailData
+{
+	GENERATED_BODY()
+
+	FText CardNameText;
+	
+	UPROPERTY()
+	UObject* CardImage;
+
+	FLinearColor CardFrontsideBorderColor;
 };
 
 DECLARE_DELEGATE_TwoParams(FOnCardMouseEventSignature, UCardWidget*, const ECardAction);
@@ -61,20 +76,10 @@ class LETHE_API UCardWidget : public ULetheUserWidget
 	GENERATED_BODY()
 
 public:
-	//~ Begin UUserWidget Interface
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
-	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
-	//~ End of UUserWidget Interface
-
 	void SetSize(const FVector2D& InSize) const;
-	void SetCardImageSize(const FVector2D& InCardImageSize) const;
 	void SetCardInfo(const FCardInitParams& InitParams);
+
+	void TryMakeViewDetailData(FViewDetailData& OutData) const;
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
@@ -89,6 +94,18 @@ public:
 	FGameplayTag GetCardTag() const;
 
 	ECardContainer GetCurrentCardContainer() const;
+
+protected:
+	//~ Begin UUserWidget Interface
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
+	//~ End of UUserWidget Interface
 
 private:
 	UFUNCTION()
@@ -137,10 +154,8 @@ protected:
 	TObjectPtr<UWidgetAnimation> ShowBackAnimation;
 
 private:
-	FText CardName;
+	FText CardNameText;
 	FGameplayTag CardTag;
-
-	float BaseRenderScale;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 
@@ -160,9 +175,5 @@ private:
 	uint8 bBlockHandHovered : 1 = false;
 	uint8 bMouseHovered : 1 = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CardView")
-	float CardBoardPadding = 10.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CardView")
-	float CardBacksideImagePadding = 6.f;
+	uint8 bMouseButtonDown : 1 = false;
 };

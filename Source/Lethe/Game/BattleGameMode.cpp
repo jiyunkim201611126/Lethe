@@ -2,6 +2,7 @@
 
 #include "BattleGameMode.h"
 
+#include "LetheGameState.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
@@ -95,25 +96,23 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			}
 		}
 
-		for (int32 TileIndex = 0; TileIndex < 5; TileIndex++)
+		// 기존 드럽게 Index가지고 계산하던 코드 버리고 그냥 5개 하드코딩으로 박았습니다.
+		// 이게 훨씬 의도가 명확하고 바로 파악 가능한 코드입니다.
+		// 추후 Room마다 하나씩 스폰하거나, 좌표를 랜덤하게 찍는 함수 정도만 구현하면 될 것 같습니다.
+		constexpr TStaticArray<FCubeCoord, 5> EnemySpawnCoords =
 		{
-			FCubeCoord SpawnEnemyCoord;
-			int32 Offset = TileIndex / 2 + 1;
-			if (TileIndex % 2 == 0)
-			{
-				SpawnEnemyCoord = FCubeCoord(0, 1, -1);
-				SpawnEnemyCoord.R -= Offset;
-				SpawnEnemyCoord.S += Offset;
-			}
-			else
-			{
-				SpawnEnemyCoord = FCubeCoord(0, 0, 0);
-				SpawnEnemyCoord.Q -= Offset;
-				SpawnEnemyCoord.R += Offset;
-			}
+			FCubeCoord(0, 0, 0),
+			FCubeCoord(-1, 1, 0),
+			FCubeCoord(0, -1, 1),
+			FCubeCoord(-2, 2, 0),
+			FCubeCoord(0, -2, 2),
+		};
+		
+		for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
+		{
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			if (ATile* TileActor = TileManagerSubsystem->GetTile(SpawnEnemyCoord))
+			if (ATile* TileActor = TileManagerSubsystem->GetTile(SpawnCoord))
 			{
 				FVector SpawnLocation = TileActor->GetActorLocation();
 				if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
@@ -122,6 +121,11 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
 				}
 			}
+		}
+
+		if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
+		{
+			LetheGameState->GoDrawPhase();
 		}
 	}
 }

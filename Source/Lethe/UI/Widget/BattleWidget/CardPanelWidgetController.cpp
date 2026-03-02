@@ -59,11 +59,6 @@ void UCardPanelWidgetController::BeginDestroy()
 	}
 }
 
-void UCardPanelWidgetController::BroadcastInitialValue()
-{
-	GoDrawPhase();
-}
-
 FVector2D UCardPanelWidgetController::GetCardSize() const
 {
 	return CardViewData->GetCardSize();

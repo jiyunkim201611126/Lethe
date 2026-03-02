@@ -64,8 +64,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::ResetSelectedCardWithoutEvent);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
-		
-		CardPanelWidgetController->BroadcastInitialValue();
 
 		ViewCardDetail->SetWidgetController(WidgetController);
 		bControllerInitialized = true;

@@ -194,7 +194,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		
 		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 			this,
-			LetheGameplayTags.MontageEvent_ApplyEffect,
+			LetheGameplayTags.Event_Montage_ApplyEffect,
 			nullptr,
 			true,
 			true);
@@ -203,7 +203,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	
 		UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 			this,
-			LetheGameplayTags.MontageEvent_EndUseCard,
+			LetheGameplayTags.Event_Montage_EndUseCard,
 			nullptr,
 			true,
 			true);
@@ -230,7 +230,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
-	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_ApplyEffect))
+	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_ApplyEffect))
 	{
 		if (CachedTargetActor.IsValid())
 		{
@@ -238,7 +238,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 			CachedTargetActor.Reset();
 		}
 	}
-	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.MontageEvent_EndUseCard))
+	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndUseCard))
 	{
 		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
 		{
@@ -305,11 +305,11 @@ void ULetheCardAbility::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	// 어떤 CardAbility든 PlayerTurn에만 사용할 수 있습니다.
+	// 어떤 CardAbility든 자신의 턴에만 사용할 수 있습니다.
 	if (HasAnyFlags(RF_ClassDefaultObject))
 	{
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		
-		ActivationRequiredTags.AddTag(LetheGameplayTags.State_Phase_PlayerTurn);
+		ActivationRequiredTags.AddTag(LetheGameplayTags.State_Character_CanAct);
 	}
 }

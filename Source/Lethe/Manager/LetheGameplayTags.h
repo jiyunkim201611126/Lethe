@@ -46,19 +46,20 @@ struct FLetheGameplayTags
 	FGameplayTag Card_Types_Util;
 	//~ End Card Types
 
-	//~ Begin PhaseState
-	FGameplayTag State_Phase_Draw;
-	FGameplayTag State_Phase_PlayerTurn;
-	//~ End of PhaseState
-
 	//~ Begin CharacterState
 	FGameplayTag State_Character_Dead;
+	FGameplayTag State_Character_CanAct;
 	FGameplayTag State_Character_MoveConsumed;
 	//~ End of CharacterState
 
+	//~ Begin StateTree Event
+	FGameplayTag Event_StateTree_TurnStarted;
+	FGameplayTag Event_StateTree_TurnEnded;
+	//~ End of StateTree Event
+
 	//~ Begin Montage Event
-	FGameplayTag MontageEvent_ApplyEffect;
-	FGameplayTag MontageEvent_EndUseCard;
+	FGameplayTag Event_Montage_ApplyEffect;
+	FGameplayTag Event_Montage_EndUseCard;
 	//~ End of Montage Event
 
 private:

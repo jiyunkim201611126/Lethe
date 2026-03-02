@@ -92,12 +92,9 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	
 	AddCharacterAbilities(StartAbilities);
 
-	if (TeamSide == ETeamSide::Player)
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-		{
-			LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		}
+		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
 
@@ -125,19 +122,20 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 
 void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
 {
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (OldPhase == EPhaseState::PlayerTurnPhase)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Phase_PlayerTurn, 0);
-	}
-	
 	if (NewPhase == EPhaseState::DrawPhase)
 	{
 		ApplyRecoveryEffect();
 	}
-	else if (NewPhase == EPhaseState::PlayerTurnPhase)
+
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
+	if (OldPhase == MyPhaseState)
 	{
-		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Phase_PlayerTurn);
+		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	}
+	else if (NewPhase == MyPhaseState)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
 	}
 }

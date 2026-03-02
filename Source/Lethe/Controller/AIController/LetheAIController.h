@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "GameplayTagContainer.h"
 #include "LetheAIController.generated.h"
 
 enum class EPhaseState : uint8;
@@ -17,6 +18,12 @@ class LETHE_API ALetheAIController : public AAIController
 public:
 	ALetheAIController();
 
+	UFUNCTION(BlueprintCallable)
+	void SelectRandomAbilityTag();
+
+	UFUNCTION(BlueprintCallable)
+	FGameplayTag GetSelectedAbilityTag() const;
+
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
@@ -28,9 +35,12 @@ protected:
 	//~ End of AAIController Interface
 
 private:
-	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase);
+	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	TObjectPtr<UStateTreeAIComponent> StateTreeAIComponent;
+
+private:
+	FGameplayTag SelectedAbilityTag;
 };

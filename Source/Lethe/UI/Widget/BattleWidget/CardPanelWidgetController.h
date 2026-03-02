@@ -59,7 +59,6 @@ class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 public:
 	//~ Begin ULetheWidgetController Interface
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
-	virtual void BroadcastInitialValue() override;
 	//~ End of ULetheWidgetController Interface
 
 	//~ Begin UObject Interface

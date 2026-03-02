@@ -28,13 +28,6 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 	CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS);
 
-	if (!OverlayWidget)
-	{
-		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
-		OverlayWidget->SetWidgetController(OverlayWidgetController);
-		OverlayWidget->AddToViewport();
-	}
-
 	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
 	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
@@ -43,6 +36,13 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
 		AttributeWidget->SetWidgetController(AttributeWidgetController);
+	}
+
+	if (!OverlayWidget)
+	{
+		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
+		OverlayWidget->SetWidgetController(OverlayWidgetController);
+		OverlayWidget->AddToViewport();
 	}
 }
 

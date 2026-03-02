@@ -3,6 +3,7 @@
 #include "LethePlayerController.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "PreviewCoordinatorComponent.h"
 #include "TileSelectorComponent.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -18,6 +19,8 @@ ALethePlayerController::ALethePlayerController()
 {
 	TileSelector = CreateDefaultSubobject<UTileSelectorComponent>("TileSelector");
 	TileSelector->OnDetectedOtherTile.BindUObject(this, &ThisClass::OnOtherTileDetected);
+
+	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -176,12 +179,6 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
 				TileSelector->HighlightTileByAbility(OutTiles, CardOwner);
-
-				// AttributeWidgetController에게 카드가 선택되었음을 콜백으로 알려줍니다.
-				if (OnCardSelectedDelegate.IsBound())
-				{
-					OnCardSelectedDelegate.Broadcast(OwnerASC, LetheCardAbility);
-				}
 			}
 		}
 
@@ -262,9 +259,14 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 			ArrowRenderer->SetActive(false);
 		}
 
-		if (OnOtherTileDetectedDelegate.IsBound())
+		if (PreviewCoordinatorComponent)
 		{
-			OnOtherTileDetectedDelegate.Broadcast(LastActor, CurrentActor, SelectedCardOwnerASC.Get(), SelectedCardAbility.Get());
+			FPreviewContext PreviewContext;
+			PreviewContext.LastTargetActor = LastActor;
+			PreviewContext.CurrentTargetActor = CurrentActor;
+			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
+			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
+			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
 		}
 	}
 }
@@ -412,4 +414,9 @@ ULetheHUD* ALethePlayerController::GetLetheHUD() const
 bool ALethePlayerController::IsProgressingCardAbility() const
 {
 	return bIsProgressingCardAbility;
+}
+
+UPreviewCoordinatorComponent* ALethePlayerController::GetPreviewCoordinatorComponent() const
+{
+	return PreviewCoordinatorComponent;
 }

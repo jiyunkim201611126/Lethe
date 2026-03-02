@@ -1,6 +1,5 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "LetheAttributeSet.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "GameplayEffectExtension.h"
@@ -8,21 +7,29 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Lethe/Interface/CombatInterface.h"
 
+TMap<FGameplayAttribute, FGameplayTag> ULetheAttributeSet::AttributesToTags;
+
 ULetheAttributeSet::ULetheAttributeSet()
 {
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	
-	AttributesToTags.Reserve(9);
+}
 
-	AttributesToTags.Emplace(GetHealthAttribute(), LetheGameplayTags.Attributes_Vital_Health);
-	AttributesToTags.Emplace(GetMaxHealthAttribute(), LetheGameplayTags.Attributes_Vital_MaxHealth);
-	AttributesToTags.Emplace(GetManaAttribute(), LetheGameplayTags.Attributes_Vital_Mana);
-	AttributesToTags.Emplace(GetMaxManaAttribute(), LetheGameplayTags.Attributes_Vital_MaxMana);
-	AttributesToTags.Emplace(GetCostAttribute(), LetheGameplayTags.Attributes_Vital_Cost);
-	AttributesToTags.Emplace(GetMaxCostAttribute(), LetheGameplayTags.Attributes_Vital_MaxCost);
-	AttributesToTags.Emplace(GetManaRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_ManaRecovery);
-	AttributesToTags.Emplace(GetCostRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_CostRecovery);
-	AttributesToTags.Emplace(GetIncomingDamageAttribute(), LetheGameplayTags.Attributes_Meta_IncomingDamage);
+void ULetheAttributeSet::InitializeAttributeTagMap()
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	if (AttributesToTags.IsEmpty())
+	{
+		AttributesToTags.Reserve(9);
+
+		AttributesToTags.Emplace(GetHealthAttribute(), LetheGameplayTags.Attributes_Vital_Health);
+		AttributesToTags.Emplace(GetMaxHealthAttribute(), LetheGameplayTags.Attributes_Vital_MaxHealth);
+		AttributesToTags.Emplace(GetManaAttribute(), LetheGameplayTags.Attributes_Vital_Mana);
+		AttributesToTags.Emplace(GetMaxManaAttribute(), LetheGameplayTags.Attributes_Vital_MaxMana);
+		AttributesToTags.Emplace(GetCostAttribute(), LetheGameplayTags.Attributes_Vital_Cost);
+		AttributesToTags.Emplace(GetMaxCostAttribute(), LetheGameplayTags.Attributes_Vital_MaxCost);
+		AttributesToTags.Emplace(GetManaRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_ManaRecovery);
+		AttributesToTags.Emplace(GetCostRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_CostRecovery);
+		AttributesToTags.Emplace(GetIncomingDamageAttribute(), LetheGameplayTags.Attributes_Meta_IncomingDamage);
+	}
 }
 
 void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

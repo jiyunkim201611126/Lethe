@@ -7,6 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Controller/PlayerController/PreviewCoordinatorComponent.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
@@ -16,11 +17,6 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
-	
-	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-	{
-		LethePlayerController->OnCardSelectedDelegate.AddUObject(this, &ThisClass::OnCardSelected);
-	}
 }
 
 void UPlayerAttributeWidgetController::OnManaChanged(const FOnAttributeChangeData& AttributeData)
@@ -59,82 +55,55 @@ void UPlayerAttributeWidgetController::BroadcastCostChanged() const
 	}
 }
 
-void UPlayerAttributeWidgetController::OnCardSelected(ULetheAbilitySystemComponent* CardOwnerASC, const ULetheCardAbility* CardAbility)
-{
-	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AbilitySystemComponent == CardOwnerASC)
-	{
-		// 해당 WidgetController와 관련 있는 ASC의 카드가 선택된 경우 들어오는 분기입니다.
-		if (CardAbility && !AbilitySystemReferences.IsEmpty())
-		{
-			// Owner의 카드가 선택된 경우 Cost에 대한 Preview를 수행합니다.
-			TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
-			TMap<FGameplayTag, float> OutPreviewData;
-			if (CardAbility->TryGetAbilityCostEffectPreviewData(CardOwnerASC, OutAbilityCostPreviewData))
-			{
-				ConvertAttributeToTag(OutAbilityCostPreviewData, OutPreviewData);
-			}
-			StartAllPreview(OutPreviewData);
-		}
-	}
-}
-
-void UPlayerAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
+void UPlayerAttributeWidgetController::OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
 		return;
 	}
 
-	UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
-	const IAbilitySystemInterface* LastAbilitySystemInterface = Cast<IAbilitySystemInterface>(LastActor);
-	const IAbilitySystemInterface* CurrentAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
+	const UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
+	
+	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.CurrentTargetActor);
+	const UAbilitySystemComponent* CurrentTargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 
-	TMap<FGameplayTag, float> OutPreviewData;
+	StopAllPreview();
 
-	// 선택된 Card의 OwnerASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (SourceASC == ThisASC)
+	// 선택된 카드의 주인이면서 동시에 Target으로 지정된 ASC면 들어가는 분기입니다.
+	if (PreviewContext.SourceASC == ThisASC && CurrentTargetASC == ThisASC)
 	{
-		// Target 유무에 따라 Preview 데이터가 결정되는 경우가 있습니다.
-		// 이전에 Preview가 있다가 이번에 없는 경우, 해당 함수 최하단 분기를 통과하지 못 하므로 여기서 명시적으로 Preview를 중단합니다.
-		StopAllPreview();
-		TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
-		if (CardAbility->TryGetAbilityCostEffectPreviewData(ThisASC, OutAbilityCostPreviewData))
+		if (!PreviewData.OutPreviewDataForSourceActor.IsEmpty() || !PreviewData.OutPreviewDataForTargetActor.IsEmpty())
 		{
-			ConvertAttributeToTag(OutAbilityCostPreviewData, OutPreviewData);
-		}
-		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
-		if (CurrentAbilitySystemInterface)
-		{
-			if (UAbilitySystemComponent* TargetASC = CurrentAbilitySystemInterface->GetAbilitySystemComponent())
+			TMap<FGameplayTag, float> AllPreviewData;
+			for (const auto& Elem : PreviewData.OutPreviewDataForSourceActor)
 			{
-				if (CardAbility->TryGetAbilityEffectsForSourcePreviewData(SourceASC, TargetASC, OutAbilityEffectPreviewData))
-				{
-					ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
-				}
+				AllPreviewData.FindOrAdd(Elem.Key) += Elem.Value;
 			}
+			for (const auto& Elem : PreviewData.OutPreviewDataForTargetActor)
+			{
+				AllPreviewData.FindOrAdd(Elem.Key) += Elem.Value;
+			}
+			StartAllPreview(AllPreviewData);
 		}
+		return;
 	}
 	
-	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	// 선택된 Card의 OwnerASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
+	if (PreviewContext.SourceASC == ThisASC)
 	{
-		StopAllPreview();
+		if (!PreviewData.OutPreviewDataForSourceActor.IsEmpty())
+		{
+			StartAllPreview(PreviewData.OutPreviewDataForSourceActor);
+		}
 	}
 
 	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	if (CurrentTargetASC == ThisASC)
 	{
-		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
-		if (CardAbility->TryGetAbilityEffectsForTargetPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
+		if (!PreviewData.OutPreviewDataForTargetActor.IsEmpty())
 		{
-			ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
+			StartAllPreview(PreviewData.OutPreviewDataForTargetActor);
 		}
-	}
-
-	if (!OutPreviewData.IsEmpty())
-	{
-		StopAllPreview();
-		StartAllPreview(OutPreviewData);
 	}
 }
 

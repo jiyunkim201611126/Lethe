@@ -8,6 +8,8 @@
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
+struct FPreviewData;
+struct FPreviewContext;
 class ULetheCardAbility;
 struct FGameplayAttribute;
 struct FOnAttributeChangeData;
@@ -43,11 +45,10 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	virtual void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility);
+	virtual void OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData);
 	void OnCancelCardSelect();
 
 	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);
-	void ConvertAttributeToTag(const TMap<FGameplayAttribute, float>& InMap, TMap<FGameplayTag, float>& OutMap);
 
 	void StartPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag, const TMap<FGameplayTag, float>& InPreviewData);
 	void StopPreview(const FGameplayTag& CurrentTag, const FGameplayTag& MaxTag);

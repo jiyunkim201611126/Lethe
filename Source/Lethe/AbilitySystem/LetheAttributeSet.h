@@ -71,6 +71,8 @@ public:
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 	//~ End UAttributeSet Interface
 
+	static void InitializeAttributeTagMap();
+
 private:
 	// GE 적용 시점에 Source와 Target을 편리하게 추적하기 위해 구조체에 그 정보를 채워주는 함수입니다.
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& EffectProperties) const;
@@ -79,7 +81,7 @@ private:
 
 public:
 	// Attribute와 그에 해당하는 Tag를 매핑한 TMap입니다.
-	TMap<FGameplayAttribute, FGameplayTag> AttributesToTags;
+	static TMap<FGameplayAttribute, FGameplayTag> AttributesToTags;
 
 	/**
 	 * Vital Attributes

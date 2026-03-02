@@ -7,6 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Controller/PlayerController/PreviewCoordinatorComponent.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
@@ -27,7 +28,10 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
-		LethePlayerController->OnOtherTileDetectedDelegate.AddUObject(this, &ThisClass::OnOtherTileDetected);
+		if (UPreviewCoordinatorComponent* PreviewCoordinatorComponent = LethePlayerController->GetPreviewCoordinatorComponent())
+		{
+			PreviewCoordinatorComponent->OnPreviewDataUpdated.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
+		}
 		LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 	}
 }
@@ -56,38 +60,34 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 	}
 }
 
-void UAttributeWidgetController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor, UAbilitySystemComponent* SourceASC, const ULetheCardAbility* CardAbility)
+
+void UAttributeWidgetController::OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
 		return;
 	}
 
-	UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
-	const IAbilitySystemInterface* LastAbilitySystemInterface = Cast<IAbilitySystemInterface>(LastActor);
-	const IAbilitySystemInterface* CurrentAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
+	const UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
+	
+	const IAbilitySystemInterface* LastTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.LastTargetActor);
+	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.CurrentTargetActor);
+	const UAbilitySystemComponent* LastTargetASC = LastTargetAbilitySystemInterface ? LastTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	const UAbilitySystemComponent* CurrentTargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 
-	// LastActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (LastAbilitySystemInterface && LastAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	// 직전에 Target이었던 ASC라면 Preview를 중단합니다.
+	if (LastTargetASC == ThisASC)
 	{
 		StopAllPreview();
-		return;
 	}
 
-	// CurrentActor의 ASC가 이 WidgetController가 관찰 중인 ASC면 들어가는 분기입니다.
-	if (CurrentAbilitySystemInterface && CurrentAbilitySystemInterface->GetAbilitySystemComponent() == ThisASC)
+	// 이번에 Target으로 지정된 ASC라면 Preview를 시작합니다.
+	if (CurrentTargetASC == ThisASC)
 	{
 		StopAllPreview();
-		TMap<FGameplayAttribute, float> OutAbilityEffectPreviewData;
-		TMap<FGameplayTag, float> OutPreviewData;
-		if (CardAbility->TryGetAbilityEffectsForTargetPreviewData(SourceASC, ThisASC, OutAbilityEffectPreviewData))
+		if (!PreviewData.OutPreviewDataForTargetActor.IsEmpty())
 		{
-			ConvertAttributeToTag(OutAbilityEffectPreviewData, OutPreviewData);
-		}
-		
-		if (!OutPreviewData.IsEmpty())
-		{
-			StartAllPreview(OutPreviewData);
+			StartAllPreview(PreviewData.OutPreviewDataForTargetActor);
 		}
 	}
 }
@@ -99,36 +99,9 @@ void UAttributeWidgetController::OnCancelCardSelect()
 
 void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData)
 {
-	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AttributeSet)
+	if (const FGameplayTag* AttributeTag = ULetheAttributeSet::AttributesToTags.Find(AttributeData.Attribute))
 	{
-		if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(AttributeData.Attribute))
-		{
-			CachedAttribute.Emplace(*AttributeTag, AttributeData.NewValue);
-		}
-	}
-}
-
-void UAttributeWidgetController::ConvertAttributeToTag(const TMap<FGameplayAttribute, float>& InMap, TMap<FGameplayTag, float>& OutMap)
-{
-	if (!AbilitySystemReferences.IsEmpty() && AbilitySystemReferences[0].AttributeSet)
-	{
-		for (const auto& Elem : InMap)
-		{
-			if (const FGameplayTag* AttributeTag = AbilitySystemReferences[0].AttributeSet->AttributesToTags.Find(Elem.Key))
-			{
-				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				if (AttributeTag->MatchesTag(LetheGameplayTags.Attributes_Meta_IncomingDamage))
-				{
-					// Damage Attribute인 경우 Health Attribute로 바꾸고, 값도 음수로 바꿔서 넣어줍니다.
-					OutMap.FindOrAdd(LetheGameplayTags.Attributes_Vital_Health) -= Elem.Value;
-				}
-				else
-				{
-					// Cost와 마우스 Hovered 상태를 합산해서 보여주기 위해 Emplace가 아닌 FindOrAdd를 사용합니다.
-					OutMap.FindOrAdd(*AttributeTag) += Elem.Value;
-				}
-			}
-		}
+		CachedAttribute.Emplace(*AttributeTag, AttributeData.NewValue);
 	}
 }
 

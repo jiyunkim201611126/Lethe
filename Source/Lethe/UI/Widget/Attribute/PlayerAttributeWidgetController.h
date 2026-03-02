@@ -19,7 +19,6 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	virtual void OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData) override;
 	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;
 	virtual void StopAllPreview() override;
 

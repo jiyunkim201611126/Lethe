@@ -17,10 +17,7 @@ struct FPreviewContext
 	GENERATED_BODY()
 
 	UPROPERTY()
-	const AActor* LastTargetActor = nullptr;
-
-	UPROPERTY()
-	const AActor* CurrentTargetActor = nullptr;
+	TArray<const AActor*> CurrentTargetActors;
 
 	UPROPERTY()
 	UAbilitySystemComponent* SourceASC = nullptr;
@@ -30,15 +27,23 @@ struct FPreviewContext
 };
 
 USTRUCT()
+struct FAttributePreviewDelta
+{
+	GENERATED_BODY()
+	
+	TMap<FGameplayTag, float> AttributePreviewDelta;
+};
+
+USTRUCT()
 struct FPreviewData
 {
 	GENERATED_BODY()
 
-	TMap<FGameplayTag, float> OutPreviewDataForSourceActor;
-	TMap<FGameplayTag, float> OutPreviewDataForTargetActor;
+	UPROPERTY()
+	TMap<UAbilitySystemComponent*, FAttributePreviewDelta> ASCToPreviewData;
 };
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPreviewDataUpdated, const FPreviewContext&, const FPreviewData&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdated, const FPreviewData&);
 
 UCLASS()
 class LETHE_API UPreviewCoordinatorComponent : public UActorComponent

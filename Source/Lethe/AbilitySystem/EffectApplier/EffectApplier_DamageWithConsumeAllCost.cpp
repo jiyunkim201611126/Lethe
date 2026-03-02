@@ -57,23 +57,6 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(const UAbilityS
 	return !OutSpecHandles.IsEmpty();
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
-{
-	const int32 CurrentCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
-	OutSpecHandles.Reserve(CurrentCost);
-	for (int32 Index = 0; Index < CurrentCost; ++Index)
-	{
-		FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);
-		OutSpecHandles.Emplace(DamageSpecHandle);
-	}
-	return !OutSpecHandles.IsEmpty();
-}
-
-TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
-{
-	return CostEffectClass;
-}
-
 void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility) const
 {
 	if (!SourceASC || !OwningAbility)
@@ -101,4 +84,21 @@ int32 UEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbi
 	}
 	// Preview와 흡사한 상황으로, 설명에 텍스트를 표시하기 위한 값을 가져가는 상황이기 때문에 Cost와 곱해서 반환합니다.
 	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) : 1.f);
+}
+
+TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
+{
+	return CostEffectClass;
+}
+
+bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+{
+	const int32 CurrentCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+	OutSpecHandles.Reserve(CurrentCost);
+	for (int32 Index = 0; Index < CurrentCost; ++Index)
+	{
+		FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);
+		OutSpecHandles.Emplace(DamageSpecHandle);
+	}
+	return !OutSpecHandles.IsEmpty();
 }

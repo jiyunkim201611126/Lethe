@@ -25,7 +25,6 @@ public:
 	virtual void CancelAbility();
 	virtual void EndAbility();
 	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
-	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
@@ -36,7 +35,9 @@ public:
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
+	// Ability 자체 Cost 외, Effect 적용 시 Source에게 발생하는 Attribute 변화를 Preview로 표시할 때 사용하는 함수들입니다.
 	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
+	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

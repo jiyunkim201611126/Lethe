@@ -2,7 +2,6 @@
 
 #include "AttributeWidgetController.h"
 
-#include "AbilitySystemInterface.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
@@ -61,34 +60,19 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 }
 
 
-void UAttributeWidgetController::OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData)
+void UAttributeWidgetController::OnPreviewDataUpdated(const FPreviewData& PreviewData)
 {
 	if (AbilitySystemReferences.IsEmpty())
 	{
 		return;
 	}
+	
+	StopAllPreview();
 
 	const UAbilitySystemComponent* ThisASC = AbilitySystemReferences[0].AbilitySystemComponent;
-	
-	const IAbilitySystemInterface* LastTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.LastTargetActor);
-	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.CurrentTargetActor);
-	const UAbilitySystemComponent* LastTargetASC = LastTargetAbilitySystemInterface ? LastTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-	const UAbilitySystemComponent* CurrentTargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-
-	// 직전에 Target이었던 ASC라면 Preview를 중단합니다.
-	if (LastTargetASC == ThisASC)
+	if (const FAttributePreviewDelta* AttributePreviewDelta = PreviewData.ASCToPreviewData.Find(ThisASC))
 	{
-		StopAllPreview();
-	}
-
-	// 이번에 Target으로 지정된 ASC라면 Preview를 시작합니다.
-	if (CurrentTargetASC == ThisASC)
-	{
-		StopAllPreview();
-		if (!PreviewData.OutPreviewDataForTargetActor.IsEmpty())
-		{
-			StartAllPreview(PreviewData.OutPreviewDataForTargetActor);
-		}
+		StartAllPreview(AttributePreviewDelta->AttributePreviewDelta);
 	}
 }
 

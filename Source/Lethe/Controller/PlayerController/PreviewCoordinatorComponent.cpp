@@ -26,28 +26,34 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
 	if (PreviewContext.SelectedCardAbility->TryGetAbilityCostEffectPreviewData(PreviewContext.SourceASC, OutAbilityCostPreviewData))
 	{
-		ConvertAttributeToTag(OutAbilityCostPreviewData, PreviewData.OutPreviewDataForSourceActor);
+		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
+		ConvertAttributeToTag(OutAbilityCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
 	}
-	
-	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(PreviewContext.CurrentTargetActor);
-	UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-	if (TargetASC)
+
+	for (const AActor* CurrentTargetActor : PreviewContext.CurrentTargetActors)
 	{
-		TMap<FGameplayAttribute, float> OutAbilityEffectsForSourcePreviewData;
-		if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForSourcePreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForSourcePreviewData))
+		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentTargetActor);
+		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+		if (TargetASC)
 		{
-			ConvertAttributeToTag(OutAbilityEffectsForSourcePreviewData, PreviewData.OutPreviewDataForSourceActor);
-		}
-		TMap<FGameplayAttribute, float> OutAbilityEffectsForTargetPreviewData;
-		if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForTargetPreviewData))
-		{
-			ConvertAttributeToTag(OutAbilityEffectsForTargetPreviewData, PreviewData.OutPreviewDataForTargetActor);
+			TMap<FGameplayAttribute, float> OutAbilityEffectsForSourcePreviewData;
+			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForSourcePreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForSourcePreviewData))
+			{
+				FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
+				ConvertAttributeToTag(OutAbilityEffectsForSourcePreviewData, AttributePreviewDelta.AttributePreviewDelta);
+			}
+			TMap<FGameplayAttribute, float> OutAbilityEffectsForTargetPreviewData;
+			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForTargetPreviewData))
+			{
+				FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
+				ConvertAttributeToTag(OutAbilityEffectsForTargetPreviewData, AttributePreviewDelta.AttributePreviewDelta);
+			}
 		}
 	}
 
 	if (OnPreviewDataUpdated.IsBound())
 	{
-		OnPreviewDataUpdated.Broadcast(PreviewContext, PreviewData);
+		OnPreviewDataUpdated.Broadcast(PreviewData);
 	}
 }
 

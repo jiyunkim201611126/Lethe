@@ -15,11 +15,6 @@ void UGameplayEffectApplier::EndAbility()
 	EffectContextHandle.Clear();
 }
 
-bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
-{
-	return false;
-}
-
 int32 UGameplayEffectApplier::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	return 0;
@@ -64,4 +59,9 @@ FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() co
 TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetSourcePreviewEffectClass() const
 {
 	return nullptr;
+}
+
+bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+{
+	return false;
 }

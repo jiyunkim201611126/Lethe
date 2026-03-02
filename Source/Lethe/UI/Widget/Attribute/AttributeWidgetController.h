@@ -45,7 +45,7 @@ public:
 	//~ End LetheWidgetController Interface
 
 protected:
-	virtual void OnPreviewDataUpdated(const FPreviewContext& PreviewContext, const FPreviewData& PreviewData);
+	virtual void OnPreviewDataUpdated(const FPreviewData& PreviewData);
 	void OnCancelCardSelect();
 
 	void UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData);

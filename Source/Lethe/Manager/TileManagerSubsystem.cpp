@@ -4,6 +4,7 @@
 
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
+#include "Lethe/Data/Stage/RoomData.h"
 
 void UTileManagerSubsystem::Deinitialize()
 {
@@ -40,7 +41,7 @@ void UTileManagerSubsystem::MakeNewTileMap()
 	
 			InitMapData(StageInitData);
 			MakeFloorData(&RandomStream, StageInitData);
-			MakeEventData(StageData, StageInitData);
+			MakeEventData(&RandomStream, StageInitData);
 			MakeTileActor(StageData, StageInitData);
 		}
 	}
@@ -98,11 +99,11 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		
 		TSet<FCubeCoord> SelectedCoords;
 		TileBFS(Coord, 10, EBFSType::Connection, SelectedCoords,
-			[]()
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
 				return true;
 			},
-			[&](const FTileData* CurrentTileData, const int32 CurrentDepth)
+			[&](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
 				if (CurrentTileData->RoomId != RootTileData->RoomId)
 				{
@@ -155,11 +156,11 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 		//테두리 검출 후 타일 연결 끊기
 		TSet<FCubeCoord> BoundCoords;
 		TileBFS(Coord, 15, EBFSType::Connection, BoundCoords,
-			[]()
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
 				return true;
 			},
-			[&RoomId](const FTileData* CurrentTileData, const int32 CurrentDepth)
+			[&RoomId](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
 				if (CurrentTileData->RoomId != RoomId) //이새끼가 문제임
 				{
@@ -191,20 +192,143 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 	}
 }
 
-void UTileManagerSubsystem::MakeEventData(const FStageData* StageData, const UStageInitData* StageInitData)
+void UTileManagerSubsystem::MakeEventData(const FRandomStream* RandomStream, const UStageInitData* StageInitData)
 {
 	//1. 모든 타일을 순차적으로 BFS를 돌아서 RoomNum 기준으로 묶는다.
-	//2. 서로 다른 RoomNum을 가진 지역이 있을 경우 (대부분 고립된 지역임) 더 큰 Size를 가진 쪽이 RoomNum을 승계한다.
-	//3. 고립된 지역에 새로운 RoomNum을 부여한다.
-	//4. Room 단위로 BFS를 돌아서 길이 연결될 가능성이 있는 구역을 탐색한다 (Floor 차이가 1이면서 RoomNum이 다른 구역)
-	//5. 각 Room마다 적절한 양의 길을 연결한다. 알고리즘이 잘 짜여졌다면 추가로 고립 여부를 BFS로 확인할 필요가 없다.
-	//7. 구조물 및 이벤트 룸을 정의하고 조건을 작성한다. Floor, RoomSize 등이 조건이 되며, 핵심 구조물 및 이벤트 타일이 배치 가능한지 우선 확인해야 한다.
-	//8. 조건이 맞는 Room에 필수 Event부터 선택하여 배치한다.
-	//9. 이벤트가 없는 나머지 룸들에 비필수 Event들을 랜덤하게 배치한다.
-	//10. 아무 이벤트가 없는 룸들에게 약간의 이벤트라도 배치한다.
+    	//2. 서로 다른 RoomNum을 가진 지역이 있을 경우 (대부분 고립된 지역임) 더 큰 Size를 가진 쪽이 RoomNum을 승계한다.
+    	//3. 고립된 지역에 새로운 RoomNum을 부여한다.
+    	//4. Room 단위로 BFS를 돌아서 길이 연결될 가능성이 있는 구역을 탐색한다 (Floor 차이가 1이면서 RoomNum이 다른 구역)
+    	//5. 각 Room마다 적절한 양의 길을 연결한다. 알고리즘이 잘 짜여졌다면 추가로 고립 여부를 BFS로 확인할 필요가 없다.
+    	//7. 구조물 및 이벤트 룸을 정의하고 조건을 작성한다. Floor, RoomSize 등이 조건이 되며, 핵심 구조물 및 이벤트 타일이 배치 가능한지 우선 확인해야 한다.
+    	//8. 조건이 맞는 Room에 필수 Event부터 선택하여 배치한다.
+    	//9. 이벤트가 없는 나머지 룸들에 비필수 Event들을 랜덤하게 배치한다.
+    	//10. 아무 이벤트가 없는 룸들에게 약간의 이벤트라도 배치한다.
+    
+    	//RoomSize, RoomNum 등을 가진 Room 구조체 필요
+    	//예전에 만들었다 지웠던 RoomInitData 데이터 에셋 필요
 
-	//RoomSize, RoomNum 등을 가진 Room 구조체 필요
-	//예전에 만들었다 지웠던 RoomInitData 데이터 에셋 필요
+		//모든 Room은 초기에 고립되어 있으므로, 추가 조건 없이 고립 구역만 검출하면 Room 검출 가능. 이후 새 인덱스 부여
+    	TMap<int32, FRoomData> RoomDataMap;
+    	TSet<FCubeCoord> VisitedCoords;
+    	int RoomId = 0;
+    
+    	for (auto& Elem : TileDataMap)
+    	{
+    		if (VisitedCoords.Contains(Elem.Key))
+    		{
+    			continue;			
+    		}
+    
+    		TSet<FCubeCoord> CurrentCoords;
+    		
+    		TileBFS(Elem.Key, 999, EBFSType::Connection, CurrentCoords,
+    			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+    		{
+    			return true;
+    		},
+    		[](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+    		{
+    			return true;
+    		});
+
+    		FCubeCoord TempCoord = FCubeCoord(0, 0, 0);
+    		
+    		for (FCubeCoord coord : CurrentCoords)
+    		{
+    			TempCoord = TempCoord + coord;
+    			TileDataMap[coord].RoomId = RoomId;
+    		}
+
+    		{
+    			int32 AverageQ = FMath::RoundToInt(static_cast<float>(TempCoord.Q) / CurrentCoords.Num());
+    			int32 AverageR = FMath::RoundToInt(static_cast<float>(TempCoord.R) / CurrentCoords.Num());
+    			int32 AverageS = FMath::RoundToInt(static_cast<float>(TempCoord.S) / CurrentCoords.Num());
+
+    			TempCoord = FCubeCoord(AverageQ, AverageR, AverageS);
+
+    			//최소값 탐색
+    			const FCubeCoord* Closest = Algo::MinElementBy(CurrentCoords, [&](const FCubeCoord& Coord)
+				{
+					return FCubeCoord::Distance(Coord, TempCoord);
+				});
+
+    			RoomDataMap.Emplace(RoomId, FRoomData(CurrentCoords.Num(), TempCoord));
+    		}
+    		
+    		VisitedCoords.Append(CurrentCoords);
+    		RoomId++;
+    	}
+
+		//Key : RoomId, Value : 테두리 타일의 Coord 집합
+		TMap<int32, TSet<FCubeCoord>> BoundTiles;
+	
+		for (auto& Elem : RoomDataMap)
+		{
+			TSet<FCubeCoord> BoundCoords;
+			
+			TileBFS(Elem.Value.CenterCoords, 999, EBFSType::Connection, BoundCoords,
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				if (CurrentTileData->RoomId == NextTileData->RoomId)
+				{
+					return true;
+				}
+				
+				return false;
+			},
+			[this](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+			{
+				//6방향 검사해서 하나라도 다른 RoomId가 나오면, 테두리 타일로 검출
+				for (int32 i = 0; i < 6; i++)
+				{
+					FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(i);
+					FTileData* NextTileData = TileDataMap.Find(NextCoord);
+
+					if (NextTileData && abs(CurrentTileData->Floor - NextTileData->Floor) == 1 && CurrentTileData->RoomId != NextTileData->RoomId)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			});
+
+			BoundTiles.Emplace(Elem.Key, BoundCoords);
+		}
+
+		for (auto& Elem : BoundTiles)
+		{
+			TArray<FCubeCoord> RandArray = Elem.Value.Array();
+			ShuffleArray(RandomStream, RandArray); //순서 보장을 위해 한 번 섞음
+
+			int32 SelectCount = 6; //최소 1개의 길 보장
+
+			//6방향 연결점을 랜덤으로 접근해서, 막힌 길을 만날 때마다 길을 뚫기 위해 시도
+			for (auto& Coord : RandArray)
+			{
+				TArray<int32> RandDir = {0, 1, 2, 3, 4, 5};
+				ShuffleArray(RandomStream, RandDir);
+
+				for (int32 Dir : RandDir)
+				{
+					FTileData* CurrentTileData = TileDataMap.Find(Coord);
+					
+					if (CurrentTileData && !CurrentTileData->Connections[Dir])
+					{
+						FTileData* NextTileData = TileDataMap.Find(Coord + FCubeCoord::GetDirection(Dir));
+
+						if (NextTileData && abs(CurrentTileData->Floor - NextTileData->Floor) == 1 && SelectCount / 6)
+						{
+							SelectCount -= 6;
+							NextTileData->Connections[(Dir + 3) % 6] = true;
+							CurrentTileData->Connections[Dir] = true;
+						}
+
+						SelectCount = SelectCount + StageInitData->AverageConnectionPerSixWays;
+					}					
+				}
+			}
+		}
 }
 
 void UTileManagerSubsystem::MakeTileActor(const FStageData* StageData, const UStageInitData* StageInitData)
@@ -335,6 +459,19 @@ FVector UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord) co
 }
 
 void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const
+{
+	const int32 LastIndex = Array.Num() - 1;
+	for (int32 Index = LastIndex; Index > 0; --Index)
+	{
+		const int32 SwapIndex = RandomStream->FRandRange(0, Index);
+		if (Index != SwapIndex)
+		{
+			Array.Swap(Index, SwapIndex);
+		}
+	}
+}
+
+void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArray<int32>& Array) const
 {
 	const int32 LastIndex = Array.Num() - 1;
 	for (int32 Index = LastIndex; Index > 0; --Index)

@@ -54,6 +54,12 @@ public:
 		};
 		return DirectionOffsets[DirectionIndex % 6];
 	}
+
+	//거리 계산
+	static int32 Distance(const FCubeCoord& A, const FCubeCoord& B)
+	{
+		return (FMath::Abs(A.Q - B.Q) + FMath::Abs(A.R - B.R) + FMath::Abs(A.S - B.S)) / 2;
+	}
 };
 
 FORCEINLINE uint32 GetTypeHash(const FCubeCoord& Coord)

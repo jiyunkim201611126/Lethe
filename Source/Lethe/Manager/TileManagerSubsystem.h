@@ -50,7 +50,7 @@ private:
 	//높낮이맵 제작 알고리즘
 	void MakeFloorData(const FRandomStream* RandomStream, const UStageInitData* StageInitData);
 	//타일맵 제작 알고리즘
-	void MakeEventData(const FStageData* StageData, const UStageInitData* StageInitData);
+	void MakeEventData(const FRandomStream* RandomStream, const UStageInitData* StageInitData);
 	//타일 생성
 	void MakeTileActor(const FStageData* StageData, const UStageInitData* StageInitData);
 
@@ -60,6 +60,7 @@ private:
 	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord) const;
 	//배열 랜덤 셔플
 	void ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const;
+	void ShuffleArray(const FRandomStream* RandomStream, TArray<int32>& Array) const;
 	
 private:
 	UPROPERTY(Config)
@@ -114,7 +115,7 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 		Visited.Emplace(CurrentCoord);
 		CurrentTileData = TileDataMap.Find(CurrentCoord);
 
-		if (SelectCondition(CurrentTileData, CurrentDepth))
+		if (SelectCondition(CurrentCoord, CurrentTileData, CurrentDepth))
 		{
 			OutCoords.Emplace(CurrentCoord);
 		}
@@ -154,7 +155,7 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 			}
 
 			// TODO: 탐색하지 않는다는 조건에 있어 필요한 매개변수들 여기서 넣어줘야 할 듯? 현재는 단순 true, false로만 해당 타일에서 더 BFS할지 말지 결정하는 중
-			if (!BFSCondition())
+			if (!BFSCondition(CurrentTileData, NextTileData))
 			{
 				continue;
 			}

@@ -42,7 +42,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	int32 ConsecutiveTileCount;
 
-	//서로 다른 층의 타일이 연결될 때, 몇 타일마다 길을 만들지 (낮을 수록 길이 많아짐)
+	//서로 다른 층의 타일이 연결될 때, 6경로 기준으로 평균 몇 개나 연결되도록 할 것인지 (6일 경우, 모든 경로가 연결됨)
 	UPROPERTY(EditDefaultsOnly)
-	int32 ConnectionPerTile;
+	int32 AverageConnectionPerSixWays;
 };

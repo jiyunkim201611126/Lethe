@@ -49,11 +49,11 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		
 		TSet<FCubeCoord> SelectedCoord;
 		TileManagerSubsystem->TileBFS(MostLeftTileCoord, 3, EBFSType::Through, SelectedCoord,
-			[]()
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
 				return true;
 			},
-			[](const FTileData* TileData, int32 Depth)
+			[](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{

@@ -6,6 +6,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "Lethe/Data/Stage/CubeCoord.h"
 #include "Lethe/Data/Stage/TileData.h"
+#include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
 class ATile;
@@ -60,7 +61,7 @@ private:
 	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord) const;
 	//배열 랜덤 셔플
 	void ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const;
-	void ShuffleArray(const FRandomStream* RandomStream, TArray<int32>& Array) const;
+	void ShuffleArray(const FRandomStream* RandomStream, TArray<TPair<FCubeCoord, int32>>& Array) const;
 	
 private:
 	UPROPERTY(Config)
@@ -72,6 +73,8 @@ private:
 
 	UPROPERTY()
 	TMap<FCubeCoord, FTileData> TileDataMap;
+	UPROPERTY()
+	TMap<int32, FRoomData> RoomDataMap;
 
 	// 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다.
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
@@ -140,6 +143,12 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 				continue;
 			}
 			
+			// TODO: 탐색하지 않는다는 조건에 있어 필요한 매개변수들 여기서 넣어줘야 할 듯? 현재는 단순 true, false로만 해당 타일에서 더 BFS할지 말지 결정하는 중
+			if (!BFSCondition(CurrentTileData, NextTileData))
+			{
+				continue;
+			}
+			
 			switch (BFSType)
 			{
 				case EBFSType::Connection:
@@ -152,12 +161,6 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 				break;
 				default:
 				break;
-			}
-
-			// TODO: 탐색하지 않는다는 조건에 있어 필요한 매개변수들 여기서 넣어줘야 할 듯? 현재는 단순 true, false로만 해당 타일에서 더 BFS할지 말지 결정하는 중
-			if (!BFSCondition(CurrentTileData, NextTileData))
-			{
-				continue;
 			}
 			
 			Queue.Enqueue({NextCoord, CurrentDepth + 1});

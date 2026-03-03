@@ -11,19 +11,13 @@
 class UGameplayAbility;
 class UGameplayEffect;
 
-UENUM()
-enum class EEffectPreviewTarget : uint8
-{
-	Source,
-	Target
-};
-
 USTRUCT()
 struct FPreviewEffectSpecContext
 {
 	GENERATED_BODY()
 	
-	EEffectPreviewTarget Target = EEffectPreviewTarget::Target;
+	UPROPERTY()
+	UAbilitySystemComponent* PreviewTargetASC = nullptr;
 
 	UPROPERTY()
 	TSubclassOf<UGameplayEffect> EffectClass;
@@ -54,7 +48,7 @@ public:
 
 	// Preview 데이터를 만들기 위한 Spec Context를 생성합니다.
 	// 기본 구현은 Target을 대상으로 하는 Preview 데이터만 생성하며, Source를 대상으로 하는 데이터가 필요한 경우 자식에서 오버라이드해 구현합니다.
-	virtual bool TryBuildPreviewSpecContexts(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const;
+	virtual bool TryBuildPreviewSpecContexts(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;

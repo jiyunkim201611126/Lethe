@@ -44,7 +44,7 @@ FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() co
 	return EffectContextHandle;
 }
 
-bool UGameplayEffectApplier::TryBuildPreviewSpecContexts(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
+bool UGameplayEffectApplier::TryBuildPreviewSpecContexts(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
 {
 	if (!SourceASC || !TargetASC)
 	{
@@ -55,7 +55,7 @@ bool UGameplayEffectApplier::TryBuildPreviewSpecContexts(const UAbilitySystemCom
 	if (TryMakeSpecHandles(SourceASC, InContextHandle, TargetSpecHandles) && EffectClass)
 	{
 		FPreviewEffectSpecContext& TargetContext = OutPreviewEffectSpecContexts.Emplace_GetRef();
-		TargetContext.Target = EEffectPreviewTarget::Target;
+		TargetContext.PreviewTargetASC = TargetASC;
 		TargetContext.EffectClass = EffectClass;
 		TargetContext.SpecHandles = MoveTemp(TargetSpecHandles);
 	}

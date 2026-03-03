@@ -63,7 +63,7 @@ protected:
 	FText GetRangeDescription() const;
 
 private:
-	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+	bool TryGetGameplayEffectPreviewData(const FPreviewEffectSpecContext& PreviewEffectSpecContext, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);

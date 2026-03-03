@@ -49,7 +49,7 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent*
 	}
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryBuildPreviewSpecContexts(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
+bool UEffectApplier_DamageWithConsumeAllCost::TryBuildPreviewSpecContexts(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
 {
 	if (!SourceASC || !TargetASC)
 	{
@@ -62,12 +62,12 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryBuildPreviewSpecContexts(const 
 		return false;
 	}
 
-	const bool bHasTargetPreview = BuildTargetDamagePreviewContext(SourceASC, InContextHandle, CurrentCost, OutPreviewEffectSpecContexts);
+	const bool bHasTargetPreview = BuildTargetDamagePreviewContext(SourceASC, TargetASC, InContextHandle, CurrentCost, OutPreviewEffectSpecContexts);
 	const bool bHasSourcePreview = BuildSourceCostPreviewContext(SourceASC, InContextHandle, CurrentCost, OutPreviewEffectSpecContexts);
 	return bHasTargetPreview || bHasSourcePreview;
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::BuildTargetDamagePreviewContext(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
+bool UEffectApplier_DamageWithConsumeAllCost::BuildTargetDamagePreviewContext(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
 {
 	// 해당 EffectApplier는 Cost를 1씩 줄이면서 EffectSpec을 만들어 적용하므로, Preview에선 Cost만큼 Spec을 만들어 반환해줍니다.
 	TArray<FGameplayEffectSpecHandle> TargetSpecHandles;
@@ -83,13 +83,13 @@ bool UEffectApplier_DamageWithConsumeAllCost::BuildTargetDamagePreviewContext(co
 	}
 
 	FPreviewEffectSpecContext& TargetContext = OutPreviewEffectSpecContexts.Emplace_GetRef();
-	TargetContext.Target = EEffectPreviewTarget::Target;
+	TargetContext.PreviewTargetASC = TargetASC;
 	TargetContext.EffectClass = EffectClass;
 	TargetContext.SpecHandles = MoveTemp(TargetSpecHandles);
 	return true;
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::BuildSourceCostPreviewContext(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewSpecEffectContexts) const
+bool UEffectApplier_DamageWithConsumeAllCost::BuildSourceCostPreviewContext(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewSpecEffectContexts) const
 {
 	if (!CostEffectClass)
 	{
@@ -111,7 +111,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::BuildSourceCostPreviewContext(cons
 	}
 
 	FPreviewEffectSpecContext& SourceContext = OutPreviewSpecEffectContexts.Emplace_GetRef();
-	SourceContext.Target = EEffectPreviewTarget::Source;
+	SourceContext.PreviewTargetASC = SourceASC;
 	SourceContext.EffectClass = CostEffectClass;
 	SourceContext.SpecHandles = MoveTemp(SourceSpecHandles);
 	return true;

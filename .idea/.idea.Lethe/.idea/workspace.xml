@@ -17,13 +17,10 @@
       <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/PreviewCoordinatorComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/PreviewCoordinatorComponent.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +34,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://6" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://8" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Developer/Concert/ConcertApp/MultiUserServer/Source/MultiUserServer/Private/Widgets/Util/SDoNotShowAgainDialog.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -646,7 +643,7 @@
       <workItem from="1772377865637" duration="9542000" />
       <workItem from="1772388828558" duration="179000" />
       <workItem from="1772435371101" duration="22820000" />
-      <workItem from="1772541027158" duration="8805000" />
+      <workItem from="1772541027158" duration="10193000" />
     </task>
     <servers />
   </component>

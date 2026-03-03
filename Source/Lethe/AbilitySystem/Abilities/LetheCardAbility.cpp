@@ -34,8 +34,11 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 		
 		TArray<FGameplayEffectSpecHandle> CostEffectSpecHandleArray;
 		CostEffectSpecHandleArray.Emplace(CostEffectSpecHandle);
-		
-		return TryGetGameplayEffectPreviewData(nullptr, CostGameplayEffectClass, CostEffectSpecHandleArray, OutCostPreviewData);
+
+		FPreviewEffectSpecContext PreviewEffectSpecContext;
+		PreviewEffectSpecContext.EffectClass = CostGameplayEffectClass;
+		PreviewEffectSpecContext.SpecHandles = CostEffectSpecHandleArray;
+		return TryGetGameplayEffectPreviewData(PreviewEffectSpecContext, OutCostPreviewData);
 	}
 	return false;
 }
@@ -67,23 +70,13 @@ bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(UAbilitySystemComponent*
 			{
 				for (const FPreviewEffectSpecContext& PreviewEffectSpecContext : PreviewEffectSpecContexts)
 				{
-					UAbilitySystemComponent* PreviewASC;
-					TMap<FGameplayAttribute, float>* OutPreviewData;
-					
-					if (PreviewEffectSpecContext.Target == EEffectPreviewTarget::Source)
+					if (SourceASC == PreviewEffectSpecContext.PreviewTargetASC)
 					{
-						PreviewASC = SourceASC;
-						OutPreviewData = &OutPreviewDataForSource;
+						TryGetGameplayEffectPreviewData(PreviewEffectSpecContext, OutPreviewDataForSource);
 					}
-					else
+					else if (TargetASC == PreviewEffectSpecContext.PreviewTargetASC)
 					{
-						PreviewASC = TargetASC;
-						OutPreviewData = &OutPreviewDataForTarget;
-					}
-
-					if (OutPreviewData)
-					{
-						TryGetGameplayEffectPreviewData(PreviewASC, PreviewEffectSpecContext.EffectClass, PreviewEffectSpecContext.SpecHandles, *OutPreviewData);
+						TryGetGameplayEffectPreviewData(PreviewEffectSpecContext, OutPreviewDataForTarget);
 					}
 				}
 			}
@@ -92,12 +85,12 @@ bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(UAbilitySystemComponent*
 	return !OutPreviewDataForSource.IsEmpty() || !OutPreviewDataForTarget.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetGameplayEffectPreviewData(const FPreviewEffectSpecContext& PreviewEffectSpecContext, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	// GameplayEffect가 적용됐을 때 어떤 변화값이 있는지 가져와서 OutData에 채워줍니다.
-	if (const UGameplayEffect* GameplayEffectCDO = EffectClass.GetDefaultObject())
+	if (const UGameplayEffect* GameplayEffectCDO = PreviewEffectSpecContext.EffectClass.GetDefaultObject())
 	{
-		for (const FGameplayEffectSpecHandle& SpecHandle : SpecHandles)
+		for (const FGameplayEffectSpecHandle& SpecHandle : PreviewEffectSpecContext.SpecHandles)
 		{
 			if (!SpecHandle.Data.IsValid())
 			{
@@ -128,7 +121,7 @@ bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent*
 				}
 
 				// ExecCalc의 계산을 실제로 한 번 돌립니다.
-				FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, TargetASC, ExecDef.PassedInTags, FPredictionKey());
+				FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, PreviewEffectSpecContext.PreviewTargetASC, ExecDef.PassedInTags, FPredictionKey());
 				FGameplayEffectCustomExecutionOutput ExecutionOutput;
 				ExecCalcCDO->Execute(ExecutionParameters, ExecutionOutput);
 

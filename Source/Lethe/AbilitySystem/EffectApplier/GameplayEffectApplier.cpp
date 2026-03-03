@@ -17,7 +17,7 @@ void UGameplayEffectApplier::EndAbility()
 
 bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
 {
-	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
+	UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC)
 	{
 		return false;

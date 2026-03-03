@@ -17,6 +17,8 @@
       <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_Damage.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/EffectApplier_DamageWithConsumeAllCost.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.cpp" afterDir="false" />
@@ -34,7 +36,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://8" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Developer/Concert/ConcertApp/MultiUserServer/Source/MultiUserServer/Private/Widgets/Util/SDoNotShowAgainDialog.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -421,24 +423,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;C/C++ 프로젝트.Lethe.executor&quot;: &quot;Debug&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "C/C++ 프로젝트.Lethe.executor": "Debug",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Reverted",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.keymap",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="C/C++ 프로젝트.Lethe">
     <configuration name="Lethe" type="CppProject" factoryName="C++ Project">
       <configuration_1 setup="1">
@@ -642,8 +644,7 @@
       <workItem from="1772342535106" duration="26581000" />
       <workItem from="1772377865637" duration="9542000" />
       <workItem from="1772388828558" duration="179000" />
-      <workItem from="1772435371101" duration="22820000" />
-      <workItem from="1772541027158" duration="10193000" />
+      <workItem from="1772435371101" duration="21935000" />
     </task>
     <servers />
   </component>

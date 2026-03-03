@@ -28,7 +28,8 @@ public:
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
 	bool TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
-	bool TryGetAbilityEffectsPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const;
+	bool TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+	bool TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 protected:
 	//~ Begin UGameplayAbility Interface
@@ -63,7 +64,7 @@ protected:
 	FText GetRangeDescription() const;
 
 private:
-	bool TryGetGameplayEffectPreviewData(const FPreviewEffectSpecContext& PreviewEffectSpecContext, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);

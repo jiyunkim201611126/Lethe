@@ -17,16 +17,16 @@ class LETHE_API UEffectApplier_DamageWithConsumeAllCost : public UEffectApplier_
 public:
 	//~ Begin FGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
-	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const override;
-	
+
+	virtual bool TryBuildPreviewSpecContexts(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const override;
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
-	
-	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const override;
-	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
 	//~ End of FGameplayEffectApplier Interface
 
 private:
 	void ApplyCost(UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility) const;
+	
+	bool BuildTargetDamagePreviewContext(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const;
+	bool BuildSourceCostPreviewContext(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, const int32 CostCount, TArray<FPreviewEffectSpecContext>& OutPreviewSpecEffectContexts) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cost")

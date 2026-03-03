@@ -40,7 +40,7 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 	return false;
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetAbilityEffectsPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const
 {
 	if (!SourceASC || !TargetASC)
 	{
@@ -51,52 +51,53 @@ bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemC
 	{
 		if (EffectApplier)
 		{
-			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
-			
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
-			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, TargetASC, PreviewContextHandle, SpecHandles))
+
+			if (AActor* TargetActor = TargetASC->GetAvatarActor())
 			{
-				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
+				TArray<TWeakObjectPtr<AActor>> TargetActors;
+				TargetActors.Emplace(TargetActor);
+				PreviewContextHandle.AddActors(TargetActors);
+			}
+
+			// EffectApplier에게서 Source와 Target의 Attribute에 영향을 주는 데이터를 추출하는 과정입니다.
+			TArray<FPreviewEffectSpecContext> PreviewEffectSpecContexts;
+			if (EffectApplier->TryBuildPreviewSpecContexts(SourceASC, TargetASC, PreviewContextHandle, PreviewEffectSpecContexts))
+			{
+				for (const FPreviewEffectSpecContext& PreviewEffectSpecContext : PreviewEffectSpecContexts)
+				{
+					UAbilitySystemComponent* PreviewASC;
+					TMap<FGameplayAttribute, float>* OutPreviewData;
+					
+					if (PreviewEffectSpecContext.Target == EEffectPreviewTarget::Source)
+					{
+						PreviewASC = SourceASC;
+						OutPreviewData = &OutPreviewDataForSource;
+					}
+					else
+					{
+						PreviewASC = TargetASC;
+						OutPreviewData = &OutPreviewDataForTarget;
+					}
+
+					if (OutPreviewData)
+					{
+						TryGetGameplayEffectPreviewData(PreviewASC, PreviewEffectSpecContext.EffectClass, PreviewEffectSpecContext.SpecHandles, *OutPreviewData);
+					}
+				}
 			}
 		}
 	}
-	return !OutPreviewData.IsEmpty();
+	return !OutPreviewDataForSource.IsEmpty() || !OutPreviewDataForTarget.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
-{
-	if (!SourceASC || !TargetASC)
-	{
-		return false;
-	}
-	
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		// Ability 사용 시 효과는 대행자가 있으므로, EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
-		if (EffectApplier)
-		{
-			const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
-			
-			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
-			PreviewContextHandle.SetAbility(this);
-			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
-			{
-				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
-			}
-		}
-	}
-	return !OutPreviewData.IsEmpty();
-}
-
-bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	// GameplayEffect가 적용됐을 때 어떤 변화값이 있는지 가져와서 OutData에 채워줍니다.
 	if (const UGameplayEffect* GameplayEffectCDO = EffectClass.GetDefaultObject())
 	{
-		for (auto& SpecHandle : SpecHandles)
+		for (const FGameplayEffectSpecHandle& SpecHandle : SpecHandles)
 		{
 			if (!SpecHandle.Data.IsValid())
 			{

@@ -15,11 +15,6 @@ void UGameplayEffectApplier::EndAbility()
 	EffectContextHandle.Clear();
 }
 
-int32 UGameplayEffectApplier::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
-{
-	return 0;
-}
-
 bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
 {
 	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
@@ -29,9 +24,7 @@ bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplay
 	}
 	
 	MakeEffectContextHandle(OwningAbility);
-	TryMakeSpecHandles(ASC, EffectContextHandle, OutSpecHandles);
-	
-	return true;
+	return TryMakeSpecHandles(ASC, EffectContextHandle, OutSpecHandles);
 }
 
 void UGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
@@ -46,22 +39,31 @@ void UGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* Own
 	}
 }
 
-TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetEffectClass() const
-{
-	return EffectClass;
-}
-
 FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() const
 {
 	return EffectContextHandle;
 }
 
-TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetSourcePreviewEffectClass() const
+bool UGameplayEffectApplier::TryBuildPreviewSpecContexts(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FPreviewEffectSpecContext>& OutPreviewEffectSpecContexts) const
 {
-	return nullptr;
+	if (!SourceASC || !TargetASC)
+	{
+		return false;
+	}
+
+	TArray<FGameplayEffectSpecHandle> TargetSpecHandles;
+	if (TryMakeSpecHandles(SourceASC, InContextHandle, TargetSpecHandles) && EffectClass)
+	{
+		FPreviewEffectSpecContext& TargetContext = OutPreviewEffectSpecContexts.Emplace_GetRef();
+		TargetContext.Target = EEffectPreviewTarget::Target;
+		TargetContext.EffectClass = EffectClass;
+		TargetContext.SpecHandles = MoveTemp(TargetSpecHandles);
+	}
+
+	return !OutPreviewEffectSpecContexts.IsEmpty();
 }
 
-bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+int32 UGameplayEffectApplier::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
-	return false;
+	return 0;
 }

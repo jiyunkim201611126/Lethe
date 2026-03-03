@@ -36,17 +36,15 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 		if (TargetASC)
 		{
-			TMap<FGameplayAttribute, float> OutAbilityEffectsForSourcePreviewData;
-			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForSourcePreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForSourcePreviewData))
+			TMap<FGameplayAttribute, float> OutPreviewDataForSource;
+			TMap<FGameplayAttribute, float> OutPreviewDataForTarget;
+			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsPreviewData(PreviewContext.SourceASC, TargetASC, OutPreviewDataForSource, OutPreviewDataForTarget))
 			{
-				FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
-				ConvertAttributeToTag(OutAbilityEffectsForSourcePreviewData, AttributePreviewDelta.AttributePreviewDelta);
-			}
-			TMap<FGameplayAttribute, float> OutAbilityEffectsForTargetPreviewData;
-			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutAbilityEffectsForTargetPreviewData))
-			{
-				FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
-				ConvertAttributeToTag(OutAbilityEffectsForTargetPreviewData, AttributePreviewDelta.AttributePreviewDelta);
+				FAttributePreviewDelta& AttributePreviewDeltaForSource = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
+				ConvertAttributeToTag(OutPreviewDataForSource, AttributePreviewDeltaForSource.AttributePreviewDelta);
+				
+				FAttributePreviewDelta& AttributePreviewDeltaForTarget = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
+				ConvertAttributeToTag(OutPreviewDataForTarget, AttributePreviewDeltaForTarget.AttributePreviewDelta);
 			}
 		}
 	}

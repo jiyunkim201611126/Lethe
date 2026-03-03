@@ -7,68 +7,46 @@
 #include "Abilities/GameplayAbility.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 
-void UEffectApplier_DamageWithConsumeAllCost::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
+bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
-	UAbilitySystemComponent* SourceASC = OwningAbility ? OwningAbility->GetAbilitySystemComponentFromActorInfo() : nullptr;
-	if (!SourceASC)
+	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()));
+	if (!bPreview)
 	{
-		return;
-	}
-
-	while (SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) >= 1.f)
-	{
-		const float PrevCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
-		ApplyCost(SourceASC, OwningAbility);
-		const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
-
-		// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
-		if (PrevCost == NewCost)
+		while (SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) >= 1.f)
 		{
-			break;
-		}
+			const float PrevCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+			ApplyCost(SourceASC);
+			const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
 		
-		Super::ApplyEffect(OwningAbility, TargetActor);
+			// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
+			if (PrevCost == NewCost)
+			{
+				break;
+			}
+		
+			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
+		}
 	}
-}
-
-bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview) const
-{
-	if (!bIsPreview)
+	else
 	{
-		return Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles, bIsPreview);
-	}
-
-	OutSpecHandles.Reserve(DamageValues.Num());
-	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
-	{
-		if (Pair.Value.IsValid())
+		const int32 StartCost = FMath::FloorToInt(SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()));
+		for (int32 Index = 0; Index < StartCost; Index++)
 		{
-			/**
-			 * 해당 Effect Applier는 다단히트로, 현재 Cost를 파악해 그 수만큼 GE를 반복적용합니다.
-			 * 하지만 프리뷰 상황인 경우 굳이 그럴 필요까진 없으므로, Cost를 가져와 ScaledDamage에 곱해서 사용합니다.
-			 */
-			float ScaledDamage = Pair.Value.GetValueAtLevel(InContextHandle.GetAbilityLevel());
-			ScaledDamage *= SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
-			FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(EffectClass, 1.f, InContextHandle);
-			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, Pair.Key, ScaledDamage);
-			OutSpecHandles.Emplace(DamageSpecHandle);
+			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
 	return !OutSpecHandles.IsEmpty();
 }
 
-void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC, const UGameplayAbility* OwningAbility) const
+void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC) const
 {
-	if (!SourceASC || !OwningAbility)
+	if (!SourceASC)
 	{
 		return;
 	}
 
-	FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
-	ContextHandle.SetAbility(OwningAbility);
-
 	check(CostEffectClass);
-	const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, ContextHandle);
+	const FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, FGameplayEffectContextHandle());
 	if (SpecHandle.IsValid())
 	{
 		SourceASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
@@ -97,8 +75,8 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview
 	OutSpecHandles.Reserve(CurrentCost);
 	for (int32 Index = 0; Index < CurrentCost; ++Index)
 	{
-		FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);
-		OutSpecHandles.Emplace(DamageSpecHandle);
+		FGameplayEffectSpecHandle CostSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);
+		OutSpecHandles.Emplace(CostSpecHandle);
 	}
 	return !OutSpecHandles.IsEmpty();
 }

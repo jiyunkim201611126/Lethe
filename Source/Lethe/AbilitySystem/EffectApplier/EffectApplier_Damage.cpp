@@ -14,9 +14,8 @@ void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 	}
 }
 
-bool UEffectApplier_Damage::TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview) const
+bool UEffectApplier_Damage::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
-	OutSpecHandles.Reserve(DamageValues.Num());
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())

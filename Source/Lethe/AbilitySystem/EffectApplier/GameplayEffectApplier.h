@@ -24,7 +24,7 @@ public:
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(ULetheEffectApplier::ApplyEffect, );
 	virtual void CancelAbility();
 	virtual void EndAbility();
-	virtual bool TryMakeSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bIsPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
+	virtual bool TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;

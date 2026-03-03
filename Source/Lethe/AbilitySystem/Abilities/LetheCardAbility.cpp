@@ -65,7 +65,7 @@ bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemC
 	return !OutPreviewData.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	if (!SourceASC || !TargetASC)
 	{

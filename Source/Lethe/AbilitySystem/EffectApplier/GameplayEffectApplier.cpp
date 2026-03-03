@@ -22,7 +22,7 @@ int32 UGameplayEffectApplier::GetValueForDescription(const UAbilitySystemCompone
 
 bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
 {
-	const UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
+	UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC)
 	{
 		return false;

@@ -29,7 +29,7 @@ public:
 
 	bool TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	bool TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
-	bool TryGetAbilityEffectsForTargetPreviewData(const UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+	bool TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
 protected:
 	//~ Begin UGameplayAbility Interface

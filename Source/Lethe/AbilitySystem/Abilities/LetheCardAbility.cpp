@@ -40,9 +40,9 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 	return false;
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
-	if (!SourceASC || !TargetASC)
+	if (!SourceASC)
 	{
 		return false;
 	}
@@ -56,7 +56,7 @@ bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemC
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, TargetASC, PreviewContextHandle, SpecHandles))
+			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, PreviewContextHandle, SpecHandles))
 			{
 				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
@@ -91,7 +91,7 @@ bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemC
 	return !OutPreviewData.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* TargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	// GameplayEffect가 적용됐을 때 어떤 변화값이 있는지 가져와서 OutData에 채워줍니다.
 	if (const UGameplayEffect* GameplayEffectCDO = EffectClass.GetDefaultObject())
@@ -127,7 +127,7 @@ bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent*
 				}
 
 				// ExecCalc의 계산을 실제로 한 번 돌립니다.
-				FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, TargetASC, ExecDef.PassedInTags, FPredictionKey());
+				FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, PreviewTargetASC, ExecDef.PassedInTags, FPredictionKey());
 				FGameplayEffectCustomExecutionOutput ExecutionOutput;
 				ExecCalcCDO->Execute(ExecutionParameters, ExecutionOutput);
 

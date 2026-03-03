@@ -15,6 +15,7 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 }
 
 void UPlayerAttributeWidgetController::OnManaChanged(const FOnAttributeChangeData& AttributeData)

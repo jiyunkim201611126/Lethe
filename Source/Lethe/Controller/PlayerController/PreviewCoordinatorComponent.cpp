@@ -30,19 +30,24 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 		ConvertAttributeToTag(OutAbilityCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
 	}
 
+	// Target과 관계 없이 EffectApplier에 의해 Source에게 적용되는 Preview 데이터를 추출해 가져옵니다.
+	TMap<FGameplayAttribute, float> OutPreviewDataForSource;
+	if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForSourcePreviewData(PreviewContext.SourceASC, OutPreviewDataForSource))
+	{
+		FAttributePreviewDelta& AttributePreviewDeltaForSource = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
+		ConvertAttributeToTag(OutPreviewDataForSource, AttributePreviewDeltaForSource.AttributePreviewDelta);
+	}
+
+	// Target들에게 적용되는 Preview 데이터를 추출해 가져옵니다.
 	for (const AActor* CurrentTargetActor : PreviewContext.CurrentTargetActors)
 	{
 		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentTargetActor);
 		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 		if (TargetASC)
 		{
-			TMap<FGameplayAttribute, float> OutPreviewDataForSource;
 			TMap<FGameplayAttribute, float> OutPreviewDataForTarget;
-			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsPreviewData(PreviewContext.SourceASC, TargetASC, OutPreviewDataForSource, OutPreviewDataForTarget))
+			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutPreviewDataForTarget))
 			{
-				FAttributePreviewDelta& AttributePreviewDeltaForSource = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
-				ConvertAttributeToTag(OutPreviewDataForSource, AttributePreviewDeltaForSource.AttributePreviewDelta);
-				
 				FAttributePreviewDelta& AttributePreviewDeltaForTarget = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
 				ConvertAttributeToTag(OutPreviewDataForTarget, AttributePreviewDeltaForTarget.AttributePreviewDelta);
 			}

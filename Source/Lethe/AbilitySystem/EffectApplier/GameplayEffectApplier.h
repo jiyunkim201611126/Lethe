@@ -37,7 +37,7 @@ public:
 
 	// Ability 자체 Cost 외, Effect 적용 시 Source에게 발생하는 Attribute 변화를 Preview로 표시할 때 사용하는 함수들입니다.
 	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
-	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
+	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

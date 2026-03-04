@@ -273,7 +273,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex)
 {
 	// 이미 사용 대기 상태인 카드라면 아무 동작도 하지 않고 얼리 리턴합니다.(이미 CardPanelWidget에서도 하고 있으나 한 번 더 방어 코드 작성)
-	for (const FUseCardData& WaitingForUseCardData : WaitingForUseCardsQueue)
+	for (const FAbilityActivationData& WaitingForUseCardData : WaitingForUseCardsQueue)
 	{
 		if (WaitingForUseCardData.HandIndex == InHandIndex)
 		{
@@ -316,10 +316,10 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 				Payload.Target = TileAndActor.Actor;
 
 				// Queue에 넣고 Ability 발동을 시작합니다.
-				FUseCardData UseCardData;
+				FAbilityActivationData UseCardData;
 				UseCardData.HandIndex = InHandIndex;
 				UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-				UseCardData.CardTag = CardTag;
+				UseCardData.AbilityTag = CardTag;
 				UseCardData.Payload = Payload;
 				UseCardData.AbilityOwnerASC = OwnerASC;
 
@@ -341,19 +341,19 @@ void ALethePlayerController::TryUseNextCardAbility()
 {
 	if (!WaitingForUseCardsQueue.IsEmpty())
 	{
-		const FUseCardData& NextCardData = WaitingForUseCardsQueue[0];
+		const FAbilityActivationData& NextAbilityData = WaitingForUseCardsQueue[0];
 		
-		const bool bUseSuccess = NextCardData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(NextCardData.AbilitySpecHandle, NextCardData.AbilityOwnerASC->AbilityActorInfo.Get(), NextCardData.CardTag, &NextCardData.Payload, *NextCardData.AbilityOwnerASC);
+		const bool bUseSuccess = NextAbilityData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(NextAbilityData.AbilitySpecHandle, NextAbilityData.AbilityOwnerASC->AbilityActorInfo.Get(), NextAbilityData.AbilityTag, &NextAbilityData.Payload, *NextAbilityData.AbilityOwnerASC);
 		bIsProgressingCardAbility = bUseSuccess;
 
 		// Queue에서 사용 시도한 카드를 제거하고 성공 여부를 콜백으로 알려줍니다.
-		OnResolveUseCardDelegate.ExecuteIfBound(NextCardData.HandIndex, bUseSuccess);
+		OnResolveUseCardDelegate.ExecuteIfBound(NextAbilityData.HandIndex, bUseSuccess);
 		WaitingForUseCardsQueue.RemoveAt(0);
 		
 		if (!bUseSuccess)
 		{
 			// 카드 사용 실패 시 Queue에 있는 모든 카드 사용 데이터를 실패로 간주하고, 이를 Widget에게 전달합니다.
-			for (const FUseCardData& WaitingCardData : WaitingForUseCardsQueue)
+			for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
 			{
 				OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
 			}
@@ -374,7 +374,7 @@ void ALethePlayerController::OnAbilityEnded(const bool bUseSuccess)
 	}
 	else
 	{
-		for (const FUseCardData& WaitingCardData : WaitingForUseCardsQueue)
+		for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
 		{
 			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
 		}

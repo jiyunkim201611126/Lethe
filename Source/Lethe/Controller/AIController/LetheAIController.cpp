@@ -5,8 +5,11 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/TileManagerSubsystem.h"
 
 ALetheAIController::ALetheAIController()
 {
@@ -69,19 +72,46 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 	}
 }
 
-void ALetheAIController::SelectRandomAbilityTag()
+void ALetheAIController::SelectMoveAbility()
 {
-	SelectedAbilityTag = FGameplayTag();
+	SelectedAbilityData = FAbilityActivationData();
 
 	APawn* ControlledPawn = GetPawn();
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledPawn);
-	const UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (ASC)
+	{
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+
+		TArray<FGameplayAbilitySpec*> AbilitySpecs;
+		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
+		if (!AbilitySpecs.IsEmpty())
+		{
+			SelectedAbilityData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+			SelectedAbilityData.AbilityTag = LetheGameplayTags.Ability_Move;
+			SelectedAbilityData.AbilityOwnerASC = ASC;
+			SelectedAbilityData.Payload.Instigator = ControlledPawn;
+		}
+	}
+}
+
+void ALetheAIController::SelectRandomAbility()
+{
+	SelectedAbilityData = FAbilityActivationData();
+
+	APawn* ControlledPawn = GetPawn();
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledPawn);
+	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 	if (ASC)
 	{
 		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 		ASC->GetAllAbilities(AbilitySpecHandles);
 
-		TArray<FGameplayTag> CandidateTags;
+		TArray<FAbilityActivationData> CandidateAbilityData;
+		CandidateAbilityData.Reserve(AbilitySpecHandles.Num());
+
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
 		{
 			const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
@@ -90,9 +120,8 @@ void ALetheAIController::SelectRandomAbilityTag()
 				continue;
 			}
 
-			FGameplayTagContainer AssetTags = Spec->Ability->GetAssetTags();
-
-			if (AssetTags.HasTagExact(FLetheGameplayTags::Get().Ability_Move))
+			const FGameplayTagContainer AssetTags = Spec->Ability->GetAssetTags();
+			if (AssetTags.HasTagExact(LetheGameplayTags.Ability_Move))
 			{
 				continue;
 			}
@@ -100,25 +129,73 @@ void ALetheAIController::SelectRandomAbilityTag()
 			FGameplayTag FirstTag;
 			for (const FGameplayTag& Tag : AssetTags)
 			{
-				FirstTag = Tag;
-				break;
+				if (Tag.IsValid())
+				{
+					FirstTag = Tag;
+					break;
+				}
 			}
 
-			if (FirstTag.IsValid())
-			{
-				CandidateTags.Emplace(FirstTag);
-			}
+			FAbilityActivationData ActivationData;
+			ActivationData.AbilitySpecHandle = Spec->Handle;
+			ActivationData.AbilityTag = FirstTag;
+			ActivationData.AbilityOwnerASC = ASC;
+			ActivationData.Payload.Instigator = ControlledPawn;
+
+			CandidateAbilityData.Emplace(ActivationData);
 		}
 
-		if (!CandidateTags.IsEmpty())
+		if (!CandidateAbilityData.IsEmpty())
 		{
-			const int32 RandomIndex = FMath::RandRange(0, CandidateTags.Num() - 1);
-			SelectedAbilityTag = CandidateTags[RandomIndex];
+			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityData.Num() - 1);
+			SelectedAbilityData = CandidateAbilityData[RandomIndex];
 		}
 	}
 }
 
-FGameplayTag ALetheAIController::GetSelectedAbilityTag() const
+void ALetheAIController::FindNearestPlayerCharacterTileCoord()
 {
-	return SelectedAbilityTag;
+	TargetTile.Reset();
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
+			TSet<FCubeCoord> PlayerCharacterTileCoords;
+			TileManagerSubsystem->TileBFS(ThisTileCoord, 999, EBFSType::Connection, PlayerCharacterTileCoords,
+			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				return PlayerCharacterTileCoords.IsEmpty();
+			},
+			[&TileManagerSubsystem, this](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
+			{
+				if (TileData && TileData->TileActor.IsValid())
+				{
+					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+					{
+						if (ActorOnTile->Implements<UPlayableCharacterInterface>())
+						{
+							this->TargetTile = TileData->TileActor;
+							return true;
+						}
+					}
+				}
+				return false;
+			});
+		}
+	}
+}
+
+bool ALetheAIController::UseAbilityToTargetTile()
+{
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (TargetTile.IsValid())
+		{
+			AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
+			SelectedAbilityData.Payload.Target = TargetActor;
+			return SelectedAbilityData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(SelectedAbilityData.AbilitySpecHandle, SelectedAbilityData.AbilityOwnerASC->AbilityActorInfo.Get(), SelectedAbilityData.AbilityTag, &SelectedAbilityData.Payload, *SelectedAbilityData.AbilityOwnerASC);
+		}
+	}
+	return false;
 }

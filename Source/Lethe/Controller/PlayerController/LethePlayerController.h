@@ -3,10 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayAbilitySpecHandle.h"
-#include "GameplayTagContainer.h"
-#include "Abilities/GameplayAbilityTypes.h"
 #include "GameFramework/PlayerController.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "LethePlayerController.generated.h"
 
 class UPreviewCoordinatorComponent;
@@ -17,24 +15,6 @@ class ULetheCardAbility;
 class ULetheHUD;
 class UTileSelectorComponent;
 struct FGameplayAbilityActorInfo;
-
-USTRUCT()
-struct FUseCardData
-{
-	GENERATED_BODY()
-
-	int32 HandIndex = INDEX_NONE;
-	
-	FGameplayAbilitySpecHandle AbilitySpecHandle;
-	
-	FGameplayTag CardTag;
-
-	UPROPERTY()
-	FGameplayEventData Payload;
-
-	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
-};
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
@@ -105,7 +85,7 @@ private:
 	// 사실상 Queue로 사용하며, Key용 값인 HandIndex도 있어 Map으로도 구현 가능합니다.
 	// 하지만 내부에 할당되는 개수가 어차피 최대 7개라 그냥 순회하면서 찾는 게 더 빠르니까 Array로 구현했습니다.
 	UPROPERTY()
-	TArray<FUseCardData> WaitingForUseCardsQueue;
+	TArray<FAbilityActivationData> WaitingForUseCardsQueue;
 	uint8 bIsProgressingCardAbility : 1 = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = ArrowRenderer)

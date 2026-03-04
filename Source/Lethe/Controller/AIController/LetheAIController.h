@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "GameplayTagContainer.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "LetheAIController.generated.h"
 
 enum class EPhaseState : uint8;
+class ATile;
 class UStateTreeAIComponent;
 
 UCLASS()
@@ -19,10 +20,16 @@ public:
 	ALetheAIController();
 
 	UFUNCTION(BlueprintCallable)
-	void SelectRandomAbilityTag();
+	void SelectMoveAbility();
 
 	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetSelectedAbilityTag() const;
+	void SelectRandomAbility();
+
+	UFUNCTION(BlueprintCallable)
+	void FindNearestPlayerCharacterTileCoord();
+
+	UFUNCTION(BlueprintCallable)
+	bool UseAbilityToTargetTile();
 
 protected:
 	//~ Begin AActor Interface
@@ -42,5 +49,7 @@ protected:
 	TObjectPtr<UStateTreeAIComponent> StateTreeAIComponent;
 
 private:
-	FGameplayTag SelectedAbilityTag;
+	FAbilityActivationData SelectedAbilityData;
+
+	TWeakObjectPtr<ATile> TargetTile;
 };

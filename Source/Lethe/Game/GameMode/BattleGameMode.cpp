@@ -2,10 +2,11 @@
 
 #include "BattleGameMode.h"
 
-#include "LetheGameState.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
+#include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
@@ -107,7 +108,8 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			FCubeCoord(-2, 2, 0),
 			FCubeCoord(0, -2, 2),
 		};
-		
+
+		int32 EnemyIndex = 0;
 		for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
 		{
 			FActorSpawnParameters SpawnParameters;
@@ -115,10 +117,12 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			if (ATile* TileActor = TileManagerSubsystem->GetTile(SpawnCoord))
 			{
 				FVector SpawnLocation = TileActor->GetActorLocation();
-				if (ALetheCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<ALetheCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+				if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
 					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedEnemy);
 					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
+					SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
+					EnemyIndex += 100;
 				}
 			}
 		}

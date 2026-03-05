@@ -51,8 +51,8 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		return;
 	}
 
-	ALetheGameState* GameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
-	if (!GameState || GameState->GetTurnPhase() != EPhaseState::PlayerTurnPhase)
+	ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
+	if (!LetheGameState || LetheGameState->GetTurnPhase() != EPhaseState::PlayerTurnPhase)
 	{
 		return;
 	}
@@ -159,7 +159,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
-		const AActor* CardOwner = OwnerASC->GetOwner();
+		const AActor* CardOwner = OwnerASC->GetAvatarActor();
 		if (LetheCardAbility && CardOwner)
 		{
 			if (OwnerASC->AbilityActorInfo.IsValid())
@@ -275,7 +275,7 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 	// 이미 사용 대기 상태인 카드라면 아무 동작도 하지 않고 얼리 리턴합니다.(이미 CardPanelWidget에서도 하고 있으나 한 번 더 방어 코드 작성)
 	for (const FAbilityActivationData& WaitingForUseCardData : WaitingForUseCardsQueue)
 	{
-		if (WaitingForUseCardData.HandIndex == InHandIndex)
+		if (WaitingForUseCardData.Index == InHandIndex)
 		{
 			return;
 		}
@@ -303,7 +303,7 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
 			{
 				TArray<ATile*> OutTiles;
-				TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetOwner(), CardAbility->GetAbilityRange());
+				TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
 				if (!OutTiles.Contains(TileAndActor.Tile))
 				{
 					OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
@@ -316,14 +316,14 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 				Payload.Target = TileAndActor.Actor;
 
 				// Queue에 넣고 Ability 발동을 시작합니다.
-				FAbilityActivationData UseCardData;
-				UseCardData.HandIndex = InHandIndex;
-				UseCardData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-				UseCardData.AbilityTag = CardTag;
-				UseCardData.Payload = Payload;
-				UseCardData.AbilityOwnerASC = OwnerASC;
+				FAbilityActivationData AbilityActivationData;
+				AbilityActivationData.Index = InHandIndex;
+				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+				AbilityActivationData.AbilityTag = CardTag;
+				AbilityActivationData.Payload = Payload;
+				AbilityActivationData.AbilityOwnerASC = OwnerASC;
 
-				WaitingForUseCardsQueue.Emplace(UseCardData);
+				WaitingForUseCardsQueue.Emplace(AbilityActivationData);
 				if (!bIsProgressingCardAbility)
 				{
 					TryUseNextCardAbility();
@@ -339,6 +339,7 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 
 void ALethePlayerController::TryUseNextCardAbility()
 {
+	// TODO: 아래 로직 모두 삭제하고 AbilityExecutionManagerComponent로 책임 넘겨야 함
 	if (!WaitingForUseCardsQueue.IsEmpty())
 	{
 		const FAbilityActivationData& NextAbilityData = WaitingForUseCardsQueue[0];
@@ -347,7 +348,7 @@ void ALethePlayerController::TryUseNextCardAbility()
 		bIsProgressingCardAbility = bUseSuccess;
 
 		// Queue에서 사용 시도한 카드를 제거하고 성공 여부를 콜백으로 알려줍니다.
-		OnResolveUseCardDelegate.ExecuteIfBound(NextAbilityData.HandIndex, bUseSuccess);
+		OnResolveUseCardDelegate.ExecuteIfBound(NextAbilityData.Index, bUseSuccess);
 		WaitingForUseCardsQueue.RemoveAt(0);
 		
 		if (!bUseSuccess)
@@ -355,7 +356,7 @@ void ALethePlayerController::TryUseNextCardAbility()
 			// 카드 사용 실패 시 Queue에 있는 모든 카드 사용 데이터를 실패로 간주하고, 이를 Widget에게 전달합니다.
 			for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
 			{
-				OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
+				OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.Index, false);
 			}
 			WaitingForUseCardsQueue.Reset();
 		}
@@ -376,7 +377,7 @@ void ALethePlayerController::OnAbilityEnded(const bool bUseSuccess)
 	{
 		for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
 		{
-			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.HandIndex, false);
+			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.Index, false);
 		}
 		WaitingForUseCardsQueue.Reset();
 	}

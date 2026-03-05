@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -16,6 +17,11 @@ ALetheAIController::ALetheAIController()
 	PrimaryActorTick.bCanEverTick = false;
 
 	StateTreeAIComponent = CreateDefaultSubobject<UStateTreeAIComponent>(TEXT("StateTreeAIComponent"));
+}
+
+void ALetheAIController::SetAbilityPriority(const int32 InPriority)
+{
+	AbilityPriority = InPriority;
 }
 
 void ALetheAIController::BeginPlay()
@@ -74,8 +80,6 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 
 void ALetheAIController::SelectMoveAbility()
 {
-	SelectedAbilityData = FAbilityActivationData();
-
 	APawn* ControlledPawn = GetPawn();
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledPawn);
 	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
@@ -88,18 +92,23 @@ void ALetheAIController::SelectMoveAbility()
 		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
 		if (!AbilitySpecs.IsEmpty())
 		{
-			SelectedAbilityData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-			SelectedAbilityData.AbilityTag = LetheGameplayTags.Ability_Move;
-			SelectedAbilityData.AbilityOwnerASC = ASC;
-			SelectedAbilityData.Payload.Instigator = ControlledPawn;
+			FAbilityActivationData MoveAbilityActivationData;
+			MoveAbilityActivationData.Index = AbilityPriority;
+			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+			MoveAbilityActivationData.AbilityOwnerASC = ASC;
+			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
+			
+			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+			{
+				LetheGameState->AddEnemyAbilityActivationData(MoveAbilityActivationData);
+			}
 		}
 	}
 }
 
-void ALetheAIController::SelectRandomAbility()
+void ALetheAIController::SelectRandomAbility() const
 {
-	SelectedAbilityData = FAbilityActivationData();
-
 	APawn* ControlledPawn = GetPawn();
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledPawn);
 	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
@@ -137,6 +146,7 @@ void ALetheAIController::SelectRandomAbility()
 			}
 
 			FAbilityActivationData ActivationData;
+			ActivationData.Index = AbilityPriority;
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
@@ -148,14 +158,17 @@ void ALetheAIController::SelectRandomAbility()
 		if (!CandidateAbilityData.IsEmpty())
 		{
 			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityData.Num() - 1);
-			SelectedAbilityData = CandidateAbilityData[RandomIndex];
+			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+			{
+				LetheGameState->AddEnemyAbilityActivationData(CandidateAbilityData[RandomIndex]);
+			}
 		}
 	}
 }
 
-void ALetheAIController::FindNearestPlayerCharacterTileCoord()
+FFoundTileData ALetheAIController::FindNearestPlayerCharacterTile() const
 {
-	TargetTile.Reset();
+	FFoundTileData FoundTileData;
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
@@ -167,7 +180,7 @@ void ALetheAIController::FindNearestPlayerCharacterTileCoord()
 			{
 				return PlayerCharacterTileCoords.IsEmpty();
 			},
-			[&TileManagerSubsystem, this](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
+			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{
@@ -175,7 +188,8 @@ void ALetheAIController::FindNearestPlayerCharacterTileCoord()
 					{
 						if (ActorOnTile->Implements<UPlayableCharacterInterface>())
 						{
-							this->TargetTile = TileData->TileActor;
+							FoundTileData.FoundTile = TileData->TileActor.Get();
+							FoundTileData.Depth = Depth;
 							return true;
 						}
 					}
@@ -184,18 +198,13 @@ void ALetheAIController::FindNearestPlayerCharacterTileCoord()
 			});
 		}
 	}
+	return FoundTileData;
 }
 
-bool ALetheAIController::UseAbilityToTargetTile()
+void ALetheAIController::SetTargetTile(ATile* TargetTile) const
 {
-	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		if (TargetTile.IsValid())
-		{
-			AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
-			SelectedAbilityData.Payload.Target = TargetActor;
-			return SelectedAbilityData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(SelectedAbilityData.AbilitySpecHandle, SelectedAbilityData.AbilityOwnerASC->AbilityActorInfo.Get(), SelectedAbilityData.AbilityTag, &SelectedAbilityData.Payload, *SelectedAbilityData.AbilityOwnerASC);
-		}
+		LetheGameState->SetTargetTile(AbilityPriority, TargetTile);
 	}
-	return false;
 }

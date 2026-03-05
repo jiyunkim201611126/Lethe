@@ -82,10 +82,15 @@ private:
 };
 
 /**
- * BFSCondition은 BFS를 뻗어나가는 데 필요한 추가 조건 작성
- * SelectCondition은 그 중 검출하고 싶은 타일의 조건 작성
  * BFSType은 BFSCondition과 유사하지만, 매우 자주 사용될 조건들을 간편하게 묶어둠 (꼭 필요한지는 모르겠음)
  * 템플릿 선언 내에서 작성된 검사는 공통 BFS의 검사 내용만
+ * 
+ * @param StartCoord BFS 시작 타일 좌표
+ * @param MaxDepth 최대 타일간 거리
+ * @param BFSType 타일 연결 상태 조건
+ * @param OutCoords 최종 검출된 타일 좌표들
+ * @param BFSCondition BFS를 뻗어나가는 데 필요한 추가 조건 작성
+ * @param SelectCondition 그 중 OutCoords에 Emplace하고 싶은 타일의 조건 작성
  */
 template <typename BFSConditionFunc, typename SelectConditionFunc>
 void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)

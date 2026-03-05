@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
+#include "Lethe/Actor/Tile/Tile.h"
 #include "AbilityActivationData.generated.h"
 
 USTRUCT()
@@ -13,8 +14,8 @@ struct FAbilityActivationData
 {
 	GENERATED_BODY()
 
-	// HandIndex는 Player 전용 변수입니다.
-	int32 HandIndex = INDEX_NONE;
+	// Player는 HandIndex로 사용하고, Enemy는 Priority로 사용하는 변수입니다.
+	int32 Index = INDEX_NONE;
 	
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 	
@@ -24,5 +25,8 @@ struct FAbilityActivationData
 	FGameplayEventData Payload;
 
 	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
+	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
+
+	UPROPERTY()
+	TWeakObjectPtr<ATile> TargetTile;
 };

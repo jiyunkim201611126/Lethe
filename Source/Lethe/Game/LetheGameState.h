@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilityExecutionManagerComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "LetheGameState.generated.h"
+
+class ATile;
 
 UENUM()
 enum class EPhaseState : uint8
@@ -23,11 +26,16 @@ class LETHE_API ALetheGameState : public AGameStateBase
 	GENERATED_BODY()
 
 public:
+	ALetheGameState();
+	
 	void GoDrawPhase();
 	void GoPlayerTurnPhase();
 	void GoEnemyTurnPhase();
 
 	EPhaseState GetTurnPhase() const;
+
+	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
+	void SetTargetTile(const int32 Priority, ATile* TargetTile) const;
 
 private:
 	void SetPhase(const EPhaseState NewPhase);
@@ -37,4 +45,7 @@ public:
 
 private:
 	EPhaseState CurrentTurnState = EPhaseState::None;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityExecutionManagerComponent> AbilityExecutionManagerComponent;
 };

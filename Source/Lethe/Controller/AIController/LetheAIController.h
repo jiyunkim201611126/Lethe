@@ -4,12 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "Lethe/Data/AbilityActivationData.h"
 #include "LetheAIController.generated.h"
 
 enum class EPhaseState : uint8;
 class ATile;
 class UStateTreeAIComponent;
+
+USTRUCT(BlueprintType)
+struct FFoundTileData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	ATile* FoundTile = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Depth = 0;
+};
 
 UCLASS()
 class LETHE_API ALetheAIController : public AAIController
@@ -19,17 +30,19 @@ class LETHE_API ALetheAIController : public AAIController
 public:
 	ALetheAIController();
 
+	void SetAbilityPriority(const int32 InPriority);
+
 	UFUNCTION(BlueprintCallable)
 	void SelectMoveAbility();
 
 	UFUNCTION(BlueprintCallable)
-	void SelectRandomAbility();
+	void SelectRandomAbility() const;
 
 	UFUNCTION(BlueprintCallable)
-	void FindNearestPlayerCharacterTileCoord();
+	FFoundTileData FindNearestPlayerCharacterTile() const;
 
-	UFUNCTION(BlueprintCallable)
-	bool UseAbilityToTargetTile();
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "반드시 Ability를 선택한 후 호출해야 합니다."))
+	void SetTargetTile(ATile* TargetTile) const;
 
 protected:
 	//~ Begin AActor Interface
@@ -49,7 +62,6 @@ protected:
 	TObjectPtr<UStateTreeAIComponent> StateTreeAIComponent;
 
 private:
-	FAbilityActivationData SelectedAbilityData;
-
-	TWeakObjectPtr<ATile> TargetTile;
+	// 이 값이 낮은 캐릭터가 먼저 Ability를 사용합니다.
+	int32 AbilityPriority = 0;
 };

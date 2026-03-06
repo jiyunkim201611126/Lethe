@@ -12,7 +12,7 @@ UAbilityExecutionManagerComponent::UAbilityExecutionManagerComponent()
 
 void UAbilityExecutionManagerComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	Priorities.Emplace(ActivationData.Index);
+	EnemyAbilityActivationPriorities.HeapPush(ActivationData.Index, TLess<int32>());
 	EnemyAbilityActivationData.Emplace(ActivationData.Index, ActivationData);
 }
 
@@ -24,40 +24,43 @@ void UAbilityExecutionManagerComponent::SetTargetTile(const int32 Priority, ATil
 	}
 }
 
-void UAbilityExecutionManagerComponent::OnEnemyTurnPhaseStarted()
+void UAbilityExecutionManagerComponent::StartUseAbility()
 {
-	if (Priorities.IsEmpty() || EnemyAbilityActivationData.IsEmpty())
+	while (true)
 	{
+		const EAbilityExecutionResult Result = TryUseNextAbility();
+		if (Result == EAbilityExecutionResult::FailedLogicError)
+		{
+			ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
+			continue;
+		}
+		
 		return;
 	}
-	
-	CurrentPriorityIndex = 0;
-	Priorities.Sort();
-	TryUseNextAbility();
 }
 
-void UAbilityExecutionManagerComponent::TryUseNextAbility()
+EAbilityExecutionResult UAbilityExecutionManagerComponent::TryUseNextAbility()
 {
-	if (!Priorities.IsValidIndex(CurrentPriorityIndex))
+	if (EnemyAbilityActivationPriorities.IsEmpty() || EnemyAbilityActivationData.IsEmpty())
 	{
-		CurrentPriorityIndex = 0;
-		Priorities.Reset();
+		EnemyAbilityActivationPriorities.Reset();
 		EnemyAbilityActivationData.Reset();
-		return;
+		return EAbilityExecutionResult::AllAbilityUsed;
 	}
+	
+	int32 CurrentPriority;
+	EnemyAbilityActivationPriorities.HeapPop(CurrentPriority, TLess<int32>());
 
-	FAbilityActivationData* Data = EnemyAbilityActivationData.Find(Priorities[CurrentPriorityIndex++]);
-	if (!Data || !Data->AbilityOwnerASC.IsValid() || !Data->TargetTile.IsValid())
+	FAbilityActivationData* Data = EnemyAbilityActivationData.Find(CurrentPriority);
+	if (!Data)
 	{
-		TryUseNextAbility();
-		return;
+		return EAbilityExecutionResult::FailedLogicError;
 	}
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
+	if (!TileManagerSubsystem || !Data->AbilityOwnerASC.IsValid() || !Data->TargetTile.IsValid())
 	{
-		TryUseNextAbility();
-		return;
+		return EAbilityExecutionResult::FailedFatal;
 	}
 	
 	CurrentActivationASC = Data->AbilityOwnerASC;
@@ -69,8 +72,10 @@ void UAbilityExecutionManagerComponent::TryUseNextAbility()
 	const bool bSuccess = CurrentActivationASC->TriggerAbilityFromGameplayEvent(Data->AbilitySpecHandle, CurrentActivationASC->AbilityActorInfo.Get(), Data->AbilityTag, &Data->Payload, *CurrentActivationASC);
 	if (!bSuccess)
 	{
-		TryUseNextAbility();
+		return EAbilityExecutionResult::FailedLogicError;
 	}
+
+	return EAbilityExecutionResult::Success;
 }
 
 void UAbilityExecutionManagerComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
@@ -80,6 +85,6 @@ void UAbilityExecutionManagerComponent::OnAbilityEnded(const FAbilityEndedData& 
 		CurrentActivationASC->OnAbilityEnded.RemoveAll(this);
 		CurrentActivationASC.Reset();
 	}
-
-	TryUseNextAbility();
+	
+	StartUseAbility();
 }

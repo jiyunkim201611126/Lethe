@@ -180,13 +180,13 @@ FFoundTileData ALetheAIController::FindNearestPlayerCharacterTile() const
 			{
 				return PlayerCharacterTileCoords.IsEmpty();
 			},
-			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
+			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{
 					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
 					{
-						if (ActorOnTile->Implements<UPlayableCharacterInterface>())
+						if (ActorOnTile->Implements<UPlayableCharacterInterface>() && !FoundTileData.FoundTile)
 						{
 							FoundTileData.FoundTile = TileData->TileActor.Get();
 							FoundTileData.Depth = Depth;

@@ -36,7 +36,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 
 	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
-		AbilityExecutionManagerComponent->OnEnemyTurnPhaseStarted();
+		AbilityExecutionManagerComponent->StartUseAbility();
 	}
 }
 

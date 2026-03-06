@@ -71,6 +71,11 @@ TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourceP
 
 bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
+	if (!SourceASC)
+	{
+		return false;
+	}
+	
 	const int32 CurrentCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
 	OutSpecHandles.Reserve(CurrentCost);
 	for (int32 Index = 0; Index < CurrentCost; ++Index)

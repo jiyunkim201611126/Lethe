@@ -16,6 +16,11 @@ void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 
 bool UEffectApplier_Damage::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
+	if (!SourceASC)
+	{
+		return false;
+	}
+	
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
 	{
 		if (Pair.Value.IsValid())
@@ -37,6 +42,11 @@ bool UEffectApplier_Damage::TryMakeSpecHandles(UAbilitySystemComponent* SourceAS
 
 void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs)
 {
+	if (!TargetActor)
+	{
+		return;
+	}
+	
 	if (EffectContextHandle.IsValid())
 	{
 		// 대상을 관련 액터에 추가합니다.

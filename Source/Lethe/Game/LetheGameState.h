@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilityExecutionManagerComponent.h"
+#include "AbilityResolverComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "LetheGameState.generated.h"
 
@@ -34,8 +34,14 @@ public:
 
 	EPhaseState GetTurnPhase() const;
 
+	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void SetTargetTile(const int32 Priority, ATile* TargetTile) const;
+
+	void OnAbilityEnded(const bool bSuccess) const;
+
+	UAbilityResolverComponent* GetAbilityResolverComponent() const;
+	bool IsProgressingPlayerAbility() const;
 
 private:
 	void SetPhase(const EPhaseState NewPhase);
@@ -47,5 +53,5 @@ private:
 	EPhaseState CurrentTurnState = EPhaseState::None;
 
 	UPROPERTY()
-	TObjectPtr<UAbilityExecutionManagerComponent> AbilityExecutionManagerComponent;
+	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 };

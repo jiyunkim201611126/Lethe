@@ -30,3 +30,11 @@ struct FAbilityActivationData
 	UPROPERTY()
 	TWeakObjectPtr<ATile> TargetTile;
 };
+
+UENUM(BlueprintType)
+enum class ETeamSide : uint8
+{
+	None,
+	Player,
+	Enemy
+};

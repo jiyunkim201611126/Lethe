@@ -27,8 +27,6 @@ ALethePlayerController::ALethePlayerController()
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
-
-	WaitingForUseCardsQueue.Reserve(MAX_HAND_COUNT - 1);
 }
 
 void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
@@ -217,6 +215,18 @@ void ALethePlayerController::BeginPlay()
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
+		{
+			AbilityResolverComponent->OnUseCardResolved.BindWeakLambda(this,
+				[this](const int32 HandIndex , const bool bSuccess)
+				{
+					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
+				});
+		}
+	}
 }
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -232,17 +242,26 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	if ((SelectedCardAbility.IsValid() || SelectedCharacter.IsValid()) && bMouseOnCardUseSection)
 	{
 		// 선택된 카드가 있거나 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
-		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_Tile, false, Hit);
-		if (Hit.IsValidBlockingHit())
+		if (ATile* HitTile = GetTileUnderCursor())
 		{
 			// 마우스가 올라가있는 타일을 하이라이팅할 수 있도록 알려줍니다.
-			TileSelector->HighlightTileByMouse(Hit.GetActor());
+			TileSelector->HighlightTileByMouse(HitTile);
 		}
 		return;
 	}
 
 	TileSelector->UnhighlightTileByMouse();
+}
+
+ATile* ALethePlayerController::GetTileUnderCursor() const
+{
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Tile, false, Hit);
+	if (Hit.IsValidBlockingHit())
+	{
+		return Cast<ATile>(Hit.GetActor());
+	}
+	return nullptr;
 }
 
 void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const
@@ -270,117 +289,50 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 	}
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex)
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
-	// 이미 사용 대기 상태인 카드라면 아무 동작도 하지 않고 얼리 리턴합니다.(이미 CardPanelWidget에서도 하고 있으나 한 번 더 방어 코드 작성)
-	for (const FAbilityActivationData& WaitingForUseCardData : WaitingForUseCardsQueue)
+	ATile* HitTile = GetTileUnderCursor();
+	if (HitTile && TileSelector && OwnerASC)
 	{
-		if (WaitingForUseCardData.Index == InHandIndex)
-		{
-			return;
-		}
-	}
-
-	if (!TileSelector)
-	{
-		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
-		return;
-	}
-
-	FTileAndActor TileAndActor;
-	TileSelector->GetTileAndActorUnderCursor(TileAndActor);
-	if (OwnerASC && TileAndActor.Actor)
-	{
+		// CardTag에 해당하는 CardAbilitySpec을 모두 가져옵니다.
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
 		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
 
 		// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
 		// TODO: 현재는 첫번째 거로 사용합니다.
-		
+	
 		if (!AbilitySpecs.IsEmpty())
 		{
 			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
 			{
 				TArray<ATile*> OutTiles;
 				TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
-				if (!OutTiles.Contains(TileAndActor.Tile))
-				{
-					OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
-					return;
-				}
 				
-				// Ability가 발동될 수 있도록 이벤트 데이터를 생성합니다.
-				FGameplayEventData Payload;
-				Payload.Instigator = OwnerASC->GetAvatarActor();
-				Payload.Target = TileAndActor.Actor;
-
-				// Queue에 넣고 Ability 발동을 시작합니다.
-				FAbilityActivationData AbilityActivationData;
-				AbilityActivationData.Index = InHandIndex;
-				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-				AbilityActivationData.AbilityTag = CardTag;
-				AbilityActivationData.Payload = Payload;
-				AbilityActivationData.AbilityOwnerASC = OwnerASC;
-
-				WaitingForUseCardsQueue.Emplace(AbilityActivationData);
-				if (!bIsProgressingCardAbility)
+				// Ability 사용 범위 내의 타일을 선택한 경우 들어가는 분기입니다.
+				if (OutTiles.Contains(HitTile))
 				{
-					TryUseNextCardAbility();
+					// Ability가 사용될 수 있도록 이벤트 데이터를 생성합니다.
+					FAbilityActivationData AbilityActivationData;
+					AbilityActivationData.Index = InHandIndex;
+					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationData.AbilityTag = CardTag;
+					AbilityActivationData.AbilityOwnerASC = OwnerASC;
+					AbilityActivationData.TargetTile = HitTile;
+
+					if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+					{
+						// 카드 사용을 시작합니다.
+						LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+						return;
+					}
 				}
 			}
 		}
 	}
-	else
-	{
-		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
-	}
-}
 
-void ALethePlayerController::TryUseNextCardAbility()
-{
-	// TODO: 아래 로직 모두 삭제하고 AbilityExecutionManagerComponent로 책임 넘겨야 함
-	if (!WaitingForUseCardsQueue.IsEmpty())
-	{
-		const FAbilityActivationData& NextAbilityData = WaitingForUseCardsQueue[0];
-		
-		const bool bUseSuccess = NextAbilityData.AbilityOwnerASC->TriggerAbilityFromGameplayEvent(NextAbilityData.AbilitySpecHandle, NextAbilityData.AbilityOwnerASC->AbilityActorInfo.Get(), NextAbilityData.AbilityTag, &NextAbilityData.Payload, *NextAbilityData.AbilityOwnerASC);
-		bIsProgressingCardAbility = bUseSuccess;
-
-		// Queue에서 사용 시도한 카드를 제거하고 성공 여부를 콜백으로 알려줍니다.
-		OnResolveUseCardDelegate.ExecuteIfBound(NextAbilityData.Index, bUseSuccess);
-		WaitingForUseCardsQueue.RemoveAt(0);
-		
-		if (!bUseSuccess)
-		{
-			// 카드 사용 실패 시 Queue에 있는 모든 카드 사용 데이터를 실패로 간주하고, 이를 Widget에게 전달합니다.
-			for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
-			{
-				OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.Index, false);
-			}
-			WaitingForUseCardsQueue.Reset();
-		}
-	}
-	else
-	{
-		bIsProgressingCardAbility = false;
-	}
-}
-
-void ALethePlayerController::OnAbilityEnded(const bool bUseSuccess)
-{
-	if (bUseSuccess)
-	{
-		TryUseNextCardAbility();
-	}
-	else
-	{
-		for (const FAbilityActivationData& WaitingCardData : WaitingForUseCardsQueue)
-		{
-			OnResolveUseCardDelegate.ExecuteIfBound(WaitingCardData.Index, false);
-		}
-		WaitingForUseCardsQueue.Reset();
-	}
+	// nullptr, CardTag에 해당하는 Ability 없음, 카드 사용 범위 바깥에 사용 시도 등 모종의 이유로 실패하면 이곳으로 내려옵니다.
+	OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 }
 
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
@@ -409,11 +361,6 @@ void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemCom
 ULetheHUD* ALethePlayerController::GetLetheHUD() const
 {
 	return LetheHUD;
-}
-
-bool ALethePlayerController::IsProgressingCardAbility() const
-{
-	return bIsProgressingCardAbility;
 }
 
 UPreviewCoordinatorComponent* ALethePlayerController::GetPreviewCoordinatorComponent() const

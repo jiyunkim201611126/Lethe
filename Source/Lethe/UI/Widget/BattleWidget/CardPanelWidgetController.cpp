@@ -99,9 +99,9 @@ void UCardPanelWidgetController::GoEnemyTurnPhase() const
 
 bool UCardPanelWidgetController::RequestTurnEnd() const
 {
-	if (LethePlayerController)
+	if (LetheGameState.IsValid() && LethePlayerController)
 	{
-		if (!LethePlayerController->IsProgressingCardAbility())
+		if (!LetheGameState->IsProgressingPlayerAbility())
 		{
 			// Ability 발동 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 			LethePlayerController->SetCardSelected(false);

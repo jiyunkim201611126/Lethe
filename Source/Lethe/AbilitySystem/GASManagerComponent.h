@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "Components/PawnComponent.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "GASManagerComponent.generated.h"
 
 enum class EPhaseState : uint8;
@@ -13,14 +14,6 @@ class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
 struct FSavedCard;
-
-UENUM(BlueprintType)
-enum class ETeamSide : uint8
-{
-	None,
-	Player,
-	Enemy
-};
 
 UCLASS(NotBlueprintable)
 class LETHE_API UGASManagerComponent : public UPawnComponent, public IAbilitySystemInterface

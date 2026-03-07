@@ -4,7 +4,7 @@
 
 ALetheGameState::ALetheGameState()
 {
-	AbilityExecutionManagerComponent = CreateDefaultSubobject<UAbilityExecutionManagerComponent>("AbilityExecutionManagerComponent");
+	AbilityResolverComponent = CreateDefaultSubobject<UAbilityResolverComponent>("AbilityResolverComponent");
 }
 
 void ALetheGameState::GoDrawPhase()
@@ -36,7 +36,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 
 	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
-		AbilityExecutionManagerComponent->StartUseAbility();
+		AbilityResolverComponent->StartUseEnemyAbility();
 	}
 }
 
@@ -45,12 +45,32 @@ EPhaseState ALetheGameState::GetTurnPhase() const
 	return CurrentTurnState;
 }
 
+void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const
+{
+	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData);
+}
+
 void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const
 {
-	AbilityExecutionManagerComponent->AddEnemyAbilityActivationData(ActivationData);
+	AbilityResolverComponent->AddEnemyAbilityActivationData(ActivationData);
 }
 
 void ALetheGameState::SetTargetTile(const int32 Priority, ATile* TargetTile) const
 {
-	AbilityExecutionManagerComponent->SetTargetTile(Priority, TargetTile);
+	AbilityResolverComponent->SetTargetTile(Priority, TargetTile);
+}
+
+void ALetheGameState::OnAbilityEnded(const bool bSuccess) const
+{
+	AbilityResolverComponent->OnAbilityEnded(bSuccess);
+}
+
+UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const
+{
+	return AbilityResolverComponent;
+}
+
+bool ALetheGameState::IsProgressingPlayerAbility() const
+{
+	return AbilityResolverComponent->IsProgressingPlayerAbility();
 }

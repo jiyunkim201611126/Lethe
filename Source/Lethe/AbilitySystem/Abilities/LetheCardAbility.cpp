@@ -8,7 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
-#include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 
@@ -240,9 +240,9 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndUseCard))
 	{
-		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
+		if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			LethePlayerController->OnAbilityEnded(true);
+			LetheGameState->OnAbilityEnded(true);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 		}
 	}
@@ -251,9 +251,9 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 void ULetheCardAbility::ActiveFailed()
 {
 	// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
-	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(GetWorld()->GetFirstPlayerController()))
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LethePlayerController->OnAbilityEnded(false);
+		LetheGameState->OnAbilityEnded(false);
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 	}
 }

@@ -3,6 +3,7 @@
 #include "AbilityResolverComponent.h"
 
 #include "AbilitySystemComponent.h"
+#include "LetheGameState.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
 
 UAbilityResolverComponent::UAbilityResolverComponent()
@@ -22,34 +23,22 @@ void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityAct
 			return;
 		}
 	}
-	
+
+	// 대기열에 추가한 후 Ability 사용을 시작합니다.
 	PlayerAbilityActivationData.Emplace(ActivationData);
-	if (!bIsProgressingPlayerAbility)
+	if (!IsActivatingPlayerAbility())
 	{
-		StartUsePlayerAbility();
+		// Ability가 사용 중이 아닐 때만 사용을 시작합니다.
+		StartActivatePlayerAbility();
 	}
 }
 
-void UAbilityResolverComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
-{
-	EnemyAbilityActivationPriorities.HeapPush(ActivationData.Index, TLess<int32>());
-	EnemyAbilityActivationData.Emplace(ActivationData.Index, ActivationData);
-}
-
-void UAbilityResolverComponent::SetTargetTile(const int32 Priority, ATile* TargetTile)
-{
-	if (FAbilityActivationData* Data = EnemyAbilityActivationData.Find(Priority))
-	{
-		Data->TargetTile = TargetTile;
-	}
-}
-
-void UAbilityResolverComponent::StartUsePlayerAbility()
+void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
 	while (!PlayerAbilityActivationData.IsEmpty())
 	{
-		const ETryAbilityActivationResult Result = TryUseNextPlayerAbility();
-		OnPlayerAbilityUsed(Result);
+		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
+		OnPlayerAbilityActivated(Result);
 		
 		if (Result == ETryAbilityActivationResult::FailedLogicError)
 		{
@@ -61,22 +50,37 @@ void UAbilityResolverComponent::StartUsePlayerAbility()
 	}
 }
 
-void UAbilityResolverComponent::OnPlayerAbilityUsed(const ETryAbilityActivationResult Result)
+ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbility()
+{
+	if (PlayerAbilityActivationData.IsEmpty())
+	{
+		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
+		return ETryAbilityActivationResult::AllAbilityUsed;
+	}
+
+	// 아직 사용되지 않은 Ability 중 가장 먼저 사용한 Ability의 사용을 시작합니다.
+	FAbilityActivationData* ActivationData = &PlayerAbilityActivationData[0];
+	if (!ActivationData)
+	{
+		return ETryAbilityActivationResult::FailedLogicError;
+	}
+	
+	return TryActivateAbility(ActivationData);
+}
+
+void UAbilityResolverComponent::OnPlayerAbilityActivated(const ETryAbilityActivationResult Result)
 {
 	switch (Result)
 	{
 	case ETryAbilityActivationResult::AllAbilityUsed:
 		CurrentActivationCharacterTeamSide = ETeamSide::None;
 		break;
-	case ETryAbilityActivationResult::FailedLogicError:
-		ProcessAllPlayerAbilitiesFailed();
-		break;
-	case ETryAbilityActivationResult::FailedFatal:
-		ProcessAllPlayerAbilitiesFailed();
-		break;
 	case ETryAbilityActivationResult::Success:
-		bIsProgressingPlayerAbility = true;
+		bIsActivatingPlayerAbility = true;
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
+		break;
+	default:
+		ProcessAllPlayerAbilitiesFailed();
 		break;
 	}
 }
@@ -90,15 +94,29 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	}
 	PlayerAbilityActivationData.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
-	bIsProgressingPlayerAbility = false;
+	bIsActivatingPlayerAbility = false;
 }
 
-void UAbilityResolverComponent::StartUseEnemyAbility()
+void UAbilityResolverComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	while (!EnemyAbilityActivationData.IsEmpty())
+	EnemyAbilityActivationPriorities.HeapPush(ActivationData.Index, TLess<int32>());
+	EnemyAbilityActivationData.Emplace(ActivationData.Index, ActivationData);
+}
+
+void UAbilityResolverComponent::SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile)
+{
+	if (FAbilityActivationData* Data = EnemyAbilityActivationData.Find(Priority))
 	{
-		const ETryAbilityActivationResult Result = TryUseNextEnemyAbility();
-		OnEnemyAbilityUsed(Result);
+		Data->TargetTile = TargetTile;
+	}
+}
+
+void UAbilityResolverComponent::StartActivateEnemyAbility()
+{
+	while (true)
+	{
+		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
+		OnEnemyAbilityActivated(Result);
 		
 		if (Result == ETryAbilityActivationResult::FailedLogicError)
 		{
@@ -110,56 +128,15 @@ void UAbilityResolverComponent::StartUseEnemyAbility()
 	}
 }
 
-void UAbilityResolverComponent::OnEnemyAbilityUsed(const ETryAbilityActivationResult Result)
+ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbility()
 {
-	switch (Result)
+	if (EnemyAbilityActivationPriorities.IsEmpty())
 	{
-	case ETryAbilityActivationResult::AllAbilityUsed:
-		ResetEnemyData();
-		break;
-	case ETryAbilityActivationResult::FailedLogicError:
-		ResetEnemyData();
-		break;
-	case ETryAbilityActivationResult::FailedFatal:
-		ResetEnemyData();
-		break;
-	case ETryAbilityActivationResult::Success:
-		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
-		break;
-	}
-}
-
-void UAbilityResolverComponent::ResetEnemyData()
-{
-	EnemyAbilityActivationPriorities.Reset();
-	EnemyAbilityActivationData.Reset();
-	CurrentActivationCharacterTeamSide = ETeamSide::None;
-}
-
-ETryAbilityActivationResult UAbilityResolverComponent::TryUseNextPlayerAbility()
-{
-	if (PlayerAbilityActivationData.IsEmpty())
-	{
+		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
-	FAbilityActivationData* ActivationData = &PlayerAbilityActivationData[0];
-	if (!ActivationData)
-	{
-		return ETryAbilityActivationResult::FailedLogicError;
-	}
-	
-	const ETryAbilityActivationResult Result = TryUseAbility(ActivationData);
-	return Result;
-}
-
-ETryAbilityActivationResult UAbilityResolverComponent::TryUseNextEnemyAbility()
-{
-	if (EnemyAbilityActivationPriorities.IsEmpty() || EnemyAbilityActivationData.IsEmpty())
-	{
-		return ETryAbilityActivationResult::AllAbilityUsed;
-	}
-	
+	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
 	int32 CurrentPriority;
 	EnemyAbilityActivationPriorities.HeapPop(CurrentPriority, TLess<int32>());
 
@@ -169,10 +146,30 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryUseNextEnemyAbility()
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
-	return TryUseAbility(ActivationData);
+	return TryActivateAbility(ActivationData);
 }
 
-ETryAbilityActivationResult UAbilityResolverComponent::TryUseAbility(FAbilityActivationData* ActivationData) const
+void UAbilityResolverComponent::OnEnemyAbilityActivated(const ETryAbilityActivationResult Result)
+{
+	switch (Result)
+	{
+	case ETryAbilityActivationResult::Success:
+		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
+		break;
+	default:
+		ResetEnemyActivationData();
+		break;
+	}
+}
+
+void UAbilityResolverComponent::ResetEnemyActivationData()
+{
+	EnemyAbilityActivationPriorities.Reset();
+	EnemyAbilityActivationData.Reset();
+	CurrentActivationCharacterTeamSide = ETeamSide::None;
+}
+
+ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid() || !ActivationData->TargetTile.IsValid())
@@ -188,7 +185,13 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryUseAbility(FAbilityAct
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
-		return ETryAbilityActivationResult::FailedLogicError;
+		switch (CurrentActivationCharacterTeamSide)
+		{
+		case ETeamSide::Player:
+			return ETryAbilityActivationResult::FailedNotActivated;
+		default:
+			return ETryAbilityActivationResult::FailedLogicError;
+		}
 	}
 
 	return ETryAbilityActivationResult::Success;
@@ -205,27 +208,36 @@ void UAbilityResolverComponent::OnAbilityEnded(const bool bSuccess)
 				if (PlayerAbilityActivationData.IsValidIndex(0))
 				{
 					OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
-					PlayerAbilityActivationData.RemoveAt(0);
+					PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 				}
-				StartUsePlayerAbility();
+				StartActivatePlayerAbility();
 			}
 			else
 			{
 				ProcessAllPlayerAbilitiesFailed();
 			}
 			
-			bIsProgressingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
+			bIsActivatingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
 		}
 		break;
 	case ETeamSide::Enemy:
-		StartUseEnemyAbility();
+		// 모든 Ability 사용을 마쳤다면 DrawPhase로 돌아갑니다.
+		if (EnemyAbilityActivationPriorities.IsEmpty())
+		{
+			if (ALetheGameState* LetheGameState = GetOwner<ALetheGameState>())
+			{
+				LetheGameState->GoDrawPhase();
+				return;
+			}
+		}
+		StartActivateEnemyAbility();
 		break;
 	default:
 		break;
 	}
 }
 
-bool UAbilityResolverComponent::IsProgressingPlayerAbility() const
+bool UAbilityResolverComponent::IsActivatingPlayerAbility() const
 {
-	return bIsProgressingPlayerAbility;
+	return bIsActivatingPlayerAbility;
 }

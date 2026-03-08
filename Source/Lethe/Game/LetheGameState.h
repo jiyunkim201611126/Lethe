@@ -36,7 +36,7 @@ public:
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
-	void SetTargetTile(const int32 Priority, ATile* TargetTile) const;
+	void SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const;
 
 	void OnAbilityEnded(const bool bSuccess) const;
 

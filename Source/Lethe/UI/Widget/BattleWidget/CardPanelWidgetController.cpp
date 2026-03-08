@@ -103,7 +103,7 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 	{
 		if (!LetheGameState->IsProgressingPlayerAbility())
 		{
-			// Ability 발동 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
+			// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 			LethePlayerController->SetCardSelected(false);
 			GoEnemyTurnPhase();
 			return true;

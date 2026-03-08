@@ -36,7 +36,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 
 	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
-		AbilityResolverComponent->StartUseEnemyAbility();
+		AbilityResolverComponent->StartActivateEnemyAbility();
 	}
 }
 
@@ -55,9 +55,9 @@ void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData
 	AbilityResolverComponent->AddEnemyAbilityActivationData(ActivationData);
 }
 
-void ALetheGameState::SetTargetTile(const int32 Priority, ATile* TargetTile) const
+void ALetheGameState::SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const
 {
-	AbilityResolverComponent->SetTargetTile(Priority, TargetTile);
+	AbilityResolverComponent->SetTargetTileForEnemy(Priority, TargetTile);
 }
 
 void ALetheGameState::OnAbilityEnded(const bool bSuccess) const
@@ -72,5 +72,5 @@ UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const
 
 bool ALetheGameState::IsProgressingPlayerAbility() const
 {
-	return AbilityResolverComponent->IsProgressingPlayerAbility();
+	return AbilityResolverComponent->IsActivatingPlayerAbility();
 }

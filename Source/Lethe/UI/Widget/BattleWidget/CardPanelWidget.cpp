@@ -355,7 +355,7 @@ void UCardPanelWidget::ResetSelectedCardWithoutEvent()
 
 void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSuccess)
 {
-	// 카드 사용 요청 성공 후, Ability 실제 발동 여부와 상관 없이 이 로직으로 들어옵니다.
+	// 카드 사용 요청 성공 후, Ability 실제 사용 여부와 상관 없이 이 로직으로 들어옵니다.
 	// 해당 함수 호출 횟수는 반드시 카드 사용 요청 성공 횟수와 1:1 대응해야 합니다.
 	UCardWidget* CardWidget = UseRequestedCards.FindRef(HandIndex);
 	if (!CardWidget)

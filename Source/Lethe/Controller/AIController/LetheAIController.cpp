@@ -205,6 +205,6 @@ void ALetheAIController::SetTargetTile(ATile* TargetTile) const
 {
 	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->SetTargetTile(AbilityPriority, TargetTile);
+		LetheGameState->SetTargetTileForEnemy(AbilityPriority, TargetTile);
 	}
 }

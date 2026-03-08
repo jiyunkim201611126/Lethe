@@ -3,16 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
-#include "Lethe/Data/AbilityActivationData.h"
 #include "LethePlayerController.generated.h"
 
-class UPreviewCoordinatorComponent;
+class ATile;
 class AArrowRenderer;
 class UAbilitySystemComponent;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
+class UPreviewCoordinatorComponent;
 class UTileSelectorComponent;
 struct FGameplayAbilityActorInfo;
 

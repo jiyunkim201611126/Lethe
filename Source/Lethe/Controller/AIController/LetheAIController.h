@@ -41,7 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FFoundTileData FindNearestPlayerCharacterTile() const;
 
-	UFUNCTION(BlueprintCallable, meta = (ToolTip = "반드시 Ability를 선택한 후 호출해야 합니다."))
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 Ability의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 Ability를 선택한 후 호출해야 합니다."))
 	void SetTargetTile(ATile* TargetTile) const;
 
 protected:

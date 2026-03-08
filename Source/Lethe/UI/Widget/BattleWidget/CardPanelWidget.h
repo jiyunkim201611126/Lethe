@@ -53,8 +53,8 @@ private:
 	// 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다.
 	bool OnMouseButtonDownInCardUseSection() const;
 	bool OnMouseButtonUpInCardUseSection();
-	void ResetSelectedCard();
-	void ResetSelectedCardWithoutEvent();
+	void ResetSelectedCard() const;
+	void OnResetSelectedCard();
 
 	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess);
 

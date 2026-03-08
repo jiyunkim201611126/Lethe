@@ -62,7 +62,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
-		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::ResetSelectedCardWithoutEvent);
+		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::OnResetSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
 
 		ViewCardDetail->SetWidgetController(WidgetController);
@@ -163,7 +163,6 @@ void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 	const TArray<TObjectPtr<UCardWidget>>& CurrentHands = CardLayoutManager->GetCurrentHands();
 	if (CurrentHands.IsValidIndex(Number))
 	{
-		ResetSelectedCard();
 		UCardWidget* SelectedCard = CurrentHands[Number];
 		if (SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
 		{
@@ -326,23 +325,15 @@ bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
 	return false;
 }
 
-void UCardPanelWidget::ResetSelectedCard()
+void UCardPanelWidget::ResetSelectedCard() const
 {
-	if (CurrentSelectedCard)
+	if (CardPanelWidgetController && CurrentSelectedCard)
 	{
-		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
-		CurrentSelectedCard = nullptr;
-
-		if (CardPanelWidgetController)
-		{
-			CardPanelWidgetController->SetCardSelected(false);
-		}
-
-		UpdateAllCardTranslation();
+		CardPanelWidgetController->SetCardSelected(false);
 	}
 }
 
-void UCardPanelWidget::ResetSelectedCardWithoutEvent()
+void UCardPanelWidget::OnResetSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{

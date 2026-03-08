@@ -87,12 +87,12 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		// 최종적으로 선택된 캐릭터가 없는 경우 얼리리턴합니다.
 		return;
 	}
-
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+	
 	if (UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SelectedCharacter.Get()))
 	{
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		TArray<FGameplayAbilitySpec*> AbilitySpecs;
+		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
 		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
 		if (AbilitySpecs.IsEmpty())
 		{
@@ -132,8 +132,11 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 
 void ALethePlayerController::ResetSelectedCharacter()
 {
-	SelectedCharacter.Reset();
-	TileSelector->UnhighlightTileByAbility();
+	if (SelectedCharacter.IsValid())
+	{
+		SelectedCharacter.Reset();
+		TileSelector->UnhighlightTileByAbility();
+	}
 }
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)

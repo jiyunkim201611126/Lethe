@@ -32,6 +32,16 @@ public:
 
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
+
+	// 겹치는 경로 없이 나뭇가지처럼 뻗어나가는 BFS로 EndTile을 탐색해 최단 경로를 Out 인자로 뱉어주는 함수입니다.
+	bool FindShortestPath(const ATile* StartTile, const ATile* EndTile, TArray<ATile*>& OutPathTiles);
+
+	void AddToReservedMoveTiles(ATile* Tile);
+	void RemoveToReservedMoveTiles(ATile* Tile);
+	void EmptyReservedMoveTiles();
+
+	UFUNCTION(BlueprintPure)
+	bool CanMoveToTile(ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
 	
@@ -39,8 +49,10 @@ public:
 	bool MapTileAndActor(ATile* InTile, AActor* InActor);
 	void UnmapByTile(ATile* InTile);
 	void UnmapByActor(AActor* InActor);
-	
+
+	UFUNCTION(BlueprintCallable)
 	AActor* GetActorOnTile(const ATile* InTile) const;
+	UFUNCTION(BlueprintCallable)
 	ATile* GetTileUnderActor(const AActor* InActor) const;
 
 private:
@@ -59,9 +71,6 @@ private:
 	void GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, int32 Width, int32 Height) const;
 	//Cube좌표를 World좌표로 전환
 	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord) const;
-	//배열 랜덤 셔플
-	void ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const;
-	void ShuffleArray(const FRandomStream* RandomStream, TArray<TPair<FCubeCoord, int32>>& Array) const;
 	
 private:
 	UPROPERTY(Config)
@@ -79,6 +88,9 @@ private:
 	// 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다.
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
+
+	// Enemy AI가 MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
+	TArray<TWeakObjectPtr<ATile>> ReservedMoveTiles;
 };
 
 /**

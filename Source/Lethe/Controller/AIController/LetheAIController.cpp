@@ -78,7 +78,42 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 	}
 }
 
-void ALetheAIController::SelectMoveAbility()
+FFoundTileData ALetheAIController::FindNearestPlayerCharacterTile() const
+{
+	FFoundTileData FoundTileData;
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			const FCubeCoord ThisTileCoord = ThisTile->GetCubeCoord();
+			TSet<FCubeCoord> PlayerCharacterTileCoords;
+			TileManagerSubsystem->TileBFS(ThisTileCoord, 999, EBFSType::Connection, PlayerCharacterTileCoords,
+			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				return PlayerCharacterTileCoords.IsEmpty();
+			},
+			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			{
+				if (TileData && TileData->TileActor.IsValid())
+				{
+					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+					{
+						if (ActorOnTile->Implements<UPlayableCharacterInterface>() && !FoundTileData.FoundTile)
+						{
+							FoundTileData.FoundTile = TileData->TileActor.Get();
+							FoundTileData.Depth = Depth;
+							return true;
+						}
+					}
+				}
+				return false;
+			});
+		}
+	}
+	return FoundTileData;
+}
+
+void ALetheAIController::SelectMoveAbility() const
 {
 	APawn* ControlledPawn = GetPawn();
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledPawn);
@@ -166,45 +201,36 @@ void ALetheAIController::SelectRandomAbility() const
 	}
 }
 
-FFoundTileData ALetheAIController::FindNearestPlayerCharacterTile() const
-{
-	FFoundTileData FoundTileData;
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
-		{
-			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
-			TSet<FCubeCoord> PlayerCharacterTileCoords;
-			TileManagerSubsystem->TileBFS(ThisTileCoord, 999, EBFSType::Connection, PlayerCharacterTileCoords,
-			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
-			{
-				return PlayerCharacterTileCoords.IsEmpty();
-			},
-			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
-			{
-				if (TileData && TileData->TileActor.IsValid())
-				{
-					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
-					{
-						if (ActorOnTile->Implements<UPlayableCharacterInterface>() && !FoundTileData.FoundTile)
-						{
-							FoundTileData.FoundTile = TileData->TileActor.Get();
-							FoundTileData.Depth = Depth;
-							return true;
-						}
-					}
-				}
-				return false;
-			});
-		}
-	}
-	return FoundTileData;
-}
-
 void ALetheAIController::SetTargetTile(ATile* TargetTile) const
 {
 	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->SetTargetTileForEnemy(AbilityPriority, TargetTile);
 	}
+}
+
+void ALetheAIController::SetTargetTileToMove(ATile* CurrentTile, ATile* TargetTile)
+{
+	if (TargetTile)
+	{
+		if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		{
+			TileManagerSubsystem->RemoveToReservedMoveTiles(CurrentTile);
+			TileManagerSubsystem->AddToReservedMoveTiles(TargetTile);
+		}
+		SetTargetTile(TargetTile);
+	}
+}
+
+TArray<ATile*> ALetheAIController::GetPathTiles(ATile* TargetTile) const
+{
+	TArray<ATile*> PathTiles;
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTiles);
+		}
+	}
+	return PathTiles;
 }

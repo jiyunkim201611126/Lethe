@@ -114,16 +114,18 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		{
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			if (ATile* TileActor = TileManagerSubsystem->GetTile(SpawnCoord))
+			if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoord))
 			{
-				FVector SpawnLocation = TileActor->GetActorLocation();
-				if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+				FVector SpawnLocation = Tile->GetActorLocation();
+				if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
 				{
-					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedEnemy);
+					TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
 					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
 					SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
 					EnemyIndex += 100;
 				}
+
+				TileManagerSubsystem->AddToReservedMoveTiles(Tile);
 			}
 		}
 

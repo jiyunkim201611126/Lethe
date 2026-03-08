@@ -5,15 +5,12 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "PreviewCoordinatorComponent.h"
 #include "TileSelectorComponent.h"
-#include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
-#include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Game/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -121,8 +118,14 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 					// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
 					FGameplayEventData Payload;
 					Payload.Instigator = SelectedCharacter.Get();
-					Payload.OptionalObject = TileAndActor.Tile;
-					AbilitySystemComponent->TriggerAbilityFromGameplayEvent(AbilitySpecs[0]->Handle, AbilitySystemComponent->AbilityActorInfo.Get(), LetheGameplayTags.Ability_Move, &Payload, *AbilitySystemComponent);
+					
+					FAbilityActivationData AbilityActivationData;
+					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					AbilityActivationData.TargetTile = TileAndActor.Tile;
+
+					LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 				}
 				ResetSelectedCharacter();
 			}

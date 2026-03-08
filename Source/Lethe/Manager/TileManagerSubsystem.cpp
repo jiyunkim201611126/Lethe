@@ -2,8 +2,10 @@
 
 #include "TileManagerSubsystem.h"
 
+#include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
 
 
 void UTileManagerSubsystem::Deinitialize()
@@ -75,7 +77,7 @@ void UTileManagerSubsystem::MakeFloorData(const FRandomStream* RandomStream, con
 	//맵 구성되는거 보고 최상단 층이 너무 넓다는 생각이 들면 추가하기
 	TArray<FCubeCoord> CubeCoordList;
 	TileDataMap.GetKeys(CubeCoordList);
-	ShuffleArray(RandomStream, CubeCoordList); //Array 셔플
+	ArrayShuffle::ShuffleWithSeed(CubeCoordList, *RandomStream); //Array 셔플
 	const UCurveFloat* Curve = StageInitData->ProbabilityCurve.LoadSynchronous(); //확률 커브
 	int32 RoomId = 0;
 	
@@ -317,7 +319,7 @@ void UTileManagerSubsystem::MakeEventData(const FRandomStream* RandomStream, con
 		for (auto& Elem : BoundTiles)
 		{
 			TArray<TPair<FCubeCoord, int32>> RandArray = Elem.Value;
-			ShuffleArray(RandomStream, RandArray);
+			ArrayShuffle::ShuffleWithSeed(RandArray, *RandomStream); //Array 셔플
 
 			int32 SelectCount = 6; //최소 1개의 길 보장
 
@@ -459,30 +461,151 @@ FVector UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord) co
 	return FVector(WorldX, WorldY, 0.f);
 }
 
-void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArray<FCubeCoord>& Array) const
+bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* EndTile, TArray<ATile*>& OutPathTiles)
 {
-	const int32 LastIndex = Array.Num() - 1;
-	for (int32 Index = LastIndex; Index > 0; --Index)
+	OutPathTiles.Reset();
+	if (!StartTile || !EndTile)
 	{
-		const int32 SwapIndex = RandomStream->FRandRange(0, Index);
-		if (Index != SwapIndex)
+		return false;
+	}
+
+	const FCubeCoord StartCoord = StartTile->GetCubeCoord();
+	const FCubeCoord EndCoord = EndTile->GetCubeCoord();
+
+	if (!TileDataMap.Contains(StartCoord) || !TileDataMap.Contains(EndCoord))
+	{
+		return false;
+	}
+
+	if (StartCoord == EndCoord)
+	{
+		return false;
+	}
+
+	// 다음에 탐색할 좌표입니다.
+	TQueue<FCubeCoord> NextCoordsQueue;
+	// 이미 방문한 좌표입니다.
+	TSet<FCubeCoord> VisitedCoords;
+	// '이 좌표에 어디서 왔는지'를 저장, 경로 복원에 사용합니다.
+	// 즉 Key는 다음 좌표, Value는 현재 좌표로 기록됩니다.
+	TMap<FCubeCoord, FCubeCoord> ParentCoordMap;
+
+	NextCoordsQueue.Enqueue(StartCoord);
+	VisitedCoords.Emplace(StartCoord);
+
+	bool bFoundPath = false;
+
+	while (!NextCoordsQueue.IsEmpty())
+	{
+		// 다음 방문할 좌표를 꺼냅니다.
+		FCubeCoord CurrentCoord;
+		NextCoordsQueue.Dequeue(CurrentCoord);
+
+		// 해당 좌표에 데이터가 존재하지 않으면 스킵합니다.
+		const FTileData* CurrentTileData = TileDataMap.Find(CurrentCoord);
+		if (!CurrentTileData)
 		{
-			Array.Swap(Index, SwapIndex);
+			continue;
+		}
+
+		// 해당 좌표의 6방향 타일들을 검사합니다.
+		for (int32 Direction = 0; Direction < 6; ++Direction)
+		{
+			// 연결 여부를 검사하고, 막혀있다면 스킵합니다.
+			if (!CurrentTileData->Connections[Direction])
+			{
+				continue;
+			}
+
+			// 이미 방문한 좌표거나 데이터가 없는 좌표라면 스킵합니다.
+			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Direction);
+			if (VisitedCoords.Contains(NextCoord) || !TileDataMap.Contains(NextCoord))
+			{
+				continue;
+			}
+
+			// 방문했음을 기록하고, 다음 좌표로 가는 타일로 현재 타일을 등록합니다.
+			VisitedCoords.Emplace(NextCoord);
+			ParentCoordMap.Emplace(NextCoord, CurrentCoord);
+
+			// 다음 좌표가 목적지라면 탐색을 중단합니다.
+			if (NextCoord == EndCoord)
+			{
+				bFoundPath = true;
+				break;
+			}
+
+			// 다음 좌표를 큐에 넣어 탐색을 계속합니다.
+			NextCoordsQueue.Enqueue(NextCoord);
+		}
+
+		if (bFoundPath)
+		{
+			break;
 		}
 	}
+
+	if (!bFoundPath)
+	{
+		return false;
+	}
+
+	TArray<FCubeCoord> ReversedPathCoords;
+	ReversedPathCoords.Reserve(VisitedCoords.Num());
+
+	FCubeCoord CurrentCoord = EndCoord;
+	ReversedPathCoords.Emplace(CurrentCoord);
+
+	// EndCoord부터 지금까지 거쳐왔던 경로를 거꾸로 다시 돌아가며 해당 경로를 기록합니다.
+	while (CurrentCoord != StartCoord)
+	{
+		const FCubeCoord* ParentCoord = ParentCoordMap.Find(CurrentCoord);
+		if (!ParentCoord)
+		{
+			OutPathTiles.Reset();
+			return false;
+		}
+
+		CurrentCoord = *ParentCoord;
+		ReversedPathCoords.Emplace(CurrentCoord);
+	}
+
+	// 경로가 거꾸로 기록되었으므로, 다시 뒤집어서 Out인자로 뱉어줍니다.
+	for (int32 Index = ReversedPathCoords.Num() - 2; Index >= 0; --Index)
+	{
+		if (ATile* PathTile = GetTile(ReversedPathCoords[Index]))
+		{
+			OutPathTiles.Emplace(PathTile);
+		}
+	}
+
+	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::ShuffleArray(const FRandomStream* RandomStream, TArray<TPair<FCubeCoord, int32>>& Array) const
+void UTileManagerSubsystem::AddToReservedMoveTiles(ATile* Tile)
 {
-	const int32 LastIndex = Array.Num() - 1;
-	for (int32 Index = LastIndex; Index > 0; --Index)
+	ReservedMoveTiles.Emplace(Tile);
+}
+
+void UTileManagerSubsystem::RemoveToReservedMoveTiles(ATile* Tile)
+{
+	ReservedMoveTiles.RemoveSwap(Tile);
+}
+
+void UTileManagerSubsystem::EmptyReservedMoveTiles()
+{
+	ReservedMoveTiles.Empty();
+}
+
+bool UTileManagerSubsystem::CanMoveToTile(ATile* Tile) const
+{
+	const bool bIsReserved = ReservedMoveTiles.Contains(Tile);
+	bool bIsPlayerCharacter = false;
+	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
 	{
-		const int32 SwapIndex = RandomStream->FRandRange(0, Index);
-		if (Index != SwapIndex)
-		{
-			Array.Swap(Index, SwapIndex);
-		}
+		bIsPlayerCharacter = ActorOnTile->Implements<UPlayableCharacterInterface>();
 	}
+	return !bIsReserved && !bIsPlayerCharacter;
 }
 
 ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord)

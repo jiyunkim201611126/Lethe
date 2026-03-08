@@ -33,7 +33,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	CurrentTurnState = NewPhase;
 	
 	OnChangeTurnStateDelegate.Broadcast(OldPhase, NewPhase);
-
+	
 	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
 		AbilityResolverComponent->StartActivateEnemyAbility();

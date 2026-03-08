@@ -38,6 +38,7 @@ public:
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const;
 
+	UFUNCTION(BlueprintCallable)
 	void OnAbilityEnded(const bool bSuccess) const;
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;

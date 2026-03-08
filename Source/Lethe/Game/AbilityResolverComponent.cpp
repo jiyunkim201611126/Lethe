@@ -4,6 +4,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "LetheGameState.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
 
 UAbilityResolverComponent::UAbilityResolverComponent()
@@ -15,12 +16,17 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 
 void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	for (const FAbilityActivationData& RegisteredActivationData : PlayerAbilityActivationData)
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	if (!ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
 	{
-		if (RegisteredActivationData.Index == ActivationData.Index)
+		// Move Ability가 아닌 경우 들어오는 분기입니다.
+		for (const FAbilityActivationData& RegisteredActivationData : PlayerAbilityActivationData)
 		{
-			// 이미 사용 대기 중인 카드인 경우 얼리리턴합니다.
-			return;
+			if (RegisteredActivationData.Index == ActivationData.Index)
+			{
+				// 이미 사용 대기 중인 카드인 경우 얼리리턴합니다.
+				return;
+			}
 		}
 	}
 
@@ -123,6 +129,10 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 			ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
 			continue;
 		}
+		if (Result == ETryAbilityActivationResult::FailedNoneTargetTileToMove)
+		{
+			continue;
+		}
 		
 		return;
 	}
@@ -156,6 +166,11 @@ void UAbilityResolverComponent::OnEnemyAbilityActivated(const ETryAbilityActivat
 	case ETryAbilityActivationResult::Success:
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
+	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
+		if (!EnemyAbilityActivationPriorities.IsEmpty())
+		{
+			break;
+		}
 	default:
 		ResetEnemyActivationData();
 		break;
@@ -172,15 +187,34 @@ void UAbilityResolverComponent::ResetEnemyActivationData()
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid() || !ActivationData->TargetTile.IsValid())
+	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid())
 	{
 		return ETryAbilityActivationResult::FailedFatal;
 	}
-	
+
 	UAbilitySystemComponent* AbilityOwnerASC = ActivationData->AbilityOwnerASC.Get();
-	AActor* Target = TileManagerSubsystem->GetActorOnTile(ActivationData->TargetTile.Get());
 	ActivationData->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
-	ActivationData->Payload.Target = Target;
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	if (ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
+	{
+		if (!ActivationData->TargetTile.IsValid())
+		{
+			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
+		}
+		
+		ActivationData->Payload.OptionalObject = ActivationData->TargetTile.Get();
+	}
+	else
+	{
+		if (!ActivationData->TargetTile.IsValid())
+		{
+			return ETryAbilityActivationResult::FailedLogicError;
+		}
+		
+		AActor* Target = TileManagerSubsystem->GetActorOnTile(ActivationData->TargetTile.Get());
+		ActivationData->Payload.Target = Target;
+	}
 	
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
@@ -207,7 +241,11 @@ void UAbilityResolverComponent::OnAbilityEnded(const bool bSuccess)
 			{
 				if (PlayerAbilityActivationData.IsValidIndex(0))
 				{
-					OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+					if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
+					{
+						OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					}
 					PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 				}
 				StartActivatePlayerAbility();

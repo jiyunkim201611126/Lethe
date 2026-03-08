@@ -6,7 +6,7 @@
 namespace ArrayShuffle
 {
 	template <typename T, typename AllocatorType>
-	FORCEINLINE void ShuffleWithSeed(TArray<T, AllocatorType>& Array, FRandomStream& Stream)
+	FORCEINLINE void ShuffleWithSeed(TArray<T, AllocatorType>& Array, const FRandomStream& Stream)
 	{
 		const int32 Num = Array.Num();
 		if (Num <= 1)

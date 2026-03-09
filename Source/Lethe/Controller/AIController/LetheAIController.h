@@ -11,15 +11,12 @@ class ATile;
 class UStateTreeAIComponent;
 
 USTRUCT(BlueprintType)
-struct FFoundTileData
+struct FTilePath
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly)
-	ATile* FoundTile = nullptr;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 Depth = 0;
+	TArray<ATile*> Tiles;
 };
 
 UCLASS()
@@ -33,7 +30,7 @@ public:
 	void SetAbilityPriority(const int32 InPriority);
 
 	UFUNCTION(BlueprintCallable)
-	FFoundTileData FindNearestPlayerCharacterTile() const;
+	int32 FindNearestPlayerCharacterTiles(UPARAM(ref) TArray<ATile*>& OutNearestTiles) const;
 	
 	UFUNCTION(BlueprintCallable)
 	void SelectRandomAbility() const;
@@ -49,6 +46,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	TArray<ATile*> GetPathTiles(ATile* TargetTile) const;
+
+	UFUNCTION(BlueprintCallable)
+	TArray<FTilePath> GetAllPathTiles(ATile* TargetTile) const;
 
 protected:
 	//~ Begin AActor Interface

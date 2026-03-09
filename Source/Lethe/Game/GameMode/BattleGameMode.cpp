@@ -124,8 +124,6 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 					SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
 					EnemyIndex += 100;
 				}
-
-				TileManagerSubsystem->AddToReservedMoveTiles(Tile);
 			}
 		}
 

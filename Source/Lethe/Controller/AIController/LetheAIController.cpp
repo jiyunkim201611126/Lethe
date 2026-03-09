@@ -8,7 +8,6 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
 
@@ -78,39 +77,59 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 	}
 }
 
-FFoundTileData ALetheAIController::FindNearestPlayerCharacterTile() const
+int32 ALetheAIController::FindNearestPlayerCharacterTiles(UPARAM(ref) TArray<ATile*>& OutNearestTiles) const
 {
-	FFoundTileData FoundTileData;
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	OutNearestTiles.Reset();
+	
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	const APawn* ControlledPawn = GetPawn();
+	if (!TileManagerSubsystem || !ControlledPawn)
 	{
-		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		return INDEX_NONE;
+	}
+
+	const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(ControlledPawn);
+	if (!ThisTile)
+	{
+		return INDEX_NONE;
+	}
+
+	TArray<TPair<ATile*, int32>> TileAndDistances;
+	TileAndDistances.Reserve(PLAYABLE_CHARACTER_NUMBER);
+
+	int32 ShortestDistance = INT_MAX;
+	for (const auto& Elem : TileManagerSubsystem->GetPlayerCharacterToTileMap())
+	{
+		if (Elem.Value.IsValid())
 		{
-			const FCubeCoord ThisTileCoord = ThisTile->GetCubeCoord();
-			TSet<FCubeCoord> PlayerCharacterTileCoords;
-			TileManagerSubsystem->TileBFS(ThisTileCoord, 999, EBFSType::Connection, PlayerCharacterTileCoords,
-			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			const int32 Distance = TileManagerSubsystem->GetTileDistance(ThisTile, Elem.Value.Get(), EBFSType::Connection);
+			if (Distance != INDEX_NONE && Distance < ShortestDistance)
 			{
-				return PlayerCharacterTileCoords.IsEmpty();
-			},
-			[&TileManagerSubsystem, &FoundTileData](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+				ShortestDistance = Distance;
+			}
+
+			if (Distance != INDEX_NONE)
 			{
-				if (TileData && TileData->TileActor.IsValid())
-				{
-					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
-					{
-						if (ActorOnTile->Implements<UPlayableCharacterInterface>() && !FoundTileData.FoundTile)
-						{
-							FoundTileData.FoundTile = TileData->TileActor.Get();
-							FoundTileData.Depth = Depth;
-							return true;
-						}
-					}
-				}
-				return false;
-			});
+				TileAndDistances.Emplace(Elem.Value.Get(), Distance);
+			}
 		}
 	}
-	return FoundTileData;
+
+	if (ShortestDistance == INT_MAX)
+	{
+		return INDEX_NONE;
+	}
+
+	OutNearestTiles.Reserve(TileAndDistances.Num());
+	for (const TPair<ATile*, int32>& TileAndDistance : TileAndDistances)
+	{
+		if (TileAndDistance.Value == ShortestDistance)
+		{
+			OutNearestTiles.Emplace(TileAndDistance.Key);
+		}
+	}
+	
+	return ShortestDistance;
 }
 
 void ALetheAIController::SelectMoveAbility() const
@@ -229,8 +248,36 @@ TArray<ATile*> ALetheAIController::GetPathTiles(ATile* TargetTile) const
 	{
 		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTiles);
+			TArray<TArray<ATile*>> PathTilesArray;
+			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray) && !PathTilesArray.IsEmpty())
+			{
+				PathTiles = PathTilesArray[0];
+			}
 		}
 	}
 	return PathTiles;
+}
+
+TArray<FTilePath> ALetheAIController::GetAllPathTiles(ATile* TargetTile) const
+{
+	TArray<FTilePath> OutPathTiles;
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			TArray<TArray<ATile*>> PathTilesArray;
+			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray))
+			{
+				OutPathTiles.Reserve(PathTilesArray.Num());
+				for (const TArray<ATile*>& PathTiles : PathTilesArray)
+				{
+					FTilePath TilePath;
+					TilePath.Tiles = PathTiles;
+					OutPathTiles.Emplace(MoveTemp(TilePath));
+				}
+			}
+		}
+	}
+
+	return OutPathTiles;
 }

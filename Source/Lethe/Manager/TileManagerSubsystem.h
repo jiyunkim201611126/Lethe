@@ -23,6 +23,7 @@ class LETHE_API UTileManagerSubsystem : public UWorldSubsystem
 
 public:
 	//~ Begin USubsystem Interface
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
 	
@@ -33,8 +34,14 @@ public:
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
 
-	// 겹치는 경로 없이 나뭇가지처럼 뻗어나가는 BFS로 EndTile을 탐색해 최단 경로를 Out 인자로 뱉어주는 함수입니다.
-	bool FindShortestPath(const ATile* StartTile, const ATile* EndTile, TArray<ATile*>& OutPathTiles);
+	/**
+	 * StartTile부터 TargetTile까지 거리를 측정에 특화된 함수입니다.
+	 * 기존 TileBFS를 활용하기엔 OutCoords가 계산에 불필요하므로 성능을 위해 따로 구현했습니다.
+	 */
+	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType);
+	
+	// StartTile에서 TargetTile까지의 "모든 최단 경로"를 Out 인자로 뱉어주는 함수입니다.
+	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
 
 	void AddToReservedMoveTiles(ATile* Tile);
 	void RemoveToReservedMoveTiles(ATile* Tile);
@@ -54,6 +61,8 @@ public:
 	AActor* GetActorOnTile(const ATile* InTile) const;
 	UFUNCTION(BlueprintCallable)
 	ATile* GetTileUnderActor(const AActor* InActor) const;
+
+	const TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>>& GetPlayerCharacterToTileMap();
 
 private:
 	const FStageData* GetStageData(const FName& StageName) const;
@@ -88,6 +97,8 @@ private:
 	// 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다.
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
+
+	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> PlayerCharacterToTileMap;
 
 	// Enemy AI가 MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
 	TArray<TWeakObjectPtr<ATile>> ReservedMoveTiles;

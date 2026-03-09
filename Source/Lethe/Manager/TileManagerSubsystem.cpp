@@ -7,6 +7,12 @@
 #include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 
+void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	PlayerCharacterToTileMap.Reserve(PLAYABLE_CHARACTER_NUMBER);
+}
 
 void UTileManagerSubsystem::Deinitialize()
 {
@@ -461,125 +467,240 @@ FVector UTileManagerSubsystem::CubeCoordToWorldCoord(const FCubeCoord& Coord) co
 	return FVector(WorldX, WorldY, 0.f);
 }
 
-bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* EndTile, TArray<ATile*>& OutPathTiles)
+int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType)
 {
-	OutPathTiles.Reset();
-	if (!StartTile || !EndTile)
+	if (!StartTile || !TargetTile)
 	{
-		return false;
+		return INDEX_NONE;
+	}
+
+	if (StartTile == TargetTile)
+	{
+		return 0;
 	}
 
 	const FCubeCoord StartCoord = StartTile->GetCubeCoord();
-	const FCubeCoord EndCoord = EndTile->GetCubeCoord();
-
-	if (!TileDataMap.Contains(StartCoord) || !TileDataMap.Contains(EndCoord))
+	const FCubeCoord TargetCoord = TargetTile->GetCubeCoord();
+	if (!TileDataMap.Contains(StartCoord) || !TileDataMap.Contains(TargetCoord))
 	{
-		return false;
+		return INDEX_NONE;
 	}
 
-	if (StartCoord == EndCoord)
+	TQueue<TPair<FCubeCoord, int32>> NextCoordQueue;
+	TSet<FCubeCoord> Visited;
+
+	NextCoordQueue.Enqueue({ StartCoord, 0 });
+	Visited.Emplace(StartCoord);
+
+	while (!NextCoordQueue.IsEmpty())
 	{
-		return false;
-	}
+		TPair<FCubeCoord, int32> Current;
+		NextCoordQueue.Dequeue(Current);
 
-	// 다음에 탐색할 좌표입니다.
-	TQueue<FCubeCoord> NextCoordsQueue;
-	// 이미 방문한 좌표입니다.
-	TSet<FCubeCoord> VisitedCoords;
-	// '이 좌표에 어디서 왔는지'를 저장, 경로 복원에 사용합니다.
-	// 즉 Key는 다음 좌표, Value는 현재 좌표로 기록됩니다.
-	TMap<FCubeCoord, FCubeCoord> ParentCoordMap;
+		const FCubeCoord& CurrentCoord = Current.Key;
+		const int32 CurrentDepth = Current.Value;
 
-	NextCoordsQueue.Enqueue(StartCoord);
-	VisitedCoords.Emplace(StartCoord);
-
-	bool bFoundPath = false;
-
-	while (!NextCoordsQueue.IsEmpty())
-	{
-		// 다음 방문할 좌표를 꺼냅니다.
-		FCubeCoord CurrentCoord;
-		NextCoordsQueue.Dequeue(CurrentCoord);
-
-		// 해당 좌표에 데이터가 존재하지 않으면 스킵합니다.
 		const FTileData* CurrentTileData = TileDataMap.Find(CurrentCoord);
 		if (!CurrentTileData)
 		{
 			continue;
 		}
 
-		// 해당 좌표의 6방향 타일들을 검사합니다.
 		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
-			// 연결 여부를 검사하고, 막혀있다면 스킵합니다.
+			if (BFSType == EBFSType::Connection && !CurrentTileData->Connections[Direction])
+			{
+				continue;
+			}
+
+			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Direction);
+			if (Visited.Contains(NextCoord))
+			{
+				continue;
+			}
+
+			if (!TileDataMap.Contains(NextCoord))
+			{
+				continue;
+			}
+
+			const int32 NextDepth = CurrentDepth + 1;
+			if (NextCoord == TargetCoord)
+			{
+				return NextDepth;
+			}
+
+			Visited.Emplace(NextCoord);
+			NextCoordQueue.Enqueue({ NextCoord, NextDepth });
+		}
+	}
+
+	// 도달 불가능한 경우 여기로 내려옵니다.
+	return INDEX_NONE;
+}
+
+bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray)
+{
+	OutPathTilesArray.Reset();
+	if (!StartTile || !TargetTile)
+	{
+		return false;
+	}
+
+	const FCubeCoord StartCoord = StartTile->GetCubeCoord();
+	const FCubeCoord TargetCoord = TargetTile->GetCubeCoord();
+
+	if (!TileDataMap.Contains(StartCoord) || !TileDataMap.Contains(TargetCoord))
+	{
+		return false;
+	}
+
+	if (StartCoord == TargetCoord)
+	{
+		return false;
+	}
+
+	TQueue<TPair<FCubeCoord, int32>> NextCoordsQueue;
+	// 각 좌표의 "최초 도달 깊이"를 저장합니다. (동일 깊이 중복 부모 기록에 사용)
+	TMap<FCubeCoord, int32> DepthMap;
+	// 최단 경로 복원을 위해 "이 좌표로 올 수 있는 부모 좌표들"을 저장합니다.
+	TMap<FCubeCoord, TArray<FCubeCoord>> ParentCoordMap;
+
+	NextCoordsQueue.Enqueue({StartCoord, 0});
+	DepthMap.Emplace(StartCoord, 0);
+	// TargetTile을 처음 발견한 최단 깊이입니다. 아직 못 찾았으면 INDEX_NONE입니다.
+	int32 ShortestDistanceToTarget = INDEX_NONE;
+
+	// BFS로 탐색하면서 TargetTile이 처음 발견된 깊이까지만 확장합니다.
+	while (!NextCoordsQueue.IsEmpty())
+	{
+		TPair<FCubeCoord, int32> Current;
+		NextCoordsQueue.Dequeue(Current);
+		const FCubeCoord CurrentCoord = Current.Key;
+		const int32 CurrentDepth = Current.Value;
+
+		const FTileData* CurrentTileData = TileDataMap.Find(CurrentCoord);
+		if (!CurrentTileData)
+		{
+			continue;
+		}
+
+		// TargetTile을 찾은 뒤에는 그 깊이까지만 확장합니다.
+		if (ShortestDistanceToTarget != INDEX_NONE && CurrentDepth >= ShortestDistanceToTarget)
+		{
+			continue;
+		}
+
+		for (int32 Direction = 0; Direction < 6; ++Direction)
+		{
 			if (!CurrentTileData->Connections[Direction])
 			{
 				continue;
 			}
 
-			// 이미 방문한 좌표거나 데이터가 없는 좌표라면 스킵합니다.
 			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Direction);
-			if (VisitedCoords.Contains(NextCoord) || !TileDataMap.Contains(NextCoord))
+			if (!TileDataMap.Contains(NextCoord))
 			{
 				continue;
 			}
 
-			// 방문했음을 기록하고, 다음 좌표로 가는 타일로 현재 타일을 등록합니다.
-			VisitedCoords.Emplace(NextCoord);
-			ParentCoordMap.Emplace(NextCoord, CurrentCoord);
-
-			// 다음 좌표가 목적지라면 탐색을 중단합니다.
-			if (NextCoord == EndCoord)
+			const int32 NextDepth = CurrentDepth + 1;
+			if (ShortestDistanceToTarget != INDEX_NONE && NextDepth > ShortestDistanceToTarget)
 			{
-				bFoundPath = true;
-				break;
+				continue;
 			}
 
-			// 다음 좌표를 큐에 넣어 탐색을 계속합니다.
-			NextCoordsQueue.Enqueue(NextCoord);
-		}
+			const int32* ExistingDepth = DepthMap.Find(NextCoord);
+			if (!ExistingDepth)
+			{
+				// 처음 도달한 좌표면 깊이를 기록하고 큐에 넣습니다.
+				DepthMap.Emplace(NextCoord, NextDepth);
+				ParentCoordMap.FindOrAdd(NextCoord).Emplace(CurrentCoord);
+				NextCoordsQueue.Enqueue({ NextCoord, NextDepth });
+			}
+			else if (*ExistingDepth == NextDepth)
+			{
+				// 이미 같은 깊이로 도달 가능한 경우에는 부모만 추가해 "모든 최단 경로"를 보존합니다.
+				TArray<FCubeCoord>& Parents = ParentCoordMap.FindOrAdd(NextCoord);
+				if (!Parents.Contains(CurrentCoord))
+				{
+					Parents.Emplace(CurrentCoord);
+				}
+			}
 
-		if (bFoundPath)
-		{
-			break;
+			// TargetTile 최초 발견 시 해당 깊이를 최단 깊이로 확정합니다.
+			if (NextCoord == TargetCoord)
+			{
+				ShortestDistanceToTarget = NextDepth;
+			}
 		}
 	}
 
-	if (!bFoundPath)
+	if (ShortestDistanceToTarget == INDEX_NONE)
 	{
 		return false;
 	}
 
-	TArray<FCubeCoord> ReversedPathCoords;
-	ReversedPathCoords.Reserve(VisitedCoords.Num());
+	// TargetTile -> StartTile 방향으로 부모를 따라가며 모든 최단 경로를 복원합니다.
+	// CurrentReversedPath는 [Target, ..., Start] 순서로 쌓입니다.
+	TArray<FCubeCoord> CurrentReversedPath;
+	CurrentReversedPath.Reserve(ShortestDistanceToTarget + 1);
 
-	FCubeCoord CurrentCoord = EndCoord;
-	ReversedPathCoords.Emplace(CurrentCoord);
+	// 경로 복원에서 같은 좌표를 반복 조회하므로 좌표->타일을 캐시합니다.
+	TMap<FCubeCoord, ATile*> TileCache;
+	TileCache.Reserve(DepthMap.Num());
 
-	// EndCoord부터 지금까지 거쳐왔던 경로를 거꾸로 다시 돌아가며 해당 경로를 기록합니다.
-	while (CurrentCoord != StartCoord)
+	TFunction<void(const FCubeCoord&)> BuildAllShortestPaths = [&](const FCubeCoord& CurrentCoord)
 	{
-		const FCubeCoord* ParentCoord = ParentCoordMap.Find(CurrentCoord);
-		if (!ParentCoord)
+		CurrentReversedPath.Emplace(CurrentCoord);
+
+		if (CurrentCoord == StartCoord)
 		{
-			OutPathTiles.Reset();
-			return false;
+			TArray<ATile*> PathTiles;
+			PathTiles.Reserve(CurrentReversedPath.Num() - 1);
+
+			// [Target, ..., Start]를 뒤에서 앞으로 읽으면 [Start 다음 타일, ..., Target]이 됩니다.
+			for (int32 Index = CurrentReversedPath.Num() - 2; Index >= 0; --Index)
+			{
+				const FCubeCoord& PathCoord = CurrentReversedPath[Index];
+				ATile** CachedTile = TileCache.Find(PathCoord);
+				ATile* PathTile = CachedTile ? *CachedTile : GetTile(PathCoord);
+				if (!CachedTile)
+				{
+					TileCache.Emplace(PathCoord, PathTile);
+				}
+
+				if (!PathTile)
+				{
+					PathTiles.Reset();
+					break;
+				}
+				PathTiles.Emplace(PathTile);
+			}
+
+			if (!PathTiles.IsEmpty())
+			{
+				OutPathTilesArray.Emplace(MoveTemp(PathTiles));
+			}
+
+			CurrentReversedPath.Pop();
+			return;
 		}
 
-		CurrentCoord = *ParentCoord;
-		ReversedPathCoords.Emplace(CurrentCoord);
-	}
-
-	// 경로가 거꾸로 기록되었으므로, 다시 뒤집어서 Out인자로 뱉어줍니다.
-	for (int32 Index = ReversedPathCoords.Num() - 2; Index >= 0; --Index)
-	{
-		if (ATile* PathTile = GetTile(ReversedPathCoords[Index]))
+		if (const TArray<FCubeCoord>* Parents = ParentCoordMap.Find(CurrentCoord))
 		{
-			OutPathTiles.Emplace(PathTile);
+			for (const FCubeCoord& ParentCoord : *Parents)
+			{
+				BuildAllShortestPaths(ParentCoord);
+			}
 		}
-	}
 
-	return !OutPathTiles.IsEmpty();
+		CurrentReversedPath.Pop();
+	};
+
+	BuildAllShortestPaths(TargetCoord);
+
+	return !OutPathTilesArray.IsEmpty();
 }
 
 void UTileManagerSubsystem::AddToReservedMoveTiles(ATile* Tile)
@@ -633,6 +754,10 @@ bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 	
 	TileToActorMap.Emplace(InTile, InActor);
 	ActorToTileMap.Emplace(InActor, InTile);
+	if (InActor->Implements<UPlayableCharacterInterface>())
+	{
+		PlayerCharacterToTileMap.Emplace(InActor, InTile);
+	}
 
 	return true;
 }
@@ -697,4 +822,9 @@ ATile* UTileManagerSubsystem::GetTileUnderActor(const AActor* InActor) const
 	}
 
 	return nullptr;
+}
+
+const TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>>& UTileManagerSubsystem::GetPlayerCharacterToTileMap()
+{
+	return PlayerCharacterToTileMap;
 }

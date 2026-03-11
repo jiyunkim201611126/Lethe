@@ -5,9 +5,11 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
 
@@ -31,6 +33,11 @@ void ALetheAIController::BeginPlay()
 	{
 		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
+
+	check(ArrowRendererClass);
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
 }
 
 void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -77,59 +84,47 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 	}
 }
 
-int32 ALetheAIController::FindNearestPlayerCharacterTiles(UPARAM(ref) TArray<ATile*>& OutNearestTiles) const
+int32 ALetheAIController::FindNearestPlayerCharacterTiles(const int32 MaxDepth, const EBFSType BFSType, TArray<ATile*>& OutNearestTiles)
 {
+	int32 Distance = INDEX_NONE;
 	OutNearestTiles.Reset();
-	
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	const APawn* ControlledPawn = GetPawn();
-	if (!TileManagerSubsystem || !ControlledPawn)
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		return INDEX_NONE;
-	}
-
-	const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(ControlledPawn);
-	if (!ThisTile)
-	{
-		return INDEX_NONE;
-	}
-
-	TArray<TPair<ATile*, int32>> TileAndDistances;
-	TileAndDistances.Reserve(PLAYABLE_CHARACTER_NUMBER);
-
-	int32 ShortestDistance = INT_MAX;
-	for (const auto& Elem : TileManagerSubsystem->GetPlayerCharacterToTileMap())
-	{
-		if (Elem.Value.IsValid())
+		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			const int32 Distance = TileManagerSubsystem->GetTileDistance(ThisTile, Elem.Value.Get(), EBFSType::Connection);
-			if (Distance != INDEX_NONE && Distance < ShortestDistance)
+			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
+			TSet<FCubeCoord> PlayerCharacterTileCoords;
+			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, PlayerCharacterTileCoords,
+			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
-				ShortestDistance = Distance;
-			}
-
-			if (Distance != INDEX_NONE)
+				return PlayerCharacterTileCoords.IsEmpty();
+			},
+			[&TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
-				TileAndDistances.Emplace(Elem.Value.Get(), Distance);
-			}
+				if (TileData && TileData->TileActor.IsValid())
+				{
+					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+					{
+						if (ActorOnTile->Implements<UPlayableCharacterInterface>())
+						{
+							if (OutNearestTiles.IsEmpty() || Distance == Depth)
+							{
+								Distance = Depth;
+								OutNearestTiles.Emplace(TileData->TileActor.Get());
+								return true;
+							}
+							if (!OutNearestTiles.IsEmpty() && Distance != Depth)
+							{
+								return false;
+							}
+						}
+					}
+				}
+				return false;
+			});
 		}
 	}
-
-	if (ShortestDistance == INT_MAX)
-	{
-		return INDEX_NONE;
-	}
-
-	OutNearestTiles.Reserve(TileAndDistances.Num());
-	for (const TPair<ATile*, int32>& TileAndDistance : TileAndDistances)
-	{
-		if (TileAndDistance.Value == ShortestDistance)
-		{
-			OutNearestTiles.Emplace(TileAndDistance.Key);
-		}
-	}
-	
-	return ShortestDistance;
+	return Distance;
 }
 
 void ALetheAIController::SelectMoveAbility() const
@@ -220,11 +215,40 @@ void ALetheAIController::SelectRandomAbility() const
 	}
 }
 
+void ALetheAIController::GetPrioritizedMoveTiles(ATile* TargetTile, TArray<ATile*>& OutPathTiles) const
+{
+	OutPathTiles.Reset();
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			TArray<TArray<ATile*>> PathTilesArray;
+			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray))
+			{
+				for (int32 Index = MoveLength - 1; Index >= 0; --Index)
+				{
+					for (TArray<ATile*>& PathTiles : PathTilesArray)
+					{
+						if (PathTiles.IsValidIndex(Index))
+						{
+							OutPathTiles.Emplace(PathTiles[Index]);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void ALetheAIController::SetTargetTile(ATile* TargetTile) const
 {
 	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->SetTargetTileForEnemy(AbilityPriority, TargetTile);
+		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		{
+			ArrowRenderer->SetPoints(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
+		}
 	}
 }
 
@@ -234,50 +258,13 @@ void ALetheAIController::SetTargetTileToMove(ATile* CurrentTile, ATile* TargetTi
 	{
 		if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
-			TileManagerSubsystem->RemoveToReservedMoveTiles(CurrentTile);
-			TileManagerSubsystem->AddToReservedMoveTiles(TargetTile);
+			TileManagerSubsystem->RemoveToStandingOrReservedMoveTiles(CurrentTile);
+			TileManagerSubsystem->AddToStandingOrReservedMoveTiles(TargetTile);
 		}
-		SetTargetTile(TargetTile);
-	}
-}
-
-TArray<ATile*> ALetheAIController::GetPathTiles(ATile* TargetTile) const
-{
-	TArray<ATile*> PathTiles;
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			TArray<TArray<ATile*>> PathTilesArray;
-			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray) && !PathTilesArray.IsEmpty())
-			{
-				PathTiles = PathTilesArray[0];
-			}
+			LetheGameState->SetTargetTileForEnemy(AbilityPriority, TargetTile);
 		}
+		ArrowRenderer->SetPoints(GetPawn(), TargetTile, false);
 	}
-	return PathTiles;
-}
-
-TArray<FTilePath> ALetheAIController::GetAllPathTiles(ATile* TargetTile) const
-{
-	TArray<FTilePath> OutPathTiles;
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
-		{
-			TArray<TArray<ATile*>> PathTilesArray;
-			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray))
-			{
-				OutPathTiles.Reserve(PathTilesArray.Num());
-				for (const TArray<ATile*>& PathTiles : PathTilesArray)
-				{
-					FTilePath TilePath;
-					TilePath.Tiles = PathTiles;
-					OutPathTiles.Emplace(MoveTemp(TilePath));
-				}
-			}
-		}
-	}
-
-	return OutPathTiles;
 }

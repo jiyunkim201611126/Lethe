@@ -43,12 +43,12 @@ public:
 	// StartTile에서 TargetTile까지의 "모든 최단 경로"를 Out 인자로 뱉어주는 함수입니다.
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
 
-	void AddToReservedMoveTiles(ATile* Tile);
-	void RemoveToReservedMoveTiles(ATile* Tile);
-	void EmptyReservedMoveTiles();
+	void AddToStandingOrReservedMoveTiles(ATile* Tile);
+	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
+	void EmptyStandingOrReservedMoveTiles();
 
 	UFUNCTION(BlueprintPure)
-	bool CanMoveToTile(ATile* Tile) const;
+	bool CanMoveToTileForAI(ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
 	
@@ -61,8 +61,6 @@ public:
 	AActor* GetActorOnTile(const ATile* InTile) const;
 	UFUNCTION(BlueprintCallable)
 	ATile* GetTileUnderActor(const AActor* InActor) const;
-
-	const TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>>& GetPlayerCharacterToTileMap();
 
 private:
 	const FStageData* GetStageData(const FName& StageName) const;
@@ -98,10 +96,8 @@ private:
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
-	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> PlayerCharacterToTileMap;
-
-	// Enemy AI가 MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
-	TArray<TWeakObjectPtr<ATile>> ReservedMoveTiles;
+	// Enemy AI가 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
+	TSet<TWeakObjectPtr<ATile>> StandingOrReservedMoveTilesForAI;
 };
 
 /**

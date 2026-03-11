@@ -9,7 +9,7 @@
 class USplineComponent;
 class USplineMeshComponent;
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API AArrowRenderer : public AActor
 {
 	GENERATED_BODY()
@@ -21,7 +21,7 @@ public:
 	virtual void BeginPlay() override;
 	//~ End of AActor Interface
 
-	void SetPoints(const AActor* SourceActor, const AActor* TargetActor) const;
+	void SetPoints(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead = true) const;
 	void SetActive(bool bActive) const;
 
 protected:

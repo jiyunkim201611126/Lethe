@@ -123,6 +123,8 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
 					SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
 					EnemyIndex += 100;
+
+					TileManagerSubsystem->AddToStandingOrReservedMoveTiles(Tile);
 				}
 			}
 		}

@@ -80,7 +80,7 @@ private:
 	TWeakObjectPtr<const ULetheCardAbility> SelectedCardAbility;
 	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
 
-	UPROPERTY(EditDefaultsOnly, Category = ArrowRenderer)
+	UPROPERTY(EditDefaultsOnly, Category = "ArrowRenderer")
 	TSubclassOf<AArrowRenderer> ArrowRendererClass;
 
 	UPROPERTY()

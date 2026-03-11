@@ -129,7 +129,7 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 			ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
 			continue;
 		}
-		if (Result == ETryAbilityActivationResult::FailedNoneTargetTileToMove)
+		else if (Result == ETryAbilityActivationResult::FailedNoneTargetTileToMove)
 		{
 			continue;
 		}
@@ -167,8 +167,9 @@ void UAbilityResolverComponent::OnEnemyAbilityActivated(const ETryAbilityActivat
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
 	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
-		if (!EnemyAbilityActivationPriorities.IsEmpty())
+		if (EnemyAbilityActivationPriorities.IsEmpty())
 		{
+			OnAbilityEnded(false);
 			break;
 		}
 	default:

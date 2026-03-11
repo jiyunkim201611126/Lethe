@@ -6,18 +6,11 @@
 #include "AIController.h"
 #include "LetheAIController.generated.h"
 
+class AArrowRenderer;
+enum class EBFSType : uint8;
 enum class EPhaseState : uint8;
 class ATile;
 class UStateTreeAIComponent;
-
-USTRUCT(BlueprintType)
-struct FTilePath
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly)
-	TArray<ATile*> Tiles;
-};
 
 UCLASS()
 class LETHE_API ALetheAIController : public AAIController
@@ -28,9 +21,9 @@ public:
 	ALetheAIController();
 
 	void SetAbilityPriority(const int32 InPriority);
-
-	UFUNCTION(BlueprintCallable)
-	int32 FindNearestPlayerCharacterTiles(UPARAM(ref) TArray<ATile*>& OutNearestTiles) const;
+	
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "가장 가까운 플레이어 캐릭터를 찾아 그 타일들을 반환합니다. 거리가 같다면 여러 타일을 반환합니다."))
+	int32 FindNearestPlayerCharacterTiles(const int32 MaxDepth, const EBFSType BFSType, TArray<ATile*>& OutNearestTiles);
 	
 	UFUNCTION(BlueprintCallable)
 	void SelectRandomAbility() const;
@@ -38,17 +31,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SelectMoveAbility() const;
 
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile로 이동하기 위한 최단 경로를 계산한 뒤, 그 모든 타일을 우선순위대로 정렬해 반환합니다."))
+	void GetPrioritizedMoveTiles(ATile* TargetTile, TArray<ATile*>& OutPathTiles) const;
+
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 Ability의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 Ability를 선택한 후 호출해야 합니다."))
 	void SetTargetTile(ATile* TargetTile) const;
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 MoveAbility의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 MoveAbility를 선택한 후 호출해야 합니다."))
 	void SetTargetTileToMove(ATile* CurrentTile, ATile* TargetTile);
-	
-	UFUNCTION(BlueprintCallable)
-	TArray<ATile*> GetPathTiles(ATile* TargetTile) const;
-
-	UFUNCTION(BlueprintCallable)
-	TArray<FTilePath> GetAllPathTiles(ATile* TargetTile) const;
 
 protected:
 	//~ Begin AActor Interface
@@ -66,6 +56,12 @@ private:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	TObjectPtr<UStateTreeAIComponent> StateTreeAIComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "ArrowRenderer")
+	TSubclassOf<AArrowRenderer> ArrowRendererClass;
+
+	UPROPERTY()
+	TObjectPtr<AArrowRenderer> ArrowRenderer;
 	
 	// 임시로 구현된 이 AI의 사거리입니다.
 	// TODO: 이곳에서 선언하지 않는 방향으로 수정될 수 있습니다. 예시) Attribute

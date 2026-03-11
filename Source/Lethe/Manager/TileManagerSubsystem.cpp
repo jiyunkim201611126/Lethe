@@ -10,8 +10,6 @@
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	PlayerCharacterToTileMap.Reserve(PLAYABLE_CHARACTER_NUMBER);
 }
 
 void UTileManagerSubsystem::Deinitialize()
@@ -703,24 +701,24 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
-void UTileManagerSubsystem::AddToReservedMoveTiles(ATile* Tile)
+void UTileManagerSubsystem::AddToStandingOrReservedMoveTiles(ATile* Tile)
 {
-	ReservedMoveTiles.Emplace(Tile);
+	StandingOrReservedMoveTilesForAI.Emplace(Tile);
 }
 
-void UTileManagerSubsystem::RemoveToReservedMoveTiles(ATile* Tile)
+void UTileManagerSubsystem::RemoveToStandingOrReservedMoveTiles(ATile* Tile)
 {
-	ReservedMoveTiles.RemoveSwap(Tile);
+	StandingOrReservedMoveTilesForAI.Remove(Tile);
 }
 
-void UTileManagerSubsystem::EmptyReservedMoveTiles()
+void UTileManagerSubsystem::EmptyStandingOrReservedMoveTiles()
 {
-	ReservedMoveTiles.Empty();
+	StandingOrReservedMoveTilesForAI.Empty();
 }
 
-bool UTileManagerSubsystem::CanMoveToTile(ATile* Tile) const
+bool UTileManagerSubsystem::CanMoveToTileForAI(ATile* Tile) const
 {
-	const bool bIsReserved = ReservedMoveTiles.Contains(Tile);
+	const bool bIsReserved = StandingOrReservedMoveTilesForAI.Contains(Tile);
 	bool bIsPlayerCharacter = false;
 	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
 	{
@@ -754,10 +752,6 @@ bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 	
 	TileToActorMap.Emplace(InTile, InActor);
 	ActorToTileMap.Emplace(InActor, InTile);
-	if (InActor->Implements<UPlayableCharacterInterface>())
-	{
-		PlayerCharacterToTileMap.Emplace(InActor, InTile);
-	}
 
 	return true;
 }
@@ -820,11 +814,5 @@ ATile* UTileManagerSubsystem::GetTileUnderActor(const AActor* InActor) const
 			return FoundTile.Get();
 		}
 	}
-
 	return nullptr;
-}
-
-const TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>>& UTileManagerSubsystem::GetPlayerCharacterToTileMap()
-{
-	return PlayerCharacterToTileMap;
 }

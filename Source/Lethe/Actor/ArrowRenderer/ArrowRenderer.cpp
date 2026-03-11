@@ -36,9 +36,12 @@ void AArrowRenderer::BeginPlay()
 	ArrowBodyDynamicMaterialInstance->SetScalarParameterValue(FlowSpeedParamName, FlowSpeed);
 }
 
-void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetActor) const
+void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead) const
 {
-	SetActive(true);
+	if (!SourceActor || !TargetActor)
+	{
+		return;
+	}
 	
 	const FVector StartLocation = SourceActor->GetActorLocation();
 	const FVector EndLocation = TargetActor->GetActorLocation();
@@ -71,18 +74,23 @@ void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetAc
 		const FVector MeshStartTan = Spline->GetTangentAtSplinePoint(0, ESplineCoordinateSpace::Local);
 		const FVector MeshEndTan = Spline->GetTangentAtSplinePoint(2, ESplineCoordinateSpace::Local);
 		SplineMesh->SetStartAndEnd(MeshStart, MeshStartTan, MeshEnd, MeshEndTan);
+		SplineMesh->SetVisibility(true);
 	}
 	else
 	{
 		SplineMesh->SetVisibility(false);
 	}
-	
-	FVector ArrowHeadLocation = EndLocation;
-	if (const ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
+
+	if (bRenderArrowHead)
 	{
-		ArrowHeadLocation.Z += TargetCharacter->GetDefaultHalfHeight() * 2.f;
+		FVector ArrowHeadLocation = EndLocation;
+		if (const ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
+		{
+			ArrowHeadLocation.Z += TargetCharacter->GetDefaultHalfHeight() * 2.f;
+		}
+		ArrowHead->SetWorldLocation(ArrowHeadLocation);
+		ArrowHead->SetVisibility(true);
 	}
-	ArrowHead->SetWorldLocation(ArrowHeadLocation);
 }
 
 void AArrowRenderer::SetActive(const bool bActive) const

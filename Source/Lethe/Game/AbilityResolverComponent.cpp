@@ -44,11 +44,10 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 	while (!PlayerAbilityActivationData.IsEmpty())
 	{
 		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
-		OnPlayerAbilityActivated(Result);
+		HandlePlayerAbilityActivationResult(Result);
 		
 		if (Result == ETryAbilityActivationResult::FailedLogicError)
 		{
-			ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
 			continue;
 		}
 		
@@ -74,16 +73,19 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbil
 	return TryActivateAbility(ActivationData);
 }
 
-void UAbilityResolverComponent::OnPlayerAbilityActivated(const ETryAbilityActivationResult Result)
+void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result)
 {
 	switch (Result)
 	{
-	case ETryAbilityActivationResult::AllAbilityUsed:
-		CurrentActivationCharacterTeamSide = ETeamSide::None;
-		break;
 	case ETryAbilityActivationResult::Success:
 		bIsActivatingPlayerAbility = true;
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
+		break;
+	case ETryAbilityActivationResult::AllAbilityUsed:
+		CurrentActivationCharacterTeamSide = ETeamSide::None;
+		break;
+	case ETryAbilityActivationResult::FailedLogicError:
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
 		break;
 	default:
 		ProcessAllPlayerAbilitiesFailed();
@@ -122,14 +124,9 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 	while (true)
 	{
 		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
-		OnEnemyAbilityActivated(Result);
-		
+		HandleEnemyAbilityActivationResult(Result);
+
 		if (Result == ETryAbilityActivationResult::FailedLogicError)
-		{
-			ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
-			continue;
-		}
-		else if (Result == ETryAbilityActivationResult::FailedNoneTargetTileToMove)
 		{
 			continue;
 		}
@@ -149,29 +146,39 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
 	int32 CurrentPriority;
 	EnemyAbilityActivationPriorities.HeapPop(CurrentPriority, TLess<int32>());
-
 	FAbilityActivationData* ActivationData = EnemyAbilityActivationData.Find(CurrentPriority);
-	if (!ActivationData)
+	
+	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
+	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnEnemyAbilityActivatedDelegate.IsBound())
 	{
-		return ETryAbilityActivationResult::FailedLogicError;
+		OnEnemyAbilityActivatedDelegate.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
-
-	return TryActivateAbility(ActivationData);
+	EnemyAbilityActivationData.Remove(CurrentPriority);
+	return Result;
 }
 
-void UAbilityResolverComponent::OnEnemyAbilityActivated(const ETryAbilityActivationResult Result)
+void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result)
 {
 	switch (Result)
 	{
 	case ETryAbilityActivationResult::Success:
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
-	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
-		if (EnemyAbilityActivationPriorities.IsEmpty())
+	case ETryAbilityActivationResult::AllAbilityUsed:
+		// 모든 Ability 사용을 마쳤다면 DrawPhase로 돌아갑니다.
+		if (ALetheGameState* LetheGameState = GetOwner<ALetheGameState>())
 		{
-			OnAbilityEnded(false);
-			break;
+			LetheGameState->GoDrawPhase();
 		}
+		break;
+	case ETryAbilityActivationResult::FailedLogicError:
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
+		break;
+	case ETryAbilityActivationResult::FailedNotActivated:
+	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
+		// 모종의 이유로 Ability 발동에 실패하면 Ended가 호출되지 않으므로 여기서 명시적으로 호출합니다.
+		OnAbilityEnded(false);
+		break;
 	default:
 		ResetEnemyActivationData();
 		break;
@@ -187,6 +194,11 @@ void UAbilityResolverComponent::ResetEnemyActivationData()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData) const
 {
+	if (!ActivationData)
+	{
+		return ETryAbilityActivationResult::FailedLogicError;
+	}
+	
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid())
 	{
@@ -260,15 +272,6 @@ void UAbilityResolverComponent::OnAbilityEnded(const bool bSuccess)
 		}
 		break;
 	case ETeamSide::Enemy:
-		// 모든 Ability 사용을 마쳤다면 DrawPhase로 돌아갑니다.
-		if (EnemyAbilityActivationPriorities.IsEmpty())
-		{
-			if (ALetheGameState* LetheGameState = GetOwner<ALetheGameState>())
-			{
-				LetheGameState->GoDrawPhase();
-				return;
-			}
-		}
 		StartActivateEnemyAbility();
 		break;
 	default:

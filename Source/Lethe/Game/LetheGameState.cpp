@@ -7,6 +7,20 @@ ALetheGameState::ALetheGameState()
 	AbilityResolverComponent = CreateDefaultSubobject<UAbilityResolverComponent>("AbilityResolverComponent");
 }
 
+void ALetheGameState::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	AbilityResolverComponent->OnEnemyAbilityActivatedDelegate.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
+}
+
+void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	AbilityResolverComponent->OnEnemyAbilityActivatedDelegate.RemoveAll(this);
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALetheGameState::GoDrawPhase()
 {
 	SetPhase(EPhaseState::DrawPhase);
@@ -58,6 +72,11 @@ void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData
 void ALetheGameState::SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const
 {
 	AbilityResolverComponent->SetTargetTileForEnemy(Priority, TargetTile);
+}
+
+void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const
+{
+	OnActivateEnemyAbilityDelegate.Broadcast(AbilityInstigator);
 }
 
 void ALetheGameState::OnAbilityEnded(const bool bSuccess) const

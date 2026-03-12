@@ -52,6 +52,7 @@ protected:
 
 private:
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
+	void OnAbilityActivated(AActor* AbilityInstigator) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")

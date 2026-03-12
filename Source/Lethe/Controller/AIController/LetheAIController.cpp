@@ -32,6 +32,7 @@ void ALetheAIController::BeginPlay()
 	if (ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
 	{
 		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnActivateEnemyAbilityDelegate.AddUObject(this, &ThisClass::OnAbilityActivated);
 	}
 
 	check(ArrowRendererClass);
@@ -45,6 +46,7 @@ void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
 	{
 		LetheGameState->OnChangeTurnStateDelegate.RemoveAll(this);
+		LetheGameState->OnActivateEnemyAbilityDelegate.RemoveAll(this);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -81,6 +83,14 @@ void ALetheAIController::OnPhaseStateChanged(const EPhaseState OldPhase, const E
 		FStateTreeEvent Event;
 		Event.Tag = LetheGameplayTags.Event_StateTree_TurnStarted;
 		StateTreeAIComponent->SendStateTreeEvent(Event);
+	}
+}
+
+void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const
+{
+	if (AbilityInstigator == GetPawn())
+	{
+		ArrowRenderer->SetActive(false);
 	}
 }
 

@@ -19,6 +19,7 @@ enum class EPhaseState : uint8
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
 
 UCLASS()
 class LETHE_API ALetheGameState : public AGameStateBase
@@ -38,17 +39,26 @@ public:
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const;
 
+	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
+
 	UFUNCTION(BlueprintCallable)
 	void OnAbilityEnded(const bool bSuccess) const;
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsProgressingPlayerAbility() const;
 
+protected:
+	//~ Begin AActor Interface
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//~ End of AActor Interface
+
 private:
 	void SetPhase(const EPhaseState NewPhase);
 
 public:
 	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;
+	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 
 private:
 	EPhaseState CurrentTurnState = EPhaseState::None;

@@ -12,15 +12,25 @@ class ATile;
 UENUM()
 enum class ETryAbilityActivationResult : uint8
 {
+	Success,
+	
 	AllAbilityUsed,
-	FailedLogicError,			// 잘못된 로직 작성으로 인한 실패의 경우 반환받게 됩니다.
-	FailedFatal,				// 강제 종료, 엔진상 버그 등으로 인한 실패의 경우 반환받게 됩니다.
-	FailedNotActivated,			// 코스트 부족 혹은 모종의 이유로 인해 Ability가 GAS상 문제로 작동에 실패한 경우 반환받게 됩니다.
-	FailedNoneTargetTileToMove,	// Enemy의 MoveAbility 사용 시 TargetTile이 없는 경우 반환받게 됩니다.
-	Success
+	
+	// 잘못된 로직 작성으로 인한 실패의 경우 반환받게 됩니다.
+	FailedLogicError,
+	
+	// 강제 종료, 엔진상 버그 등으로 인한 실패의 경우 반환받게 됩니다.
+	FailedFatal,
+	
+	// 코스트 부족 혹은 모종의 이유로 인해 Ability가 GAS상 문제로 작동에 실패한 경우 반환받게 됩니다.
+	FailedNotActivated,
+	
+	// Enemy의 MoveAbility 사용 시 TargetTile이 없는 경우 반환받게 됩니다.
+	FailedNoneTargetTileToMove,
 };
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
 
 UCLASS()
 class LETHE_API UAbilityResolverComponent : public UActorComponent
@@ -32,13 +42,13 @@ public:
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData);
 	void StartActivatePlayerAbility();
-	void OnPlayerAbilityActivated(const ETryAbilityActivationResult Result);
+	void HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ProcessAllPlayerAbilitiesFailed();
 
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 	void SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile);
 	void StartActivateEnemyAbility();
-	void OnEnemyAbilityActivated(const ETryAbilityActivationResult Result);
+	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ResetEnemyActivationData();
 	
 	void OnAbilityEnded(const bool bSuccess);
@@ -52,6 +62,7 @@ private:
 
 public:
 	FOnUseCardResolved OnUseCardResolved;
+	FOnEnemyAbilityActivated OnEnemyAbilityActivatedDelegate;
 
 private:
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.

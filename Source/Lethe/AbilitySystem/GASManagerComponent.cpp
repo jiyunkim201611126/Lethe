@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"

@@ -701,6 +701,18 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
+int32 UTileManagerSubsystem::GetTileFloor(const ATile* Tile)
+{
+	if (Tile)
+	{
+		if (const FTileData* TileData = TileDataMap.Find(Tile->GetCubeCoord()))
+		{
+			return TileData->Floor;
+		}
+	}
+	return INDEX_NONE;
+}
+
 void UTileManagerSubsystem::AddToStandingOrReservedMoveTiles(ATile* Tile)
 {
 	StandingOrReservedMoveTilesForAI.Emplace(Tile);

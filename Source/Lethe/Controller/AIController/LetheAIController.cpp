@@ -8,7 +8,7 @@
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/AbilityActivationData.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"
@@ -225,7 +225,7 @@ void ALetheAIController::SelectRandomAbility() const
 	}
 }
 
-void ALetheAIController::GetPrioritizedMoveTiles(ATile* TargetTile, TArray<ATile*>& OutPathTiles) const
+void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveLength, TArray<ATile*>& OutPathTiles) const
 {
 	OutPathTiles.Reset();
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())

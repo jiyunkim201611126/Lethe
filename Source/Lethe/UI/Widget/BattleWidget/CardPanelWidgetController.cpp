@@ -5,7 +5,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Data/Card/CardViewData.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 
 void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
 {

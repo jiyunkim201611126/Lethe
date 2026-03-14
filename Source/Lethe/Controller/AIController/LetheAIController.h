@@ -32,7 +32,7 @@ public:
 	void SelectMoveAbility() const;
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile로 이동하기 위한 최단 경로를 계산한 뒤, 그 모든 타일을 우선순위대로 정렬해 반환합니다."))
-	void GetPrioritizedMoveTiles(ATile* TargetTile, TArray<ATile*>& OutPathTiles) const;
+	void GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveLength, TArray<ATile*>& OutPathTiles) const;
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 Ability의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 Ability를 선택한 후 호출해야 합니다."))
 	void SetTargetTile(ATile* TargetTile) const;
@@ -63,18 +63,6 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
-	
-	// 임시로 구현된 이 AI의 사거리입니다.
-	// TODO: 이곳에서 선언하지 않는 방향으로 수정될 수 있습니다. 예시) Attribute
-	// TODO: 이곳에 선언한다 하더라도 주입은 외부에서 하거나 Blueprint에서 수정 가능한 형태로 구현하는 것이 좋습니다.
-	UPROPERTY(BlueprintReadOnly)
-	int32 Range = 1;
-	
-	// 임시로 구현된 이 AI의 이동 거리입니다.
-	// TODO: 이곳에서 선언하지 않는 방향으로 수정될 수 있습니다. 예시) Attribute
-	// TODO: 이곳에 선언한다 하더라도 주입은 외부에서 하거나 Blueprint에서 수정 가능한 형태로 구현하는 것이 좋습니다.
-	UPROPERTY(BlueprintReadOnly)
-	int32 MoveLength = 2;
 
 private:
 	// 이 값이 낮은 캐릭터가 먼저 Ability를 사용합니다.

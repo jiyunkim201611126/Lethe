@@ -8,7 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 

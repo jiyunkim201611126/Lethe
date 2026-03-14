@@ -8,7 +8,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 

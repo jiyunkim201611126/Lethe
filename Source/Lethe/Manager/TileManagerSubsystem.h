@@ -43,6 +43,9 @@ public:
 	// StartTile에서 TargetTile까지의 "모든 최단 경로"를 Out 인자로 뱉어주는 함수입니다.
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
 
+	UFUNCTION(BlueprintPure)
+	int32 GetTileFloor(const ATile* Tile);
+
 	void AddToStandingOrReservedMoveTiles(ATile* Tile);
 	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
 	void EmptyStandingOrReservedMoveTiles();

@@ -6,7 +6,7 @@
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
-#include "Lethe/Game/LetheGameState.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/TileManagerSubsystem.h"

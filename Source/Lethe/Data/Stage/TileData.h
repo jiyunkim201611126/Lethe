@@ -7,23 +7,27 @@
 
 class ATile;
 
-UENUM()
+UENUM(BlueprintType)
 enum class EBFSType : uint8
 {
 	Connection,
 	Through,
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FAbilityRange
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	EBFSType BFSType;
-	
-	UPROPERTY(EditDefaultsOnly)
-	int32 Depth;
+
+	// BFS 시 Depth와 같은 뜻으로 사용됩니다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int32 Distance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int32 FloorGap;
 };
 
 UENUM()

@@ -77,7 +77,6 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			}
 		}
 
-		// 캐릭터 순서대로 가장 왼쪽 타일, 우상단, 우측, 우하단에 스폰합니다.
 		for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
 		{
 			const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];

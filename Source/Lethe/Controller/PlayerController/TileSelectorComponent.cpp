@@ -147,7 +147,7 @@ bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const 
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))
 		{
 			TSet<FCubeCoord> SelectedCoords;
-			TileManagerSubsystem->TileBFS(Tile->GetCubeCoord(), InRange.Depth, InRange.BFSType, SelectedCoords,
+			TileManagerSubsystem->TileBFS(Tile->GetCubeCoord(), InRange.Distance, InRange.BFSType, SelectedCoords,
 				[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 				{
 					return true;

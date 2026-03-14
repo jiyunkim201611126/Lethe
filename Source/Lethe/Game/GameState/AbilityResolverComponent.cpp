@@ -107,16 +107,15 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 
 void UAbilityResolverComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	EnemyAbilityActivationPriorities.HeapPush(ActivationData.Index, TLess<int32>());
-	EnemyAbilityActivationData.Emplace(ActivationData.Index, ActivationData);
+	EnemyAbilityActivationData.Emplace(ActivationData);
 }
 
-void UAbilityResolverComponent::SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile)
+void UAbilityResolverComponent::SortEnemyAbilityActivationData()
 {
-	if (FAbilityActivationData* Data = EnemyAbilityActivationData.Find(Priority))
+	EnemyAbilityActivationData.Sort([](const FAbilityActivationData& A, const FAbilityActivationData& B)
 	{
-		Data->TargetTile = TargetTile;
-	}
+		return A.Index < B.Index;
+	});
 }
 
 void UAbilityResolverComponent::StartActivateEnemyAbility()
@@ -137,23 +136,21 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbility()
 {
-	if (EnemyAbilityActivationPriorities.IsEmpty())
+	if (EnemyAbilityActivationData.IsEmpty())
 	{
 		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
 	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
-	int32 CurrentPriority;
-	EnemyAbilityActivationPriorities.HeapPop(CurrentPriority, TLess<int32>());
-	FAbilityActivationData* ActivationData = EnemyAbilityActivationData.Find(CurrentPriority);
+	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
 	
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
 	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnEnemyAbilityActivatedDelegate.IsBound())
 	{
 		OnEnemyAbilityActivatedDelegate.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
-	EnemyAbilityActivationData.Remove(CurrentPriority);
+	EnemyAbilityActivationData.RemoveAt(0);
 	return Result;
 }
 
@@ -187,7 +184,6 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 
 void UAbilityResolverComponent::ResetEnemyActivationData()
 {
-	EnemyAbilityActivationPriorities.Reset();
 	EnemyAbilityActivationData.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 }
@@ -237,6 +233,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		case ETeamSide::Player:
 			return ETryAbilityActivationResult::FailedNotActivated;
 		default:
+			// Enemy는 코스트나 마나 등의 개념이 없으며, TargetActor가 없더라도 Ability를 발동하기 때문에 Ability 발동에 실패했다면 로직에 문제가 있는 상황입니다.
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 	}

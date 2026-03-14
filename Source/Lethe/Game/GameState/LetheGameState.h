@@ -37,7 +37,6 @@ public:
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
-	void SetTargetTileForEnemy(const int32 Priority, ATile* TargetTile) const;
 
 	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
 

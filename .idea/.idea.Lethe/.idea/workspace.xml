@@ -14,25 +14,20 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/BP_EnemyBase.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/BP_EnemyBase.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/STT_SelectAbility.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/STT_SelectAbility.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/ST_EnemyBasic.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/ST_EnemyBasic.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/Stage/TileData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/Stage/TileData.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/AbilityResolverComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/TileSelectorComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/TileSelectorComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Data/AbilityActivationData.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Data/AbilityActivationData.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/TileManagerSubsystem.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +41,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://3" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://11" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Developer/Concert/ConcertApp/MultiUserServer/Source/MultiUserServer/Private/Widgets/Util/SDoNotShowAgainDialog.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -680,7 +675,7 @@
       <workItem from="1773075514711" duration="427000" />
       <workItem from="1773235876835" duration="10292000" />
       <workItem from="1773324052926" duration="5413000" />
-      <workItem from="1773467308208" duration="6222000" />
+      <workItem from="1773467308208" duration="13742000" />
     </task>
     <servers />
   </component>

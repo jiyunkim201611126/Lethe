@@ -26,19 +26,13 @@ public:
 	int32 FindNearestPlayerCharacterTiles(const int32 MaxDepth, const EBFSType BFSType, TArray<ATile*>& OutNearestTiles);
 	
 	UFUNCTION(BlueprintCallable)
-	void SelectRandomAbility() const;
+	void SelectRandomAbility(ATile* TargetTile) const;
 	
 	UFUNCTION(BlueprintCallable)
-	void SelectMoveAbility() const;
+	void SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile) const;
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile로 이동하기 위한 최단 경로를 계산한 뒤, 그 모든 타일을 우선순위대로 정렬해 반환합니다."))
 	void GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveLength, TArray<ATile*>& OutPathTiles) const;
-
-	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 Ability의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 Ability를 선택한 후 호출해야 합니다."))
-	void SetTargetTile(ATile* TargetTile) const;
-
-	UFUNCTION(BlueprintCallable, meta = (ToolTip = "선택된 MoveAbility의 ActivationData에 TargetTile을 할당하는 함수로, 반드시 MoveAbility를 선택한 후 호출해야 합니다."))
-	void SetTargetTileToMove(ATile* CurrentTile, ATile* TargetTile);
 
 protected:
 	//~ Begin AActor Interface

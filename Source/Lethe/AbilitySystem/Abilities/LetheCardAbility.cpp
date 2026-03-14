@@ -298,7 +298,7 @@ FText ULetheCardAbility::GetRangeDescription() const
 		break;
 	}
 	
-	return FLetheTextManager::GetText(EStringTableType::CardDescription, RangeDescriptionKey, AbilityRange.Depth);
+	return FLetheTextManager::GetText(EStringTableType::CardDescription, RangeDescriptionKey, AbilityRange.Distance);
 }
 
 void ULetheCardAbility::PostInitProperties()

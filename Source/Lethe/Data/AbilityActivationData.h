@@ -22,13 +22,13 @@ struct FAbilityActivationData
 	FGameplayTag AbilityTag;
 
 	UPROPERTY()
-	FGameplayEventData Payload;
-
-	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
 	TWeakObjectPtr<ATile> TargetTile;
+
+	UPROPERTY()
+	FGameplayEventData Payload;
 };
 
 UENUM(BlueprintType)

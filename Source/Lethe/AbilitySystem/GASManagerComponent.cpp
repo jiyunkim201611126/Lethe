@@ -94,6 +94,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
+		LetheGameState->OnDrawPhaseStartedDelegate.AddUObject(this, &ThisClass::OnDrawPhaseStarted);
 		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
@@ -120,28 +121,11 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+void UGASManagerComponent::OnDrawPhaseStarted() const
 {
-	if (NewPhase == EPhaseState::DrawPhase)
-	{
-		ApplyRecoveryEffect();
-	}
-
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
-	if (OldPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
-	}
-	else if (NewPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
-	}
-}
-
-void UGASManagerComponent::ApplyRecoveryEffect() const
-{
+	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
+	
 	if (!TurnStartRecovery)
 	{
 		return;
@@ -151,9 +135,22 @@ void UGASManagerComponent::ApplyRecoveryEffect() const
 	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(TurnStartRecovery, 1.f, ContextHandle);
 	if (SpecHandle.IsValid())
 	{
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetManaRecoveryAttribute()));
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetCostRecoveryAttribute()));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
+	}
+}
+
+void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
+	if (OldPhase == MyPhaseState)
+	{
+		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	}
+	else if (NewPhase == MyPhaseState)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}
 }

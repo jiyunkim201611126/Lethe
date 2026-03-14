@@ -45,7 +45,7 @@ public:
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
 
 	UFUNCTION(BlueprintPure)
-	int32 GetTileFloor(const ATile* Tile);
+	int32 GetTileFloor(const ATile* Tile) const;
 
 	void AddToStandingOrReservedMoveTiles(ATile* Tile);
 	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
@@ -101,7 +101,7 @@ private:
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
 	// Enemy AI가 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
-	TSet<TWeakObjectPtr<ATile>> StandingOrReservedMoveTilesForAI;
+	TSet<TWeakObjectPtr<ATile>> StandingOrReservedMoveTilesForEnemyAI;
 };
 
 /**

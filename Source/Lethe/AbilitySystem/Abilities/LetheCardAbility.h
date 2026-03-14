@@ -69,6 +69,7 @@ private:
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);
 
+	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 	void ActiveFailed();
 	
 protected:

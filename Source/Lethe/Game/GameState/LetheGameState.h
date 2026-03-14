@@ -18,6 +18,7 @@ enum class EPhaseState : uint8
 	EnemyTurnPhase,
 };
 
+DECLARE_MULTICAST_DELEGATE(FOnDrawPhaseStartedSignature);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
 
@@ -56,6 +57,7 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 public:
+	FOnDrawPhaseStartedSignature OnDrawPhaseStartedDelegate;
 	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;
 	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 

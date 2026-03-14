@@ -42,8 +42,8 @@ protected:
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
 
 private:
+	void OnDrawPhaseStarted() const;
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
-	void ApplyRecoveryEffect() const;
 
 protected:
 	// 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다.

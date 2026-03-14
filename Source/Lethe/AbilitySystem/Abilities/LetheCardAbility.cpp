@@ -7,8 +7,10 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 
@@ -162,18 +164,58 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (!TriggerEventData || !TriggerEventData->Target)
+	if (!TryValidateAndCommitActivation(Handle, ActorInfo, ActivationInfo, TriggerEventData))
 	{
 		ActiveFailed();
 		return;
+	}
+
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	
+	// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
+	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
+
+	UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		LetheGameplayTags.Event_Montage_ApplyEffect,
+		nullptr,
+		true,
+		true);
+	WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+	WaitApplyEffectEventTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		LetheGameplayTags.Event_Montage_EndUseCard,
+		nullptr,
+		true,
+		true);
+	WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+	WaitEndUseCardEventTask->ReadyForActivation();
+
+	UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this,
+		NAME_None,
+		AbilityAnimMontage,
+		1.f,
+		NAME_None,
+		false,
+		1.f);
+	PlayMontageAndWaitTask->ReadyForActivation();
+}
+
+bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	if (!TriggerEventData || !TriggerEventData->Target)
+	{
+		return false;
 	}
 	
 	// 애니메이션 재생 후 트리거를 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
 	CachedTargetActor = const_cast<AActor*>(TriggerEventData->Target.Get());
 	if (!CachedTargetActor.IsValid())
 	{
-		ActiveFailed();
-		return;
+		return false;
 	}
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -181,49 +223,29 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 	if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))
 	{
-		ActiveFailed();
-		return;
+		return false;
 	}
 
-	if (CheckCost(Handle, ActorInfo))
+	if (const AActor* SourceActor = GetAvatarActorFromActorInfo())
 	{
-		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-		
-		// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
-		ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
-		
-		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-			this,
-			LetheGameplayTags.Event_Montage_ApplyEffect,
-			nullptr,
-			true,
-			true);
-		WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-		WaitApplyEffectEventTask->ReadyForActivation();
-	
-		UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-			this,
-			LetheGameplayTags.Event_Montage_EndUseCard,
-			nullptr,
-			true,
-			true);
-		WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-		WaitEndUseCardEventTask->ReadyForActivation();
-
-		UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-			this,
-			NAME_None,
-			AbilityAnimMontage,
-			1.f,
-			NAME_None,
-			false,
-			1.f);
-		PlayMontageAndWaitTask->ReadyForActivation();
+		// SourceActor가 플레이어 캐릭터인 경우 들어가는 분기입니다.
+		if (SourceActor->Implements<UPlayableCharacterInterface>())
+		{
+			// Enemy는 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
+			const bool bCanUseByFloorGap = ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(this, SourceActor, CachedTargetActor.Get(), AbilityRange.FloorGap);
+			if (bCanUseByFloorGap && CheckCost(Handle, ActorInfo))
+			{
+				// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
+				CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
+				return true;
+			}
+		}
+		else
+		{
+			return true;
+		}
 	}
-	else
-	{
-		ActiveFailed();
-	}
+	return false;
 }
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
@@ -250,7 +272,6 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 
 void ULetheCardAbility::ActiveFailed()
 {
-	// GameplayEffect를 적용할 대상이 이미 사망한 경우 로직을 중단합니다.
 	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnAbilityEnded(false);

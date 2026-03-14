@@ -608,6 +608,13 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 				continue;
 			}
 
+			// Enemy AI 전용 함수기 때문에, 다른 Enemy AI가 점유한 타일이면 스킵합니다.
+			// TODO: 추후 공용으로 변경하거나 다른 의도(그냥 무시하고 최단 경로 확인하기 등)로 확장하게 되면 매개변수로 이 조건을 사용할지 말지 결정하는 등의 방식이 필요합니다.
+			if (StandingOrReservedMoveTilesForEnemyAI.Contains(GetTile(NextCoord)))
+			{
+				continue;
+			}
+
 			const int32* ExistingDepth = DepthMap.Find(NextCoord);
 			if (!ExistingDepth)
 			{
@@ -701,7 +708,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
-int32 UTileManagerSubsystem::GetTileFloor(const ATile* Tile)
+int32 UTileManagerSubsystem::GetTileFloor(const ATile* Tile) const
 {
 	if (Tile)
 	{
@@ -715,22 +722,22 @@ int32 UTileManagerSubsystem::GetTileFloor(const ATile* Tile)
 
 void UTileManagerSubsystem::AddToStandingOrReservedMoveTiles(ATile* Tile)
 {
-	StandingOrReservedMoveTilesForAI.Emplace(Tile);
+	StandingOrReservedMoveTilesForEnemyAI.Emplace(Tile);
 }
 
 void UTileManagerSubsystem::RemoveToStandingOrReservedMoveTiles(ATile* Tile)
 {
-	StandingOrReservedMoveTilesForAI.Remove(Tile);
+	StandingOrReservedMoveTilesForEnemyAI.Remove(Tile);
 }
 
 void UTileManagerSubsystem::EmptyStandingOrReservedMoveTiles()
 {
-	StandingOrReservedMoveTilesForAI.Empty();
+	StandingOrReservedMoveTilesForEnemyAI.Empty();
 }
 
 bool UTileManagerSubsystem::CanMoveToTileForAI(ATile* Tile) const
 {
-	const bool bIsReserved = StandingOrReservedMoveTilesForAI.Contains(Tile);
+	const bool bIsReserved = StandingOrReservedMoveTilesForEnemyAI.Contains(Tile);
 	bool bIsPlayerCharacter = false;
 	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
 	{

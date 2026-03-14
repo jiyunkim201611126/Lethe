@@ -45,10 +45,16 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	}
 	
 	CurrentTurnState = NewPhase;
+
+	if (CurrentTurnState == EPhaseState::DrawPhase)
+	{
+		// MoveConsumed 태그를 제거한 후 AIController의 SelectAbility 로직이 시작될 수 있도록 순서 보장을 위해 분리된 콜백을 호출합니다.
+		OnDrawPhaseStartedDelegate.Broadcast();
+	}
 	
-	OnChangeTurnStateDelegate.Broadcast(OldPhase, NewPhase);
+	OnChangeTurnStateDelegate.Broadcast(OldPhase, CurrentTurnState);
 	
-	if (NewPhase == EPhaseState::EnemyTurnPhase)
+	if (CurrentTurnState == EPhaseState::EnemyTurnPhase)
 	{
 		AbilityResolverComponent->SortEnemyAbilityActivationData();
 		AbilityResolverComponent->StartActivateEnemyAbility();

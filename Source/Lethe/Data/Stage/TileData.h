@@ -20,14 +20,14 @@ struct FAbilityRange
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	EBFSType BFSType;
+	EBFSType BFSType = EBFSType::Through;
 
 	// BFS 시 Depth와 같은 뜻으로 사용됩니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	int32 Distance;
+	int32 Distance = 2;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	int32 FloorGap;
+	int32 FloorGap = 1;
 };
 
 UENUM()

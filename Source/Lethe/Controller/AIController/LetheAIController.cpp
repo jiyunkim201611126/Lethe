@@ -204,7 +204,7 @@ void ALetheAIController::SelectRandomAbility(ATile* TargetTile) const
 
 void ALetheAIController::SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile) const
 {
-	if (!TargetTile)
+	if (!CurrentTile || !TargetTile)
 	{
 		return;
 	}
@@ -260,7 +260,7 @@ void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const 
 					{
 						if (PathTiles.IsValidIndex(Index))
 						{
-							OutPathTiles.Emplace(PathTiles[Index]);
+							OutPathTiles.AddUnique(PathTiles[Index]);
 						}
 					}
 				}

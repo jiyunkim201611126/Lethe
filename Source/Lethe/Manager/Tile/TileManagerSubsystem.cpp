@@ -68,57 +68,27 @@ int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile
 		return INDEX_NONE;
 	}
 
-	TQueue<TPair<FCubeCoord, int32>> NextCoordQueue;
-	TSet<FCubeCoord> Visited;
+	int32 FoundDepth = INDEX_NONE;
+	TSet<FCubeCoord> DummyCoords;
 
-	NextCoordQueue.Enqueue({ StartCoord, 0 });
-	Visited.Emplace(StartCoord);
-
-	while (!NextCoordQueue.IsEmpty())
-	{
-		TPair<FCubeCoord, int32> Current;
-		NextCoordQueue.Dequeue(Current);
-
-		const FCubeCoord& CurrentCoord = Current.Key;
-		const int32 CurrentDepth = Current.Value;
-
-		const FTileData* CurrentTileData = TileDataMap.Find(CurrentCoord);
-		if (!CurrentTileData)
+	TileBFS(StartCoord, 999, BFSType, DummyCoords,
+		[&FoundDepth](const FTileData* CurrentTileData, const FTileData* NextTileData)
 		{
-			continue;
-		}
-
-		for (int32 Direction = 0; Direction < 6; ++Direction)
+			return FoundDepth == INDEX_NONE;
+		},
+		[&TargetCoord, &FoundDepth](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 		{
-			if (BFSType == EBFSType::Connection && !CurrentTileData->Connections[Direction])
+			if (CurrentCoord == TargetCoord)
 			{
-				continue;
+				FoundDepth = CurrentDepth;
+				return true;
 			}
+			return false;
+		});
 
-			const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(Direction);
-			if (Visited.Contains(NextCoord))
-			{
-				continue;
-			}
-
-			if (!TileDataMap.Contains(NextCoord))
-			{
-				continue;
-			}
-
-			const int32 NextDepth = CurrentDepth + 1;
-			if (NextCoord == TargetCoord)
-			{
-				return NextDepth;
-			}
-
-			Visited.Emplace(NextCoord);
-			NextCoordQueue.Enqueue({ NextCoord, NextDepth });
-		}
-	}
-
-	// 도달 불가능한 경우 여기로 내려옵니다.
-	return INDEX_NONE;
+	// 만약 고립된 타일이 TargetTile로 들어올 경우, 맵 전체를 탐색하며 스파이크가 튀어 프레임 드랍이 발생할 수 있습니다.
+	// TODO: 고립된 타일이 생길 수 있는 기획이 들어온다면 로직을 수정해야 합니다.
+	return FoundDepth;
 }
 
 bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray)

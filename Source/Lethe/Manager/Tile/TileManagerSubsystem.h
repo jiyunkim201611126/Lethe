@@ -34,10 +34,6 @@ public:
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
 
-	/**
-	 * StartTile부터 TargetTile까지 거리를 측정에 특화된 함수입니다.
-	 * 기존 TileBFS를 활용하기엔 OutCoords가 계산에 불필요하므로 성능을 위해 따로 구현했습니다.
-	 */
 	UFUNCTION(BlueprintPure)
 	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType);
 	
@@ -75,6 +71,7 @@ private:
 
 	UPROPERTY()
 	TMap<FCubeCoord, FTileData> TileDataMap;
+	
 	UPROPERTY()
 	TMap<int32, FRoomData> RoomDataMap;
 

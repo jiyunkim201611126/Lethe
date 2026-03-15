@@ -44,9 +44,6 @@ public:
 	// StartTile에서 TargetTile까지의 "모든 최단 경로"를 Out 인자로 뱉어주는 함수입니다.
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
 
-	UFUNCTION(BlueprintPure)
-	int32 GetTileFloor(const ATile* Tile) const;
-
 	void AddToStandingOrReservedMoveTiles(ATile* Tile);
 	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
 	void EmptyStandingOrReservedMoveTiles();
@@ -55,6 +52,9 @@ public:
 	bool CanMoveToTileForAI(ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
+
+	UFUNCTION(BlueprintPure)
+	int32 GetTileFloor(const ATile* Tile) const;
 	
 	UFUNCTION(BlueprintCallable)
 	bool MapTileAndActor(ATile* InTile, AActor* InActor);
@@ -69,27 +69,9 @@ public:
 private:
 	const FStageData* GetStageData(const FName& StageName) const;
 	
-	//맵 데이터 초기화
-	void InitMapData(const UStageInitData* StageInitData);
-	//높낮이맵 제작 알고리즘
-	void MakeFloorData(const FRandomStream* RandomStream, const UStageInitData* StageInitData);
-	//타일맵 제작 알고리즘
-	void MakeEventData(const FRandomStream* RandomStream, const UStageInitData* StageInitData);
-	//타일 생성
-	void MakeTileActor(const FStageData* StageData, const UStageInitData* StageInitData);
-
-	//크기 만큼의 좌표 영역을 반환
-	void GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, int32 Width, int32 Height) const;
-	//Cube좌표를 World좌표로 전환
-	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord) const;
-	
 private:
 	UPROPERTY(Config)
 	TSoftObjectPtr<UDataTable> StageDataTable;
-
-	//타일과 타일 사이의 간격
-	static constexpr float TileWidthInterval = 173.205f;
-	static constexpr float TileHeightInterval = 150.f;
 
 	UPROPERTY()
 	TMap<FCubeCoord, FTileData> TileDataMap;

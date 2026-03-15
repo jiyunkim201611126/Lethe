@@ -5,7 +5,7 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/HighlightInterface.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 UTileSelectorComponent::UTileSelectorComponent()
 {

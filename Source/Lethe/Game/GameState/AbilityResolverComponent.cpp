@@ -5,7 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 UAbilityResolverComponent::UAbilityResolverComponent()
 {

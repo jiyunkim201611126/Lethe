@@ -4,7 +4,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
 
 class UTileManagerSubsystem;

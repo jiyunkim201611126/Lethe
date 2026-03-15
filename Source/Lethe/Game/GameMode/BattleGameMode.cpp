@@ -9,7 +9,7 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {

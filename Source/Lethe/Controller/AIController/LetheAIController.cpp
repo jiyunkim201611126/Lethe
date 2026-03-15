@@ -11,7 +11,7 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Manager/TileManagerSubsystem.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALetheAIController::ALetheAIController()
 {
@@ -239,7 +239,6 @@ void ALetheAIController::SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile
 				TileManagerSubsystem->RemoveToStandingOrReservedMoveTiles(CurrentTile);
 				TileManagerSubsystem->AddToStandingOrReservedMoveTiles(TargetTile);
 			}
-			ArrowRenderer->SetPoints(GetPawn(), TargetTile, false);
 		}
 	}
 }

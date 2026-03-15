@@ -37,8 +37,17 @@ public:
 	UFUNCTION(BlueprintPure)
 	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType);
 	
-	// StartTile에서 TargetTile까지의 "모든 최단 경로"를 Out 인자로 뱉어주는 함수입니다.
+	/**
+	 * StartTile에서 TargetTile까지의 '모든 최단 경로'를 Out 인자로 뱉어주는 함수입니다.
+	 * 생성된 ShortestPathSearchData를 기반으로 모든 경로를 복원하기 때문에, 한 번에 여러 번 호출하면 프레임드랍을 유발할 수 있습니다.
+	 */
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
+
+	/**
+	 * StartTile에서 TargetTile까지의 최단 경로들 중, MoveDistance 이내에서 도달 가능한 타일들을 우선순위대로 Out 인자로 뱉어주는 함수입니다.
+	 * 기존 FindShortestPath의 프레임드랍 유발 가능성을 제거하기 위해 구현한 함수로, MoveDistance를 매개변수로 받아 최소한의 경로 복원을 수행합니다.
+	 */
+	bool FindPrioritizedPathTilesForAI(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles);
 
 	void AddToStandingOrReservedMoveTiles(ATile* Tile);
 	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
@@ -63,6 +72,17 @@ public:
 	ATile* GetTileUnderActor(const AActor* InActor) const;
 
 private:
+	struct FShortestPathSearchData
+	{
+		// StartTile로부터 각 좌표까지의 최단 거리(최초 도달 Depth)를 기록한 Map입니다.
+		TMap<FCubeCoord, int32> DistanceMap;
+		// Key 좌표에 최단 거리로 도달할 수 있는 직전 좌표들을 Value로 기록한 Map입니다.
+		TMap<FCubeCoord, TArray<FCubeCoord>> ParentCoordMap;
+		int32 ShortestDistanceToTarget = INDEX_NONE;
+	};
+
+	// StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다.
+	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData);
 	const FStageData* GetStageData(const FName& StageName) const;
 	
 private:

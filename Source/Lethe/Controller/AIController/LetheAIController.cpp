@@ -243,27 +243,14 @@ void ALetheAIController::SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile
 	}
 }
 
-void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveLength, TArray<ATile*>& OutPathTiles) const
+void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles) const
 {
 	OutPathTiles.Reset();
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TArray<TArray<ATile*>> PathTilesArray;
-			if (TileManagerSubsystem->FindShortestPath(ThisTile, TargetTile, PathTilesArray))
-			{
-				for (int32 Index = MoveLength - 1; Index >= 0; --Index)
-				{
-					for (TArray<ATile*>& PathTiles : PathTilesArray)
-					{
-						if (PathTiles.IsValidIndex(Index))
-						{
-							OutPathTiles.AddUnique(PathTiles[Index]);
-						}
-					}
-				}
-			}
+			TileManagerSubsystem->FindPrioritizedPathTilesForAI(ThisTile, TargetTile, MoveDistance, OutPathTiles);
 		}
 	}
 }

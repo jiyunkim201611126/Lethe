@@ -91,9 +91,12 @@ int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile
 	return FoundDepth;
 }
 
-bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray)
+bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData)
 {
-	OutPathTilesArray.Reset();
+	OutSearchData.DistanceMap.Reset();
+	OutSearchData.ParentCoordMap.Reset();
+	OutSearchData.ShortestDistanceToTarget = INDEX_NONE;
+
 	if (!StartTile || !TargetTile)
 	{
 		return false;
@@ -113,17 +116,11 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	}
 
 	TQueue<TPair<FCubeCoord, int32>> NextCoordsQueue;
-	// 각 좌표의 "최초 도달 깊이"를 저장합니다. (동일 깊이 중복 부모 기록에 사용)
-	TMap<FCubeCoord, int32> DepthMap;
-	// 최단 경로 복원을 위해 "이 좌표로 올 수 있는 부모 좌표들"을 저장합니다.
-	TMap<FCubeCoord, TArray<FCubeCoord>> ParentCoordMap;
 
-	NextCoordsQueue.Enqueue({StartCoord, 0});
-	DepthMap.Emplace(StartCoord, 0);
-	// TargetTile을 처음 발견한 최단 깊이입니다. 아직 못 찾았으면 INDEX_NONE입니다.
-	int32 ShortestDistanceToTarget = INDEX_NONE;
+	NextCoordsQueue.Enqueue({ StartCoord, 0 });
+	OutSearchData.DistanceMap.Emplace(StartCoord, 0);
 
-	// BFS로 탐색하면서 TargetTile이 처음 발견된 깊이까지만 확장합니다.
+	// BFS 탐색을 시작합니다.
 	while (!NextCoordsQueue.IsEmpty())
 	{
 		TPair<FCubeCoord, int32> Current;
@@ -137,14 +134,15 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 			continue;
 		}
 
-		// TargetTile을 찾은 뒤에는 그 깊이까지만 확장합니다.
-		if (ShortestDistanceToTarget != INDEX_NONE && CurrentDepth >= ShortestDistanceToTarget)
+		// TargetCoord를 찾은 뒤에는, 최단 거리보다 깊거나 같은 Distance의 타일은 더 확장할 필요가 없으므로 스킵합니다.
+		if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && CurrentDepth >= OutSearchData.ShortestDistanceToTarget)
 		{
 			continue;
 		}
-
+		
 		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
+			// 이동할 타일을 찾는 중이기 때문에 연결된 타일이 아니라면 스킵합니다.
 			if (!CurrentTileData->Connections[Direction])
 			{
 				continue;
@@ -156,8 +154,9 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 				continue;
 			}
 
+			// TargetCoord를 찾은 뒤에는, 최단 거리보다 더 깊은 탐색은 필요 없으므로 스킵합니다.
 			const int32 NextDepth = CurrentDepth + 1;
-			if (ShortestDistanceToTarget != INDEX_NONE && NextDepth > ShortestDistanceToTarget)
+			if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && NextDepth > OutSearchData.ShortestDistanceToTarget)
 			{
 				continue;
 			}
@@ -169,46 +168,66 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 				continue;
 			}
 
-			const int32* ExistingDepth = DepthMap.Find(NextCoord);
+			const int32* ExistingDepth = OutSearchData.DistanceMap.Find(NextCoord);
 			if (!ExistingDepth)
 			{
 				// 처음 도달한 좌표면 깊이를 기록하고 큐에 넣습니다.
-				DepthMap.Emplace(NextCoord, NextDepth);
-				ParentCoordMap.FindOrAdd(NextCoord).Emplace(CurrentCoord);
+				OutSearchData.DistanceMap.Emplace(NextCoord, NextDepth);
+				OutSearchData.ParentCoordMap.FindOrAdd(NextCoord).Emplace(CurrentCoord);
 				NextCoordsQueue.Enqueue({ NextCoord, NextDepth });
 			}
 			else if (*ExistingDepth == NextDepth)
 			{
-				// 이미 같은 깊이로 도달 가능한 경우에는 부모만 추가해 "모든 최단 경로"를 보존합니다.
-				TArray<FCubeCoord>& Parents = ParentCoordMap.FindOrAdd(NextCoord);
+				// 이미 같은 최단 거리로 도달 가능한 경우에는, 최단 경로 복원을 위해 부모를 추가로 기록합니다.
+				TArray<FCubeCoord>& Parents = OutSearchData.ParentCoordMap.FindOrAdd(NextCoord);
 				if (!Parents.Contains(CurrentCoord))
 				{
 					Parents.Emplace(CurrentCoord);
 				}
 			}
+			// 기존 기록보다 더 짧게 도달하는 경우는 알고리즘상 존재하지 않기 때문에 따로 처리하지 않습니다.
 
-			// TargetTile 최초 발견 시 해당 깊이를 최단 깊이로 확정합니다.
+			// TargetCoord를 발견했다면 그 Distance를 기록합니다.
 			if (NextCoord == TargetCoord)
 			{
-				ShortestDistanceToTarget = NextDepth;
+				OutSearchData.ShortestDistanceToTarget = NextDepth;
 			}
 		}
 	}
 
-	if (ShortestDistanceToTarget == INDEX_NONE)
+	return OutSearchData.ShortestDistanceToTarget != INDEX_NONE;
+}
+
+bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray)
+{
+	OutPathTilesArray.Reset();
+	FShortestPathSearchData SearchData;
+	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData))
 	{
 		return false;
 	}
 
-	// TargetTile -> StartTile 방향으로 부모를 따라가며 모든 최단 경로를 복원합니다.
+	const FCubeCoord StartCoord = StartTile->GetCubeCoord();
+	const FCubeCoord TargetCoord = TargetTile->GetCubeCoord();
+	
+	// TargetTile을 처음 발견한 최단 깊이입니다. 아직 못 찾았으면 INDEX_NONE입니다.
+	const int32 ShortestDistanceToTarget = SearchData.ShortestDistanceToTarget;
+
+	// TargetTile -> StartTile 방향으로 부모를 따라가며 모든 최단 경로를 생성합니다.
 	// CurrentReversedPath는 [Target, ..., Start] 순서로 쌓입니다.
 	TArray<FCubeCoord> CurrentReversedPath;
 	CurrentReversedPath.Reserve(ShortestDistanceToTarget + 1);
 
 	// 경로 복원에서 같은 좌표를 반복 조회하므로 좌표 -> 타일을 캐시합니다.
 	TMap<FCubeCoord, ATile*> TileCache;
-	TileCache.Reserve(DepthMap.Num());
+	TileCache.Reserve(SearchData.DistanceMap.Num());
 
+	/**
+	 * ParendCoordMap을 따라 TargetTile -> StartTile 방향으로 재귀 탐색하며 모든 최단 경로를 복원합니다.
+	 * CurrentReversedPath는 현재 분기에서 [Target, ..., Start] 순서로 쌓이는 경로입니다.
+	 * StartCoord에 도달하면 startTile을 제외하고 역순으로 읽어 [Start 다음 타일, ..., Target] 경로를 생성합니다.
+	 * 각 분기 탐색이 끝나면 Pop으로 현재 좌표를 제거해 다음 분기를 위한 경로 상태를 복구합니다.
+	 */
 	TFunction<void(const FCubeCoord&)> BuildAllShortestPaths = [&](const FCubeCoord& CurrentCoord)
 	{
 		CurrentReversedPath.Emplace(CurrentCoord);
@@ -218,7 +237,6 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 			TArray<ATile*> PathTiles;
 			PathTiles.Reserve(CurrentReversedPath.Num() - 1);
 
-			// [Target, ..., Start]를 뒤에서 앞으로 읽으면 [Start 다음 타일, ..., Target]이 됩니다.
 			for (int32 Index = CurrentReversedPath.Num() - 2; Index >= 0; --Index)
 			{
 				const FCubeCoord& PathCoord = CurrentReversedPath[Index];
@@ -246,7 +264,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 			return;
 		}
 
-		if (const TArray<FCubeCoord>* Parents = ParentCoordMap.Find(CurrentCoord))
+		if (const TArray<FCubeCoord>* Parents = SearchData.ParentCoordMap.Find(CurrentCoord))
 		{
 			for (const FCubeCoord& ParentCoord : *Parents)
 			{
@@ -260,6 +278,73 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	BuildAllShortestPaths(TargetCoord);
 
 	return !OutPathTilesArray.IsEmpty();
+}
+
+bool UTileManagerSubsystem::FindPrioritizedPathTilesForAI(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles)
+{
+	OutPathTiles.Reset();
+	if (MoveDistance <= 0)
+	{
+		return false;
+	}
+
+	FShortestPathSearchData SearchData;
+	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData))
+	{
+		return false;
+	}
+
+	// 이번 턴에 최대 이동 가능한 거리를 계산합니다.
+	const int32 MaxPriorityDistance = FMath::Min(MoveDistance, SearchData.ShortestDistanceToTarget);
+
+	// 거리별 후보 좌표 저장 공간을 준비합니다.
+	// Index 1에는 '한 칸 이동 후보', Index 2에는 '두 칸 이동 후보' ...
+	TArray<TSet<FCubeCoord>> PrioritizedCoordsByDistance;
+	PrioritizedCoordsByDistance.SetNum(MaxPriorityDistance + 1);
+
+	// TargetTile -> StartTile 방향으로 부모를 따라가며 최단 경로를 생성합니다.
+	TSet<FCubeCoord> CurrentCoords;
+	CurrentCoords.Emplace(TargetTile->GetCubeCoord());
+
+	// 현재 Distance에 있는 좌표 집합에서 부모들을 모아 Distance - 1 좌표 집합을 생성합니다.
+	for (int32 Distance = SearchData.ShortestDistanceToTarget; Distance > 0; --Distance)
+	{
+		TSet<FCubeCoord> NextCoords;
+		for (const FCubeCoord& Coord : CurrentCoords)
+		{
+			if (const TArray<FCubeCoord>* Parents = SearchData.ParentCoordMap.Find(Coord))
+			{
+				for (const FCubeCoord& ParentCoord : *Parents)
+				{
+					NextCoords.Emplace(ParentCoord);
+				}
+			}
+		}
+
+		// 이번 턴 후보 거리 안에 있으면 저장합니다.
+		const int32 ParentDistance = Distance - 1;
+		if (ParentDistance >= 1 && ParentDistance <= MaxPriorityDistance)
+		{
+			PrioritizedCoordsByDistance[ParentDistance] = NextCoords;
+		}
+
+		// 방금 찾은 부모 집합을 기준으로 다시 부모를 찾습니다.
+		CurrentCoords = MoveTemp(NextCoords);
+	}
+
+	// 만들어진 좌표 집합 가장 먼 이동 후보부터 넣어 우선순위로 정렬합니다.
+	for (int32 Distance = MaxPriorityDistance; Distance >= 1; --Distance)
+	{
+		for (const FCubeCoord& Coord : PrioritizedCoordsByDistance[Distance])
+		{
+			if (ATile* Tile = GetTile(Coord))
+			{
+				OutPathTiles.AddUnique(Tile);
+			}
+		}
+	}
+
+	return !OutPathTiles.IsEmpty();
 }
 
 void UTileManagerSubsystem::AddToStandingOrReservedMoveTiles(ATile* Tile)

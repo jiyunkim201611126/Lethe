@@ -21,11 +21,7 @@ void UTileManagerSubsystem::Deinitialize()
 
 void UTileManagerSubsystem::MakeNewTileMap()
 {
-	//절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
-	//1. 맵 데이터를 초기화한다.
-	//2. 타일에 층고를 만들기 위한 알고리즘을 실행한다.
-	//3. 타일에 이벤트를 생성하기 위한 알고리즘을 실행한다.
-	//4. 데이터를 기반으로 실제 액터를 생성한다.
+	// 절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
 	if (const FStageData* StageData = GetStageData(FName("Forest")))
 	{
 		if (const UStageInitData* StageInitData = StageData->StageInitData.LoadSynchronous())

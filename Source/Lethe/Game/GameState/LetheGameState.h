@@ -13,12 +13,13 @@ UENUM()
 enum class EPhaseState : uint8
 {
 	None,
+	EnemyMovePhase,
 	DrawPhase,
 	PlayerTurnPhase,
 	EnemyTurnPhase,
 };
 
-DECLARE_MULTICAST_DELEGATE(FOnDrawPhaseStartedSignature);
+DECLARE_MULTICAST_DELEGATE(FOnEnemyMovePhaseStartedSignature);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
 
@@ -29,10 +30,15 @@ class LETHE_API ALetheGameState : public AGameStateBase
 
 public:
 	ALetheGameState();
-	
+
+	void GoEnemyMovePhase();
 	void GoDrawPhase();
 	void GoPlayerTurnPhase();
 	void GoEnemyTurnPhase();
+
+	void RegisterEnemy(AActor* InEnemyAI);
+	void RemovePendingEnemyMove(AActor* InEnemyAI);
+	void OnAllEnemyAbilityResolved();
 
 	EPhaseState GetTurnPhase() const;
 
@@ -57,7 +63,7 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 public:
-	FOnDrawPhaseStartedSignature OnDrawPhaseStartedDelegate;
+	FOnEnemyMovePhaseStartedSignature OnEnemyMovePhaseStartedDelegate;
 	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;
 	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 
@@ -66,4 +72,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
+
+	TSet<TWeakObjectPtr<AActor>> RegisteredEnemies;
+	TSet<TWeakObjectPtr<AActor>> PendingMoveEnemies;
 };

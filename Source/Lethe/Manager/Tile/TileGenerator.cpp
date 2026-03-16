@@ -506,6 +506,11 @@ namespace TileGeneratorInternal
 
 bool FTileGenerator::GenerateTileMap(UWorld* World, const FStageData* StageData, const UStageInitData* StageInitData, FTileGenerationResult& OutResult)
 {
+	//1. 맵 데이터를 초기화한다.
+	//2. 타일에 층고를 만들기 위한 알고리즘을 실행한다.
+	//3. 타일에 이벤트를 생성하기 위한 알고리즘을 실행한다.
+	//4. 데이터를 기반으로 실제 액터를 생성한다.
+	
 	OutResult.TileDataMap.Reset();
 	OutResult.RoomDataMap.Reset();
 

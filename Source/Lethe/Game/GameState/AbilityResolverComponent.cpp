@@ -3,7 +3,6 @@
 #include "AbilityResolverComponent.h"
 
 #include "AbilitySystemComponent.h"
-#include "LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -146,9 +145,9 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
 	
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
-	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnEnemyAbilityActivatedDelegate.IsBound())
+	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnEnemyAbilityActivated.IsBound())
 	{
-		OnEnemyAbilityActivatedDelegate.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnEnemyAbilityActivated.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
 	EnemyAbilityActivationData.RemoveAt(0);
 	return Result;
@@ -162,11 +161,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		// 모든 Ability 사용을 마쳤다면 DrawPhase로 돌아갑니다.
-		if (ALetheGameState* LetheGameState = GetOwner<ALetheGameState>())
-		{
-			LetheGameState->GoDrawPhase();
-		}
+		OnAllEnemyAbilityResolved.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));

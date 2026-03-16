@@ -108,29 +108,31 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			FCubeCoord(0, -2, 2),
 		};
 
-		int32 EnemyIndex = 0;
-		for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
-		{
-			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoord))
-			{
-				FVector SpawnLocation = Tile->GetActorLocation();
-				if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
-				{
-					TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
-					SpawnedEnemy->SetLocationOnTile(SpawnLocation);
-					SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
-					EnemyIndex += 100;
-
-					TileManagerSubsystem->AddToStandingOrReservedMoveTiles(Tile);
-				}
-			}
-		}
-
 		if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
 		{
-			LetheGameState->GoDrawPhase();
+			int32 EnemyIndex = 0;
+			for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
+			{
+				FActorSpawnParameters SpawnParameters;
+				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoord))
+				{
+					FVector SpawnLocation = Tile->GetActorLocation();
+					if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
+					{
+						SpawnedEnemy->SetLocationOnTile(SpawnLocation);
+						SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
+						EnemyIndex += 100;
+
+						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
+						TileManagerSubsystem->AddToStandingOrReservedMoveTiles(Tile);
+
+						LetheGameState->RegisterEnemy(SpawnedEnemy);
+					}
+				}
+			}
+			
+			LetheGameState->GoEnemyMovePhase();
 		}
 	}
 }

@@ -69,7 +69,6 @@ public:
 	
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
-	void GoDrawPhase() const;
 	void GoPlayerTurnPhase() const;
 	void GoEnemyTurnPhase() const;
 	bool RequestTurnEnd() const;

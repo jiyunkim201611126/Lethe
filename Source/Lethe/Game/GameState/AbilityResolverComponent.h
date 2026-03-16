@@ -31,6 +31,7 @@ enum class ETryAbilityActivationResult : uint8
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
+DECLARE_DELEGATE(FOnAllEnemyAbilityResolved);
 
 UCLASS()
 class LETHE_API UAbilityResolverComponent : public UActorComponent
@@ -62,7 +63,8 @@ private:
 
 public:
 	FOnUseCardResolved OnUseCardResolved;
-	FOnEnemyAbilityActivated OnEnemyAbilityActivatedDelegate;
+	FOnEnemyAbilityActivated OnEnemyAbilityActivated;
+	FOnAllEnemyAbilityResolved OnAllEnemyAbilityResolved;
 
 private:
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.

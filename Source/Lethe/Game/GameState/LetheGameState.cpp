@@ -11,14 +11,20 @@ void ALetheGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	AbilityResolverComponent->OnEnemyAbilityActivatedDelegate.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
+	AbilityResolverComponent->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
+	AbilityResolverComponent->OnAllEnemyAbilityResolved.BindUObject(this, &ThisClass::OnAllEnemyAbilityResolved);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	AbilityResolverComponent->OnEnemyAbilityActivatedDelegate.RemoveAll(this);
+	AbilityResolverComponent->OnEnemyAbilityActivated.RemoveAll(this);
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+void ALetheGameState::GoEnemyMovePhase()
+{
+	SetPhase(EPhaseState::EnemyMovePhase);
 }
 
 void ALetheGameState::GoDrawPhase()
@@ -36,6 +42,35 @@ void ALetheGameState::GoEnemyTurnPhase()
 	SetPhase(EPhaseState::EnemyTurnPhase);
 }
 
+void ALetheGameState::RegisterEnemy(AActor* InEnemyAI)
+{
+	RegisteredEnemies.Emplace(InEnemyAI);
+	PendingMoveEnemies.Emplace(InEnemyAI);
+}
+
+void ALetheGameState::RemovePendingEnemyMove(AActor* InEnemyAI)
+{
+	PendingMoveEnemies.Remove(InEnemyAI);
+
+	if (PendingMoveEnemies.IsEmpty())
+	{
+		AbilityResolverComponent->StartActivateEnemyAbility();
+	}
+}
+
+void ALetheGameState::OnAllEnemyAbilityResolved()
+{
+	if (CurrentTurnState == EPhaseState::EnemyMovePhase)
+	{
+		SetPhase(EPhaseState::DrawPhase);
+	}
+	if (CurrentTurnState == EPhaseState::EnemyTurnPhase)
+	{
+		PendingMoveEnemies = RegisteredEnemies;
+		SetPhase(EPhaseState::EnemyMovePhase);
+	}
+}
+
 void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 {
 	const EPhaseState OldPhase = CurrentTurnState;
@@ -46,10 +81,10 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	
 	CurrentTurnState = NewPhase;
 
-	if (CurrentTurnState == EPhaseState::DrawPhase)
+	if (CurrentTurnState == EPhaseState::EnemyMovePhase)
 	{
 		// MoveConsumed 태그를 제거한 후 AIController의 SelectAbility 로직이 시작될 수 있도록 순서 보장을 위해 분리된 콜백을 호출합니다.
-		OnDrawPhaseStartedDelegate.Broadcast();
+		OnEnemyMovePhaseStartedDelegate.Broadcast();
 	}
 	
 	OnChangeTurnStateDelegate.Broadcast(OldPhase, CurrentTurnState);

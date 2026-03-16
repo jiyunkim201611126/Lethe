@@ -94,7 +94,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnDrawPhaseStartedDelegate.AddUObject(this, &ThisClass::OnDrawPhaseStarted);
+		LetheGameState->OnEnemyMovePhaseStartedDelegate.AddUObject(this, &ThisClass::OnEnemyMovePhaseStarted);
 		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
@@ -121,8 +121,9 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnDrawPhaseStarted() const
+void UGASManagerComponent::OnEnemyMovePhaseStarted() const
 {
+	// 모든 ASC에게서 MoveConsumed 태그를 제거합니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
 	

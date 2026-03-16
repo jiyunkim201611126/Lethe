@@ -73,14 +73,6 @@ bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULe
 	return false;
 }
 
-void UCardPanelWidgetController::GoDrawPhase() const
-{
-	if (LetheGameState.IsValid())
-	{
-		LetheGameState->GoDrawPhase();
-	}
-}
-
 void UCardPanelWidgetController::GoPlayerTurnPhase() const
 {
 	if (LetheGameState.IsValid())

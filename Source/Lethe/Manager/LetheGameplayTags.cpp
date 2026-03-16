@@ -59,11 +59,13 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("State.Character.CanAct"), FString(""));
 	GameplayTags.State_Character_MoveConsumed = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("State.Character.MoveConsumed"), FString(""));
-
-	GameplayTags.Event_StateTree_TurnStarted = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Event.StateTree.TurnStarted"), FString(""));
-	GameplayTags.Event_StateTree_TurnEnded = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Event.StateTree.TurnEnded"), FString(""));
+	
+	GameplayTags.Event_StateTree_MovePhaseStarted = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Event.StateTree.MovePhaseStarted"), FString(""));
+	GameplayTags.Event_StateTree_DrawPhaseStarted = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Event.StateTree.DrawPhaseStarted"), FString(""));
+	GameplayTags.Event_StateTree_OwnTurnPhaseStarted = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Event.StateTree.OwnTurnPhaseStarted"), FString(""));
 	
 	GameplayTags.Event_Montage_ApplyEffect = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.Montage.ApplyEffect"), FString(""));

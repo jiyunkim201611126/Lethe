@@ -91,6 +91,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
 					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
+					TileManagerSubsystem->ReserveTile(SpawnedCharacter, TileActor);
 					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 				}
 			}
@@ -125,7 +126,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 						EnemyIndex += 100;
 
 						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
-						TileManagerSubsystem->AddToStandingOrReservedMoveTiles(Tile);
+						TileManagerSubsystem->ReserveTile(SpawnedEnemy, Tile);
 
 						LetheGameState->RegisterEnemy(SpawnedEnemy);
 					}

@@ -94,7 +94,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnEnemyMovePhaseStartedDelegate.AddUObject(this, &ThisClass::OnEnemyMovePhaseStarted);
+		LetheGameState->OnRoundStartedDelegate.AddUObject(this, &ThisClass::OnRoundStarted);
 		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
@@ -121,9 +121,13 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnEnemyMovePhaseStarted() const
+void UGASManagerComponent::OnRoundStarted() const
 {
-	// 모든 ASC에게서 MoveConsumed 태그를 제거합니다.
+	/**
+	 * 모든 ASC에게서 MoveConsumed 태그를 제거합니다.
+	 * 예외적으로 GE가 아닌 코드로 직접 수정하는 이유는, GE로 구현한다면 태그 제거가 깔끔하지 않기 때문입니다.
+	 * MoveConsumed를 제외한 모든 '행동 제한'형 태그는 전부 GE의 'Grant Tags To Target Actor'로 부여하고, Ability에서 'ActivationBlockedTags'로 걸러야 합니다.
+	 */
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
 	

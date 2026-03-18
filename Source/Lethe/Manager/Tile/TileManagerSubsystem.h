@@ -9,6 +9,7 @@
 #include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
+enum class ETeamSide : uint8;
 class ATile;
 class UStageInitData;
 struct FStageData;
@@ -49,12 +50,12 @@ public:
 	 */
 	bool FindPrioritizedPathTilesForAI(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles);
 
-	void AddToStandingOrReservedMoveTiles(ATile* Tile);
-	void RemoveToStandingOrReservedMoveTiles(ATile* Tile);
-	void EmptyStandingOrReservedMoveTiles();
+	void ReserveTile(const AActor* Character, ATile* Tile);
+	void ClearTileReservations(const ETeamSide TeamSide);
 
+	bool CanMoveToTileForPlayerCharacter(ATile* Tile) const;
 	UFUNCTION(BlueprintPure)
-	bool CanMoveToTileForAI(ATile* Tile) const;
+	bool CanMoveToTileForEnemyAI(ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
 
@@ -100,7 +101,8 @@ private:
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
 	// Enemy AI가 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
-	TSet<TWeakObjectPtr<ATile>> StandingOrReservedMoveTilesForEnemyAI;
+	TSet<TWeakObjectPtr<ATile>> EnemyReservedTiles;
+	TSet<TWeakObjectPtr<ATile>> PlayerCharacterReservedTiles;
 };
 
 /**

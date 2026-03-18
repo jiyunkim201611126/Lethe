@@ -42,7 +42,7 @@ protected:
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
 
 private:
-	void OnEnemyMovePhaseStarted() const;
+	void OnRoundStarted() const;
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
 
 protected:

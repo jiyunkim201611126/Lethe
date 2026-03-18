@@ -9,6 +9,7 @@
 
 class ATile;
 
+// 페이즈가 1바퀴 도는 것을 Round라고 지칭하며, EnemyMovePhase가 Round의 시작 첫 Phase입니다.
 UENUM()
 enum class EPhaseState : uint8
 {
@@ -19,7 +20,7 @@ enum class EPhaseState : uint8
 	EnemyTurnPhase,
 };
 
-DECLARE_MULTICAST_DELEGATE(FOnEnemyMovePhaseStartedSignature);
+DECLARE_MULTICAST_DELEGATE(FOnRoundStartedSignature);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
 
@@ -63,7 +64,7 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 public:
-	FOnEnemyMovePhaseStartedSignature OnEnemyMovePhaseStartedDelegate;
+	FOnRoundStartedSignature OnRoundStartedDelegate;
 	FOnChangePhaseStateSignature OnChangeTurnStateDelegate;
 	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 

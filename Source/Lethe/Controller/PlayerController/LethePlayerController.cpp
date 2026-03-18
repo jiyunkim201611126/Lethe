@@ -11,6 +11,7 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -112,20 +113,25 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			}
 			else
 			{
-				// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
-				if (OutTiles.Contains(TileAndActor.Tile))
+				if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 				{
-					// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-					FGameplayEventData Payload;
-					Payload.Instigator = SelectedCharacter.Get();
-					
-					FAbilityActivationData AbilityActivationData;
-					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-					AbilityActivationData.TargetTile = TileAndActor.Tile;
+					// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
+					if (OutTiles.Contains(TileAndActor.Tile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(TileAndActor.Tile))
+					{
+						// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
+						FGameplayEventData Payload;
+						Payload.Instigator = SelectedCharacter.Get();
+						
+						FAbilityActivationData AbilityActivationData;
+						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+						AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+						AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+						AbilityActivationData.TargetTile = TileAndActor.Tile;
 
-					LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+						LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+						
+						TileManagerSubsystem->ReserveTile(SelectedCharacter.Get(), TileAndActor.Tile);
+					}
 				}
 				ResetSelectedCharacter();
 			}

@@ -4,6 +4,7 @@
 
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 
@@ -159,7 +160,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 
 			// Enemy AI 전용 함수기 때문에, 다른 Enemy AI가 점유한 타일이면 스킵합니다.
 			// TODO: 추후 공용으로 변경하거나 다른 의도(그냥 무시하고 최단 경로 확인하기 등)로 확장하게 되면 매개변수로 이 조건을 사용할지 말지 결정하는 등의 방식이 필요합니다.
-			if (StandingOrReservedMoveTilesForEnemyAI.Contains(GetTile(NextCoord)))
+			if (EnemyReservedTiles.Contains(GetTile(NextCoord)))
 			{
 				continue;
 			}
@@ -343,24 +344,44 @@ bool UTileManagerSubsystem::FindPrioritizedPathTilesForAI(const ATile* StartTile
 	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::AddToStandingOrReservedMoveTiles(ATile* Tile)
+void UTileManagerSubsystem::ReserveTile(const AActor* Character, ATile* Tile)
 {
-	StandingOrReservedMoveTilesForEnemyAI.Emplace(Tile);
+	const ATile* CurrentTile = GetTileUnderActor(Character);
+	if (Character->Implements<UPlayableCharacterInterface>())
+	{
+		PlayerCharacterReservedTiles.Remove(CurrentTile);
+		PlayerCharacterReservedTiles.Emplace(Tile);
+	}
+	else
+	{
+		EnemyReservedTiles.Remove(CurrentTile);
+		EnemyReservedTiles.Emplace(Tile);
+	}
 }
 
-void UTileManagerSubsystem::RemoveToStandingOrReservedMoveTiles(ATile* Tile)
+void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)
 {
-	StandingOrReservedMoveTilesForEnemyAI.Remove(Tile);
+	switch (TeamSide)
+	{
+	case ETeamSide::Player:
+		PlayerCharacterReservedTiles.Empty();
+		break;
+	case ETeamSide::Enemy:
+		EnemyReservedTiles.Empty();
+		break;
+	default:
+		break;
+	}
 }
 
-void UTileManagerSubsystem::EmptyStandingOrReservedMoveTiles()
+bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(ATile* Tile) const
 {
-	StandingOrReservedMoveTilesForEnemyAI.Empty();
+	return !PlayerCharacterReservedTiles.Contains(Tile);
 }
 
-bool UTileManagerSubsystem::CanMoveToTileForAI(ATile* Tile) const
+bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(ATile* Tile) const
 {
-	const bool bIsReserved = StandingOrReservedMoveTilesForEnemyAI.Contains(Tile);
+	const bool bIsReserved = EnemyReservedTiles.Contains(Tile);
 	bool bIsPlayerCharacter = false;
 	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
 	{

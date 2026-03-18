@@ -177,8 +177,7 @@ void ALetheAIController::SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile
 			
 				if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 				{
-					TileManagerSubsystem->RemoveToStandingOrReservedMoveTiles(CurrentTile);
-					TileManagerSubsystem->AddToStandingOrReservedMoveTiles(TargetTile);
+					TileManagerSubsystem->ReserveTile(ControlledPawn, TargetTile);
 				}
 			}
 		}

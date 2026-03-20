@@ -11,3 +11,8 @@ void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority) const
 		AIController->SetAbilityPriority(InPriority);
 	}
 }
+
+const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
+{
+	return AbilityRange;
+}

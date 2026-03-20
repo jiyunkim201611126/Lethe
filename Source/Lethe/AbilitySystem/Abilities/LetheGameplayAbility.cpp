@@ -4,7 +4,7 @@
 
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-FAbilityRange ULetheGameplayAbility::GetAbilityRange() const
+FBFSRange ULetheGameplayAbility::GetAbilityRange() const
 {
 	return AbilityRange;
 }

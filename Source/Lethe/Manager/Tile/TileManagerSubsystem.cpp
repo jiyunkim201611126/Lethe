@@ -4,6 +4,7 @@
 
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"

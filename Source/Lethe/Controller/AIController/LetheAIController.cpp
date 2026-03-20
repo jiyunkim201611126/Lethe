@@ -7,6 +7,7 @@
 #include "Components/StateTreeAIComponent.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
@@ -29,23 +30,23 @@ void ALetheAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
-	{
-		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		LetheGameState->OnActivateEnemyAbilityDelegate.AddUObject(this, &ThisClass::OnAbilityActivated);
-	}
-
 	check(ArrowRendererClass);
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->OnChangePhaseStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnActivateEnemyAbilityDelegate.AddUObject(this, &ThisClass::OnAbilityActivated);
+	}
 }
 
 void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangeTurnStateDelegate.RemoveAll(this);
+		LetheGameState->OnChangePhaseStateDelegate.RemoveAll(this);
 		LetheGameState->OnActivateEnemyAbilityDelegate.RemoveAll(this);
 	}
 	
@@ -101,7 +102,7 @@ void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const
 	}
 }
 
-int32 ALetheAIController::FindNearestPlayerCharacterTiles(const int32 MaxDepth, const EBFSType BFSType, TArray<ATile*>& OutNearestTiles)
+int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutNearestTiles)
 {
 	int32 Distance = INDEX_NONE;
 	OutNearestTiles.Reset();
@@ -142,6 +143,42 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const int32 MaxDepth, 
 		}
 	}
 	return Distance;
+}
+
+ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth)
+{
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		{
+			TSet<FCubeCoord> TilesInRange;
+			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
+			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, TilesInRange,
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				// 우선 범위 내 타일을 모두 탐색합니다.
+				return true;
+			},
+			[&TileManagerSubsystem](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			{
+				// EnemyAI가 이동 가능한 타일만 선택합니다.
+				if (TileData && TileData->TileActor.IsValid())
+				{
+					return TileManagerSubsystem->CanMoveToTileForEnemyAI(TileData->TileActor.Get());
+				}
+				return false;
+			});
+		
+			if (!TilesInRange.IsEmpty())
+			{
+				// 범위 내 타일 중 랜덤하게 하나 반환합니다.
+				TArray<FCubeCoord> TileArray = TilesInRange.Array();
+				const FCubeCoord& RandomCoord = TileArray[FMath::RandRange(0, TileArray.Num() - 1)];
+				return TileManagerSubsystem->GetTile(RandomCoord);
+			}
+		}
+	}
+	return nullptr;
 }
 
 void ALetheAIController::SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile)
@@ -267,4 +304,16 @@ void ALetheAIController::SelectRandomAbility(ATile* TargetTile) const
 			}
 		}
 	}
+}
+
+bool ALetheAIController::IsPlayerCharacterInDetectionRange()
+{
+	if (const AEnemyCharacterBase* EnemyCharacter = GetPawn<AEnemyCharacterBase>())
+	{
+		const FBFSRange& AbilityRange = EnemyCharacter->GetAbilityRange();
+		TArray<ATile*> PlayerCharacterTiles;
+		FindNearestPlayerCharacterTiles(AbilityRange.BFSType, AbilityRange.Distance, PlayerCharacterTiles);
+		return !PlayerCharacterTiles.IsEmpty();
+	}
+	return false;
 }

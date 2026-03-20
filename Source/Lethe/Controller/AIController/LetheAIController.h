@@ -6,9 +6,9 @@
 #include "AIController.h"
 #include "LetheAIController.generated.h"
 
-class AArrowRenderer;
 enum class EBFSType : uint8;
 enum class EPhaseState : uint8;
+class AArrowRenderer;
 class ATile;
 class UStateTreeAIComponent;
 
@@ -23,7 +23,10 @@ public:
 	void SetAbilityPriority(const int32 InPriority);
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "가장 가까운 플레이어 캐릭터를 찾아 그 타일들을 반환합니다. 거리가 같다면 여러 타일을 반환합니다."))
-	int32 FindNearestPlayerCharacterTiles(const int32 MaxDepth, const EBFSType BFSType, TArray<ATile*>& OutNearestTiles);
+	int32 FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutNearestTiles);
+
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "정해진 범위 내에 랜덤한, 위에 아무것도 없는 타일을 반환합니다."))
+	ATile* GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth);
 	
 	UFUNCTION(BlueprintCallable)
 	void SelectMoveAbility(ATile* CurrentTile, ATile* TargetTile);
@@ -36,6 +39,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void SelectRandomAbility(ATile* TargetTile) const;
+
+	bool IsPlayerCharacterInDetectionRange();
 
 protected:
 	//~ Begin AActor Interface

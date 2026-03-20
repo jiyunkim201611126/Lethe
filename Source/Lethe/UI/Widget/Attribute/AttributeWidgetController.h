@@ -39,10 +39,10 @@ class LETHE_API UAttributeWidgetController : public ULetheWidgetController
 	GENERATED_BODY()
 
 public:
-	//~ Begin LetheWidgetController Interface
+	//~ Begin ULetheWidgetController Interface
 	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams) override;
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
-	//~ End LetheWidgetController Interface
+	//~ End of ULetheWidgetController Interface
 
 protected:
 	virtual void OnPreviewDataUpdated(const FPreviewData& PreviewData);

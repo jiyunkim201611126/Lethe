@@ -2,6 +2,8 @@
 
 #include "LetheGameState.h"
 
+#include "Lethe/Controller/AIController/LetheAIController.h"
+
 ALetheGameState::ALetheGameState()
 {
 	AbilityResolverComponent = CreateDefaultSubobject<UAbilityResolverComponent>("AbilityResolverComponent");
@@ -18,6 +20,7 @@ void ALetheGameState::BeginPlay()
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->OnEnemyAbilityActivated.RemoveAll(this);
+	AbilityResolverComponent->OnAllEnemyAbilityResolved.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -27,9 +30,19 @@ void ALetheGameState::GoEnemyMovePhase()
 	SetPhase(EPhaseState::EnemyMovePhase);
 }
 
-void ALetheGameState::GoDrawPhase()
+void ALetheGameState::GoPlayerPhase()
 {
-	SetPhase(EPhaseState::DrawPhase);
+	// 전투에 참여 중인 적들을 확인합니다.
+	RebuildCurrentInBattleEnemies();
+	
+	if (CurrentInBattleEnemies.IsEmpty())
+	{
+		SetPhase(EPhaseState::PlayerMovePhase);
+	}
+	else
+	{
+		SetPhase(EPhaseState::DrawPhase);
+	}
 }
 
 void ALetheGameState::GoPlayerTurnPhase()
@@ -37,20 +50,27 @@ void ALetheGameState::GoPlayerTurnPhase()
 	SetPhase(EPhaseState::PlayerTurnPhase);
 }
 
-void ALetheGameState::GoEnemyTurnPhase()
+void ALetheGameState::RequestTurnEnd()
 {
-	SetPhase(EPhaseState::EnemyTurnPhase);
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		SetPhase(EPhaseState::EnemyMovePhase);
+	}
+	else if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	{
+		SetPhase(EPhaseState::EnemyTurnPhase);
+	}
 }
 
-void ALetheGameState::RegisterEnemy(AActor* InEnemyAI)
+void ALetheGameState::RegisterEnemy(AActor* Enemy)
 {
-	RegisteredEnemies.Emplace(InEnemyAI);
-	PendingMoveEnemies.Emplace(InEnemyAI);
+	RegisteredEnemies.Emplace(Enemy);
+	PendingMoveEnemies.Emplace(Enemy);
 }
 
-void ALetheGameState::RemovePendingEnemyMove(AActor* InEnemyAI)
+void ALetheGameState::RemovePendingEnemyMove(AActor* Enemy)
 {
-	PendingMoveEnemies.Remove(InEnemyAI);
+	PendingMoveEnemies.Remove(Enemy);
 
 	if (PendingMoveEnemies.IsEmpty())
 	{
@@ -60,45 +80,71 @@ void ALetheGameState::RemovePendingEnemyMove(AActor* InEnemyAI)
 
 void ALetheGameState::OnAllEnemyAbilityResolved()
 {
-	if (CurrentTurnState == EPhaseState::EnemyMovePhase)
+	if (CurrentPhaseState == EPhaseState::EnemyMovePhase)
 	{
-		SetPhase(EPhaseState::DrawPhase);
+		GoPlayerPhase();
 	}
-	if (CurrentTurnState == EPhaseState::EnemyTurnPhase)
+	else if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
-		PendingMoveEnemies = RegisteredEnemies;
-		SetPhase(EPhaseState::EnemyMovePhase);
+		GoEnemyMovePhase();
 	}
 }
 
 void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 {
-	const EPhaseState OldPhase = CurrentTurnState;
+	const EPhaseState OldPhase = CurrentPhaseState;
 	if (OldPhase == NewPhase)
 	{
 		return;
 	}
 	
-	CurrentTurnState = NewPhase;
+	CurrentPhaseState = NewPhase;
 
-	if (CurrentTurnState == EPhaseState::EnemyMovePhase)
+	if (CurrentPhaseState == EPhaseState::EnemyMovePhase)
 	{
-		// MoveConsumed 태그를 제거한 후 AIController의 SelectAbility 로직이 시작될 수 있도록 순서 보장을 위해 분리된 콜백을 호출합니다.
+		// MoveConsumed 태그를 제거한 후 AIController의 SelectAbility 로직이 시작될 수 있도록, 순서 보장을 위해 분리된 콜백을 호출합니다.
 		OnRoundStartedDelegate.Broadcast();
+		PendingMoveEnemies = RegisteredEnemies;
 	}
 	
-	OnChangeTurnStateDelegate.Broadcast(OldPhase, CurrentTurnState);
+	OnChangePhaseStateDelegate.Broadcast(OldPhase, CurrentPhaseState);
 	
-	if (CurrentTurnState == EPhaseState::EnemyTurnPhase)
+	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
 		AbilityResolverComponent->SortEnemyAbilityActivationData();
 		AbilityResolverComponent->StartActivateEnemyAbility();
 	}
 }
 
-EPhaseState ALetheGameState::GetTurnPhase() const
+void ALetheGameState::RebuildCurrentInBattleEnemies()
 {
-	return CurrentTurnState;
+	CurrentInBattleEnemies.Reset();
+	for (const auto& Enemy : RegisteredEnemies)
+	{
+		if (!Enemy.IsValid())
+		{
+			continue;
+		}
+		
+		const APawn* EnemyPawn = Cast<APawn>(Enemy.Get());
+		if (!EnemyPawn)
+		{
+			continue;
+		}
+
+		if (ALetheAIController* AIController = EnemyPawn->GetController<ALetheAIController>())
+		{
+			if (AIController->IsPlayerCharacterInDetectionRange())
+			{
+				CurrentInBattleEnemies.Emplace(Enemy.Get());
+			}
+		}
+	}
+}
+
+EPhaseState ALetheGameState::GetPhaseState() const
+{
+	return CurrentPhaseState;
 }
 
 void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const

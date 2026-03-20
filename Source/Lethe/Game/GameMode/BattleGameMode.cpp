@@ -102,11 +102,11 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		// 추후 Room마다 하나씩 스폰하거나, 좌표를 랜덤하게 찍는 함수 정도만 구현하면 될 것 같습니다.
 		constexpr TStaticArray<FCubeCoord, 5> EnemySpawnCoords =
 		{
-			FCubeCoord(0, 0, 0),
-			FCubeCoord(-1, 1, 0),
-			FCubeCoord(0, -1, 1),
-			FCubeCoord(-2, 2, 0),
-			FCubeCoord(0, -2, 2),
+			FCubeCoord(3, 0, -3),
+			FCubeCoord(2, 1, -3),
+			FCubeCoord(3, -1, -2),
+			FCubeCoord(1, 2, -3),
+			FCubeCoord(3, -2, -1),
 		};
 
 		if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())

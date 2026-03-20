@@ -25,6 +25,8 @@ void UCardPanelWidget::NativeDestruct()
 {
 	CardLayoutManager = nullptr;
 	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	CardUseSection->OnMouseButtonDown.Unbind();
+	CardUseSection->OnMouseButtonUp.Unbind();
 	
 	Super::NativeDestruct();
 }
@@ -380,7 +382,7 @@ void UCardPanelWidget::StartViewCardDetail(const UCardWidget* CardWidget) const
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase || CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
 

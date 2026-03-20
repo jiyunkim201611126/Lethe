@@ -24,7 +24,7 @@ void UGASManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			LetheGameState->OnChangeTurnStateDelegate.RemoveAll(this);
+			LetheGameState->OnChangePhaseStateDelegate.RemoveAll(this);
 		}
 	}
 	
@@ -95,7 +95,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnRoundStartedDelegate.AddUObject(this, &ThisClass::OnRoundStarted);
-		LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnChangePhaseStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
 

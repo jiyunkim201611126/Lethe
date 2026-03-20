@@ -9,6 +9,7 @@
 #include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
+class AEnemyCharacterBase;
 enum class ETeamSide : uint8;
 class ATile;
 class UStageInitData;

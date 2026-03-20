@@ -15,7 +15,7 @@ enum class EBFSType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FAbilityRange
+struct FBFSRange
 {
 	GENERATED_BODY()
 

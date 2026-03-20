@@ -48,8 +48,15 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	}
 
 	ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
-	if (!LetheGameState || LetheGameState->GetTurnPhase() != EPhaseState::PlayerTurnPhase)
+	if (!LetheGameState)
 	{
+		return;
+	}
+
+	EPhaseState CurrentPhaseState = LetheGameState->GetPhaseState();
+	if (CurrentPhaseState != EPhaseState::PlayerMovePhase && CurrentPhaseState != EPhaseState::PlayerTurnPhase)
+	{
+		// 플레이어의 턴이 아니라면 얼리리턴합니다.
 		return;
 	}
 
@@ -233,7 +240,7 @@ void ALethePlayerController::BeginPlay()
 		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
 		{
 			AbilityResolverComponent->OnUseCardResolved.BindWeakLambda(this,
-				[this](const int32 HandIndex , const bool bSuccess)
+				[this](const int32 HandIndex, const bool bSuccess)
 				{
 					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
 				});
@@ -244,6 +251,14 @@ void ALethePlayerController::BeginPlay()
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	OnNumberKeyPressedDelegate.Unbind();
+	
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
+		{
+			AbilityResolverComponent->OnUseCardResolved.Unbind();
+		}
+	}
 	Super::EndPlay(EndPlayReason);
 }
 

@@ -9,7 +9,7 @@
 class ATile;
 class IHighlightInterface;
 struct FCubeCoord;
-struct FAbilityRange;
+struct FBFSRange;
 
 // 로컬 변수로만 활용하기 때문에 멤버 변수를 Raw 포인터로 사용합니다.
 USTRUCT()
@@ -44,7 +44,7 @@ public:
 
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	AActor* GetActorOnTileUnderCursor() const;
-	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FAbilityRange& InRange) const;
+	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const;
 
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;

@@ -26,7 +26,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		if (LetheGameState.IsValid())
 		{
-			LetheGameState->OnChangeTurnStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
+			LetheGameState->OnChangePhaseStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
 		}
 		
 		bInitialized = true;
@@ -55,7 +55,7 @@ void UCardPanelWidgetController::BeginDestroy()
 
 	if (LetheGameState.IsValid())
 	{
-		LetheGameState->OnChangeTurnStateDelegate.RemoveAll(this);
+		LetheGameState->OnChangePhaseStateDelegate.RemoveAll(this);
 	}
 }
 
@@ -81,14 +81,6 @@ void UCardPanelWidgetController::GoPlayerTurnPhase() const
 	}
 }
 
-void UCardPanelWidgetController::GoEnemyTurnPhase() const
-{
-	if (LetheGameState.IsValid())
-	{
-		LetheGameState->GoEnemyTurnPhase();
-	}
-}
-
 bool UCardPanelWidgetController::RequestTurnEnd() const
 {
 	if (LetheGameState.IsValid() && LethePlayerController)
@@ -97,7 +89,7 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 		{
 			// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 			LethePlayerController->SetCardSelected(false);
-			GoEnemyTurnPhase();
+			LetheGameState->RequestTurnEnd();
 			return true;
 		}
 	}

@@ -15,12 +15,12 @@ class LETHE_API ULetheGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 public:
-	FAbilityRange GetAbilityRange() const;
+	FBFSRange GetAbilityRange() const;
 
 protected:
 	// Ability 범위입니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	FAbilityRange AbilityRange;
+	FBFSRange AbilityRange;
 
 #if WITH_EDITOR
 public:

@@ -317,40 +317,45 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
-	ATile* HitTile = GetTileUnderCursor();
-	if (HitTile && TileSelector && OwnerASC)
+	if (TileSelector && OwnerASC)
 	{
-		// CardTag에 해당하는 CardAbilitySpec을 모두 가져옵니다.
-		TArray<FGameplayAbilitySpec*> AbilitySpecs;
-		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
-		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
-
-		// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
-		// TODO: 현재는 첫번째 거로 사용합니다.
-	
-		if (!AbilitySpecs.IsEmpty())
+		// 카드 사용 시엔 검출된 타일 위에 반드시 캐릭터가 있어야 합니다.
+		FTileAndActor TileAndActor;
+		TileSelector->GetTileAndActorUnderCursor(TileAndActor);
+		if (TileAndActor.Tile && TileAndActor.Actor)
 		{
-			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
-			{
-				TArray<ATile*> OutTiles;
-				TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
-				
-				// Ability 사용 범위 내의 타일을 선택한 경우 들어가는 분기입니다.
-				if (OutTiles.Contains(HitTile))
-				{
-					// Ability가 사용될 수 있도록 이벤트 데이터를 생성합니다.
-					FAbilityActivationData AbilityActivationData;
-					AbilityActivationData.Index = InHandIndex;
-					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-					AbilityActivationData.AbilityTag = CardTag;
-					AbilityActivationData.AbilityOwnerASC = OwnerASC;
-					AbilityActivationData.TargetTile = HitTile;
+			// CardTag에 해당하는 CardAbilitySpec을 모두 가져옵니다.
+			TArray<FGameplayAbilitySpec*> AbilitySpecs;
+			const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
+			OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
 
-					if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+			// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
+			// TODO: 현재는 첫번째 거로 사용합니다.
+	
+			if (!AbilitySpecs.IsEmpty())
+			{
+				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
+				{
+					TArray<ATile*> OutTiles;
+					TileSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
+				
+					// Ability 사용 범위 내의 타일을 선택한 경우 들어가는 분기입니다.
+					if (OutTiles.Contains(TileAndActor.Tile))
 					{
-						// 카드 사용을 시작합니다.
-						LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
-						return;
+						// Ability가 사용될 수 있도록 이벤트 데이터를 생성합니다.
+						FAbilityActivationData AbilityActivationData;
+						AbilityActivationData.Index = InHandIndex;
+						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+						AbilityActivationData.AbilityTag = CardTag;
+						AbilityActivationData.AbilityOwnerASC = OwnerASC;
+						AbilityActivationData.TargetTile = TileAndActor.Tile;
+
+						if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+						{
+							// 카드 사용을 시작합니다.
+							LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+							return;
+						}
 					}
 				}
 			}

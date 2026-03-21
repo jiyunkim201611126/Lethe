@@ -124,6 +124,11 @@ void UCardWidget::SetTargetTransform(const FWidgetTransform& InTransform)
 
 void UCardWidget::MouseHovered(const bool bInHovered)
 {
+	if (bMouseHovered == bInHovered)
+	{
+		return;
+	}
+	
 	bMouseHovered = bInHovered;
 	SetTargetTransform(TargetTransform);
 }

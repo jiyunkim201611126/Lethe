@@ -14,25 +14,10 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Assets/Character/Glasses/Animation/AM_Glasses_Attack.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Assets/Character/Glasses/Animation/AM_Glasses_Attack.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/GA_Move.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/GA_Move.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AnimNotify/AN_EndUseCard.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Game/BP_BattleGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Game/BP_BattleGameMode.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Game/BP_LetheGameState.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Game/BP_LetheGameState.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/BattleWidget/WBP_Card.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/BattleWidget/WBP_Card.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/LetheGameplayTags.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardWidget.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +31,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://29" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://37" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DeformerGraph/Source/OptimusCore/Private/DataInterfaces/OptimusDataInterfaceRawBuffer.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -701,7 +686,7 @@
       <workItem from="1773845465215" duration="4935000" />
       <workItem from="1773929975706" duration="4260000" />
       <workItem from="1774022627698" duration="8329000" />
-      <workItem from="1774080372724" duration="28016000" />
+      <workItem from="1774080372724" duration="31998000" />
     </task>
     <servers />
   </component>
@@ -727,6 +712,11 @@
           <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
           <option name="timeStamp" value="3" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp</url>
+          <line>256</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

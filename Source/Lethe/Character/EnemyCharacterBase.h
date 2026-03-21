@@ -13,7 +13,11 @@ class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
 	GENERATED_BODY()
 
 public:
-	void SetEnemyAbilityPriority(const int32 InPriority) const;
+	void SetEnemyAbilityPriority(const int32 InPriority);
+	int32 GetEnemyAbilityPriority() const;
+
+	void ProcessPlanPhase() const;
+	void ProcessTelegraphPlan() const;
 
 	const FBFSRange& GetAbilityRange() const;
 
@@ -31,4 +35,7 @@ protected:
 	// 캐릭터의 경계 범위입니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
 	FBFSRange DetectionRange;
+
+private:
+	int32 AbilityPriority = INT_MAX;
 };

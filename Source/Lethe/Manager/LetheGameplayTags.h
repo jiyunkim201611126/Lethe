@@ -53,9 +53,8 @@ struct FLetheGameplayTags
 	//~ End of CharacterState
 
 	//~ Begin StateTree Event
-	FGameplayTag Event_StateTree_MovePhaseStarted;
-	FGameplayTag Event_StateTree_DrawPhaseStarted;
-	FGameplayTag Event_StateTree_OwnTurnPhaseStarted;
+	FGameplayTag Event_StateTree_PlanPhaseStarted;
+	FGameplayTag Event_StateTree_TelegraphPlan;
 	//~ End of StateTree Event
 
 	//~ Begin Montage Event

@@ -382,7 +382,7 @@ void UCardPanelWidget::StartViewCardDetail(const UCardWidget* CardWidget) const
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase || CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
 
@@ -406,8 +406,6 @@ void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPhaseState OldState, con
 	{
 	case EPhaseState::DrawPhase:
 		OnDrawPhaseStarted();
-		break;
-	case EPhaseState::PlayerTurnPhase:
 		break;
 	default:
 		break;

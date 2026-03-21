@@ -111,7 +111,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 
 		if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
 		{
-			int32 EnemyIndex = 0;
+			int32 EnemyPriority = 0;
 			for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
 			{
 				FActorSpawnParameters SpawnParameters;
@@ -122,18 +122,17 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 					if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
 					{
 						SpawnedEnemy->SetLocationOnTile(SpawnLocation);
-						SpawnedEnemy->SetEnemyAbilityPriority(EnemyIndex);
-						EnemyIndex += 100;
+						SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
 
 						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
 						TileManagerSubsystem->ReserveTile(SpawnedEnemy, Tile);
 
 						LetheGameState->RegisterEnemy(SpawnedEnemy);
+						EnemyPriority += 100;
 					}
 				}
 			}
-			
-			LetheGameState->GoEnemyMovePhase();
+			LetheGameState->GoEnemyPlanningPhase();
 		}
 	}
 }

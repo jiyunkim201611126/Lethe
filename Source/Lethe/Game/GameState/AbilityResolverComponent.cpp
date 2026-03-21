@@ -104,6 +104,11 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	bIsActivatingPlayerAbility = false;
 }
 
+void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& ActivationData) const
+{
+	TryActivateAbility(&ActivationData);
+}
+
 void UAbilityResolverComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
 	EnemyAbilityActivationData.Emplace(ActivationData);

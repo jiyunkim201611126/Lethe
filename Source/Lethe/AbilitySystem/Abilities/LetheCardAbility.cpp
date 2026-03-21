@@ -262,7 +262,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndUseCard))
 	{
-		if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
 			LetheGameState->OnAbilityEnded(true);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
@@ -272,7 +272,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 
 void ULetheCardAbility::ActiveFailed()
 {
-	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnAbilityEnded(false);
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);

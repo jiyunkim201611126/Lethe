@@ -2,7 +2,7 @@
 
 #include "LetheGameState.h"
 
-#include "Lethe/Controller/AIController/LetheAIController.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 
 ALetheGameState::ALetheGameState()
 {
@@ -14,7 +14,7 @@ void ALetheGameState::BeginPlay()
 	Super::BeginPlay();
 	
 	AbilityResolverComponent->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
-	AbilityResolverComponent->OnAllEnemyAbilityResolved.BindUObject(this, &ThisClass::OnAllEnemyAbilityResolved);
+	AbilityResolverComponent->OnAllEnemyAbilityResolved.BindUObject(this, &ThisClass::GoEnemyPlanningPhase);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -25,24 +25,19 @@ void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ALetheGameState::GoEnemyMovePhase()
+void ALetheGameState::RegisterEnemy(AEnemyCharacterBase* Enemy)
 {
-	SetPhase(EPhaseState::EnemyMovePhase);
+	RegisteredEnemies.Emplace(Enemy);
 }
 
-void ALetheGameState::GoPlayerPhase()
+void ALetheGameState::GoEnemyPlanningPhase()
 {
-	// 전투에 참여 중인 적들을 확인합니다.
-	RebuildCurrentInBattleEnemies();
-	
-	if (CurrentInBattleEnemies.IsEmpty())
-	{
-		SetPhase(EPhaseState::PlayerMovePhase);
-	}
-	else
-	{
-		SetPhase(EPhaseState::DrawPhase);
-	}
+	SetPhase(EPhaseState::EnemyPlanningPhase);
+}
+
+void ALetheGameState::GoDrawPhase()
+{
+	SetPhase(EPhaseState::DrawPhase);
 }
 
 void ALetheGameState::GoPlayerTurnPhase()
@@ -50,44 +45,9 @@ void ALetheGameState::GoPlayerTurnPhase()
 	SetPhase(EPhaseState::PlayerTurnPhase);
 }
 
-void ALetheGameState::RequestTurnEnd()
+void ALetheGameState::GoEnemyTurnPhase()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
-	{
-		SetPhase(EPhaseState::EnemyMovePhase);
-	}
-	else if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
-	{
-		SetPhase(EPhaseState::EnemyTurnPhase);
-	}
-}
-
-void ALetheGameState::RegisterEnemy(AActor* Enemy)
-{
-	RegisteredEnemies.Emplace(Enemy);
-	PendingMoveEnemies.Emplace(Enemy);
-}
-
-void ALetheGameState::RemovePendingEnemyMove(AActor* Enemy)
-{
-	PendingMoveEnemies.Remove(Enemy);
-
-	if (PendingMoveEnemies.IsEmpty())
-	{
-		AbilityResolverComponent->StartActivateEnemyAbility();
-	}
-}
-
-void ALetheGameState::OnAllEnemyAbilityResolved()
-{
-	if (CurrentPhaseState == EPhaseState::EnemyMovePhase)
-	{
-		GoPlayerPhase();
-	}
-	else if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
-	{
-		GoEnemyMovePhase();
-	}
+	SetPhase(EPhaseState::EnemyTurnPhase);
 }
 
 void ALetheGameState::SetPhase(const EPhaseState NewPhase)
@@ -99,15 +59,23 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	}
 	
 	CurrentPhaseState = NewPhase;
-
-	if (CurrentPhaseState == EPhaseState::EnemyMovePhase)
-	{
-		// MoveConsumed 태그를 제거한 후 AIController의 SelectAbility 로직이 시작될 수 있도록, 순서 보장을 위해 분리된 콜백을 호출합니다.
-		OnRoundStartedDelegate.Broadcast();
-		PendingMoveEnemies = RegisteredEnemies;
-	}
 	
 	OnChangePhaseStateDelegate.Broadcast(OldPhase, CurrentPhaseState);
+
+	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
+	{
+		RegisteredEnemies.Sort([](const TWeakObjectPtr<AEnemyCharacterBase>& A, const TWeakObjectPtr<AEnemyCharacterBase>& B)
+			{
+				if (A.IsValid() && B.IsValid())
+				{
+					return A->GetEnemyAbilityPriority() < B->GetEnemyAbilityPriority();
+				}
+				return false;
+			});
+		
+		CurrentEnemyIndex = 0;
+		ProcessCurrentEnemyPlan();
+	}
 	
 	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
@@ -116,30 +84,26 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	}
 }
 
-void ALetheGameState::RebuildCurrentInBattleEnemies()
+void ALetheGameState::ProcessCurrentEnemyPlan()
 {
-	CurrentInBattleEnemies.Reset();
-	for (const auto& Enemy : RegisteredEnemies)
+	if (!RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
 	{
-		if (!Enemy.IsValid())
-		{
-			continue;
-		}
-		
-		const APawn* EnemyPawn = Cast<APawn>(Enemy.Get());
-		if (!EnemyPawn)
-		{
-			continue;
-		}
-
-		if (ALetheAIController* AIController = EnemyPawn->GetController<ALetheAIController>())
-		{
-			if (AIController->IsPlayerCharacterInDetectionRange())
-			{
-				CurrentInBattleEnemies.Emplace(Enemy.Get());
-			}
-		}
+		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
+		bIsEnemyPlanning = false;
+		GoDrawPhase();
+		return;
 	}
+
+	const TWeakObjectPtr<AEnemyCharacterBase>& CurrentEnemy = RegisteredEnemies[CurrentEnemyIndex];
+	if (!CurrentEnemy.IsValid())
+	{
+		++CurrentEnemyIndex;
+		ProcessCurrentEnemyPlan();
+		return;
+	}
+
+	bIsEnemyPlanning = true;
+	CurrentEnemy->ProcessPlanPhase();
 }
 
 EPhaseState ALetheGameState::GetPhaseState() const
@@ -152,6 +116,11 @@ void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationDat
 	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData);
 }
 
+void ALetheGameState::ActivateEnemyAbility(FAbilityActivationData& ActivationData) const
+{
+	AbilityResolverComponent->ActivateEnemyAbility(ActivationData);
+}
+
 void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const
 {
 	AbilityResolverComponent->AddEnemyAbilityActivationData(ActivationData);
@@ -162,9 +131,31 @@ void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const
 	OnActivateEnemyAbilityDelegate.Broadcast(AbilityInstigator);
 }
 
-void ALetheGameState::OnAbilityEnded(const bool bSuccess) const
+void ALetheGameState::OnAbilityEnded(const bool bSuccess)
 {
-	AbilityResolverComponent->OnAbilityEnded(bSuccess);
+	if (bIsEnemyPlanning)
+	{
+		if (bSuccess)
+		{
+			if (RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
+			{
+				RegisteredEnemies[CurrentEnemyIndex]->ProcessTelegraphPlan();
+			}
+		}
+
+		// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle,
+			[this]()
+			{
+				++CurrentEnemyIndex;
+				ProcessCurrentEnemyPlan();
+			}, 0.5f, false);
+	}
+	else
+	{
+		AbilityResolverComponent->OnAbilityEnded(bSuccess);
+	}
 }
 
 UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const

@@ -7,27 +7,20 @@
 #include "GameFramework/GameStateBase.h"
 #include "LetheGameState.generated.h"
 
+class AEnemyCharacterBase;
 class ATile;
 
-/**
- * 페이즈가 1바퀴 도는 것을 Round라고 지칭하며, EnemyMovePhase가 Round의 시작 첫 Phase입니다.
- * PlayerMovePhase는 EnemyMovePhase가 끝난 뒤 비전투 상황일 때 돌입합니다.
- * 만약 EnemyMovePhase가 끝난 후 전투 상황이라면 PlayerMovePhase를 스킵하고 DrawPhase로 돌입합니다.
- * 이 경우 플레이어는 PlayerTurnPhase에 캐릭터들을 움직일 수 있습니다.
- */
 UENUM()
 enum class EPhaseState : uint8
 {
 	None,
-	EnemyMovePhase,
-	PlayerMovePhase,
+	EnemyPlanningPhase,
 
 	DrawPhase,
 	PlayerTurnPhase,
 	EnemyTurnPhase,
 };
 
-DECLARE_MULTICAST_DELEGATE(FOnRoundStartedSignature);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
 
@@ -39,25 +32,23 @@ class LETHE_API ALetheGameState : public AGameStateBase
 public:
 	ALetheGameState();
 
-	void GoEnemyMovePhase();
-	void GoPlayerPhase();
+	void RegisterEnemy(AEnemyCharacterBase* Enemy);
+
+	void GoEnemyPlanningPhase();
+	void GoDrawPhase();
 	void GoPlayerTurnPhase();
-
-	void RequestTurnEnd();
-
-	void RegisterEnemy(AActor* Enemy);
-	void RemovePendingEnemyMove(AActor* Enemy);
-	void OnAllEnemyAbilityResolved();
+	void GoEnemyTurnPhase();
 
 	EPhaseState GetPhaseState() const;
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
+	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 
 	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
 
 	UFUNCTION(BlueprintCallable)
-	void OnAbilityEnded(const bool bSuccess) const;
+	void OnAbilityEnded(const bool bSuccess);
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsProgressingPlayerAbility() const;
@@ -71,10 +62,9 @@ protected:
 private:
 	void SetPhase(const EPhaseState NewPhase);
 
-	void RebuildCurrentInBattleEnemies();
+	void ProcessCurrentEnemyPlan();
 
 public:
-	FOnRoundStartedSignature OnRoundStartedDelegate;
 	FOnChangePhaseStateSignature OnChangePhaseStateDelegate;
 	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 
@@ -84,10 +74,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 
-	// 현재 맵에 스폰된 모든 적들입니다.
-	TSet<TWeakObjectPtr<AActor>> RegisteredEnemies;
-	// MoveAbility 예약을 아직 걸지 않은 적들입니다.
-	TSet<TWeakObjectPtr<AActor>> PendingMoveEnemies;
-	// 현재 전투에 참여 중인 적들입니다.
-	TSet<TWeakObjectPtr<AActor>> CurrentInBattleEnemies;
+	// 우선순위대로 정렬되는 현재 스폰된 적들입니다.
+	TArray<TWeakObjectPtr<AEnemyCharacterBase>> RegisteredEnemies;
+	int32 CurrentEnemyIndex = 0;
+	uint8 bIsEnemyPlanning : 1 = false;
 };

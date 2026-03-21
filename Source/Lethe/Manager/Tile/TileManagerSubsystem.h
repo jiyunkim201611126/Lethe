@@ -56,7 +56,7 @@ public:
 
 	bool CanMoveToTileForPlayerCharacter(ATile* Tile) const;
 	UFUNCTION(BlueprintPure)
-	bool CanMoveToTileForEnemyAI(ATile* Tile) const;
+	bool CanMoveToTileForEnemyAI(const ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord);
 
@@ -101,8 +101,7 @@ private:
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
-	// Enemy AI가 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 Enemy AI가 동일한 타일을 선택하지 않도록 막는 역할입니다.
-	TSet<TWeakObjectPtr<ATile>> EnemyReservedTiles;
+	// 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 캐릭터가 동일한 타일을 선택하지 않도록 막는 역할입니다.
 	TSet<TWeakObjectPtr<ATile>> PlayerCharacterReservedTiles;
 };
 

@@ -94,7 +94,6 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnRoundStartedDelegate.AddUObject(this, &ThisClass::OnRoundStarted);
 		LetheGameState->OnChangePhaseStateDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 }
@@ -121,7 +120,26 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnRoundStarted() const
+void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+{
+	if (NewPhase == EPhaseState::EnemyPlanningPhase)
+	{
+		OnPlanPhaseStarted();
+	}
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
+	if (OldPhase == MyPhaseState)
+	{
+		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	}
+	else if (NewPhase == MyPhaseState)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
+	}
+}
+
+void UGASManagerComponent::OnPlanPhaseStarted() const
 {
 	/**
 	 * 모든 ASC에게서 MoveConsumed 태그를 제거합니다.
@@ -143,19 +161,5 @@ void UGASManagerComponent::OnRoundStarted() const
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetManaRecoveryAttribute()));
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetCostRecoveryAttribute()));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
-	}
-}
-
-void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
-{
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
-	if (OldPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
-	}
-	else if (NewPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}
 }

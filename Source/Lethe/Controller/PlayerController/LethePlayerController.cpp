@@ -54,7 +54,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	}
 
 	EPhaseState CurrentPhaseState = LetheGameState->GetPhaseState();
-	if (CurrentPhaseState != EPhaseState::PlayerMovePhase && CurrentPhaseState != EPhaseState::PlayerTurnPhase)
+	if (CurrentPhaseState != EPhaseState::PlayerTurnPhase)
 	{
 		// 플레이어의 턴이 아니라면 얼리리턴합니다.
 		return;

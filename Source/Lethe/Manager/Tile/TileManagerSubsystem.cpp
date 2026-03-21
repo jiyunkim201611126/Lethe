@@ -4,7 +4,6 @@
 
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
-#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
@@ -159,9 +158,8 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 				continue;
 			}
 
-			// Enemy AI 전용 함수기 때문에, 다른 Enemy AI가 점유한 타일이면 스킵합니다.
-			// TODO: 추후 공용으로 변경하거나 다른 의도(그냥 무시하고 최단 경로 확인하기 등)로 확장하게 되면 매개변수로 이 조건을 사용할지 말지 결정하는 등의 방식이 필요합니다.
-			if (EnemyReservedTiles.Contains(GetTile(NextCoord)))
+			// 타일 위에 무언가 있다면 해당 경로로는 이동할 수 없습니다.
+			if (NextCoord != TargetCoord && GetActorOnTile(GetTile(NextCoord)))
 			{
 				continue;
 			}
@@ -353,11 +351,6 @@ void UTileManagerSubsystem::ReserveTile(const AActor* Character, ATile* Tile)
 		PlayerCharacterReservedTiles.Remove(CurrentTile);
 		PlayerCharacterReservedTiles.Emplace(Tile);
 	}
-	else
-	{
-		EnemyReservedTiles.Remove(CurrentTile);
-		EnemyReservedTiles.Emplace(Tile);
-	}
 }
 
 void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)
@@ -367,9 +360,6 @@ void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)
 	case ETeamSide::Player:
 		PlayerCharacterReservedTiles.Empty();
 		break;
-	case ETeamSide::Enemy:
-		EnemyReservedTiles.Empty();
-		break;
 	default:
 		break;
 	}
@@ -377,18 +367,14 @@ void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)
 
 bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(ATile* Tile) const
 {
+	// 타일 위에 무언가 있다면 이미 입력 단계에서 걸러졌으므로, 여기선 확인하지 않고 ReserveTile만 검사합니다.
 	return !PlayerCharacterReservedTiles.Contains(Tile);
 }
 
-bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(ATile* Tile) const
+bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(const ATile* Tile) const
 {
-	const bool bIsReserved = EnemyReservedTiles.Contains(Tile);
-	bool bIsPlayerCharacter = false;
-	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
-	{
-		bIsPlayerCharacter = ActorOnTile->Implements<UPlayableCharacterInterface>();
-	}
-	return !bIsReserved && !bIsPlayerCharacter;
+	// 타일 위에 아무것도 없다면 이동할 수 있습니다.
+	return !GetActorOnTile(Tile);
 }
 
 ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord)

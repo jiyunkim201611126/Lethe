@@ -59,7 +59,7 @@ struct FLetheGameplayTags
 
 	//~ Begin Montage Event
 	FGameplayTag Event_Montage_ApplyEffect;
-	FGameplayTag Event_Montage_EndUseCard;
+	FGameplayTag Event_Montage_EndAbility;
 	//~ End of Montage Event
 
 private:

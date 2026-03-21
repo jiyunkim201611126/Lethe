@@ -184,14 +184,14 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
 	WaitApplyEffectEventTask->ReadyForActivation();
 
-	UAbilityTask_WaitGameplayEvent* WaitEndUseCardEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+	UAbilityTask_WaitGameplayEvent* WaitEndAbilityEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 		this,
-		LetheGameplayTags.Event_Montage_EndUseCard,
+		LetheGameplayTags.Event_Montage_EndAbility,
 		nullptr,
 		true,
 		true);
-	WaitEndUseCardEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-	WaitEndUseCardEventTask->ReadyForActivation();
+	WaitEndAbilityEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+	WaitEndAbilityEventTask->ReadyForActivation();
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageAndWaitTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
@@ -218,32 +218,37 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		return false;
 	}
 
+	const AActor* SourceActor = GetAvatarActorFromActorInfo();
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CachedTargetActor);
 	const UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-	if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))
+	if (!SourceActor)
 	{
 		return false;
 	}
-
-	if (const AActor* SourceActor = GetAvatarActorFromActorInfo())
+	
+	if (SourceActor->Implements<UPlayableCharacterInterface>())
 	{
-		// SourceActor가 플레이어 캐릭터인 경우 들어가는 분기입니다.
-		if (SourceActor->Implements<UPlayableCharacterInterface>())
+		// SourceActor가 플레이어 캐릭터인 경우 들어오는 분기입니다.
+		if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))
 		{
-			// Enemy는 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
-			const bool bCanUseByFloorGap = ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(this, SourceActor, CachedTargetActor.Get(), AbilityRange.FloorGap);
-			if (bCanUseByFloorGap && CheckCost(Handle, ActorInfo))
-			{
-				// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
-				CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
-				return true;
-			}
+			return false;
 		}
-		else
+		
+		// 적은 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
+		const bool bCanUseByFloorGap = ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(this, SourceActor, CachedTargetActor.Get(), AbilityRange.FloorGap);
+		if (bCanUseByFloorGap && CheckCost(Handle, ActorInfo))
 		{
+			// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
+			CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
 			return true;
 		}
+	}
+	else
+	{
+		// SourceActor가 적 캐릭터인 경우 들어오는 분기입니다.
+		// 이 경우 Target Tile 위에 캐릭터가 없더라도, 애니메이션이나 나이아가라를 재생하기 위해 더미 액터를 올려두어 진행하기 때문에 true를 반환합니다.
+		return true;
 	}
 	return false;
 }
@@ -254,13 +259,13 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	
 	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_ApplyEffect))
 	{
-		if (CachedTargetActor.IsValid())
+		if (CachedTargetActor.IsValid() && CachedTargetActor->Implements<UAbilitySystemInterface>())
 		{
 			ApplyAllEffects(CachedTargetActor.Get());
 			CachedTargetActor.Reset();
 		}
 	}
-	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndUseCard))
+	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
 	{
 		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{

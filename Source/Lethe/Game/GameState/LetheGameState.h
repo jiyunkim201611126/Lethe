@@ -42,6 +42,7 @@ public:
 	EPhaseState GetPhaseState() const;
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
+	
 	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 
@@ -69,6 +70,13 @@ public:
 	FOnChangePhaseStateSignature OnChangePhaseStateDelegate;
 	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
 
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> DummyActorClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	float EnemyAbilityDelayTime = 0.5f;
+
 private:
 	EPhaseState CurrentPhaseState = EPhaseState::None;
 
@@ -85,4 +93,6 @@ private:
 	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
 	 */
 	TArray<FAbilityActivationData> ReservedEnemyAbilityActivationData;
+
+	FTimerHandle PlanTimerHandle;
 };

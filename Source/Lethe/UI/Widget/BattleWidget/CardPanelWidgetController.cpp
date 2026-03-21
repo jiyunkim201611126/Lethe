@@ -89,6 +89,7 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 		if (!LetheGameState->IsProgressingPlayerAbility())
 		{
 			LethePlayerController->SetCardSelected(false);
+			LethePlayerController->ResetSelectedCharacter();
 			LetheGameState->GoEnemyTurnPhase();
 			return true;
 		}

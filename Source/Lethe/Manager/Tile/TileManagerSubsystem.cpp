@@ -6,7 +6,6 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/Stage/StageData.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
 
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -346,11 +345,8 @@ bool UTileManagerSubsystem::FindPrioritizedPathTilesForAI(const ATile* StartTile
 void UTileManagerSubsystem::ReserveTile(const AActor* Character, ATile* Tile)
 {
 	const ATile* CurrentTile = GetTileUnderActor(Character);
-	if (Character->Implements<UPlayableCharacterInterface>())
-	{
-		PlayerCharacterReservedTiles.Remove(CurrentTile);
-		PlayerCharacterReservedTiles.Emplace(Tile);
-	}
+	PlayerCharacterReservedTiles.Remove(CurrentTile);
+	PlayerCharacterReservedTiles.Emplace(Tile);
 }
 
 void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)

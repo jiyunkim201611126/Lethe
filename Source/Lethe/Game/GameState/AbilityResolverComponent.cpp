@@ -13,6 +13,11 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 	PlayerAbilityActivationData.Reserve(MAX_HAND_COUNT);
 }
 
+void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
+{
+	DummyActor = InDummyActor;
+}
+
 void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -42,6 +47,7 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
 	while (!PlayerAbilityActivationData.IsEmpty())
 	{
+		CurrentActivationCharacterTeamSide = ETeamSide::Player;
 		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
 		HandlePlayerAbilityActivationResult(Result);
 		
@@ -78,7 +84,6 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 	{
 	case ETryAbilityActivationResult::Success:
 		bIsActivatingPlayerAbility = true;
-		CurrentActivationCharacterTeamSide = ETeamSide::Player;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
 		CurrentActivationCharacterTeamSide = ETeamSide::None;
@@ -126,6 +131,7 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 {
 	while (true)
 	{
+		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
 		HandleEnemyAbilityActivationResult(Result);
 
@@ -163,7 +169,6 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	switch (Result)
 	{
 	case ETryAbilityActivationResult::Success:
-		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
 		OnEnemyActivationQueueFinished.ExecuteIfBound();
@@ -221,21 +226,35 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 		
-		AActor* Target = TileManagerSubsystem->GetActorOnTile(ActivationData->TargetTile.Get());
-		ActivationData->Payload.Target = Target;
+		if (AActor* Target = TileManagerSubsystem->GetActorOnTile(ActivationData->TargetTile.Get()))
+		{
+			ActivationData->Payload.Target = Target;
+		}
+		else
+		{
+			if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
+			{
+				// 플레이어는 Tile 위에 대상이 없는 상태로 여기까지 왔다면 로직 오류입니다.
+				return ETryAbilityActivationResult::FailedLogicError;
+			}
+			
+			// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
+			const FVector DummyActorLocation = ActivationData->TargetTile.Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+			DummyActor->SetActorLocation(DummyActorLocation);
+			ActivationData->Payload.Target = DummyActor;
+		}
 	}
 	
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
-		switch (CurrentActivationCharacterTeamSide)
+		if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
 		{
-		case ETeamSide::Player:
 			return ETryAbilityActivationResult::FailedNotActivated;
-		default:
-			// Enemy는 코스트나 마나 등의 개념이 없으며, TargetActor가 없더라도 Ability를 발동하기 때문에 Ability 발동에 실패했다면 로직에 문제가 있는 상황입니다.
-			return ETryAbilityActivationResult::FailedLogicError;
 		}
+		
+		// Enemy는 코스트나 마나 등의 개념이 없으며, TargetActor가 없더라도 Ability를 발동하기 때문에 Ability 발동에 실패했다면 로직에 문제가 있는 상황입니다.
+		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
 	return ETryAbilityActivationResult::Success;

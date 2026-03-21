@@ -134,10 +134,9 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 						AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 						AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
 						AbilityActivationData.TargetTile = TileAndActor.Tile;
-
-						LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 						
 						TileManagerSubsystem->ReserveTile(SelectedCharacter.Get(), TileAndActor.Tile);
+						LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 					}
 				}
 				ResetSelectedCharacter();

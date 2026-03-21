@@ -12,6 +12,11 @@ ALetheGameState::ALetheGameState()
 void ALetheGameState::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AActor* DummyActor = GetWorld()->SpawnActor<AActor>(DummyActorClass))
+	{
+		AbilityResolverComponent->SetDummyActor(DummyActor);
+	}
 	
 	AbilityResolverComponent->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
 	AbilityResolverComponent->OnEnemyActivationQueueFinished.BindUObject(this, &ThisClass::OnEnemyExecutionQueueFinished);
@@ -19,6 +24,7 @@ void ALetheGameState::BeginPlay()
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	AbilityResolverComponent->SetDummyActor(nullptr);
 	AbilityResolverComponent->OnEnemyAbilityActivated.RemoveAll(this);
 	AbilityResolverComponent->OnEnemyActivationQueueFinished.Unbind();
 	
@@ -150,13 +156,16 @@ void ALetheGameState::OnAbilityEnded(const bool bSuccess)
 		}
 
 		// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle,
+		if (PlanTimerHandle.IsValid())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(PlanTimerHandle);
+		}
+		GetWorld()->GetTimerManager().SetTimer(PlanTimerHandle,
 			[this]()
 			{
 				++CurrentEnemyIndex;
 				ProcessCurrentEnemyPlan();
-			}, 0.5f, false);
+			}, EnemyAbilityDelayTime, false);
 	}
 	else
 	{

@@ -41,6 +41,8 @@ class LETHE_API UAbilityResolverComponent : public UActorComponent
 public:
 	UAbilityResolverComponent();
 
+	void SetDummyActor(AActor* InDummyActor);
+
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData);
 	void StartActivatePlayerAbility();
 	void HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result);
@@ -70,6 +72,9 @@ public:
 	FOnEnemyActivationQueueFinished OnEnemyActivationQueueFinished;
 
 private:
+	UPROPERTY()
+	TObjectPtr<AActor> DummyActor;
+	
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.
 	// TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	TArray<FAbilityActivationData> PlayerAbilityActivationData;

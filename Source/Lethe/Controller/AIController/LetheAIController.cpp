@@ -259,7 +259,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 		if (!CandidateAbilityData.IsEmpty())
 		{
 			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityData.Num() - 1);
-			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+			if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
 				LetheGameState->AddEnemyAbilityActivationData(CandidateAbilityData[RandomIndex]);
 			}

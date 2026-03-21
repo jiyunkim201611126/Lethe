@@ -353,7 +353,7 @@ void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSucc
 	UCardWidget* CardWidget = UseRequestedCards.FindRef(HandIndex);
 	if (!CardWidget)
 	{
-		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다."));
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다."));
 		return;
 	}
 	

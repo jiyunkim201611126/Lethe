@@ -31,7 +31,7 @@ enum class ETryAbilityActivationResult : uint8
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
-DECLARE_DELEGATE(FOnAllEnemyAbilityResolved);
+DECLARE_DELEGATE(FOnEnemyActivationQueueFinished);
 
 UCLASS()
 class LETHE_API UAbilityResolverComponent : public UActorComponent
@@ -49,7 +49,7 @@ public:
 	// Queue와 관계없이 Ability를 즉시 발동할 때 사용하는 함수로, MoveAbility 등을 사용할 때 호출합니다.
 	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
 	
-	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
+	void SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData);
 	void SortEnemyAbilityActivationData();
 	void StartActivateEnemyAbility();
 	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
@@ -67,11 +67,11 @@ private:
 public:
 	FOnUseCardResolved OnUseCardResolved;
 	FOnEnemyAbilityActivated OnEnemyAbilityActivated;
-	FOnAllEnemyAbilityResolved OnAllEnemyAbilityResolved;
+	FOnEnemyActivationQueueFinished OnEnemyActivationQueueFinished;
 
 private:
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.
-	// 최대 8개의 원소를 갖기 때문에 0번째 인덱스를 제거하는 비용이 그리 크지 않으며, TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
+	// TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	TArray<FAbilityActivationData> PlayerAbilityActivationData;
 	uint8 bIsActivatingPlayerAbility : 1 = false;
 

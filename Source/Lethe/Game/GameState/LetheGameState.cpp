@@ -14,13 +14,13 @@ void ALetheGameState::BeginPlay()
 	Super::BeginPlay();
 	
 	AbilityResolverComponent->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
-	AbilityResolverComponent->OnAllEnemyAbilityResolved.BindUObject(this, &ThisClass::GoEnemyPlanningPhase);
+	AbilityResolverComponent->OnEnemyActivationQueueFinished.BindUObject(this, &ThisClass::OnEnemyExecutionQueueFinished);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->OnEnemyAbilityActivated.RemoveAll(this);
-	AbilityResolverComponent->OnAllEnemyAbilityResolved.Unbind();
+	AbilityResolverComponent->OnEnemyActivationQueueFinished.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -79,6 +79,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	
 	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
+		AbilityResolverComponent->SetEnemyAbilityActivationData(MoveTemp(ReservedEnemyAbilityActivationData));		
 		AbilityResolverComponent->SortEnemyAbilityActivationData();
 		AbilityResolverComponent->StartActivateEnemyAbility();
 	}
@@ -106,6 +107,11 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	CurrentEnemy->ProcessPlanPhase();
 }
 
+void ALetheGameState::OnEnemyExecutionQueueFinished()
+{
+	GoEnemyPlanningPhase();
+}
+
 EPhaseState ALetheGameState::GetPhaseState() const
 {
 	return CurrentPhaseState;
@@ -121,9 +127,9 @@ void ALetheGameState::ActivateEnemyAbility(FAbilityActivationData& ActivationDat
 	AbilityResolverComponent->ActivateEnemyAbility(ActivationData);
 }
 
-void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const
+void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	AbilityResolverComponent->AddEnemyAbilityActivationData(ActivationData);
+	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
 }
 
 void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const

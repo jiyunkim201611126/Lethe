@@ -43,7 +43,7 @@ public:
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
 	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
-	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData) const;
+	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 
 	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
 
@@ -63,6 +63,7 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 	void ProcessCurrentEnemyPlan();
+	void OnEnemyExecutionQueueFinished();
 
 public:
 	FOnChangePhaseStateSignature OnChangePhaseStateDelegate;
@@ -78,4 +79,10 @@ private:
 	TArray<TWeakObjectPtr<AEnemyCharacterBase>> RegisteredEnemies;
 	int32 CurrentEnemyIndex = 0;
 	uint8 bIsEnemyPlanning : 1 = false;
+
+	/**
+	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
+	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
+	 */
+	TArray<FAbilityActivationData> ReservedEnemyAbilityActivationData;
 };

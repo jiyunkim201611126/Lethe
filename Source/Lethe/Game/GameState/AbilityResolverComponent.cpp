@@ -84,7 +84,7 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 		CurrentActivationCharacterTeamSide = ETeamSide::None;
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
-		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
 		break;
 	default:
 		ProcessAllPlayerAbilitiesFailed();
@@ -109,9 +109,9 @@ void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& Act
 	TryActivateAbility(&ActivationData);
 }
 
-void UAbilityResolverComponent::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
+void UAbilityResolverComponent::SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData)
 {
-	EnemyAbilityActivationData.Emplace(ActivationData);
+	EnemyAbilityActivationData = MoveTemp(ActivationData);
 }
 
 void UAbilityResolverComponent::SortEnemyAbilityActivationData()
@@ -166,10 +166,10 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		OnAllEnemyAbilityResolved.ExecuteIfBound();
+		OnEnemyActivationQueueFinished.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
-		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 김지윤한테 문의 바랍니다. 일단 진행은 합니다."));
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
 		break;
 	case ETryAbilityActivationResult::FailedNotActivated:
 	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:

@@ -19,7 +19,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		if (LethePlayerController)
 		{
 			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
-			LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+			LethePlayerController->OnCardSelectCanceledDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 			LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
 		}
 		

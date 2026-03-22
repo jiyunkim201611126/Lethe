@@ -6,7 +6,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
-#include "Lethe/Controller/PlayerController/PreviewCoordinatorComponent.h"
+#include "Lethe/Data/PreviewData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
@@ -27,11 +27,8 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
-		if (UPreviewCoordinatorComponent* PreviewCoordinatorComponent = LethePlayerController->GetPreviewCoordinatorComponent())
-		{
-			PreviewCoordinatorComponent->OnPreviewDataUpdated.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
-		}
-		LethePlayerController->OnCancelCardSelectDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+		LethePlayerController->OnCardSelectCanceledDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+		LethePlayerController->OnPreviewDataUpdatedDelegate.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
 	}
 }
 

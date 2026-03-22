@@ -13,6 +13,7 @@ void ALetheGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(DummyActorClass);
 	if (AActor* DummyActor = GetWorld()->SpawnActor<AActor>(DummyActorClass))
 	{
 		AbilityResolverComponent->SetDummyActor(DummyActor);

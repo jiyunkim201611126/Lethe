@@ -2,12 +2,13 @@
 
 #include "LethePlayerController.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemInterface.h"
 #include "PreviewCoordinatorComponent.h"
 #include "TileSelectorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
+#include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -19,6 +20,7 @@ ALethePlayerController::ALethePlayerController()
 	TileSelector->OnDetectedOtherTile.BindUObject(this, &ThisClass::OnOtherTileDetected);
 
 	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
+	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -93,7 +95,10 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		return;
 	}
 	
-	if (UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SelectedCharacter.Get()))
+	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(SelectedCharacter.Get());
+	UAbilitySystemComponent* AbilitySystemComponent = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	
+	if (AbilitySystemComponent)
 	{
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
@@ -198,6 +203,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 			}
 		}
 
+		// 마우스를 타일 위에 올려둔 채로 카드를 키보드로 선택한 경우에도 타일 하이라이팅 등이 정상 작동할 수 있도록 명시적으로 한 번 호출합니다.
 		OnOtherTileDetected(nullptr, TileSelector->GetActorOnTileUnderCursor());
 		
 		return true;
@@ -208,9 +214,9 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	TileSelector->UnhighlightTileByAbility();
 	TileSelector->UnhighlightTileByMouse();
 	ArrowRenderer->SetActive(false);
-	if (OnCancelCardSelectDelegate.IsBound())
+	if (OnCardSelectCanceledDelegate.IsBound())
 	{
-		OnCancelCardSelectDelegate.Broadcast();
+		OnCardSelectCanceledDelegate.Broadcast();
 	}
 	return false;
 }
@@ -306,13 +312,28 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 
 		if (PreviewCoordinatorComponent)
 		{
-			FPreviewContext PreviewContext;
-			PreviewContext.CurrentTargetActors.Emplace(CurrentActor);
-			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
-			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
-			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
+			const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
+			UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+
+			if (TargetASC)
+			{
+				FPreviewContext PreviewContext;
+				PreviewContext.CurrentTargetASCs.Emplace(TargetASC);
+				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
+				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
+				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
+			}
+			else
+			{
+				PreviewCoordinatorComponent->StopAllPreview();
+			}
 		}
 	}
+}
+
+void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData)
+{
+	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const

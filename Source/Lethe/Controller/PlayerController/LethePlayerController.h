@@ -16,9 +16,11 @@ class ULetheHUD;
 class UPreviewCoordinatorComponent;
 class UTileSelectorComponent;
 struct FGameplayAbilityActorInfo;
+struct FPreviewData;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
 DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float /* AttributeWidgetSize */);
 
@@ -57,14 +59,17 @@ private:
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
 
+	void OnUpdatePreviewData(const FPreviewData& PreviewData);
+
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
-	FOnCardSelectCanceledSignature OnCancelCardSelectDelegate;
+	FOnCardSelectCanceledSignature OnCardSelectCanceledDelegate;
+	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
 	FOnCameraHeightChangedSignature OnCameraHeightChangedDelegate;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, Instanced, Category = LetheHUD)
+	UPROPERTY(EditDefaultsOnly, Instanced, Category = "LetheHUD")
 	TObjectPtr<ULetheHUD> LetheHUD;
 	
 private:

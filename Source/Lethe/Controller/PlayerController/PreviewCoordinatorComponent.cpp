@@ -2,11 +2,11 @@
 
 #include "PreviewCoordinatorComponent.h"
 
-#include "AbilitySystemInterface.h"
 #include "AttributeSet.h"
 #include "GameplayTagContainer.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/Data/PreviewData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 UPreviewCoordinatorComponent::UPreviewCoordinatorComponent()
@@ -23,40 +23,50 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	
 	FPreviewData PreviewData;
 	
-	TMap<FGameplayAttribute, float> OutAbilityCostPreviewData;
-	if (PreviewContext.SelectedCardAbility->TryGetAbilityCostEffectPreviewData(PreviewContext.SourceASC, OutAbilityCostPreviewData))
+	TMap<FGameplayAttribute, float> OutCostPreviewData;
+	TMap<FGameplayAttribute, float> OutPreviewDataForSource;
+	TMap<FGameplayAttribute, float> OutPreviewDataForTarget;
+	
+	if (PreviewContext.SelectedCardAbility->TryGetCostEffectPreviewData(PreviewContext.SourceASC, OutCostPreviewData))
 	{
 		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
-		ConvertAttributeToTag(OutAbilityCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
+		ConvertAttributeToTag(OutCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
 	}
 
 	// Target과 관계 없이 EffectApplier에 의해 Source에게 적용되는 Preview 데이터를 추출해 가져옵니다.
-	TMap<FGameplayAttribute, float> OutPreviewDataForSource;
-	if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForSourcePreviewData(PreviewContext.SourceASC, OutPreviewDataForSource))
+	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourcePreviewData(PreviewContext.SourceASC, OutPreviewDataForSource))
 	{
 		FAttributePreviewDelta& AttributePreviewDeltaForSource = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
 		ConvertAttributeToTag(OutPreviewDataForSource, AttributePreviewDeltaForSource.AttributePreviewDelta);
 	}
 
 	// Target들에게 적용되는 Preview 데이터를 추출해 가져옵니다.
-	for (const AActor* CurrentTargetActor : PreviewContext.CurrentTargetActors)
+	for (UAbilitySystemComponent* TargetASC : PreviewContext.CurrentTargetASCs)
 	{
-		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentTargetActor);
-		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-		if (TargetASC)
+		OutPreviewDataForSource.Empty();
+		OutPreviewDataForTarget.Empty();
+		if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutPreviewDataForSource, OutPreviewDataForTarget))
 		{
-			TMap<FGameplayAttribute, float> OutPreviewDataForTarget;
-			if (PreviewContext.SelectedCardAbility->TryGetAbilityEffectsForTargetPreviewData(PreviewContext.SourceASC, TargetASC, OutPreviewDataForTarget))
-			{
-				FAttributePreviewDelta& AttributePreviewDeltaForTarget = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
-				ConvertAttributeToTag(OutPreviewDataForTarget, AttributePreviewDeltaForTarget.AttributePreviewDelta);
-			}
+			FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
+			ConvertAttributeToTag(OutPreviewDataForSource, AttributePreviewDelta.AttributePreviewDelta);
+			
+			FAttributePreviewDelta& AttributePreviewDeltaForTarget = PreviewData.ASCToPreviewData.FindOrAdd(TargetASC);
+			ConvertAttributeToTag(OutPreviewDataForTarget, AttributePreviewDeltaForTarget.AttributePreviewDelta);
 		}
 	}
 
-	if (OnPreviewDataUpdated.IsBound())
+	if (OnUpdatePreviewData.IsBound())
 	{
-		OnPreviewDataUpdated.Broadcast(PreviewData);
+		OnUpdatePreviewData.Broadcast(PreviewData);
+	}
+}
+
+void UPreviewCoordinatorComponent::StopAllPreview() const
+{
+	if (OnUpdatePreviewData.IsBound())
+	{
+		const FPreviewData PreviewData;
+		OnUpdatePreviewData.Broadcast(PreviewData);
 	}
 }
 

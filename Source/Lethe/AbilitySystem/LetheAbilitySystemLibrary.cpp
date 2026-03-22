@@ -2,6 +2,7 @@
 
 #include "LetheAbilitySystemLibrary.h"
 
+#include "LetheAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
@@ -69,4 +70,12 @@ bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const UObject* W
 		}
 	}
 	return false;
+}
+
+void ULetheAbilitySystemLibrary::ResolveDamageRules(TMap<FGameplayAttribute, float>& OutDataForSource, TMap<FGameplayAttribute, float>& OutDataForTarget)
+{
+	if (float* IncomingDamageValue = OutDataForTarget.Find(ULetheAttributeSet::GetIncomingDamageAttribute()))
+	{
+		
+	}
 }

@@ -25,7 +25,7 @@ void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 	}
 }
 
-bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
+bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
 {
 	if (CostGameplayEffectClass && SourceASC)
 	{
@@ -42,7 +42,7 @@ bool ULetheCardAbility::TryGetAbilityCostEffectPreviewData(const UAbilitySystemC
 	return false;
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	if (!SourceASC)
 	{
@@ -67,7 +67,7 @@ bool ULetheCardAbility::TryGetAbilityEffectsForSourcePreviewData(UAbilitySystemC
 	return !OutPreviewData.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const
 {
 	if (!SourceASC || !TargetASC)
 	{
@@ -86,11 +86,15 @@ bool ULetheCardAbility::TryGetAbilityEffectsForTargetPreviewData(UAbilitySystemC
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
 			if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 			{
-				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewData);
+				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
 			}
 		}
 	}
-	return !OutPreviewData.IsEmpty();
+
+	// 반사 데미지, 흡혈 등 ExecCalc만으로는 구현 불가능한 규칙들을 Preview에도 적용하기 위해 아래 함수를 호출합니다.
+	ULetheAbilitySystemLibrary::ResolveDamageRules(OutPreviewDataForSource, OutPreviewDataForTarget);
+
+	return !OutPreviewDataForSource.IsEmpty() || !OutPreviewDataForTarget.IsEmpty();
 }
 
 bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const

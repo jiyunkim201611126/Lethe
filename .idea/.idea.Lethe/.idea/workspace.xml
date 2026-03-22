@@ -14,10 +14,13 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/BattleWidget/WBP_Card.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/UI/Widget/BattleWidget/WBP_Card.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Assets/Character/Glasses/Animation/AM_Glasses_Attack.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Assets/Character/Glasses/Animation/AM_Glasses_Attack.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/GA_Move.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/AbilitySystem/Abilities/GA_Move.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/STT_ActivateMoveAbility.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/STT_ActivateMoveAbility.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardWidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +34,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://37" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://2" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DeformerGraph/Source/OptimusCore/Private/DataInterfaces/OptimusDataInterfaceRawBuffer.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -96,6 +99,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/DeveloperToolSettings/Classes/Settings/PlatformsMenuSettings.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/DeviceManager/Private/Widgets/Processes/SDeviceProcesses.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/FunctionalTesting/Private/FunctionalTestingManager.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/FunctionalTesting/Private/FunctionalUIScreenshotTest.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/FunctionalTesting/Private/ScreenshotFunctionalTest.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/FunctionalTesting/Private/ScreenshotFunctionalTestBase.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Developer/NaniteBuilder/Private/NaniteEncode.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -686,7 +690,8 @@
       <workItem from="1773845465215" duration="4935000" />
       <workItem from="1773929975706" duration="4260000" />
       <workItem from="1774022627698" duration="8329000" />
-      <workItem from="1774080372724" duration="31998000" />
+      <workItem from="1774080372724" duration="33936000" />
+      <workItem from="1774156741388" duration="3907000" />
     </task>
     <servers />
   </component>
@@ -712,11 +717,6 @@
           <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
           <option name="timeStamp" value="3" />
         </breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp</url>
-          <line>256</line>
-          <option name="timeStamp" value="38" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

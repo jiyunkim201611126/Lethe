@@ -96,7 +96,6 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	if (!RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		bIsEnemyPlanning = false;
 		GoDrawPhase();
 		return;
 	}
@@ -109,7 +108,6 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 		return;
 	}
 
-	bIsEnemyPlanning = true;
 	CurrentEnemy->ProcessPlanPhase();
 }
 
@@ -145,32 +143,27 @@ void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const
 
 void ALetheGameState::OnAbilityEnded(const bool bSuccess)
 {
-	if (bIsEnemyPlanning)
-	{
-		if (bSuccess)
-		{
-			if (RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
-			{
-				RegisteredEnemies[CurrentEnemyIndex]->ProcessTelegraphPlan();
-			}
-		}
+	AbilityResolverComponent->OnAbilityEnded(bSuccess);
+}
 
-		// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
-		if (PlanTimerHandle.IsValid())
-		{
-			GetWorld()->GetTimerManager().ClearTimer(PlanTimerHandle);
-		}
-		GetWorld()->GetTimerManager().SetTimer(PlanTimerHandle,
-			[this]()
-			{
-				++CurrentEnemyIndex;
-				ProcessCurrentEnemyPlan();
-			}, EnemyAbilityDelayTime, false);
-	}
-	else
+void ALetheGameState::OnEnemyPlanMoveResolved()
+{
+	if (RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
 	{
-		AbilityResolverComponent->OnAbilityEnded(bSuccess);
+		RegisteredEnemies[CurrentEnemyIndex]->ProcessTelegraphPlan();
 	}
+
+	// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
+	if (PlanTimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(PlanTimerHandle);
+	}
+	GetWorld()->GetTimerManager().SetTimer(PlanTimerHandle,
+		[this]()
+		{
+			++CurrentEnemyIndex;
+			ProcessCurrentEnemyPlan();
+		}, EnemyAbilityDelayTime, false);
 }
 
 UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const

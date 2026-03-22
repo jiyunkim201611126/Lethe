@@ -111,7 +111,12 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 
 void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& ActivationData) const
 {
-	TryActivateAbility(&ActivationData);
+	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
+	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
+	if (Result == ETryAbilityActivationResult::FailedLogicError)
+	{
+		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다."));
+	}
 }
 
 void UAbilityResolverComponent::SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData)

@@ -48,8 +48,13 @@ public:
 
 	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
 
+	// 일반적인 Ability 종료를 Resolver에 전달할 때 사용합니다.
 	UFUNCTION(BlueprintCallable)
 	void OnAbilityEnded(const bool bSuccess);
+
+	// Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.
+	UFUNCTION(BlueprintCallable)
+	void OnEnemyPlanMoveResolved();
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsProgressingPlayerAbility() const;
@@ -86,7 +91,6 @@ private:
 	// 우선순위대로 정렬되는 현재 스폰된 적들입니다.
 	TArray<TWeakObjectPtr<AEnemyCharacterBase>> RegisteredEnemies;
 	int32 CurrentEnemyIndex = 0;
-	uint8 bIsEnemyPlanning : 1 = false;
 
 	/**
 	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.

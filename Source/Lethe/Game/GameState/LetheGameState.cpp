@@ -142,9 +142,9 @@ void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const
 	OnActivateEnemyAbilityDelegate.Broadcast(AbilityInstigator);
 }
 
-void ALetheGameState::OnAbilityEnded(const bool bSuccess)
+void ALetheGameState::OnAbilityActivationFailed()
 {
-	AbilityResolverComponent->OnAbilityEnded(bSuccess);
+	AbilityResolverComponent->OnAbilityActivationFailed();
 }
 
 void ALetheGameState::OnEnemyPlanMoveResolved()

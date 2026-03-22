@@ -48,11 +48,14 @@ public:
 
 	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
 
-	// 일반적인 Ability 종료를 Resolver에 전달할 때 사용합니다.
-	UFUNCTION(BlueprintCallable)
-	void OnAbilityEnded(const bool bSuccess);
+	// Ability를 Activate하는 데까진 성공했으나, 모종의 이유(층 수 차이, 이미 사망한 적 등)로 CardAbility에서 반려한 경우 호출되는 함수입니다.
+	void OnAbilityActivationFailed();
 
-	// Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.
+	/**
+	 * Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.
+	 * GA_Move에선 EndAbility 직전에 호출하는 함수로, 현재는 '적은 한 번에 여러 Ability를 사용하지 않는다.'는 전제하에 정상 작동하는 상태입니다.
+	 * 만약 적이 MoveAbility를 연속으로 발동한다면 문제가 생길 수 있으나, 프로젝트 정책상 그럴 일이 없어 현재 해결해두지 않았습니다.
+	 */
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyPlanMoveResolved();
 

@@ -49,7 +49,7 @@ public:
 	void ProcessAllPlayerAbilitiesFailed();
 
 	// Queue와 관계없이 Ability를 즉시 발동할 때 사용하는 함수로, MoveAbility 등을 사용할 때 호출합니다.
-	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
+	void ActivateEnemyAbility(FAbilityActivationData& ActivationData);
 	
 	void SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData);
 	void SortEnemyAbilityActivationData();
@@ -57,14 +57,16 @@ public:
 	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ResetEnemyActivationData();
 	
-	void OnAbilityEnded(const bool bSuccess);
+	void OnAbilityActivationFailed();
 
 	bool IsActivatingPlayerAbility() const;
 
 private:
 	ETryAbilityActivationResult TryActivateNextPlayerAbility();
 	ETryAbilityActivationResult TryActivateNextEnemyAbility();
-	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationData* ActivationData) const;
+	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationData* ActivationData);
+
+	void OnAbilityEnded(const FAbilityEndedData& AbilityEndedData);
 
 public:
 	FOnUseCardResolved OnUseCardResolved;
@@ -83,4 +85,8 @@ private:
 	TArray<FAbilityActivationData> EnemyAbilityActivationData;
 
 	ETeamSide CurrentActivationCharacterTeamSide = ETeamSide::None;
+	
+	TWeakObjectPtr<UAbilitySystemComponent> CurrentActivationASC;
+
+	FDelegateHandle OnAbilityEndedDelegate;
 };

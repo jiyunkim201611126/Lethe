@@ -109,7 +109,7 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	bIsActivatingPlayerAbility = false;
 }
 
-void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& ActivationData) const
+void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& ActivationData)
 {
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
@@ -184,7 +184,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	case ETryAbilityActivationResult::FailedNotActivated:
 	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
 		// 모종의 이유로 Ability 발동에 실패하면 Ended가 호출되지 않으므로 여기서 명시적으로 호출합니다.
-		OnAbilityEnded(false);
+		OnAbilityActivationFailed();
 		break;
 	default:
 		ResetEnemyActivationData();
@@ -198,7 +198,7 @@ void UAbilityResolverComponent::ResetEnemyActivationData()
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 }
 
-ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData) const
+ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData)
 {
 	if (!ActivationData)
 	{
@@ -262,35 +262,60 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
+	// 성공적으로 Ability를 발동한 경우 ASC를 캐싱하고 콜백을 붙여둡니다.
+	CurrentActivationASC = AbilityOwnerASC;
+	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+
 	return ETryAbilityActivationResult::Success;
 }
 
-void UAbilityResolverComponent::OnAbilityEnded(const bool bSuccess)
+void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
 {
+	if (CurrentActivationASC.IsValid())
+	{
+		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivationASC.Reset();
+	}
+	
 	switch (CurrentActivationCharacterTeamSide)
 	{
 	case ETeamSide::Player:
 		{
-			if (bSuccess)
+			if (PlayerAbilityActivationData.IsValidIndex(0))
 			{
-				if (PlayerAbilityActivationData.IsValidIndex(0))
+				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+				if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
 				{
-					const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-					if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
-					{
-						OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
-					}
-					PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
+					OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
 				}
-				StartActivatePlayerAbility();
+				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 			}
-			else
-			{
-				ProcessAllPlayerAbilitiesFailed();
-			}
+			StartActivatePlayerAbility();
 			
 			bIsActivatingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
 		}
+		break;
+	case ETeamSide::Enemy:
+		StartActivateEnemyAbility();
+		break;
+	default:
+		break;
+	}
+}
+
+void UAbilityResolverComponent::OnAbilityActivationFailed()
+{
+	if (CurrentActivationASC.IsValid())
+	{
+		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivationASC.Reset();
+	}
+	
+	switch (CurrentActivationCharacterTeamSide)
+	{
+	case ETeamSide::Player:
+		ProcessAllPlayerAbilitiesFailed();
+		bIsActivatingPlayerAbility = false;
 		break;
 	case ETeamSide::Enemy:
 		StartActivateEnemyAbility();

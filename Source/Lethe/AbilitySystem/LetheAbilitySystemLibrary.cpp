@@ -65,7 +65,7 @@ bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const UObject* W
 		{
 			const int32 CurrentFloor = TileManagerSubsystem->GetTileFloor(SourceTile);
 			const int32 TargetFloor = TileManagerSubsystem->GetTileFloor(TargetTile);
-			const int32 FloorGap = CurrentFloor - TargetFloor;
+			const int32 FloorGap = FMath::Abs(CurrentFloor - TargetFloor);
 			return FloorGap <= MaxFloorGap;
 		}
 	}

@@ -51,11 +51,6 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
 		HandlePlayerAbilityActivationResult(Result);
 		
-		if (Result == ETryAbilityActivationResult::FailedLogicError)
-		{
-			continue;
-		}
-		
 		return;
 	}
 }
@@ -83,14 +78,15 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 	switch (Result)
 	{
 	case ETryAbilityActivationResult::Success:
-		bIsActivatingPlayerAbility = true;
+		bIsResolvingPlayerAbility = true;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
 		CurrentActivationCharacterTeamSide = ETeamSide::None;
+		bIsResolvingPlayerAbility = false;
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
-		break;
+	case ETryAbilityActivationResult::FailedNotActivated:
 	default:
 		ProcessAllPlayerAbilitiesFailed();
 		break;
@@ -102,11 +98,11 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationData를 정리합니다.
 	for (const FAbilityActivationData& WaitingCardData : PlayerAbilityActivationData)
 	{
-		OnResolveCardUse.ExecuteIfBound(WaitingCardData.Index, false);
+		OnCardUseResolved.ExecuteIfBound(WaitingCardData.Index, false);
 	}
 	PlayerAbilityActivationData.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
-	bIsActivatingPlayerAbility = false;
+	bIsResolvingPlayerAbility = false;
 }
 
 void UAbilityResolverComponent::ActivateEnemyAbility(FAbilityActivationData& ActivationData)
@@ -262,7 +258,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
-	// 성공적으로 Ability를 발동한 경우 ASC를 캐싱하고 콜백을 붙여둡니다.
+	// ASC를 캐싱하고 콜백을 붙여둡니다.
 	CurrentActivationASC = AbilityOwnerASC;
 	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
 
@@ -271,12 +267,14 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 
 void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
 {
+	// Ability를 성공적으로 발동해 EndAbility까지 호출됐을 때 콜백을 통해 이곳으로 들어옵니다.
 	if (CurrentActivationASC.IsValid())
 	{
 		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
 		CurrentActivationASC.Reset();
 	}
-	
+
+	// Player와 Enemy에 따라 필요한 처리를 하고 다음 Ability 발동을 시도합니다.
 	switch (CurrentActivationCharacterTeamSide)
 	{
 	case ETeamSide::Player:
@@ -286,13 +284,11 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 				if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
 				{
-					OnResolveCardUse.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					OnCardUseResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
 				}
 				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 			}
 			StartActivatePlayerAbility();
-			
-			bIsActivatingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
 		}
 		break;
 	case ETeamSide::Enemy:
@@ -305,6 +301,7 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 
 void UAbilityResolverComponent::OnAbilityActivationFailed()
 {
+	// Ability를 발동했으나, 내부 로직에 의해 실패한 경우(층 수 차이, 코스트 부족 등) 이곳으로 들어옵니다.
 	if (CurrentActivationASC.IsValid())
 	{
 		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
@@ -314,10 +311,12 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 	switch (CurrentActivationCharacterTeamSide)
 	{
 	case ETeamSide::Player:
+		// 등록되어 있던 모든 Ability 발동을 취소합니다.
 		ProcessAllPlayerAbilitiesFailed();
-		bIsActivatingPlayerAbility = false;
+		bIsResolvingPlayerAbility = false;
 		break;
 	case ETeamSide::Enemy:
+		// Enemy의 경우 정상적으로 수행됐다면 이 함수로 들어올 일이 없지만, 일단 다음 Ability 발동을 진행합니다.
 		StartActivateEnemyAbility();
 		break;
 	default:
@@ -327,5 +326,5 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 
 bool UAbilityResolverComponent::IsActivatingPlayerAbility() const
 {
-	return bIsActivatingPlayerAbility;
+	return bIsResolvingPlayerAbility;
 }

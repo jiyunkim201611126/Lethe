@@ -69,7 +69,7 @@ private:
 	void OnAbilityEnded(const FAbilityEndedData& AbilityEndedData);
 
 public:
-	FOnUseCardResolved OnResolveCardUse;
+	FOnUseCardResolved OnCardUseResolved;
 	FOnActivateEnemyAbility OnActivateEnemyAbility;
 	FOnFinishEnemyActivationQueue OnFinishEnemyActivationQueue;
 
@@ -80,7 +80,8 @@ private:
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.
 	// TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	TArray<FAbilityActivationData> PlayerAbilityActivationData;
-	uint8 bIsActivatingPlayerAbility : 1 = false;
+	// PlayerAbilityQueue가 작동 중인지를 표현하는 변수입니다.
+	uint8 bIsResolvingPlayerAbility : 1 = false;
 
 	TArray<FAbilityActivationData> EnemyAbilityActivationData;
 

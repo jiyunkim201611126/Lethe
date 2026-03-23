@@ -14,21 +14,6 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LethePawn.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Attribute/AttributeWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/Attribute/AttributeWidgetController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidget.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -701,7 +686,7 @@
       <workItem from="1774022627698" duration="8329000" />
       <workItem from="1774080372724" duration="33936000" />
       <workItem from="1774156741388" duration="20629000" />
-      <workItem from="1774273236006" duration="3822000" />
+      <workItem from="1774273236006" duration="4634000" />
     </task>
     <servers />
   </component>

@@ -244,7 +244,7 @@ void ALethePlayerController::BeginPlay()
 	{
 		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
 		{
-			AbilityResolverComponent->OnResolveCardUse.BindWeakLambda(this,
+			AbilityResolverComponent->OnCardUseResolved.BindWeakLambda(this,
 				[this](const int32 HandIndex, const bool bSuccess)
 				{
 					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
@@ -261,7 +261,7 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
 		{
-			AbilityResolverComponent->OnResolveCardUse.Unbind();
+			AbilityResolverComponent->OnCardUseResolved.Unbind();
 		}
 	}
 	Super::EndPlay(EndPlayReason);

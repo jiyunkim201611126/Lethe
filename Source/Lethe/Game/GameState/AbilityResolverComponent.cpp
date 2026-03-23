@@ -48,8 +48,14 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 	while (!PlayerAbilityActivationData.IsEmpty())
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
+
+		// Ability 발동 처리 중임을 기록하고, 발동 시도가 끝나면 다시 false로 되돌립니다.
+		bIsHandlingAbilityActivation = true;
 		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
+		bIsHandlingAbilityActivation = false;
+		
 		HandlePlayerAbilityActivationResult(Result);
+		ProcessPendingAbilityCallbacks();
 		
 		return;
 	}
@@ -133,8 +139,16 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 	while (true)
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
+		
+		bIsHandlingAbilityActivation = true;
 		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
+		bIsHandlingAbilityActivation = false;
+		
 		HandleEnemyAbilityActivationResult(Result);
+		if (ProcessPendingAbilityCallbacks())
+		{
+			return;
+		}
 
 		if (Result == ETryAbilityActivationResult::FailedLogicError)
 		{
@@ -246,9 +260,19 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		}
 	}
 	
+	// ASC를 캐싱하고 콜백을 붙여둡니다.
+	CurrentActivationASC = AbilityOwnerASC;
+	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+	
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
+		if (CurrentActivationASC.IsValid())
+		{
+			CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+			CurrentActivationASC.Reset();
+		}
+		
 		if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
 		{
 			return ETryAbilityActivationResult::FailedNotActivated;
@@ -258,22 +282,54 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
-	// ASC를 캐싱하고 콜백을 붙여둡니다.
-	CurrentActivationASC = AbilityOwnerASC;
-	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
-
 	return ETryAbilityActivationResult::Success;
 }
 
 void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
 {
 	// Ability를 성공적으로 발동해 EndAbility까지 호출됐을 때 콜백을 통해 이곳으로 들어옵니다.
+	// 턴제 게임인 프로젝트 특성상 Ability 발동 도중 Cancel되는 경우는 존재하지 않습니다.
 	if (CurrentActivationASC.IsValid())
 	{
 		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
 		CurrentActivationASC.Reset();
 	}
 
+	if (bIsHandlingAbilityActivation)
+	{
+		// 애니메이션이 없는 즉발성 Ability는 EndAbility가 바로 호출되어 들어오는 분기로, 성공 처리를 보류합니다.
+		bPendingAbilitySucceeded = true;
+		return;
+	}
+
+	// 보류할 필요가 없는 경우 즉시 성공 처리를 진행합니다.
+	ProcessAbilitySucceeded();
+}
+
+bool UAbilityResolverComponent::ProcessPendingAbilityCallbacks()
+{
+	if (bPendingAbilityFailed)
+	{
+		// 보류했던 실패 처리를 수행합니다.
+		bPendingAbilityFailed = false;
+		bPendingAbilitySucceeded = false;
+		ProcessAbilityFailed();
+		return true;
+	}
+
+	if (bPendingAbilitySucceeded)
+	{
+		// 보류했던 성공 처리를 수행합니다.
+		bPendingAbilitySucceeded = false;
+		ProcessAbilitySucceeded();
+		return true;
+	}
+
+	return false;
+}
+
+void UAbilityResolverComponent::ProcessAbilitySucceeded()
+{
 	// Player와 Enemy에 따라 필요한 처리를 하고 다음 Ability 발동을 시도합니다.
 	switch (CurrentActivationCharacterTeamSide)
 	{
@@ -288,6 +344,7 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 				}
 				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 			}
+			bIsResolvingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
 			StartActivatePlayerAbility();
 		}
 		break;
@@ -307,7 +364,19 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
 		CurrentActivationASC.Reset();
 	}
+
+	if (bIsHandlingAbilityActivation)
+	{
+		// Ability 내부 로직이 발동 실패를 알린 경우 들어오는 분기로, 실패 처리를 보류합니다.
+		bPendingAbilityFailed = true;
+		return;
+	}
+
+	ProcessAbilityFailed();
+}
 	
+void UAbilityResolverComponent::ProcessAbilityFailed()
+{
 	switch (CurrentActivationCharacterTeamSide)
 	{
 	case ETeamSide::Player:

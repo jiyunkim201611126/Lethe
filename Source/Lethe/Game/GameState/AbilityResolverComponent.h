@@ -66,6 +66,12 @@ private:
 	ETryAbilityActivationResult TryActivateNextEnemyAbility();
 	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationData* ActivationData);
 
+	// Activation 처리 중 보류했던 Ability 종료/실패 콜백을 처리하는 함수입니다.
+	bool ProcessPendingAbilityCallbacks();
+	
+	void ProcessAbilitySucceeded();
+	void ProcessAbilityFailed();
+
 	void OnAbilityEnded(const FAbilityEndedData& AbilityEndedData);
 
 public:
@@ -88,6 +94,9 @@ private:
 	ETeamSide CurrentActivationCharacterTeamSide = ETeamSide::None;
 	
 	TWeakObjectPtr<UAbilitySystemComponent> CurrentActivationASC;
+	uint8 bIsHandlingAbilityActivation : 1 = false;
+	uint8 bPendingAbilitySucceeded : 1 = false;
+	uint8 bPendingAbilityFailed : 1 = false;
 
 	FDelegateHandle OnAbilityEndedDelegate;
 };

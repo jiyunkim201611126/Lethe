@@ -102,7 +102,7 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationData를 정리합니다.
 	for (const FAbilityActivationData& WaitingCardData : PlayerAbilityActivationData)
 	{
-		OnUseCardResolved.ExecuteIfBound(WaitingCardData.Index, false);
+		OnResolveCardUse.ExecuteIfBound(WaitingCardData.Index, false);
 	}
 	PlayerAbilityActivationData.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
@@ -161,9 +161,9 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
 	
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
-	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnEnemyAbilityActivated.IsBound())
+	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnActivateEnemyAbility.IsBound())
 	{
-		OnEnemyAbilityActivated.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnActivateEnemyAbility.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
 	EnemyAbilityActivationData.RemoveAt(0);
 	return Result;
@@ -176,7 +176,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	case ETryAbilityActivationResult::Success:
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		OnEnemyActivationQueueFinished.ExecuteIfBound();
+		OnFinishEnemyActivationQueue.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
@@ -286,7 +286,7 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 				if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
 				{
-					OnUseCardResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					OnResolveCardUse.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
 				}
 				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 			}

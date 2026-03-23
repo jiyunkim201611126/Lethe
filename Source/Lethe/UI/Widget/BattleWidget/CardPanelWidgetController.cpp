@@ -19,14 +19,14 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 		if (LethePlayerController)
 		{
 			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
-			LethePlayerController->OnCardSelectCanceledDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
-			LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
+			LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+			LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 		}
 		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		if (LetheGameState.IsValid())
 		{
-			LetheGameState->OnChangePhaseStateDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseChanged);
+			LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		}
 		
 		bInitialized = true;
@@ -55,7 +55,7 @@ void UCardPanelWidgetController::BeginDestroy()
 
 	if (LetheGameState.IsValid())
 	{
-		LetheGameState->OnChangePhaseStateDelegate.RemoveAll(this);
+		LetheGameState->OnChangePhaseState.RemoveAll(this);
 	}
 }
 
@@ -113,9 +113,9 @@ void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySyste
 	}
 }
 
-void UCardPanelWidgetController::OnPlayerPhaseChanged(const EPhaseState OldState, const EPhaseState NewState) const
+void UCardPanelWidgetController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
-	OnPlayerPhaseStateChangedDelegate.Broadcast(OldState, NewState);
+	OnPhaseStateChangedDelegate.Broadcast(OldState, NewState);
 }
 
 void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
@@ -125,10 +125,10 @@ void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
 
 void UCardPanelWidgetController::OnCancelCardSelect() const
 {
-	OnCancelCardSelectDelegate.ExecuteIfBound();
+	OnCardSelectCanceledDelegate.ExecuteIfBound();
 }
 
-void UCardPanelWidgetController::OnUseCardResolved(const int32 HandIndex, const bool bSuccess) const
+void UCardPanelWidgetController::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
 {
 	OnUseCardResolvedDelegate.ExecuteIfBound(HandIndex, bSuccess);
 }

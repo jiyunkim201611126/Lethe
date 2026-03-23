@@ -30,8 +30,8 @@ enum class ETryAbilityActivationResult : uint8
 };
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
-DECLARE_DELEGATE(FOnEnemyActivationQueueFinished);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
+DECLARE_DELEGATE(FOnFinishEnemyActivationQueue);
 
 UCLASS()
 class LETHE_API UAbilityResolverComponent : public UActorComponent
@@ -69,9 +69,9 @@ private:
 	void OnAbilityEnded(const FAbilityEndedData& AbilityEndedData);
 
 public:
-	FOnUseCardResolved OnUseCardResolved;
-	FOnEnemyAbilityActivated OnEnemyAbilityActivated;
-	FOnEnemyActivationQueueFinished OnEnemyActivationQueueFinished;
+	FOnUseCardResolved OnResolveCardUse;
+	FOnActivateEnemyAbility OnActivateEnemyAbility;
+	FOnFinishEnemyActivationQueue OnFinishEnemyActivationQueue;
 
 private:
 	UPROPERTY()

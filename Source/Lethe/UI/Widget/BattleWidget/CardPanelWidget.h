@@ -53,17 +53,17 @@ private:
 	// 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다.
 	bool OnMouseButtonDownInCardUseSection() const;
 	bool OnMouseButtonUpInCardUseSection();
-	void ResetSelectedCard() const;
-	void OnResetSelectedCard();
+	void CancelSelectedCard() const;
+	void OnCancelSelectedCard();
 
-	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess);
+	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
 
 	void StartViewCardDetail(const UCardWidget* CardWidget) const;
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
-	void OnPlayerPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
+	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	void OnDrawPhaseStarted() const;
 	
 protected:

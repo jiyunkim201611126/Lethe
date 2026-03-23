@@ -46,9 +46,9 @@ struct FCardInitParams
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
-DECLARE_DELEGATE(FOnCancelCardSelect);
+DECLARE_DELEGATE(FOnCardSelectCanceled);
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
 
 UCLASS(Abstract, Blueprintable)
@@ -77,16 +77,16 @@ public:
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
-	void OnPlayerPhaseChanged(const EPhaseState OldState, const EPhaseState NewState) const;
+	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
-	void OnUseCardResolved(const int32 HandIndex, const bool bSuccess) const;
+	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
-	FOnPlayerPhaseStateChanged OnPlayerPhaseStateChangedDelegate;
+	FOnPhaseStateChanged OnPhaseStateChangedDelegate;
 	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
-	FOnCancelCardSelect OnCancelCardSelectDelegate;
+	FOnCardSelectCanceled OnCardSelectCanceledDelegate;
 	FOnUseCardResolved OnUseCardResolvedDelegate;
 
 protected:

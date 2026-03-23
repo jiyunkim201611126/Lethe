@@ -37,7 +37,7 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 	{
 		if (CurrentSelectedCard)
 		{
-			ResetSelectedCard();
+			CancelSelectedCard();
 		}
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
@@ -62,10 +62,10 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		}
 		
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
-		CardPanelWidgetController->OnPlayerPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPlayerPhaseStateChanged);
+		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
-		CardPanelWidgetController->OnCancelCardSelectDelegate.BindUObject(this, &ThisClass::OnResetSelectedCard);
-		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnUseCardResolved);
+		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
+		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
 		ViewCardDetail->SetWidgetController(WidgetController);
 		bControllerInitialized = true;
@@ -259,7 +259,7 @@ void UCardPanelWidget::OnHandHovered(UCardWidget* CardWidget, const bool bHovere
 void UCardPanelWidget::SelectCard(UCardWidget* CardWidget)
 {
 	// 다른 카드가 선택되어 있었다면 선택을 취소합니다.
-	ResetSelectedCard();
+	CancelSelectedCard();
 
 	// 이미 사용 대기 상태인 카드라면 선택하지 않고 얼리 리턴합니다.
 	const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CardWidget) : INDEX_NONE;
@@ -305,7 +305,7 @@ bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
 		const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CurrentSelectedCard) : INDEX_NONE;
 		if (HandIndex == INDEX_NONE)
 		{
-			ResetSelectedCard();
+			CancelSelectedCard();
 			return false;
 		}
 		UseRequestedCards.Emplace(HandIndex, CurrentSelectedCard);
@@ -327,7 +327,7 @@ bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
 	return false;
 }
 
-void UCardPanelWidget::ResetSelectedCard() const
+void UCardPanelWidget::CancelSelectedCard() const
 {
 	if (CardPanelWidgetController && CurrentSelectedCard)
 	{
@@ -335,7 +335,7 @@ void UCardPanelWidget::ResetSelectedCard() const
 	}
 }
 
-void UCardPanelWidget::OnResetSelectedCard()
+void UCardPanelWidget::OnCancelSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{
@@ -346,7 +346,7 @@ void UCardPanelWidget::OnResetSelectedCard()
 	}
 }
 
-void UCardPanelWidget::OnUseCardResolved(const int32 HandIndex, const bool bSuccess)
+void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 {
 	// 카드 사용 요청 성공 후, Ability 실제 사용 여부와 상관 없이 이 로직으로 들어옵니다.
 	// 해당 함수 호출 횟수는 반드시 카드 사용 요청 성공 횟수와 1:1 대응해야 합니다.
@@ -398,7 +398,7 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 	}
 }
 
-void UCardPanelWidget::OnPlayerPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
 	CurrentPhaseState = NewState;
 

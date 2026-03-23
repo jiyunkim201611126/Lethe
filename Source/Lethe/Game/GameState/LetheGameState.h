@@ -21,8 +21,8 @@ enum class EPhaseState : uint8
 	EnemyTurnPhase,
 };
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseStateSignature, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbilitySignature, AActor* /* Instigator */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
 
 UCLASS()
 class LETHE_API ALetheGameState : public AGameStateBase
@@ -46,10 +46,10 @@ public:
 	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 
-	void OnEnemyAbilityActivated(AActor* AbilityInstigator) const;
+	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;
 
 	// Ability를 Activate하는 데까진 성공했으나, 모종의 이유(층 수 차이, 이미 사망한 적 등)로 CardAbility에서 반려한 경우 호출되는 함수입니다.
-	void OnAbilityActivationFailed();
+	void OnAbilityActivationFailed() const;
 
 	/**
 	 * Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.
@@ -72,11 +72,11 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 	void ProcessCurrentEnemyPlan();
-	void OnEnemyExecutionQueueFinished();
+	void OnFinishEnemyExecutionQueue();
 
 public:
-	FOnChangePhaseStateSignature OnChangePhaseStateDelegate;
-	FOnActivateEnemyAbilitySignature OnActivateEnemyAbilityDelegate;
+	FOnChangePhaseState OnChangePhaseState;
+	FOnEnemyAbilityActivated OnEnemyAbilityActivated;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

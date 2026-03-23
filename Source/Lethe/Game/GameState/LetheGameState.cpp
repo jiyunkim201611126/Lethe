@@ -19,15 +19,15 @@ void ALetheGameState::BeginPlay()
 		AbilityResolverComponent->SetDummyActor(DummyActor);
 	}
 	
-	AbilityResolverComponent->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnEnemyAbilityActivated);
-	AbilityResolverComponent->OnEnemyActivationQueueFinished.BindUObject(this, &ThisClass::OnEnemyExecutionQueueFinished);
+	AbilityResolverComponent->OnActivateEnemyAbility.AddUObject(this, &ThisClass::OnActivateEnemyAbility);
+	AbilityResolverComponent->OnFinishEnemyActivationQueue.BindUObject(this, &ThisClass::OnFinishEnemyExecutionQueue);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->SetDummyActor(nullptr);
-	AbilityResolverComponent->OnEnemyAbilityActivated.RemoveAll(this);
-	AbilityResolverComponent->OnEnemyActivationQueueFinished.Unbind();
+	AbilityResolverComponent->OnActivateEnemyAbility.RemoveAll(this);
+	AbilityResolverComponent->OnFinishEnemyActivationQueue.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -67,7 +67,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	
 	CurrentPhaseState = NewPhase;
 	
-	OnChangePhaseStateDelegate.Broadcast(OldPhase, CurrentPhaseState);
+	OnChangePhaseState.Broadcast(OldPhase, CurrentPhaseState);
 
 	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
 	{
@@ -112,7 +112,7 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	CurrentEnemy->ProcessPlanPhase();
 }
 
-void ALetheGameState::OnEnemyExecutionQueueFinished()
+void ALetheGameState::OnFinishEnemyExecutionQueue()
 {
 	GoEnemyPlanningPhase();
 }
@@ -137,12 +137,12 @@ void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData
 	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
 }
 
-void ALetheGameState::OnEnemyAbilityActivated(AActor* AbilityInstigator) const
+void ALetheGameState::OnActivateEnemyAbility(AActor* AbilityInstigator) const
 {
-	OnActivateEnemyAbilityDelegate.Broadcast(AbilityInstigator);
+	OnEnemyAbilityActivated.Broadcast(AbilityInstigator);
 }
 
-void ALetheGameState::OnAbilityActivationFailed()
+void ALetheGameState::OnAbilityActivationFailed() const
 {
 	AbilityResolverComponent->OnAbilityActivationFailed();
 }

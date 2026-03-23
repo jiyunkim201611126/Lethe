@@ -27,7 +27,7 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	
 	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 	{
-		LethePlayerController->OnCardSelectCanceledDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		LethePlayerController->OnPreviewDataUpdatedDelegate.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
 	}
 }

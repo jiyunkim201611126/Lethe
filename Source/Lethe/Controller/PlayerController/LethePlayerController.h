@@ -19,7 +19,7 @@ struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
-DECLARE_MULTICAST_DELEGATE(FOnCardSelectCanceledSignature);
+DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float /* AttributeWidgetSize */);
@@ -32,7 +32,7 @@ class LETHE_API ALethePlayerController : public APlayerController
 public:
 	ALethePlayerController();
 
-	void OnNumberPressed(const int32 InNumber) const;
+	void OnNumberKeyPressed(const int32 InNumber) const;
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
@@ -59,11 +59,11 @@ private:
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
 
-	void OnUpdatePreviewData(const FPreviewData& PreviewData);
+	void OnUpdatePreviewData(const FPreviewData& PreviewData) const;
 
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
-	FOnCardSelectCanceledSignature OnCardSelectCanceledDelegate;
+	FOnCancelCardSelectSignature OnCancelCardSelectCancelDelegate;
 	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
 	FOnCameraHeightChangedSignature OnCameraHeightChangedDelegate;

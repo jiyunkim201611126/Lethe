@@ -32,7 +32,7 @@ void ALetheAIController::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnActivateEnemyAbilityDelegate.AddUObject(this, &ThisClass::OnAbilityActivated);
+		LetheGameState->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnAbilityActivated);
 	}
 }
 
@@ -40,7 +40,7 @@ void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnActivateEnemyAbilityDelegate.RemoveAll(this);
+		LetheGameState->OnEnemyAbilityActivated.RemoveAll(this);
 	}
 	
 	Super::EndPlay(EndPlayReason);

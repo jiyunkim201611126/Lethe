@@ -90,7 +90,7 @@ void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
 
 	if (const ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
 	{
-		PlayerController->OnNumberPressed(InputIndex);
+		PlayerController->OnNumberKeyPressed(InputIndex);
 	}
 }
 

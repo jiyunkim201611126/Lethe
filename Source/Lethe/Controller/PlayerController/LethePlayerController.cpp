@@ -29,7 +29,7 @@ ALethePlayerController::ALethePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
-void ALethePlayerController::OnNumberPressed(const int32 InNumber) const
+void ALethePlayerController::OnNumberKeyPressed(const int32 InNumber) const
 {
 	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
@@ -214,9 +214,9 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	TileSelector->UnhighlightTileByAbility();
 	TileSelector->UnhighlightTileByMouse();
 	ArrowRenderer->SetActive(false);
-	if (OnCardSelectCanceledDelegate.IsBound())
+	if (OnCancelCardSelectCancelDelegate.IsBound())
 	{
-		OnCardSelectCanceledDelegate.Broadcast();
+		OnCancelCardSelectCancelDelegate.Broadcast();
 	}
 	return false;
 }
@@ -244,7 +244,7 @@ void ALethePlayerController::BeginPlay()
 	{
 		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
 		{
-			AbilityResolverComponent->OnUseCardResolved.BindWeakLambda(this,
+			AbilityResolverComponent->OnResolveCardUse.BindWeakLambda(this,
 				[this](const int32 HandIndex, const bool bSuccess)
 				{
 					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
@@ -261,7 +261,7 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
 		{
-			AbilityResolverComponent->OnUseCardResolved.Unbind();
+			AbilityResolverComponent->OnResolveCardUse.Unbind();
 		}
 	}
 	Super::EndPlay(EndPlayReason);
@@ -331,7 +331,7 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 	}
 }
 
-void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData)
+void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData) const
 {
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }

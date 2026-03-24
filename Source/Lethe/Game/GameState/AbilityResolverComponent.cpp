@@ -126,14 +126,6 @@ void UAbilityResolverComponent::SetEnemyAbilityActivationData(TArray<FAbilityAct
 	EnemyAbilityActivationData = MoveTemp(ActivationData);
 }
 
-void UAbilityResolverComponent::SortEnemyAbilityActivationData()
-{
-	EnemyAbilityActivationData.Sort([](const FAbilityActivationData& A, const FAbilityActivationData& B)
-	{
-		return A.Index < B.Index;
-	});
-}
-
 void UAbilityResolverComponent::StartActivateEnemyAbility()
 {
 	while (true)

@@ -3,6 +3,22 @@
 #include "EnemyCharacterBase.h"
 
 #include "Lethe/Controller/AIController/LetheAIController.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
+
+void AEnemyCharacterBase::Die()
+{
+	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
+	{
+		AIController->DeactivateArrow();
+	}
+
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->UnregisterEnemy(this);
+	}
+	
+	Super::Die();
+}
 
 void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority)
 {

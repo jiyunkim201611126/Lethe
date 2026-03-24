@@ -39,6 +39,11 @@ void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
 
 void ALetheCharacterBase::Die()
 {
+	GASManagerComponent->OnDied();
+	if (Controller)
+	{
+		Controller->UnPossess();
+	}
 }
 
 void ALetheCharacterBase::BeginPlay()

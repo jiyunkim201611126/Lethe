@@ -52,7 +52,6 @@ public:
 	void ActivateEnemyAbility(FAbilityActivationData& ActivationData);
 	
 	void SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData);
-	void SortEnemyAbilityActivationData();
 	void StartActivateEnemyAbility();
 	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ResetEnemyActivationData();
@@ -86,10 +85,10 @@ private:
 	// Array지만 사실상 Queue의 작동 방식을 갖습니다.
 	// TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	TArray<FAbilityActivationData> PlayerAbilityActivationData;
+	TArray<FAbilityActivationData> EnemyAbilityActivationData;
+	
 	// PlayerAbilityQueue가 작동 중인지를 표현하는 변수입니다.
 	uint8 bIsResolvingPlayerAbility : 1 = false;
-
-	TArray<FAbilityActivationData> EnemyAbilityActivationData;
 
 	ETeamSide CurrentActivationCharacterTeamSide = ETeamSide::None;
 	

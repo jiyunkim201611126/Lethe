@@ -37,6 +37,15 @@ void ALetheGameState::RegisterEnemy(AEnemyCharacterBase* Enemy)
 	RegisteredEnemies.Emplace(Enemy);
 }
 
+void ALetheGameState::UnregisterEnemy(AEnemyCharacterBase* Enemy)
+{
+	RegisteredEnemies.Remove(Enemy);
+	ReservedEnemyAbilityActivationData.RemoveAll([Enemy](const FAbilityActivationData& ActivationData)
+	{
+		return ActivationData.Index == Enemy->GetEnemyAbilityPriority();
+	});
+}
+
 void ALetheGameState::GoEnemyPlanningPhase()
 {
 	SetPhase(EPhaseState::EnemyPlanningPhase);
@@ -86,8 +95,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	
 	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
-		AbilityResolverComponent->SetEnemyAbilityActivationData(MoveTemp(ReservedEnemyAbilityActivationData));		
-		AbilityResolverComponent->SortEnemyAbilityActivationData();
+		AbilityResolverComponent->SetEnemyAbilityActivationData(MoveTemp(ReservedEnemyAbilityActivationData));
 		AbilityResolverComponent->StartActivateEnemyAbility();
 	}
 }

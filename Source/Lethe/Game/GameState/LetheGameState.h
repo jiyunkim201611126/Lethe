@@ -33,6 +33,7 @@ public:
 	ALetheGameState();
 
 	void RegisterEnemy(AEnemyCharacterBase* Enemy);
+	void UnregisterEnemy(AEnemyCharacterBase* Enemy);
 
 	void GoEnemyPlanningPhase();
 	void GoDrawPhase();

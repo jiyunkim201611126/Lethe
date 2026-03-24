@@ -22,6 +22,8 @@ public:
 
 	void ProcessPlanPhase() const;
 	void ProcessTelegraphPlan() const;
+
+	void DeactivateArrow() const;
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "가장 가까운 플레이어 캐릭터를 찾아 그 타일들을 반환합니다. 거리가 같다면 여러 타일을 반환합니다."))
 	int32 FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutNearestTiles);
@@ -48,6 +50,7 @@ protected:
 	
 	//~ Begin AAIController Interface
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
 	//~ End of AAIController Interface
 
 private:

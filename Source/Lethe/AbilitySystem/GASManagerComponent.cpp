@@ -110,6 +110,13 @@ void UGASManagerComponent::AddCharacterAbilities(const TArray<FSavedCard>& InCar
 	ASC->AddCharacterAbilities(InCards);
 }
 
+void UGASManagerComponent::OnDied() const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
+	ASC->AddLooseGameplayTag(LetheGameplayTags.State_Character_Dead, 1);
+}
+
 void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const
 {
 	check(IsValid(AbilitySystemComponent));

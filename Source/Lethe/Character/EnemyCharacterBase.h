@@ -13,6 +13,10 @@ class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
 	GENERATED_BODY()
 
 public:
+	//~ Begin ICombatInterface
+	virtual void Die() override;
+	//~ End of ICombatInterface
+	
 	void SetEnemyAbilityPriority(const int32 InPriority);
 	int32 GetEnemyAbilityPriority() const;
 

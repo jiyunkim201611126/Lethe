@@ -56,6 +56,16 @@ void ALetheAIController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ALetheAIController::OnUnPossess()
+{
+	if (StateTreeAIComponent)
+	{
+		StateTreeAIComponent->StopLogic(FString(""));
+	}
+	
+	Super::OnUnPossess();
+}
+
 void ALetheAIController::ProcessPlanPhase() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -74,11 +84,16 @@ void ALetheAIController::ProcessTelegraphPlan() const
 	StateTreeAIComponent->SendStateTreeEvent(Event);
 }
 
+void ALetheAIController::DeactivateArrow() const
+{
+	ArrowRenderer->SetActive(false);
+}
+
 void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const
 {
 	if (AbilityInstigator == GetPawn())
 	{
-		ArrowRenderer->SetActive(false);
+		DeactivateArrow();
 	}
 }
 

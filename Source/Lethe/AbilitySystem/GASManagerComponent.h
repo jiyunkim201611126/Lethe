@@ -36,6 +36,8 @@ public:
 	
 	virtual void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
 	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;
+	
+	void OnDied() const;
 
 protected:
 	// GameplayEffect를 본인에게 적용하는 함수입니다.

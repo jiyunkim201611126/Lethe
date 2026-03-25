@@ -4,6 +4,7 @@
 
 #include "LetheAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
+#include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
@@ -40,28 +41,28 @@ UCardPanelWidgetController* ULetheAbilitySystemLibrary::GetCardPanelWidgetContro
 	return nullptr;
 }
 
-bool ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(const UObject* WorldContextObject, const AActor* SourceActor, const AActor* TargetActor, const int32 MaxFloorGap)
+bool ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(const AActor* SourceActor, const AActor* TargetActor, const int32 MaxFloorGap)
 {
-	if (WorldContextObject && SourceActor && TargetActor)
+	if (SourceActor && TargetActor)
 	{
-		if (const UTileManagerSubsystem* TileManagerSubsystem = WorldContextObject->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		if (const UTileManagerSubsystem* TileManagerSubsystem = SourceActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
 			const ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(SourceActor);
 			const ATile* TargetTile = TileManagerSubsystem->GetTileUnderActor(TargetActor);
 			if (SourceTile && TargetTile)
 			{
-				return CanUseAbilityByTileAndFloorGap(WorldContextObject, SourceTile, TargetTile, MaxFloorGap);
+				return CanUseAbilityByTileAndFloorGap(SourceTile, TargetTile, MaxFloorGap);
 			}
 		}
 	}
 	return false;
 }
 
-bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const UObject* WorldContextObject, const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap)
+bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap)
 {
-	if (WorldContextObject && SourceTile && TargetTile)
+	if (SourceTile && TargetTile)
 	{
-		if (const UTileManagerSubsystem* TileManagerSubsystem = WorldContextObject->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		if (const UTileManagerSubsystem* TileManagerSubsystem = SourceTile->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
 			const int32 CurrentFloor = TileManagerSubsystem->GetTileFloor(SourceTile);
 			const int32 TargetFloor = TileManagerSubsystem->GetTileFloor(TargetTile);
@@ -72,10 +73,7 @@ bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const UObject* W
 	return false;
 }
 
-void ULetheAbilitySystemLibrary::ResolveDamageRules(TMap<FGameplayAttribute, float>& OutDataForSource, TMap<FGameplayAttribute, float>& OutDataForTarget)
+void ULetheAbilitySystemLibrary::ResolveDamageRules(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const float IncomingDamage, TMap<FGameplayAttribute, float>& OutDataForSource, TMap<FGameplayAttribute, float>& OutDataForTarget)
 {
-	if (float* IncomingDamageValue = OutDataForTarget.Find(ULetheAttributeSet::GetIncomingDamageAttribute()))
-	{
-		
-	}
+	// 절대 Out 데이터 안에 IncomingDamage를 넣어선 안 됩니다.
 }

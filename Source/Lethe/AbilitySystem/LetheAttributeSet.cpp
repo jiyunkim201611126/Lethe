@@ -5,6 +5,7 @@
 #include "GameplayEffectExtension.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "LetheAbilitySystemLibrary.h"
 #include "Lethe/Interface/CombatInterface.h"
 
 TMap<FGameplayAttribute, FGameplayTag> ULetheAttributeSet::AttributesToTags;
@@ -111,6 +112,13 @@ void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, con
 		const float NewHealth = GetHealth() - LocalIncomingDamage;
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 		UE_LOG(LogTemp, Log, TEXT("SVAttributeSet - Damage Applied"));
+
+		// 데미지 적용 시 발생하는 Source와 Target의 Attribute 변화를 계산해 가져옵니다.
+		TMap<FGameplayAttribute, float> OutDataForSource;
+		TMap<FGameplayAttribute, float> OutDataForTarget;
+		ULetheAbilitySystemLibrary::ResolveDamageRules(Props.SourceASC, Props.TargetASC, LocalIncomingDamage, OutDataForSource, OutDataForTarget);
+
+		// TODO: 위 함수를 통해 나온 OutData를 실제로 적용해야 합니다.
 		
 		const bool bFatal = NewHealth <= 0.f;
 		if (bFatal)

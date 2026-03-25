@@ -8,6 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
+#include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayableCharacterInterface.h"
@@ -90,9 +91,12 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 			}
 		}
 	}
-
+	
 	// 반사 데미지, 흡혈 등 ExecCalc만으로는 구현 불가능한 규칙들을 Preview에도 적용하기 위해 아래 함수를 호출합니다.
-	ULetheAbilitySystemLibrary::ResolveDamageRules(OutPreviewDataForSource, OutPreviewDataForTarget);
+	if (const float* IncomingDamage = OutPreviewDataForTarget.Find(ULetheAttributeSet::GetIncomingDamageAttribute()))
+	{
+		ULetheAbilitySystemLibrary::ResolveDamageRules(SourceASC, TargetASC, *IncomingDamage, OutPreviewDataForSource, OutPreviewDataForTarget);
+	}
 
 	return !OutPreviewDataForSource.IsEmpty() || !OutPreviewDataForTarget.IsEmpty();
 }
@@ -240,7 +244,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		}
 		
 		// 적은 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
-		const bool bCanUseByFloorGap = ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(this, SourceActor, CachedTargetActor.Get(), AbilityRange.FloorGap);
+		const bool bCanUseByFloorGap = ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(SourceActor, CachedTargetActor.Get(), AbilityRange.FloorGap);
 		if (bCanUseByFloorGap && CheckCost(Handle, ActorInfo))
 		{
 			// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.

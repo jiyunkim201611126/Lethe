@@ -121,6 +121,12 @@ public:
 	UNiagaraSystem* GetNiagara(const FGameplayTag& NiagaraTag) const;
 
 private:
+	void RemoveAllPending();
+	FStreamableManager& GetStreamableManager() const;
+
+private:
+	FDelegateHandle OnLevelChangeStartedHandle;
+	
 	// DataTable에 매핑되어있는 Tag와 에셋들은 탐색 효율을 위해 TMap으로 재구성되므로, 메모리 효율을 위해 Soft로 선언합니다.
 	UPROPERTY(Config)
 	TSoftObjectPtr<UDataTable> SoundDataTablePath;
@@ -133,8 +139,6 @@ private:
 	
 	UPROPERTY()
 	TMap<FGameplayTag, TSoftObjectPtr<UNiagaraSystem>> NiagaraMap;
-	
-	FStreamableManager* StreamableManager;
 	
 	// 동일한 에셋에 대한 요청이 여러 개 동시에 들어올 경우, 로드가 끝날 때 모두 처리할 수 있도록 콜백 함수나 재생 관련 변수를 캐싱해 대기시키는 TMap입니다.
 	UPROPERTY()

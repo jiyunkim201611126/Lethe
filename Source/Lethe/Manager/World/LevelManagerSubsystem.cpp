@@ -29,6 +29,11 @@ void ULevelManagerSubsystem::ChangeMap(const ELevelType TargetLevelType, const F
 
 	checkf(!NextLevel.IsNull(), TEXT("NextLevel을 찾을 수 없습니다."));
 
+	if (OnStartLevelChanged.IsBound())
+	{
+		OnStartLevelChanged.Broadcast();
+	}
+
 	// TODO: 로딩 위젯 켜기
 
 	// 로딩 맵으로 이동을 시작합니다.

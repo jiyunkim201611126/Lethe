@@ -6,15 +6,23 @@
 #include "NiagaraSystem.h"
 #include "Engine/AssetManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "World/LevelManagerSubsystem.h"
 
 void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	StreamableManager = &UAssetManager::Get().GetStreamableManager();
+	Collection.InitializeDependency<ULevelManagerSubsystem>();
+
+	if (const UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (ULevelManagerSubsystem* LevelManagerSubsystem = GameInstance->GetSubsystem<ULevelManagerSubsystem>())
+		{
+			OnLevelChangeStartedHandle = LevelManagerSubsystem->OnStartLevelChanged.AddUObject(this, &ThisClass::RemoveAllPending);
+		}
+	}
 
 	// 모든 데이터 테이블을 동기 로드합니다.
-
 	if (const UDataTable* SoundDataTable = SoundDataTablePath.LoadSynchronous())
 	{
 		const FString Context(TEXT("FXManagerSubsystem - Sound"));
@@ -50,22 +58,36 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	NiagaraDataTablePath.Reset();
 }
 
+void UFXManagerSubsystem::RemoveAllPending()
+{
+	// 안전하게 종료하기 위해 콜백들을 모두 제거합니다.
+	FScopeLock Lock(&PendingRequestsLock);
+	PendingSoundLoadRequests.Empty();
+	PendingNiagaraLoadRequests.Empty();
+}
+
 void UFXManagerSubsystem::Deinitialize()
 {
-	FScopeLock Lock(&PendingRequestsLock);
-	// 안전하게 종료하기 위해 현재 로드 중인 에셋을 모두 취소합니다.
-	PendingSoundLoadRequests.Empty();
+	RemoveAllPending();
+
+	if (const UGameInstance* GameInstance = GetGameInstance())
+	{
+		if (ULevelManagerSubsystem* LevelManagerSubsystem = GameInstance->GetSubsystem<ULevelManagerSubsystem>())
+		{
+			LevelManagerSubsystem->OnStartLevelChanged.Remove(OnLevelChangeStartedHandle);
+		}
+	}
+	
 	Super::Deinitialize();
 }
 
 void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation, const float VolumeMultiplier, const float PitchMultiplier)
 {
-	if (!SoundTag.IsValid() || !StreamableManager)
+	FStreamableManager& StreamableManager = GetStreamableManager();
+	if (!SoundTag.IsValid())
 	{
 		return;
 	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
 	
 	const TSoftObjectPtr<USoundBase> SoundToLoad = SoundMap.FindRef(SoundTag);
 	if (SoundToLoad.IsNull())
@@ -80,6 +102,8 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundToLoad.Get(), Location, Rotation, VolumeMultiplier, PitchMultiplier);
 		return;
 	}
+	
+	FScopeLock Lock(&PendingRequestsLock);
 	
 	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
 	
@@ -103,19 +127,18 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 	FSoundAsyncLoadRequest NewRequest;
 	NewRequest.PlayRequests.Add(NewPlayData);	
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
-	StreamableManager->RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+	StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 
 	PendingSoundLoadRequests.Add(AssetPath, NewRequest);
 }
 
 void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback)
 {
-	if (!SoundTag.IsValid() || !StreamableManager)
+	FStreamableManager& StreamableManager = GetStreamableManager();
+	if (!SoundTag.IsValid())
 	{
 		return;
 	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
 	
 	const TSoftObjectPtr<USoundBase> SoundToLoad = SoundMap.FindRef(SoundTag);
 	if (SoundToLoad.IsNull())
@@ -132,6 +155,8 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 		OnLoadedCallback(SoundToLoad.Get());
 		return;
 	}
+	
+	FScopeLock Lock(&PendingRequestsLock);
 
 	// 이미 로드 중인 경우 콜백 함수만 등록합니다.
 	if (PendingSoundLoadRequests.Contains(AssetPath))
@@ -144,52 +169,55 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 	FSoundAsyncLoadRequest NewRequest;
 	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
-	StreamableManager->RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+	StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 	
 	PendingSoundLoadRequests.Add(AssetPath, NewRequest);
 }
 
 void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPath)
 {
-	FScopeLock Lock(&PendingRequestsLock);
-	
-	// 로드 완료 후 사운드 재생을 시작합니다.
-	USoundBase* LoadedSound = Cast<USoundBase>(StreamableManager->LoadSynchronous(LoadedAssetPath, false));
-
-	if (FSoundAsyncLoadRequest* CompletedRequest = PendingSoundLoadRequests.Find(LoadedAssetPath))
+	FSoundAsyncLoadRequest CompletedRequest;
 	{
-		if (LoadedSound && GetWorld())
+		FScopeLock Lock(&PendingRequestsLock);
+		if (FSoundAsyncLoadRequest* FoundRequest = PendingSoundLoadRequests.Find(LoadedAssetPath))
 		{
-			for (const auto& PlayData : CompletedRequest->PlayRequests)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), LoadedSound, PlayData.Location, PlayData.Rotation, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);
-			}
-			for (const auto& Callback : CompletedRequest->GetterCallbacks)
-			{
-				Callback(LoadedSound);
-			}			
+			CompletedRequest = MoveTemp(*FoundRequest);
+			PendingSoundLoadRequests.Remove(LoadedAssetPath);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("로딩 후, USoundBase가 유효하지 않거나 월드를 찾을 수 없습니다."));
+			return;
 		}
+	}
 
-		PendingSoundLoadRequests.Remove(LoadedAssetPath);
+	// 로드 완료 후 사운드 재생을 시작합니다.
+	USoundBase* LoadedSound = Cast<USoundBase>(LoadedAssetPath.ResolveObject());
+	const UWorld* World = GetWorld();
+
+	if (LoadedSound && World)
+	{
+		for (const auto& PlayData : CompletedRequest.PlayRequests)
+		{
+			UGameplayStatics::PlaySoundAtLocation(World, LoadedSound, PlayData.Location, PlayData.Rotation, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);
+		}
+		for (const auto& Callback : CompletedRequest.GetterCallbacks)
+		{
+			Callback(LoadedSound);
+		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("로딩 후, 등록된 콜백 요청을 찾을 수 없습니다."));
+		UE_LOG(LogTemp, Warning, TEXT("로딩 후, USoundBase가 유효하지 않거나 월드를 찾을 수 없습니다."));
 	}
 }
 
 void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation, const FVector Scale, bool bAutoDestroy, bool bAutoActivate)
 {
-	if (!NiagaraTag.IsValid() || !StreamableManager)
+	FStreamableManager& StreamableManager = GetStreamableManager();
+	if (!NiagaraTag.IsValid())
 	{
 		return;
 	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
 	
 	const TSoftObjectPtr<UNiagaraSystem> NiagaraToLoad = NiagaraMap.FindRef(NiagaraTag);
 	if (NiagaraToLoad.IsNull())
@@ -204,6 +232,8 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraToLoad.Get(), Location, Rotation, Scale, bAutoDestroy, bAutoActivate);
 		return;
 	}
+	
+	FScopeLock Lock(&PendingRequestsLock);
 	
 	FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
 	
@@ -226,19 +256,18 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 	FNiagaraAsyncLoadRequest NewRequest;
 	NewRequest.SpawnRequests.Add(NewPlayData);
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
-	StreamableManager->RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+	StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 
 	PendingNiagaraLoadRequests.Add(AssetPath, NewRequest);
 }
 
 void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback)
 {
-	if (!NiagaraTag.IsValid() || !StreamableManager)
+	FStreamableManager& StreamableManager = GetStreamableManager();
+	if (!NiagaraTag.IsValid())
 	{
 		return;
 	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
 	
 	const TSoftObjectPtr<UNiagaraSystem> NiagaraToLoad = NiagaraMap.FindRef(NiagaraTag);
 	if (NiagaraToLoad.IsNull())
@@ -255,6 +284,8 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 		OnLoadedCallback(NiagaraToLoad.Get());
 		return;
 	}
+	
+	FScopeLock Lock(&PendingRequestsLock);
 
 	// 이미 로드 중인 경우 콜백 함수만 등록하고 리턴합니다.
 	if (PendingNiagaraLoadRequests.Contains(AssetPath))
@@ -267,40 +298,44 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 	FNiagaraAsyncLoadRequest NewRequest;
 	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
-	StreamableManager->RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+	StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 	
 	PendingNiagaraLoadRequests.Add(AssetPath, NewRequest);
 }
 
 void UFXManagerSubsystem::OnNiagaraAsyncLoadComplete(FSoftObjectPath LoadedAssetPath)
 {
-	FScopeLock Lock(&PendingRequestsLock);
-
-	UNiagaraSystem* LoadedNiagara = Cast<UNiagaraSystem>(StreamableManager->LoadSynchronous(LoadedAssetPath, false));
-
-	if (FNiagaraAsyncLoadRequest* CompletedRequest = PendingNiagaraLoadRequests.Find(LoadedAssetPath))
+	FNiagaraAsyncLoadRequest CompletedRequest;
 	{
-		if (LoadedNiagara && GetWorld())
+		FScopeLock Lock(&PendingRequestsLock);
+		if (FNiagaraAsyncLoadRequest* FoundRequest = PendingNiagaraLoadRequests.Find(LoadedAssetPath))
 		{
-			for (const auto& PlayData : CompletedRequest->SpawnRequests)
-			{
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), LoadedNiagara, PlayData.Location, PlayData.Rotation, PlayData.Scale, PlayData.bAutoDestroy, PlayData.bAutoActivate);
-			}
-			for (const auto& Callback : CompletedRequest->GetterCallbacks)
-			{
-				Callback(LoadedNiagara);
-			}
+			CompletedRequest = MoveTemp(*FoundRequest);
+			PendingNiagaraLoadRequests.Remove(LoadedAssetPath);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("로딩 후, UNiagaraSystem이 유효하지 않거나 월드를 찾을 수 없습니다."));
+			return;
 		}
+	}
 
-		PendingNiagaraLoadRequests.Remove(LoadedAssetPath);
+	UNiagaraSystem* LoadedNiagara = Cast<UNiagaraSystem>(LoadedAssetPath.ResolveObject());
+	const UWorld* World = GetWorld();
+
+	if (LoadedNiagara && World)
+	{
+		for (const auto& PlayData : CompletedRequest.SpawnRequests)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, LoadedNiagara, PlayData.Location, PlayData.Rotation, PlayData.Scale, PlayData.bAutoDestroy, PlayData.bAutoActivate);
+		}
+		for (const auto& Callback : CompletedRequest.GetterCallbacks)
+		{
+			Callback(LoadedNiagara);
+		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("로딩 후, 등록된 콜백 요청을 찾을 수 없습니다."));
+		UE_LOG(LogTemp, Warning, TEXT("로딩 후, UNiagaraSystem이 유효하지 않거나 월드를 찾을 수 없습니다."));
 	}
 }
 
@@ -336,4 +371,9 @@ UNiagaraSystem* UFXManagerSubsystem::GetNiagara(const FGameplayTag& NiagaraTag) 
 	}
 
 	return NiagaraToLoad.LoadSynchronous();
+}
+
+FStreamableManager& UFXManagerSubsystem::GetStreamableManager() const
+{
+	return UAssetManager::Get().GetStreamableManager();
 }

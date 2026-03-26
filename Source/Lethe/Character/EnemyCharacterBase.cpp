@@ -7,17 +7,21 @@
 
 void AEnemyCharacterBase::Die()
 {
-	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
+	Super::Die();
+	
+	if (ALetheAIController* AIController = GetController<ALetheAIController>())
 	{
 		AIController->DeactivateArrow();
+		AIController->UnPossess();
 	}
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->UnregisterEnemy(this);
 	}
-	
-	Super::Die();
+
+	// TODO: 보통은 애니메이션 재생한 뒤 Destroy되는 게 맞습니다.
+	Destroy();
 }
 
 void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority)

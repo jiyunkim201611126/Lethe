@@ -19,14 +19,14 @@ void ALetheGameState::BeginPlay()
 		AbilityResolverComponent->SetDummyActor(DummyActor);
 	}
 	
-	AbilityResolverComponent->OnActivateEnemyAbility.AddUObject(this, &ThisClass::OnActivateEnemyAbility);
+	AbilityResolverComponent->OnActivateEnemyAbility.BindUObject(this, &ThisClass::OnActivateEnemyAbility);
 	AbilityResolverComponent->OnFinishEnemyActivationQueue.BindUObject(this, &ThisClass::OnFinishEnemyExecutionQueue);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->SetDummyActor(nullptr);
-	AbilityResolverComponent->OnActivateEnemyAbility.RemoveAll(this);
+	AbilityResolverComponent->OnActivateEnemyAbility.Unbind();
 	AbilityResolverComponent->OnFinishEnemyActivationQueue.Unbind();
 	
 	Super::EndPlay(EndPlayReason);

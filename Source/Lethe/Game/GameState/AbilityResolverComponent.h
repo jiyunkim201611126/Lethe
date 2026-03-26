@@ -30,7 +30,7 @@ enum class ETryAbilityActivationResult : uint8
 };
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
+DECLARE_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
 DECLARE_DELEGATE(FOnFinishEnemyActivationQueue);
 
 UCLASS()

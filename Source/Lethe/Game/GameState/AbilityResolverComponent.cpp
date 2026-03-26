@@ -163,9 +163,9 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
 	
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
-	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid() && OnActivateEnemyAbility.IsBound())
+	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid())
 	{
-		OnActivateEnemyAbility.Broadcast(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnActivateEnemyAbility.ExecuteIfBound(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
 	EnemyAbilityActivationData.RemoveAt(0);
 	return Result;

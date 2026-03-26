@@ -14,13 +14,7 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/AbilityResolverComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/FXManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/FXManagerSubsystem.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/FXManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/FXManagerSubsystem.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -699,7 +693,7 @@
       <workItem from="1774273236006" duration="10024000" />
       <workItem from="1774357184781" duration="4259000" />
       <workItem from="1774444769410" duration="7809000" />
-      <workItem from="1774534230234" duration="3071000" />
+      <workItem from="1774534230234" duration="4146000" />
     </task>
     <servers />
   </component>

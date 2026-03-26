@@ -68,11 +68,11 @@ void UFXManagerSubsystem::RemoveAllPending()
 	
 	{
 		FScopeLock Lock(&PendingRequestsLock);
-		for (const auto& Requests : PendingSoundLoadRequests)
+		for (auto& Requests : PendingSoundLoadRequests)
 		{
 			SoundGetterCallbacks.Append(MoveTemp(Requests.Value.GetterCallbacks));
 		}
-		for (const auto& Requests : PendingNiagaraLoadRequests)
+		for (auto& Requests : PendingNiagaraLoadRequests)
 		{
 			NiagaraGetterCallbacks.Append(MoveTemp(Requests.Value.GetterCallbacks));
 		}

@@ -21,6 +21,9 @@ public:
 	void HighlightActorByMouse();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void HighlightActorTransparentByMouse();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void UnhighlightActorByMouse();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

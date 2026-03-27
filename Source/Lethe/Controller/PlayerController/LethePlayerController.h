@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "LethePlayerController.generated.h"
 
+enum class EPhaseState : uint8;
 class ATile;
 class AArrowRenderer;
 class UAbilitySystemComponent;
@@ -14,7 +16,7 @@ class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
 class UPreviewCoordinatorComponent;
-class UTileSelectorComponent;
+class UActorSelectorComponent;
 struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 
@@ -54,7 +56,7 @@ protected:
 	//~ End of AActor Interface
 
 private:
-	ATile* GetTileUnderCursor() const;
+	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
@@ -74,10 +76,13 @@ protected:
 	
 private:
 	UPROPERTY()
-	TObjectPtr<UTileSelectorComponent> TileSelector;
+	TObjectPtr<UActorSelectorComponent> ActorSelector;
 
 	UPROPERTY()
 	TObjectPtr<UPreviewCoordinatorComponent> PreviewCoordinatorComponent;
+
+	EPhaseState CurrentPhaseState = EPhaseState::None;
+	FDelegateHandle OnPhaseStateChangedHandle;
 	
 	uint8 bMouseOnCardUseSection : 1 = false;
 	

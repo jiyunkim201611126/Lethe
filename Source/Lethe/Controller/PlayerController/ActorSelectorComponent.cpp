@@ -1,39 +1,47 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "TileSelectorComponent.h"
+#include "ActorSelectorComponent.h"
 
 #include "Lethe/Lethe.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/HighlightInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-UTileSelectorComponent::UTileSelectorComponent()
+UActorSelectorComponent::UActorSelectorComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UTileSelectorComponent::HighlightTileByMouse(AActor* Tile)
+void UActorSelectorComponent::HighlightActorByMouse(AActor* Actor, const bool bTransparent)
 {
-	if (Tile)
-	{
-		LastMouseHoveredTile = CurrentMouseHoveredTile;
-		CurrentMouseHoveredTile = Tile;
+	LastMouseHoveredActor = CurrentMouseHoveredActor;
+	CurrentMouseHoveredActor = Actor;
 
-		if (LastMouseHoveredTile != CurrentMouseHoveredTile)
+	if (LastMouseHoveredActor != CurrentMouseHoveredActor)
+	{
+		if (LastMouseHoveredActor)
 		{
-			if (LastMouseHoveredTile)
+			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+		}
+		if (CurrentMouseHoveredActor)
+		{
+			if (bTransparent)
 			{
-				IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredTile.GetObject());
+				IHighlightInterface::Execute_HighlightActorTransparentByMouse(CurrentMouseHoveredActor.GetObject());
 			}
-			if (CurrentMouseHoveredTile)
+			else
 			{
-				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredTile.GetObject());
+				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
 			}
-			
+		}
+		
+		if (Actor && Actor->IsA<ATile>())
+		{
+			// 새롭게 검출된 액터가 타일인 경우 들어오는 분기입니다.
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
-				const AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredTile.GetObject()));
-				const AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredTile.GetObject()));
+				const AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredActor.GetObject()));
+				const AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredActor.GetObject()));
 				if (LastActor != CurrentActor)
 				{
 					OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);
@@ -43,23 +51,23 @@ void UTileSelectorComponent::HighlightTileByMouse(AActor* Tile)
 	}
 }
 
-void UTileSelectorComponent::UnhighlightTileByMouse()
+void UActorSelectorComponent::UnhighlightActorByMouse()
 {
-	if (LastMouseHoveredTile)
+	if (LastMouseHoveredActor)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredTile.GetObject());
-		LastMouseHoveredTile = nullptr;
+		IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+		LastMouseHoveredActor = nullptr;
 	}
-	if (CurrentMouseHoveredTile)
+	if (CurrentMouseHoveredActor)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredTile.GetObject());
-		CurrentMouseHoveredTile = nullptr;
+		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
+		CurrentMouseHoveredActor = nullptr;
 	}
 }
 
-void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles, const AActor* AbilityOwner)
+void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner)
 {
-	UnhighlightTileByAbility();
+	UnhighlightActorsByAbility();
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		for (ATile* Tile : Tiles)
@@ -76,24 +84,33 @@ void UTileSelectorComponent::HighlightTileByAbility(const TArray<ATile*>& Tiles,
 			}
 			
 			IHighlightInterface::Execute_HighlightActorByCard(Tile, OutlineColor);
-			CurrentHighlightedTilesByAbility.Emplace(Tile);
+			CurrentHighlightedActorsByAbility.Emplace(Tile);
 		}
 	}
+	
+	IHighlightInterface::Execute_HighlightActorByMouse(AbilityOwner);
+	CurrentHighlightedCharacterByAbility = AbilityOwner;
 }
 
-void UTileSelectorComponent::UnhighlightTileByAbility()
+void UActorSelectorComponent::UnhighlightActorsByAbility()
 {
-	for (TScriptInterface<IHighlightInterface> HighlightTile : CurrentHighlightedTilesByAbility)
+	for (TScriptInterface<IHighlightInterface> HighlightActor : CurrentHighlightedActorsByAbility)
 	{
-		if (HighlightTile)
+		if (HighlightActor)
 		{
-			IHighlightInterface::Execute_UnhighlightActorByCard(HighlightTile.GetObject());
+			IHighlightInterface::Execute_UnhighlightActorByCard(HighlightActor.GetObject());
 		}
 	}
-	CurrentHighlightedTilesByAbility.Reset();
+	CurrentHighlightedActorsByAbility.Reset();
+	
+	if (CurrentHighlightedCharacterByAbility)
+	{
+		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentHighlightedCharacterByAbility.GetObject());
+		CurrentHighlightedCharacterByAbility = nullptr;
+	}
 }
 
-void UTileSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
+void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
 {
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
 	{
@@ -116,31 +133,7 @@ void UTileSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndAc
 	}
 }
 
-AActor* UTileSelectorComponent::GetActorOnTileUnderCursor() const
-{
-	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
-	{
-		FHitResult Hit;
-		PlayerController->GetHitResultUnderCursor(ECC_Tile, false, Hit);
-
-		if (Hit.IsValidBlockingHit())
-		{
-			if (ATile* HitTile = Cast<ATile>(Hit.GetActor()))
-			{
-				const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-				const ATile* TopTile = HitTile->GetTopTile();
-				if (TileManagerSubsystem && TopTile)
-				{
-					return TileManagerSubsystem->GetActorOnTile(TopTile);
-				}
-			}
-		}
-	}
-
-	return nullptr;
-}
-
-bool UTileSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const
+bool UActorSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const
 {
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{

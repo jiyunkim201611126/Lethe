@@ -68,6 +68,23 @@ void ALetheCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void ALetheCharacterBase::HighlightActorByMouse_Implementation()
+{
+	GetMesh()->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
+}
+
+void ALetheCharacterBase::HighlightActorTransparentByMouse_Implementation()
+{
+	GetMesh()->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(OutlineColorTransparent);
+}
+
+void ALetheCharacterBase::UnhighlightActorByMouse_Implementation()
+{
+	GetMesh()->SetRenderCustomDepth(false);
+}
+
 void ALetheCharacterBase::InitAbilityActorInfo() const
 {
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);

@@ -20,7 +20,7 @@ void AEnemyCharacterBase::Die()
 		LetheGameState->UnregisterEnemy(this);
 	}
 
-	// TODO: 보통은 애니메이션 재생한 뒤 Destroy되는 게 맞습니다.
+	// TODO: 애니메이션 재생한 뒤 Destroy되어야 합니다.
 	Destroy();
 }
 

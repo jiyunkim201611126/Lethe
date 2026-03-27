@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "Lethe/Lethe.h"
 #include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Interface/HighlightInterface.h"
 #include "LetheCharacterBase.generated.h"
 
 class ALethePawn;
@@ -15,7 +17,7 @@ class UGASManagerComponent;
 class UWidgetComponent;
 
 UCLASS()
-class LETHE_API ALetheCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
+class LETHE_API ALetheCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface, public IHighlightInterface
 {
 	GENERATED_BODY()
 
@@ -36,6 +38,12 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActor Interface
 
+	//~ Begin IHighlightInterface
+	virtual void HighlightActorByMouse_Implementation() override;
+	virtual void HighlightActorTransparentByMouse_Implementation() override;
+	virtual void UnhighlightActorByMouse_Implementation() override;
+	//~ End of IHighlightInterface
+
 protected:
 	void InitAbilityActorInfo() const;
 
@@ -54,4 +62,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
+
+private:
+	int32 OutlineColorTransparent = CUSTOM_DEPTH_YELLOW_TRANSPARENT;
+	int32 OutlineColor = CUSTOM_DEPTH_YELLOW;
 };

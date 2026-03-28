@@ -10,7 +10,7 @@
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -118,7 +118,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 				{
 					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
 					{
-						if (ActorOnTile->Implements<UPlayableCharacterInterface>())
+						if (ActorOnTile->Implements<UPlayerCharacterInterface>())
 						{
 							if (OutNearestTiles.IsEmpty() || Distance == Depth)
 							{
@@ -217,7 +217,7 @@ void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const 
 	{
 		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TileManagerSubsystem->FindPrioritizedPathTilesForAI(ThisTile, TargetTile, MoveDistance, OutPathTiles);
+			TileManagerSubsystem->FindPrioritizedPathTiles(ThisTile, TargetTile, MoveDistance, OutPathTiles);
 		}
 	}
 }
@@ -291,10 +291,18 @@ bool ALetheAIController::IsPlayerCharacterInDetectionRange()
 {
 	if (const AEnemyCharacterBase* EnemyCharacter = GetPawn<AEnemyCharacterBase>())
 	{
-		const FBFSRange& AbilityRange = EnemyCharacter->GetAbilityRange();
+		const FBFSRange& AbilityRange = EnemyCharacter->GetDetectionRange();
 		TArray<ATile*> PlayerCharacterTiles;
 		FindNearestPlayerCharacterTiles(AbilityRange.BFSType, AbilityRange.Distance, PlayerCharacterTiles);
 		return !PlayerCharacterTiles.IsEmpty();
 	}
 	return false;
+}
+
+void ALetheAIController::StartCombat()
+{
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
+	}
 }

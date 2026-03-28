@@ -18,6 +18,9 @@ class LETHE_API ICombatInterface
 
 public:
 	UFUNCTION(BlueprintCallable)
+	virtual int32 GetMoveDistance() = 0;
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLocationOnTile(FVector InTileLocation) = 0;
+	virtual void OnDamageTaken() = 0;
 	virtual void Die() = 0;
 };

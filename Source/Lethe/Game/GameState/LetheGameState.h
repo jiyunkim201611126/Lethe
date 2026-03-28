@@ -16,6 +16,10 @@ enum class EPhaseState : uint8
 	None,
 	EnemyPlanningPhase,
 
+	// None Combat Phase
+	PlayerMovePhase,
+
+	// Combat Phase
 	DrawPhase,
 	PlayerTurnPhase,
 	EnemyTurnPhase,
@@ -33,9 +37,11 @@ public:
 	ALetheGameState();
 
 	void RegisterEnemy(AEnemyCharacterBase* Enemy);
+	void RegisterCombatEnemy(AEnemyCharacterBase* Enemy);
 	void UnregisterEnemy(AEnemyCharacterBase* Enemy);
 
 	void GoEnemyPlanningPhase();
+	void GoPlayerMovePhase();
 	void GoDrawPhase();
 	void GoPlayerTurnPhase();
 	void GoEnemyTurnPhase();
@@ -60,6 +66,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyPlanMoveResolved();
 
+	void OnPlanTimerEnded();
+
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsProgressingPlayerAbility() const;
 
@@ -74,6 +82,8 @@ private:
 
 	void ProcessCurrentEnemyPlan();
 	void OnFinishEnemyExecutionQueue();
+
+	bool IsCombatPhase() const;
 
 public:
 	FOnChangePhaseState OnChangePhaseState;
@@ -93,14 +103,14 @@ private:
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 
 	// 우선순위대로 정렬되는 현재 스폰된 적들입니다.
-	TArray<TWeakObjectPtr<AEnemyCharacterBase>> RegisteredEnemies;
-	int32 CurrentEnemyIndex = 0;
-
-	/**
-	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
-	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
-	 */
+	TArray<TWeakObjectPtr<AEnemyCharacterBase>> SpawnedEnemies;
+	int32 CurrentEnemyAbilityProcessIndex = 0;
+	
+	// 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
+	// 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
 	TArray<FAbilityActivationData> ReservedEnemyAbilityActivationData;
-
 	FTimerHandle PlanTimerHandle;
+
+	// 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다.
+	TSet<TWeakObjectPtr<AEnemyCharacterBase>> CurrentCombatEnemies;
 };

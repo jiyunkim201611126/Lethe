@@ -31,7 +31,7 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 
 		// 전투에 참여할 캐릭터들의 CharacterTag를 가져옵니다.
 		TArray<FGameplayTag> CharacterTags;
-		CharacterTags.Reserve(PLAYABLE_CHARACTER_NUMBER);
+		CharacterTags.Reserve(PLAYER_CHARACTER_NUMBER);
 		for (const auto& EquippedDeck : DeckManagerSubsystem->GetEquippedDecks())
 		{
 			CharacterTags.Emplace(EquippedDeck.Key);
@@ -91,7 +91,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
 				{
 					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
-					TileManagerSubsystem->ReserveTile(SpawnedCharacter, TileActor);
+					TileManagerSubsystem->ReservePlayerMoveTile(SpawnedCharacter, TileActor);
 					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 				}
 			}

@@ -12,7 +12,7 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	PlayerController = WidgetControllerParams.PlayerController;
 	PlayerState = WidgetControllerParams.PlayerState;
 
-	AbilitySystemReferences.Reserve(PLAYABLE_CHARACTER_NUMBER);
+	AbilitySystemReferences.Reserve(PLAYER_CHARACTER_NUMBER);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = Cast<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
 	

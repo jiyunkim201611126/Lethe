@@ -14,13 +14,47 @@
   <component name="ChangeListManager">
     <list default="true" id="08f6e5a2-d562-47fd-b405-2101441b3dbe" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Lethe/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" beforeDir="false" afterPath="$PROJECT_DIR$/Saved/SaveGames/DeckSaveSlot.sav" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Actor/Tile/Tile.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Enemy/BP_TestEnemy.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Character/Enemy/BP_TestEnemy.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/AnimBP/ABP_Glasses.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter0.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter1.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter2.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/BP_TestCharacter3.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_CharacterDefinition_Test0.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_CharacterDefinition_Test1.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_CharacterDefinition_Test2.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Character/Playable/DA_CharacterDefinition_Test3.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/STT_SelectAndTelegraphRandomAbility.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/ST_EnemyBasic.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprint/Controller/StateTree/ST_EnemyBasic.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/Abilities/LetheCardAbility.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/GASManagerComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAbilitySystemComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAttributeSet.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/AbilitySystem/LetheAttributeSet.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/EnemyCharacterBase.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/LetheCharacterBase.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Character/PlayerCharacterBase.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/AIController/LetheAIController.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/ActorSelectorComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/ActorSelectorComponent.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/ActorSelectorComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/ActorSelectorComponent.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Controller/PlayerController/LethePlayerController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameMode/BattleGameMode.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Game/GameState/LetheGameState.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Interface/CombatInterface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Interface/CombatInterface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Lethe/Interface/HighlightInterface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Interface/HighlightInterface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Interface/PlayerCharacterInterface.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Interface/PlayerCharacterInterface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Lethe.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Lethe.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/DeckManagerSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/Manager/Tile/TileManagerSubsystem.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardLayoutManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/BattleWidget/CardLayoutManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheWidgetController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Lethe/UI/Widget/LetheWidgetController.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +68,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://1" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/ControlRig/Source/ControlRig/Public/Units/Highlevel/RigUnit_HighlevelBase.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DNACalib/Source/DNACalibLib/Private/dnacalib/commands/SetBlendShapeTargetDeltasCommand.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Animation/DeformerGraph/Source/OptimusCore/Private/DataInterfaces/OptimusDataInterfaceRawBuffer.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -54,11 +88,13 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Fab/Source/Fab/Private/Utilities/FabLocalAssets.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Marketplace/Developer/RiderLink/Source/RD/thirdparty/spdlog/include/spdlog/details/null_mutex.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Mutable/Source/CustomizableObjectEditor/Private/MuCOE/CustomizableObjectConnectionDrawingPolicy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/NetcodeUnitTest/NetcodeUnitTest/Source/NetcodeUnitTest/Classes/ProcessUnitTest.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/NetcodeUnitTest/NetcodeUnitTest/Source/NetcodeUnitTest/Private/ProcessUnitTest.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/PCG/Source/PCG/Private/MatchAndSet/PCGMatchAndSetWeightedByCategory.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/AndroidDeviceProfileSelector/Source/AndroidDeviceProfileCommandlets/Private/CreateAndroidPreviewDataFromADBCommandlet.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbility.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbility.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/GameplayAbilityTargetActor.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/Tasks/AbilityTask_ApplyRootMotionJumpForce.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/Tasks/AbilityTask_ApplyRootMotionJumpForce.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/Tasks/AbilityTask_PlayMontageAndWait.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/Tasks/AbilityTask_SpawnActor.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Abilities/Tasks/AbilityTask_VisualizeTargeting.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -66,7 +102,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemBlueprintLibrary.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemCheatManagerExtension.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent_Abilities.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemComponent_Abilities.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/AbilitySystemInterface.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayAbilitiesModule.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/Tests/AbilitySystemComponentTests.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -77,6 +113,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AttributeSet.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilitiesEditor/Private/AssetTypeActions_GameplayAbilitiesBlueprint.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/ResonanceAudio/Source/ResonanceAudio/Private/ResonanceAudioLibrary/resonance_audio/graph/ambisonic_binaural_decoder_node.cc" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/RigVM/Source/RigVM/Private/RigVMFunctions/Animation/RigVMFunction_GetWorldTime.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/StateTree/Source/StateTreeEditorModule/Private/Debugger/SStateTreeDebuggerView.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/Runtime/nDisplay/Source/DisplayCluster/Private/Render/Viewport/Containers/DisplayClusterViewportProxyData.h" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Plugins/VirtualProduction/Avalanche/Source/Avalanche/Private/Transition/Tasks/AvaSceneRemoveTagAttributeTask.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -120,6 +157,8 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/LevelEditor/Private/LevelEditorOutlinerSettings.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/LevelEditor/Private/LevelEditorSubsystem.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/LevelEditor/Private/LevelEditorToolBar.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/MovieSceneTools/Private/AutomatedLevelSequenceCapture.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/Sequencer/Public/SequencerKeyStructGenerator.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/SparseVolumeTexture/Private/SparseVolumeTextureOpenVDBUtility.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/UMGEditor/Private/Designer/STransformHandle.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/UMGEditor/Private/TabFactory/PreviewDetailsTabSummoner.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -129,19 +168,24 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxLightImport.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/UnrealEd/Private/PlayLevel.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Editor/WorldPartitionEditor/Private/WorldPartitionEditorModule.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/AutomationUtils/ProcessUtils.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/BuildGraph/Tasks/SpawnTask.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Gauntlet/Framework/Base/Gauntlet.TargetDeviceDesktopCommon.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Gauntlet/SelfTest/TestData/LogParser/LinuxFatalError.txt" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Localization/LocalizationProvider.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Scripts/AddAutomatedPerfTestToProject.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Scripts/CopyBuildToStagingDirectory.Automation.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Scripts/LaunchMultiServer.Automation.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/AutomationTool/Turnkey/Providers/GoogleDriveCopyProvider.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.BuildGraph/Expressions/BgInt.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Core/MemoryReader.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Core/ProcessUtils.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Core/RegistryConfigurationSource.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Horde/Accounts/AccountMessages.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Horde/Issues/WorkflowMessages.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Horde/Jobs/JobMessages.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Horde/Storage/BatchBlobReader.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Oodle/Oodle.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Perforce/Records/DescribeOptions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.Serialization/CbField.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Programs/Shared/EpicGames.UHT/Parsers/UhtClassParser.cs" root0="FORCE_HIGHLIGHTING" />
@@ -153,6 +197,7 @@
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/AIModule/Classes/AIController.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/AIModule/Classes/BehaviorTree/Decorators/BTDecorator_CheckGameplayTagsOnActor.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/AIModule/Private/AIController.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/AIModule/Private/Perception/AIPerceptionSystem.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/AudioCaptureImplementations/AudioCaptureRtAudio/AudioCaptureRtAudio.Build.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.6/Engine/Source/Runtime/Core/Private/Delegates/DelegateHandle.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -384,8 +429,8 @@
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/CombatInterface.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/HighlightInterface.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/HighlightInterface.h" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.cpp" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/PlayableCharacterInterface.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/PlayerCharacterInterface.cpp" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Source/Lethe/Interface/PlayerCharacterInterface.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/LetheAbilityTypes.cpp" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/LetheAbilityTypes.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Source/Lethe/Manager/DataLoadManagerSubsystem.cpp" root0="FORCE_HIGHLIGHTING" />
@@ -702,7 +747,7 @@
       <workItem from="1774444769410" duration="7809000" />
       <workItem from="1774534230234" duration="6293000" />
       <workItem from="1774629037300" duration="5989000" />
-      <workItem from="1774678570901" duration="817000" />
+      <workItem from="1774678570901" duration="31477000" />
     </task>
     <servers />
   </component>

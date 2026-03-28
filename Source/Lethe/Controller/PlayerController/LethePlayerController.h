@@ -57,6 +57,9 @@ protected:
 
 private:
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
+
+	void ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile) const;
+	void TryMoveWhileCombatPhase(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const;
 	
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;

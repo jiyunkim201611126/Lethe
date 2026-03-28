@@ -5,6 +5,21 @@
 #include "Lethe/Controller/AIController/LetheAIController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 
+void AEnemyCharacterBase::OnDamageTaken()
+{
+	Super::OnDamageTaken();
+	
+	if (ALetheAIController* AIController = GetController<ALetheAIController>())
+	{
+		AIController->StartCombat();
+	}
+}
+
+int32 AEnemyCharacterBase::GetMoveDistance()
+{
+	return MoveDistance;
+}
+
 void AEnemyCharacterBase::Die()
 {
 	Super::Die();
@@ -53,4 +68,9 @@ void AEnemyCharacterBase::ProcessTelegraphPlan() const
 const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
 {
 	return AbilityRange;
+}
+
+const FBFSRange& AEnemyCharacterBase::GetDetectionRange() const
+{
+	return DetectionRange;
 }

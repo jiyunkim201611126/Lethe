@@ -10,7 +10,8 @@
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -46,10 +47,11 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 {
 	if (SelectedCardAbility.IsValid() || !ActorSelector)
 	{
+		// 선택된 카드가 있다면 얼리리턴합니다.
 		return;
 	}
 	
-	if (CurrentPhaseState != EPhaseState::PlayerTurnPhase)
+	if (CurrentPhaseState != EPhaseState::PlayerMovePhase && CurrentPhaseState != EPhaseState::PlayerTurnPhase)
 	{
 		// 플레이어의 턴이 아니라면 얼리리턴합니다.
 		return;
@@ -75,7 +77,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	{
 		// 클릭한 타일에 무언가 있다면 일단 캐릭터 선택 상태를 초기화하고, 캐릭터 선택 로직을 시작합니다.
 		ResetSelectedCharacter();
-		if (OutTileAndActor.Actor->Implements<UPlayableCharacterInterface>())
+		if (OutTileAndActor.Actor->Implements<UPlayerCharacterInterface>())
 		{
 			SelectedCharacter = OutTileAndActor.Actor;
 			bIsSelectingCharacter = true;
@@ -93,6 +95,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	
 	if (AbilitySystemComponent)
 	{
+		// MoveAbility 사용 준비를 시작합니다.
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
@@ -113,34 +116,29 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		{
 			if (bIsSelectingCharacter)
 			{
-				// 캐릭터를 선택한 경우 들어오는 분기입니다.
+				// 캐릭터를 선택해야 하는 경우 들어오는 분기입니다.
 				ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
 			}
 			else
 			{
-				if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+				// 이미 선택된 캐릭터가 있었고, 빈 타일을 클릭해 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
+				switch (CurrentPhaseState)
 				{
-					// 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
-					if (OutTiles.Contains(OutTileAndActor.Tile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(OutTileAndActor.Tile))
-					{
-						// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-						FGameplayEventData Payload;
-						Payload.Instigator = SelectedCharacter.Get();
-						
-						FAbilityActivationData AbilityActivationData;
-						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-						AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-						AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-						AbilityActivationData.TargetTile = OutTileAndActor.Tile;
-						
-						TileManagerSubsystem->ReserveTile(SelectedCharacter.Get(), OutTileAndActor.Tile);
-						
-						if (ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
-						{
-							LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
-						}
-					}
+				case EPhaseState::PlayerMovePhase:
+					ReserveMoveWhileNoneCombatPhase(OutTileAndActor.Tile);
+					break;
+				case EPhaseState::PlayerTurnPhase:
+					FAbilityActivationData AbilityActivationData;
+					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					AbilityActivationData.TargetTile = OutTileAndActor.Tile;
+					TryMoveWhileCombatPhase(OutTiles, AbilityActivationData);
+					break;
+				default:
+					return;
 				}
+				
 				ResetSelectedCharacter();
 			}
 		}
@@ -153,6 +151,33 @@ void ALethePlayerController::ResetSelectedCharacter()
 	{
 		ActorSelector->UnhighlightActorsByAbility();
 		SelectedCharacter.Reset();
+	}
+}
+
+void ALethePlayerController::ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile) const
+{
+	ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter);
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (CombatInterface && TileManagerSubsystem)
+	{
+		const int32 MoveDistance = CombatInterface->GetMoveDistance();
+	}
+}
+
+void ALethePlayerController::TryMoveWhileCombatPhase(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const
+{
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		if (TilesInRange.Contains(AbilityActivationData.TargetTile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(AbilityActivationData.TargetTile.Get()))
+		{
+			// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
+			TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter.Get(), AbilityActivationData.TargetTile.Get());
+					
+			if (const ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
+			{
+				LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+			}
+		}
 	}
 }
 
@@ -204,7 +229,6 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		FTileAndActor OutTileAndActor;
 		ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
 		OnOtherTileDetected(nullptr, OutTileAndActor.Actor);
-		
 		return true;
 	}
 	
@@ -270,6 +294,11 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+{
+	CurrentPhaseState = NewState;
+}
+
 void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
@@ -296,11 +325,6 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	}
 
 	ActorSelector->UnhighlightActorByMouse();
-}
-
-void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
-{
-	CurrentPhaseState = NewState;
 }
 
 void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const

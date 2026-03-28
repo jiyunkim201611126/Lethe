@@ -49,12 +49,11 @@ public:
 	 * StartTile에서 TargetTile까지의 최단 경로들 중, MoveDistance 이내에서 도달 가능한 타일들을 우선순위대로 Out 인자로 뱉어주는 함수입니다.
 	 * 기존 FindShortestPath의 프레임드랍 유발 가능성을 제거하기 위해 구현한 함수로, MoveDistance를 매개변수로 받아 최소한의 경로 복원을 수행합니다.
 	 */
-	bool FindPrioritizedPathTilesForAI(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles);
+	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles);
 
-	void ReserveTile(const AActor* Character, ATile* Tile);
-	void ClearTileReservations(const ETeamSide TeamSide);
+	void ReservePlayerMoveTile(const AActor* Character, const ATile* Tile);
 
-	bool CanMoveToTileForPlayerCharacter(ATile* Tile) const;
+	bool CanMoveToTileForPlayerCharacter(const ATile* Tile) const;
 	UFUNCTION(BlueprintPure)
 	bool CanMoveToTileForEnemyAI(const ATile* Tile) const;
 	

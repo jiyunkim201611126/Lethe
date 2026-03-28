@@ -84,7 +84,7 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 			}
 			
 			IHighlightInterface::Execute_HighlightActorByAbility(Tile, OutlineColor);
-			CurrentHighlightedActorsByAbility.Emplace(Tile);
+			CurrentHighlightedTilesByAbility.Emplace(Tile);
 		}
 	}
 	
@@ -94,14 +94,14 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 
 void UActorSelectorComponent::UnhighlightActorsByAbility()
 {
-	for (TScriptInterface<IHighlightInterface> HighlightActor : CurrentHighlightedActorsByAbility)
+	for (TScriptInterface<IHighlightInterface> HighlightedTile : CurrentHighlightedTilesByAbility)
 	{
-		if (HighlightActor)
+		if (HighlightedTile)
 		{
-			IHighlightInterface::Execute_UnhighlightActorByAbility(HighlightActor.GetObject());
+			IHighlightInterface::Execute_UnhighlightActorByAbility(HighlightedTile.GetObject());
 		}
 	}
-	CurrentHighlightedActorsByAbility.Reset();
+	CurrentHighlightedTilesByAbility.Reset();
 	
 	if (CurrentHighlightedCharacterByAbility)
 	{

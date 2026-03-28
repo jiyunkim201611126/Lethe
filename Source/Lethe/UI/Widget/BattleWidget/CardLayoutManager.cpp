@@ -19,7 +19,7 @@ void UCardLayoutManager::Initialize(const FVector2D& CardSize)
 	GravesCardTranslation.X += CardSize.X / 2.f;
 	GravesCardTranslation.Y -= CardSize.Y / 2.f;
 	
-	ASCToCards.Reserve(PLAYABLE_CHARACTER_NUMBER);
+	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);
 }
 
 void UCardLayoutManager::SetupCardSlot(UCanvasPanelSlot* CardSlot) const

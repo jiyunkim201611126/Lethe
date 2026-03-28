@@ -7,7 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/HUD/LetheHUD.h"
@@ -76,7 +76,7 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-	if (IPlayableCharacterInterface* PlayerCharacter = Cast<IPlayableCharacterInterface>(OwnerPawn))
+	if (IPlayerCharacterInterface* PlayerCharacter = Cast<IPlayerCharacterInterface>(OwnerPawn))
 	{
 		const FGameplayTag& CharacterTag = PlayerCharacter->GetCharacterTag();
 		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())

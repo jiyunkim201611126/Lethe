@@ -4,7 +4,6 @@
 
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
-#include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/Stage/StageData.h"
 
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -275,7 +274,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
-bool UTileManagerSubsystem::FindPrioritizedPathTilesForAI(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles)
+bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles)
 {
 	OutPathTiles.Reset();
 	if (MoveDistance <= 0)
@@ -342,28 +341,16 @@ bool UTileManagerSubsystem::FindPrioritizedPathTilesForAI(const ATile* StartTile
 	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::ReserveTile(const AActor* Character, ATile* Tile)
+void UTileManagerSubsystem::ReservePlayerMoveTile(const AActor* Character, const ATile* Tile)
 {
 	const ATile* CurrentTile = GetTileUnderActor(Character);
 	PlayerCharacterReservedTiles.Remove(CurrentTile);
 	PlayerCharacterReservedTiles.Emplace(Tile);
 }
 
-void UTileManagerSubsystem::ClearTileReservations(const ETeamSide TeamSide)
+bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(const ATile* Tile) const
 {
-	switch (TeamSide)
-	{
-	case ETeamSide::Player:
-		PlayerCharacterReservedTiles.Empty();
-		break;
-	default:
-		break;
-	}
-}
-
-bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(ATile* Tile) const
-{
-	// 타일 위에 무언가 있다면 이미 입력 단계에서 걸러졌으므로, 여기선 확인하지 않고 ReserveTile만 검사합니다.
+	// 예약된 타일을 걸러주지 않으면 빠른 조작 시 플레이어 캐릭터끼리 겹치는 경우가 있으므로 막아줍니다.
 	return !PlayerCharacterReservedTiles.Contains(Tile);
 }
 

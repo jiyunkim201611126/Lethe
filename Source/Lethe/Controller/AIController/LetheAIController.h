@@ -40,7 +40,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SelectAndTelegraphRandomAbility(ATile* TargetTile) const;
 
+	UFUNCTION(BlueprintCallable)
 	bool IsPlayerCharacterInDetectionRange();
+
+	UFUNCTION(BlueprintCallable)
+	void StartCombat();
 
 protected:
 	//~ Begin AActor Interface

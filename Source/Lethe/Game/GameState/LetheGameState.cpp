@@ -34,21 +34,35 @@ void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ALetheGameState::RegisterEnemy(AEnemyCharacterBase* Enemy)
 {
-	RegisteredEnemies.Emplace(Enemy);
+	SpawnedEnemies.Emplace(Enemy);
+}
+
+void ALetheGameState::RegisterCombatEnemy(AEnemyCharacterBase* Enemy)
+{
+	if (!CurrentCombatEnemies.Contains(Enemy))
+	{
+		CurrentCombatEnemies.Emplace(Enemy);
+	}
 }
 
 void ALetheGameState::UnregisterEnemy(AEnemyCharacterBase* Enemy)
 {
-	RegisteredEnemies.Remove(Enemy);
+	SpawnedEnemies.Remove(Enemy);
 	ReservedEnemyAbilityActivationData.RemoveAll([Enemy](const FAbilityActivationData& ActivationData)
 	{
 		return ActivationData.Index == Enemy->GetEnemyAbilityPriority();
 	});
+	CurrentCombatEnemies.Remove(Enemy);
 }
 
 void ALetheGameState::GoEnemyPlanningPhase()
 {
 	SetPhase(EPhaseState::EnemyPlanningPhase);
+}
+
+void ALetheGameState::GoPlayerMovePhase()
+{
+	SetPhase(EPhaseState::PlayerMovePhase);
 }
 
 void ALetheGameState::GoDrawPhase()
@@ -80,7 +94,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 
 	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
 	{
-		RegisteredEnemies.Sort([](const TWeakObjectPtr<AEnemyCharacterBase>& A, const TWeakObjectPtr<AEnemyCharacterBase>& B)
+		SpawnedEnemies.Sort([](const TWeakObjectPtr<AEnemyCharacterBase>& A, const TWeakObjectPtr<AEnemyCharacterBase>& B)
 			{
 				if (A.IsValid() && B.IsValid())
 				{
@@ -89,7 +103,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 				return false;
 			});
 		
-		CurrentEnemyIndex = 0;
+		CurrentEnemyAbilityProcessIndex = 0;
 		ProcessCurrentEnemyPlan();
 	}
 	
@@ -102,17 +116,17 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 
 void ALetheGameState::ProcessCurrentEnemyPlan()
 {
-	if (!RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
+	if (!SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		GoDrawPhase();
+		IsCombatPhase() ? GoDrawPhase() : GoPlayerMovePhase();
 		return;
 	}
 
-	const TWeakObjectPtr<AEnemyCharacterBase>& CurrentEnemy = RegisteredEnemies[CurrentEnemyIndex];
+	const TWeakObjectPtr<AEnemyCharacterBase>& CurrentEnemy = SpawnedEnemies[CurrentEnemyAbilityProcessIndex];
 	if (!CurrentEnemy.IsValid())
 	{
-		++CurrentEnemyIndex;
+		++CurrentEnemyAbilityProcessIndex;
 		ProcessCurrentEnemyPlan();
 		return;
 	}
@@ -123,6 +137,11 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 void ALetheGameState::OnFinishEnemyExecutionQueue()
 {
 	GoEnemyPlanningPhase();
+}
+
+bool ALetheGameState::IsCombatPhase() const
+{
+	return !CurrentCombatEnemies.IsEmpty();
 }
 
 EPhaseState ALetheGameState::GetPhaseState() const
@@ -157,22 +176,23 @@ void ALetheGameState::OnAbilityActivationFailed() const
 
 void ALetheGameState::OnEnemyPlanMoveResolved()
 {
-	if (RegisteredEnemies.IsValidIndex(CurrentEnemyIndex))
+	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
-		RegisteredEnemies[CurrentEnemyIndex]->ProcessTelegraphPlan();
+		SpawnedEnemies[CurrentEnemyAbilityProcessIndex]->ProcessTelegraphPlan();
 	}
 
 	// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
 	if (PlanTimerHandle.IsValid())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(PlanTimerHandle);
+		GetWorldTimerManager().ClearTimer(PlanTimerHandle);
 	}
-	GetWorld()->GetTimerManager().SetTimer(PlanTimerHandle,
-		[this]()
-		{
-			++CurrentEnemyIndex;
-			ProcessCurrentEnemyPlan();
-		}, EnemyAbilityDelayTime, false);
+	GetWorldTimerManager().SetTimer(PlanTimerHandle, this, &ThisClass::OnPlanTimerEnded, EnemyAbilityDelayTime, false);
+}
+
+void ALetheGameState::OnPlanTimerEnded()
+{
+	++CurrentEnemyAbilityProcessIndex;
+	ProcessCurrentEnemyPlan();
 }
 
 UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const

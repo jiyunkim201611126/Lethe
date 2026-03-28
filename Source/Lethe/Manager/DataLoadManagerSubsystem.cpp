@@ -239,7 +239,7 @@ void UDataLoadManagerSubsystem::OnCharacterDefinitionDataLoaded(const TArray<FPr
 		}
 	}
 
-	// 로드된 객체를 콜백으로 반환합니다.
+	// 로드된 객체를 콜백으로 전달합니다.
 	OnComplete.ExecuteIfBound(LoadedAssets);
 }
 

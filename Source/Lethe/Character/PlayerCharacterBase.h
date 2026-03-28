@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "LetheCharacterBase.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "PlayerCharacterBase.generated.h"
 
 UCLASS()
-class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlayableCharacterInterface
+class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlayerCharacterInterface
 {
 	GENERATED_BODY()
 

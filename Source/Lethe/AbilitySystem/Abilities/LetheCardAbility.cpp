@@ -11,7 +11,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
 
@@ -235,7 +235,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		return false;
 	}
 	
-	if (SourceActor->Implements<UPlayableCharacterInterface>())
+	if (SourceActor->Implements<UPlayerCharacterInterface>())
 	{
 		// SourceActor가 플레이어 캐릭터인 경우 들어오는 분기입니다.
 		if (!TargetASC || TargetASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead))

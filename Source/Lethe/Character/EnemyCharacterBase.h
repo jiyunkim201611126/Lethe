@@ -14,6 +14,8 @@ class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
 
 public:
 	//~ Begin ICombatInterface
+	virtual void OnDamageTaken() override;
+	virtual int32 GetMoveDistance() override;
 	virtual void Die() override;
 	//~ End of ICombatInterface
 	
@@ -24,17 +26,13 @@ public:
 	void ProcessTelegraphPlan() const;
 
 	const FBFSRange& GetAbilityRange() const;
+	const FBFSRange& GetDetectionRange() const;
 
 protected:
 	// 캐릭터의 사정거리입니다.
 	// TODO: 현재로선 간단하게 구현하기 위해 이곳에 선언되었으나, 추후 Ability에 선언된 AbilityRange를 사용하도록 구현할 필요가 있습니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
 	FBFSRange AbilityRange;
-
-	// 캐릭터의 최대 이동 거리입니다.
-	// TODO: 현재로선 간단하게 구현하기 위해 이곳에 선언되었으나, 추후 Attribute로 옮길 필요가 있습니다.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
-	int32 MoveDistance = 2;
 
 	// 캐릭터의 경계 범위입니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")

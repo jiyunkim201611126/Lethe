@@ -106,6 +106,7 @@ void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, con
 		return;
 	}
 	
+	// 데미지가 0.01보다 작으면 체력 감소를 적용하지 않습니다.
 	if (LocalIncomingDamage > 0.01f)
 	{
 		// 새로운 체력을 계산해 할당합니다.
@@ -121,18 +122,10 @@ void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, con
 		// TODO: 위 함수를 통해 나온 OutData를 실제로 적용해야 합니다.
 		
 		const bool bFatal = NewHealth <= 0.f;
-		if (bFatal)
+		if (ICombatInterface* Combat = Cast<ICombatInterface>(Props.TargetAvatarActor))
 		{
-			if (ICombatInterface* Combat = Cast<ICombatInterface>(Props.TargetAvatarActor))
-			{
-				Combat->Die();
-			}
+			bFatal ? Combat->Die() : Combat->OnDamageTaken();
 		}
-	}
-	else
-	{
-		// 데미지가 0.01보다 작으면 체력 감소를 적용하지 않습니다.
-		SetIncomingDamage(0.f);
 	}
 
 	// TODO: Damage Text 출력 등

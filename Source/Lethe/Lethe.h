@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#define PLAYABLE_CHARACTER_NUMBER 4
+#define PLAYER_CHARACTER_NUMBER 4
 #define MAX_HAND_COUNT 8
 #define MAX_DECK_COUNT 10
 

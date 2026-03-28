@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PlayableCharacterInterface.generated.h"
+#include "PlayerCharacterInterface.generated.h"
 
 struct FGameplayTag;
 
 UINTERFACE()
-class UPlayableCharacterInterface : public UInterface
+class UPlayerCharacterInterface : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class LETHE_API IPlayableCharacterInterface
+class LETHE_API IPlayerCharacterInterface
 {
 	GENERATED_BODY()
 

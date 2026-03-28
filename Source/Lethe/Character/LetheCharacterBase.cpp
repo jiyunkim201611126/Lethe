@@ -37,6 +37,11 @@ void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
 	SetActorLocation(InTileLocation);
 }
 
+void ALetheCharacterBase::OnDamageTaken()
+{
+	// TODO: 피격 애니메이션 재생 등
+}
+
 void ALetheCharacterBase::Die()
 {
 	GASManagerComponent->OnDied();

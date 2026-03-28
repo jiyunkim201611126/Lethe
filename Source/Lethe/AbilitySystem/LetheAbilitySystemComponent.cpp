@@ -5,7 +5,7 @@
 #include "Abilities/LetheGameplayAbility.h"
 #include "Lethe/Data/CardPrimaryDataAssetLoader.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
-#include "Lethe/Interface/PlayableCharacterInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
 
 void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities)
@@ -28,7 +28,7 @@ void ULetheAbilitySystemComponent::AddCharacterAbilitiesWithActive(const TArray<
 
 void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards)
 {
-	if (IPlayableCharacterInterface* PlayerCharacter = Cast<IPlayableCharacterInterface>(GetOwner()))
+	if (IPlayerCharacterInterface* PlayerCharacter = Cast<IPlayerCharacterInterface>(GetOwner()))
 	{
 		UDataLoadManagerSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
 		UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this);

@@ -39,9 +39,11 @@ public:
 	//~ End of AActor Interface
 
 	//~ Begin IHighlightInterface
-	virtual void HighlightActorByMouse_Implementation() override;
 	virtual void HighlightActorTransparentByMouse_Implementation() override;
+	virtual void HighlightActorByMouse_Implementation() override;
 	virtual void UnhighlightActorByMouse_Implementation() override;
+	virtual void HighlightActorByAbility_Implementation(const int32 InOutlineColor) override;
+	virtual void UnhighlightActorByAbility_Implementation() override;
 	//~ End of IHighlightInterface
 
 protected:

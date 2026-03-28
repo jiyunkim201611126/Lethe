@@ -83,12 +83,12 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 				OutlineColor = CUSTOM_DEPTH_BLUE;
 			}
 			
-			IHighlightInterface::Execute_HighlightActorByCard(Tile, OutlineColor);
+			IHighlightInterface::Execute_HighlightActorByAbility(Tile, OutlineColor);
 			CurrentHighlightedActorsByAbility.Emplace(Tile);
 		}
 	}
 	
-	IHighlightInterface::Execute_HighlightActorByMouse(AbilityOwner);
+	IHighlightInterface::Execute_HighlightActorByAbility(AbilityOwner, INDEX_NONE);
 	CurrentHighlightedCharacterByAbility = AbilityOwner;
 }
 
@@ -98,14 +98,14 @@ void UActorSelectorComponent::UnhighlightActorsByAbility()
 	{
 		if (HighlightActor)
 		{
-			IHighlightInterface::Execute_UnhighlightActorByCard(HighlightActor.GetObject());
+			IHighlightInterface::Execute_UnhighlightActorByAbility(HighlightActor.GetObject());
 		}
 	}
 	CurrentHighlightedActorsByAbility.Reset();
 	
 	if (CurrentHighlightedCharacterByAbility)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentHighlightedCharacterByAbility.GetObject());
+		IHighlightInterface::Execute_UnhighlightActorByAbility(CurrentHighlightedCharacterByAbility.GetObject());
 		CurrentHighlightedCharacterByAbility = nullptr;
 	}
 }

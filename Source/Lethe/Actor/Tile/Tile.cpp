@@ -74,11 +74,11 @@ void ATile::UnhighlightActorByMouse_Implementation()
 	}
 }
 
-void ATile::HighlightActorByCard_Implementation(const int32 InOutlineColor)
+void ATile::HighlightActorByAbility_Implementation(const int32 InOutlineColor)
 {
 	if (TopTile.IsValid())
 	{
-		Execute_HighlightActorByCard(TopTile.Get(), InOutlineColor);
+		Execute_HighlightActorByAbility(TopTile.Get(), InOutlineColor);
 	}
 	else
 	{
@@ -88,11 +88,11 @@ void ATile::HighlightActorByCard_Implementation(const int32 InOutlineColor)
 	}
 }
 
-void ATile::UnhighlightActorByCard_Implementation()
+void ATile::UnhighlightActorByAbility_Implementation()
 {
 	if (TopTile.IsValid())
 	{
-		Execute_UnhighlightActorByCard(TopTile.Get());
+		Execute_UnhighlightActorByAbility(TopTile.Get());
 	}
 	else
 	{

@@ -85,6 +85,17 @@ void ALetheCharacterBase::UnhighlightActorByMouse_Implementation()
 	GetMesh()->SetRenderCustomDepth(false);
 }
 
+void ALetheCharacterBase::HighlightActorByAbility_Implementation(const int32 InOutlineColor)
+{
+	GetMesh()->SetRenderCustomDepth(true);
+	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
+}
+
+void ALetheCharacterBase::UnhighlightActorByAbility_Implementation()
+{
+	GetMesh()->SetRenderCustomDepth(false);
+}
+
 void ALetheCharacterBase::InitAbilityActorInfo() const
 {
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);

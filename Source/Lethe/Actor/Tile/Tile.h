@@ -33,8 +33,8 @@ public:
 	//~ Begin IHighlightInterface
 	virtual void HighlightActorByMouse_Implementation() override;
 	virtual void UnhighlightActorByMouse_Implementation() override;
-	virtual void HighlightActorByCard_Implementation(const int32 InOutlineColor) override;
-	virtual void UnhighlightActorByCard_Implementation() override;
+	virtual void HighlightActorByAbility_Implementation(const int32 InOutlineColor) override;
+	virtual void UnhighlightActorByAbility_Implementation() override;
 	//~ End of IHighlightInterface
 	
 	FCubeCoord GetCubeCoord() const;

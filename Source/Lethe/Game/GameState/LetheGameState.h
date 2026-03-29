@@ -49,9 +49,8 @@ public:
 	EPhaseState GetPhaseState() const;
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
-	
-	void ActivateEnemyAbility(FAbilityActivationData& ActivationData) const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
+	void ActivateAbility(FAbilityActivationData& ActivationData) const;
 
 	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;
 
@@ -83,7 +82,7 @@ private:
 	void ProcessCurrentEnemyPlan();
 	void OnFinishEnemyExecutionQueue();
 
-	bool IsCombatPhase() const;
+	bool ShouldGoCombatPhase() const;
 
 public:
 	FOnChangePhaseState OnChangePhaseState;

@@ -86,7 +86,7 @@ int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile
 	return FoundDepth;
 }
 
-bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData)
+bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const
 {
 	OutSearchData.DistanceMap.Reset();
 	OutSearchData.ParentCoordMap.Reset();
@@ -156,8 +156,8 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 				continue;
 			}
 
-			// 타일 위에 무언가 있다면 해당 경로로는 이동할 수 없습니다.
-			if (NextCoord != TargetCoord && GetActorOnTile(GetTile(NextCoord)))
+			// 타일 위에 무언가 있고, 이를 무시하지 않을 예정이라면 스킵합니다.
+			if (!bIgnoreActor && NextCoord != TargetCoord && GetActorOnTile(GetTile(NextCoord)))
 			{
 				continue;
 			}
@@ -192,11 +192,11 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 	return OutSearchData.ShortestDistanceToTarget != INDEX_NONE;
 }
 
-bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray)
+bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray, const bool bIgnoreActor) const
 {
 	OutPathTilesArray.Reset();
 	FShortestPathSearchData SearchData;
-	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData))
+	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData, bIgnoreActor))
 	{
 		return false;
 	}
@@ -219,7 +219,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	/**
 	 * ParendCoordMap을 따라 TargetTile -> StartTile 방향으로 재귀 탐색하며 모든 최단 경로를 복원합니다.
 	 * CurrentReversedPath는 현재 분기에서 [Target, ..., Start] 순서로 쌓이는 경로입니다.
-	 * StartCoord에 도달하면 startTile을 제외하고 역순으로 읽어 [Start 다음 타일, ..., Target] 경로를 생성합니다.
+	 * StartCoord에 도달하면 StartTile을 제외하고 역순으로 읽어 [Start 다음 타일, ..., Target] 경로를 생성합니다.
 	 * 각 분기 탐색이 끝나면 Pop으로 현재 좌표를 제거해 다음 분기를 위한 경로 상태를 복구합니다.
 	 */
 	TFunction<void(const FCubeCoord&)> BuildAllShortestPaths = [&](const FCubeCoord& CurrentCoord)
@@ -274,7 +274,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
-bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles)
+bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const
 {
 	OutPathTiles.Reset();
 	if (MoveDistance <= 0)
@@ -283,7 +283,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	}
 
 	FShortestPathSearchData SearchData;
-	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData))
+	if (!BuildShortestPathSearchData(StartTile, TargetTile, SearchData, bIgnoreActor))
 	{
 		return false;
 	}
@@ -341,11 +341,28 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::ReservePlayerMoveTile(const AActor* Character, const ATile* Tile)
+void UTileManagerSubsystem::ReservePlayerMoveTile(const AActor* Character, ATile* Tile)
 {
 	const ATile* CurrentTile = GetTileUnderActor(Character);
 	PlayerCharacterReservedTiles.Remove(CurrentTile);
 	PlayerCharacterReservedTiles.Emplace(Tile);
+}
+
+void UTileManagerSubsystem::RemovePlayerReservedTile(ATile* Tile)
+{
+	PlayerCharacterReservedTiles.Remove(Tile);
+}
+
+void UTileManagerSubsystem::ResetPlayerReservedTile(const TArray<AActor*>& PlayerCharacters)
+{
+	PlayerCharacterReservedTiles.Reset();
+	for (const AActor* PlayerCharacter : PlayerCharacters)
+	{
+		if (ATile* Tile = GetTileUnderActor(PlayerCharacter))
+		{
+			PlayerCharacterReservedTiles.Emplace(Tile);
+		}
+	}
 }
 
 bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(const ATile* Tile) const
@@ -360,7 +377,7 @@ bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(const ATile* Tile) const
 	return !GetActorOnTile(Tile);
 }
 
-ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord)
+ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord) const
 {
 	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
 	{

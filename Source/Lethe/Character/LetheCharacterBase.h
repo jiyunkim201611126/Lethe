@@ -30,6 +30,7 @@ public:
 	
 	//~ Begin ICombatInterface
 	virtual void SetLocationOnTile(FVector InTileLocation) override;
+	virtual int32 GetMoveDistance() const override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
 	//~ End of ICombatInterface

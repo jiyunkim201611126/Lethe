@@ -204,7 +204,7 @@ void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
 			
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
-				LetheGameState->ActivateEnemyAbility(MoveAbilityActivationData);
+				LetheGameState->ActivateAbility(MoveAbilityActivationData);
 			}
 		}
 	}
@@ -213,11 +213,11 @@ void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
 void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles) const
 {
 	OutPathTiles.Reset();
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TileManagerSubsystem->FindPrioritizedPathTiles(ThisTile, TargetTile, MoveDistance, OutPathTiles);
+			TileManagerSubsystem->FindPrioritizedPathTiles(ThisTile, TargetTile, MoveDistance, OutPathTiles, false);
 		}
 	}
 }

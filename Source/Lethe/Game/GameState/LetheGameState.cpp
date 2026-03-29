@@ -119,7 +119,7 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	if (!SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		IsCombatPhase() ? GoDrawPhase() : GoPlayerMovePhase();
+		ShouldGoCombatPhase() ? GoDrawPhase() : GoPlayerMovePhase();
 		return;
 	}
 
@@ -139,7 +139,7 @@ void ALetheGameState::OnFinishEnemyExecutionQueue()
 	GoEnemyPlanningPhase();
 }
 
-bool ALetheGameState::IsCombatPhase() const
+bool ALetheGameState::ShouldGoCombatPhase() const
 {
 	return !CurrentCombatEnemies.IsEmpty();
 }
@@ -154,14 +154,14 @@ void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationDat
 	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData);
 }
 
-void ALetheGameState::ActivateEnemyAbility(FAbilityActivationData& ActivationData) const
-{
-	AbilityResolverComponent->ActivateEnemyAbility(ActivationData);
-}
-
 void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
 	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
+}
+
+void ALetheGameState::ActivateAbility(FAbilityActivationData& ActivationData) const
+{
+	AbilityResolverComponent->ActivateAbility(ActivationData);
 }
 
 void ALetheGameState::OnActivateEnemyAbility(AActor* AbilityInstigator) const

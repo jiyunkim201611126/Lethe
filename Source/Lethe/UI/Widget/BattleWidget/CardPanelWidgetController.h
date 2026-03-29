@@ -70,6 +70,7 @@ public:
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoPlayerTurnPhase() const;
+	void ProcessAllPlayerMove() const;
 	bool RequestTurnEnd() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 

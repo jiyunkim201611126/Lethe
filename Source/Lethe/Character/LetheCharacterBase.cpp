@@ -37,6 +37,11 @@ void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
 	SetActorLocation(InTileLocation);
 }
 
+int32 ALetheCharacterBase::GetMoveDistance() const
+{
+	return MoveDistance;
+}
+
 void ALetheCharacterBase::OnDamageTaken()
 {
 	// TODO: 피격 애니메이션 재생 등

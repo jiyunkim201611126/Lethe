@@ -81,6 +81,14 @@ void UCardPanelWidgetController::GoPlayerTurnPhase() const
 	}
 }
 
+void UCardPanelWidgetController::ProcessAllPlayerMove() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->ProcessAllPlayerMove();
+	}
+}
+
 bool UCardPanelWidgetController::RequestTurnEnd() const
 {
 	if (LetheGameState.IsValid() && LethePlayerController)

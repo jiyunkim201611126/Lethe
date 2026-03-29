@@ -234,7 +234,7 @@ void UCardPanelWidget::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 		UpdateAllCardTranslation();
 	}
 
-	if (CardLayoutManager->GetCurrentHandsNum() == MAX_HAND_COUNT)
+	if (CardLayoutManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
 	{
 		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
 		CardPanelWidgetController->GoPlayerTurnPhase();
@@ -382,19 +382,26 @@ void UCardPanelWidget::StartViewCardDetail(const UCardWidget* CardWidget) const
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	switch (CurrentPhaseState)
 	{
-		const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
-
-		if (bRequestResult)
+	case EPhaseState::PlayerMovePhase:
+		CardPanelWidgetController->ProcessAllPlayerMove();
+		break;
+	case EPhaseState::PlayerTurnPhase:
 		{
-			if (CardLayoutManager)
+			const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
+			if (bRequestResult)
 			{
-				CardLayoutManager->AddAllHandsToGrave();
+				if (CardLayoutManager)
+				{
+					CardLayoutManager->AddAllHandsToGrave();
+				}
+				UpdateAllCardTranslation();
 			}
-
-			UpdateAllCardTranslation();
 		}
+		break;
+	default:
+		break;
 	}
 }
 

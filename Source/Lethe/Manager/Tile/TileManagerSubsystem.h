@@ -43,21 +43,23 @@ public:
 	 * StartTile에서 TargetTile까지의 '모든 최단 경로'를 Out 인자로 뱉어주는 함수입니다.
 	 * 생성된 ShortestPathSearchData를 기반으로 모든 경로를 복원하기 때문에, 한 번에 여러 번 호출하면 프레임드랍을 유발할 수 있습니다.
 	 */
-	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray);
+	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray, const bool bIgnoreActor) const;
 
 	/**
 	 * StartTile에서 TargetTile까지의 최단 경로들 중, MoveDistance 이내에서 도달 가능한 타일들을 우선순위대로 Out 인자로 뱉어주는 함수입니다.
 	 * 기존 FindShortestPath의 프레임드랍 유발 가능성을 제거하기 위해 구현한 함수로, MoveDistance를 매개변수로 받아 최소한의 경로 복원을 수행합니다.
 	 */
-	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles);
+	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const;
 
-	void ReservePlayerMoveTile(const AActor* Character, const ATile* Tile);
-
+	void ReservePlayerMoveTile(const AActor* Character, ATile* Tile);
+	void RemovePlayerReservedTile(ATile* Tile);
+	void ResetPlayerReservedTile(const TArray<AActor*>& PlayerCharacters);
 	bool CanMoveToTileForPlayerCharacter(const ATile* Tile) const;
+	
 	UFUNCTION(BlueprintPure)
 	bool CanMoveToTileForEnemyAI(const ATile* Tile) const;
 	
-	ATile* GetTile(const FCubeCoord& InCubeCoord);
+	ATile* GetTile(const FCubeCoord& InCubeCoord) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetTileFloor(const ATile* Tile) const;
@@ -83,7 +85,7 @@ private:
 	};
 
 	// StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다.
-	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData);
+	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const;
 	const FStageData* GetStageData(const FName& StageName) const;
 	
 private:

@@ -40,6 +40,7 @@ void UDeckEditingWidget::NativeDestruct()
 		UnequippedDeckTileView->OnItemClicked().RemoveAll(this);
 	}
 
+	GoToBattleButton->OnClicked.RemoveDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
 	NextPageButton->OnClicked.RemoveDynamic(this, &ThisClass::OnNextPageButtonClicked);
 	PreviousPageButton->OnClicked.RemoveDynamic(this, &ThisClass::OnPreviousPageButtonClicked);
 	NextCharacterButton->OnClicked.RemoveDynamic(this, &ThisClass::OnNextCharacterButtonClicked);
@@ -53,8 +54,7 @@ void UDeckEditingWidget::NativeDestruct()
 
 void UDeckEditingWidget::StartLoadAllCards()
 {
-	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
-	if (DeckManagerSubsystem)
+	if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
 	{
 		// 로드되어 있는 Deck들을 가져온 뒤, 필요한 카드 관련 에셋 로드를 시작합니다.
 		const TMap<FGameplayTag, FSavedCharacterDeck>& UnequippedDecks = DeckManagerSubsystem->GetUnequippedDecks();

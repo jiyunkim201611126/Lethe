@@ -15,11 +15,6 @@ void AEnemyCharacterBase::OnDamageTaken()
 	}
 }
 
-int32 AEnemyCharacterBase::GetMoveDistance()
-{
-	return MoveDistance;
-}
-
 void AEnemyCharacterBase::Die()
 {
 	Super::Die();

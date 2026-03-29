@@ -15,7 +15,6 @@ class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
 public:
 	//~ Begin ICombatInterface
 	virtual void OnDamageTaken() override;
-	virtual int32 GetMoveDistance() override;
 	virtual void Die() override;
 	//~ End of ICombatInterface
 	

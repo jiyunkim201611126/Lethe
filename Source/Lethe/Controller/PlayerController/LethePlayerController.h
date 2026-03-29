@@ -9,14 +9,15 @@
 #include "LethePlayerController.generated.h"
 
 enum class EPhaseState : uint8;
-class ATile;
 class AArrowRenderer;
+class APlayerCharacterBase;
+class ATile;
 class UAbilitySystemComponent;
+class UActorSelectorComponent;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
 class UPreviewCoordinatorComponent;
-class UActorSelectorComponent;
 struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 
@@ -38,6 +39,7 @@ public:
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
+	void ProcessAllPlayerMove();
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
@@ -58,8 +60,8 @@ protected:
 private:
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 
-	void ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile) const;
-	void TryMoveWhileCombatPhase(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const;
+	void ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile);
+	void ProcessPlayerMove(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const;
 	
 	// 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다.
 	void OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const;
@@ -100,4 +102,13 @@ private:
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
 
 	TWeakObjectPtr<AActor> SelectedCharacter;
+
+	// 비전투 상황에서 캐릭터의 예약 경로를 담아두는 변수입니다.
+	struct FPlayerCharacterReservedMove
+	{
+		TWeakObjectPtr<AActor> PlayerCharacter;
+		TArray<TWeakObjectPtr<ATile>> PathTiles;
+		TWeakObjectPtr<ATile> TargetTile;
+	};
+	TArray<FPlayerCharacterReservedMove> PlayerCharacterReservedMoveData;
 };

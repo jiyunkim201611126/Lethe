@@ -45,8 +45,7 @@ void UDeckManagerSubsystem::LoadDeck()
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{
 			// 세이브 파일이 존재하는 경우 들어오는 분기입니다.
-			const UDeckSaveGame* LoadedDeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
-			if (LoadedDeckSaveGameObject)
+			if (const UDeckSaveGame* LoadedDeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0)))
 			{
 				// Id 기준으로 세이브되었던 데이터를 Tag 기준으로 변경해 로드합니다.
 				TMap<FGameplayTag, FSavedCharacterDeck> OutEquippedDecks;

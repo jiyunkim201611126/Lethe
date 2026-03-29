@@ -117,7 +117,10 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			if (bIsSelectingCharacter)
 			{
 				// 캐릭터를 선택해야 하는 경우 들어오는 분기입니다.
-				ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
+				if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+				{
+					ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
+				}
 			}
 			else
 			{
@@ -128,17 +131,18 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 					ReserveMoveWhileNoneCombatPhase(OutTileAndActor.Tile);
 					break;
 				case EPhaseState::PlayerTurnPhase:
-					FAbilityActivationData AbilityActivationData;
-					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-					AbilityActivationData.TargetTile = OutTileAndActor.Tile;
-					TryMoveWhileCombatPhase(OutTiles, AbilityActivationData);
-					break;
+					{
+						FAbilityActivationData AbilityActivationData;
+						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+						AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+						AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+						AbilityActivationData.TargetTile = OutTileAndActor.Tile;
+						ProcessPlayerMove(OutTiles, AbilityActivationData);
+						break;
+					}
 				default:
 					return;
 				}
-				
 				ResetSelectedCharacter();
 			}
 		}
@@ -154,18 +158,162 @@ void ALethePlayerController::ResetSelectedCharacter()
 	}
 }
 
-void ALethePlayerController::ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile) const
+void ALethePlayerController::ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile)
 {
-	ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter);
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (CombatInterface && TileManagerSubsystem)
+	if (!SelectedCharacter.IsValid())
 	{
-		const int32 MoveDistance = CombatInterface->GetMoveDistance();
+		return;
+	}
+	
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (TileManagerSubsystem)
+	{
+		// 기존에 예약해두었던 타일이 있다면 제거합니다.
+		FPlayerCharacterReservedMove* SelectedData = PlayerCharacterReservedMoveData.FindByPredicate([this](const auto& MoveData)
+		{
+			return MoveData.PlayerCharacter == SelectedCharacter;
+		});
+		if (SelectedData)
+		{
+			TileManagerSubsystem->RemovePlayerReservedTile(SelectedData->TargetTile.Get());
+		}
+		
+		// TargetTile을 향한 모든 가능 경로를 가져옵니다.
+		TArray<TArray<ATile*>> OutPathTilesArray;
+		TileManagerSubsystem->FindShortestPath(TileManagerSubsystem->GetTileUnderActor(SelectedCharacter.Get()), TargetTile, OutPathTilesArray, true);
+		for (const TArray<ATile*> PathTiles : OutPathTilesArray)
+		{
+			// 최단 경로 중, 중간에 가로막히지 않고 도달 가능한 경로를 탐색합니다.
+			TArray<TWeakObjectPtr<ATile>> WeakPathTiles;
+			bool bIsAllTileEmpty = true;
+			for (ATile* Tile : PathTiles)
+			{
+				if (!TileManagerSubsystem->CanMoveToTileForPlayerCharacter(Tile))
+				{
+					bIsAllTileEmpty = false;
+					break;
+				}
+				WeakPathTiles.Emplace(Tile);
+			}
+			
+			if (bIsAllTileEmpty)
+			{
+				// 중간에 가로막히지 않고 도달 가능한 경로라면 이를 캐싱합니다.
+				if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter))
+				{
+					const int32 MoveDistance = CombatInterface->GetMoveDistance();
+					ATile* ReservingTile = PathTiles.IsValidIndex(MoveDistance) ? PathTiles[MoveDistance] : PathTiles.Last();
+
+					if (!SelectedData)
+					{
+						FPlayerCharacterReservedMove MovePathData;
+						MovePathData.PlayerCharacter = SelectedCharacter;
+						MovePathData.PathTiles = WeakPathTiles;
+						MovePathData.TargetTile = ReservingTile;
+						PlayerCharacterReservedMoveData.Emplace(MovePathData);
+					}
+					else
+					{
+						SelectedData->PathTiles = WeakPathTiles;
+						SelectedData->TargetTile = ReservingTile;
+					}
+					TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter.Get(), ReservingTile);
+				}
+				break;
+			}
+			WeakPathTiles.Reset();
+		}
 	}
 }
 
-void ALethePlayerController::TryMoveWhileCombatPhase(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const
+void ALethePlayerController::ProcessAllPlayerMove()
 {
+	ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!LetheGameState || !TileManagerSubsystem)
+	{
+		return;
+	}
+	
+	// 경로를 예약한 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
+	for (auto& ReservedMoveData : PlayerCharacterReservedMoveData)
+	{
+		// 경로가 더이상 남지 않았다면 다음 캐릭터로 넘어갑니다.
+		if (ReservedMoveData.PathTiles.IsEmpty())
+		{
+			continue;
+		}
+		
+		const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ReservedMoveData.PlayerCharacter);
+		UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+		if (!AbilitySystemComponent)
+		{
+			continue;
+		}
+
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		TArray<FGameplayAbilitySpec*> AbilitySpecs;
+		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
+		if (AbilitySpecs.IsEmpty())
+		{
+			return;
+		}
+		
+		FAbilityActivationData AbilityActivationData;
+		AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+		AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+		AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+		AbilityActivationData.TargetTile = ReservedMoveData.TargetTile;
+		
+		LetheGameState->ActivateAbility(AbilityActivationData);
+	
+		// 캐싱된 경로에서 도달한 타일까지 제거합니다.
+		int32 RemoveNum = 1;
+		for (const auto& PathTile : ReservedMoveData.PathTiles)
+		{
+			if (PathTile == ReservedMoveData.TargetTile)
+			{
+				break;
+			}
+			++RemoveNum;
+		}
+		for (int32 RemoveIndex = RemoveNum; RemoveIndex > 0; --RemoveIndex)
+		{
+			if (!ReservedMoveData.PathTiles.IsEmpty())
+			{
+				ReservedMoveData.PathTiles.RemoveAt(0);
+			}
+		}
+		
+		// 다음 이동할 타일을 예약합니다.
+		if (!ReservedMoveData.PathTiles.IsEmpty())
+		{
+			if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ReservedMoveData.PlayerCharacter))
+			{
+				const int32 MoveDistance = CombatInterface->GetMoveDistance();
+				const auto& ReservingTile = ReservedMoveData.PathTiles.IsValidIndex(MoveDistance) ? ReservedMoveData.PathTiles[MoveDistance] : ReservedMoveData.PathTiles.Last();
+				if (ReservingTile.IsValid())
+				{
+					TileManagerSubsystem->RemovePlayerReservedTile(ReservedMoveData.TargetTile.Get());
+					ReservedMoveData.TargetTile = ReservingTile;
+					TileManagerSubsystem->ReservePlayerMoveTile(ReservedMoveData.PlayerCharacter.Get(), ReservingTile.Get());
+				}
+			}
+		}
+	}
+
+	// 모든 플레이어 캐릭터의 이동을 마쳤다면 다음 페이즈로 넘어갑니다.
+	LetheGameState->GoEnemyPlanningPhase();
+}
+
+void ALethePlayerController::ProcessPlayerMove(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const
+{
+	if (!SelectedCharacter.IsValid())
+	{
+		return;
+	}
+	
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (TilesInRange.Contains(AbilityActivationData.TargetTile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(AbilityActivationData.TargetTile.Get()))
@@ -297,6 +445,21 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
 	CurrentPhaseState = NewState;
+	
+	if (CurrentPhaseState == EPhaseState::DrawPhase)
+	{
+		// Combat Phase로 진입 시 예약해뒀던 모든 예약 이동을 초기화합니다.
+		TArray<AActor*> PlayerCharacters;
+		for (const auto& ReservedMoveData : PlayerCharacterReservedMoveData)
+		{
+			PlayerCharacters.Emplace(ReservedMoveData.PlayerCharacter.Get());
+		}
+		if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		{
+			TileManagerSubsystem->ResetPlayerReservedTile(PlayerCharacters);
+		}
+		PlayerCharacterReservedMoveData.Reset();
+	}
 }
 
 void ALethePlayerController::PlayerTick(float DeltaTime)

@@ -4,16 +4,14 @@
 
 #include "AbilitySystemInterface.h"
 #include "ActorSelectorComponent.h"
+#include "PlayerAbilityContextComponent.h"
 #include "PreviewCoordinatorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
-#include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -22,6 +20,8 @@ ALethePlayerController::ALethePlayerController()
 
 	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
 	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
+
+	PlayerAbilityContextComponent = CreateDefaultSubobject<UPlayerAbilityContextComponent>("PlayerAbilityContextComponent");
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -65,20 +65,21 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		ResetSelectedCharacter();
 		return;
 	}
-
-	bool bIsSelectingCharacter = false;
+	
 	if ((!SelectedCharacter.IsValid() && !OutTileAndActor.Actor) || (SelectedCharacter.IsValid() && SelectedCharacter == OutTileAndActor.Actor))
 	{
 		// 캐릭터 미선택 상태에서 빈 타일을 클릭했거나, 이미 선택된 캐릭터와 동일한 캐릭터를 선택한 경우 얼리리턴합니다.
 		return;
 	}
 
+	bool bIsSelectingCharacter = false;
 	if (OutTileAndActor.Actor)
 	{
 		// 클릭한 타일에 무언가 있다면 일단 캐릭터 선택 상태를 초기화하고, 캐릭터 선택 로직을 시작합니다.
 		ResetSelectedCharacter();
 		if (OutTileAndActor.Actor->Implements<UPlayerCharacterInterface>())
 		{
+			// 캐릭터를 캐싱하고, '이번 입력으로 캐릭터를 선택 중임'을 기록합니다.
 			SelectedCharacter = OutTileAndActor.Actor;
 			bIsSelectingCharacter = true;
 		}
@@ -90,62 +91,50 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		return;
 	}
 	
-	const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(SelectedCharacter.Get());
-	UAbilitySystemComponent* AbilitySystemComponent = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-	
-	if (AbilitySystemComponent)
+	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(SelectedCharacter);
+	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+	if (!AbilitySystemComponent)
 	{
-		// MoveAbility 사용 준비를 시작합니다.
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		TArray<FGameplayAbilitySpec*> AbilitySpecs;
-		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
-		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
-		if (AbilitySpecs.IsEmpty())
+		ResetSelectedCharacter();
+		return;
+	}
+
+	switch (CurrentPhaseState)
+	{
+	case EPhaseState::PlayerMovePhase:
+		if (!bIsSelectingCharacter)
 		{
+			// 이동 타일을 예약합니다.
+			PlayerAbilityContextComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
 			ResetSelectedCharacter();
-			return;
 		}
-		
-		TArray<ATile*> OutTiles;
-		if (const ULetheGameplayAbility* MoveAbility = Cast<ULetheGameplayAbility>(AbilitySpecs[0]->Ability))
+		break;
+	case EPhaseState::PlayerTurnPhase:
 		{
-			ActorSelector->TryGetTilesByDepth(OutTiles, SelectedCharacter.Get(), MoveAbility->GetAbilityRange());
-		}
+			// 이동 가능한 타일을 모두 가져옵니다.
+			TArray<ATile*> OutTiles;
+			if (!PlayerAbilityContextComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutTiles))
+			{
+				ResetSelectedCharacter();
+				break;
+			}
 		
-		if (!OutTiles.IsEmpty())
-		{
 			if (bIsSelectingCharacter)
 			{
-				// 캐릭터를 선택해야 하는 경우 들어오는 분기입니다.
-				if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
-				{
-					ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
-				}
+				// 이동 가능 범위를 하이라이팅합니다.
+				ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
 			}
 			else
 			{
-				// 이미 선택된 캐릭터가 있었고, 빈 타일을 클릭해 캐릭터를 이동시켜야 하는 경우 들어오는 분기입니다.
-				switch (CurrentPhaseState)
-				{
-				case EPhaseState::PlayerMovePhase:
-					ReserveMoveWhileNoneCombatPhase(OutTileAndActor.Tile);
-					break;
-				case EPhaseState::PlayerTurnPhase:
-					{
-						FAbilityActivationData AbilityActivationData;
-						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-						AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-						AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-						AbilityActivationData.TargetTile = OutTileAndActor.Tile;
-						ProcessPlayerMove(OutTiles, AbilityActivationData);
-						break;
-					}
-				default:
-					return;
-				}
+				// 이동을 요청합니다.
+				PlayerAbilityContextComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTiles, OutTileAndActor.Tile);
 				ResetSelectedCharacter();
 			}
 		}
+		break;
+	default:
+		ResetSelectedCharacter();
+		break;
 	}
 }
 
@@ -158,175 +147,9 @@ void ALethePlayerController::ResetSelectedCharacter()
 	}
 }
 
-void ALethePlayerController::ReserveMoveWhileNoneCombatPhase(const ATile* TargetTile)
+void ALethePlayerController::ProcessAllPlayerMove() const
 {
-	if (!SelectedCharacter.IsValid())
-	{
-		return;
-	}
-	
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (TileManagerSubsystem)
-	{
-		// 기존에 예약해두었던 타일이 있다면 제거합니다.
-		FPlayerCharacterReservedMove* SelectedData = PlayerCharacterReservedMoveData.FindByPredicate([this](const auto& MoveData)
-		{
-			return MoveData.PlayerCharacter == SelectedCharacter;
-		});
-		if (SelectedData)
-		{
-			TileManagerSubsystem->RemovePlayerReservedTile(SelectedData->TargetTile.Get());
-		}
-		
-		// TargetTile을 향한 모든 가능 경로를 가져옵니다.
-		TArray<TArray<ATile*>> OutPathTilesArray;
-		TileManagerSubsystem->FindShortestPath(TileManagerSubsystem->GetTileUnderActor(SelectedCharacter.Get()), TargetTile, OutPathTilesArray, true);
-		for (const TArray<ATile*> PathTiles : OutPathTilesArray)
-		{
-			// 최단 경로 중, 중간에 가로막히지 않고 도달 가능한 경로를 탐색합니다.
-			TArray<TWeakObjectPtr<ATile>> WeakPathTiles;
-			bool bIsAllTileEmpty = true;
-			for (ATile* Tile : PathTiles)
-			{
-				if (!TileManagerSubsystem->CanMoveToTileForPlayerCharacter(Tile))
-				{
-					bIsAllTileEmpty = false;
-					break;
-				}
-				WeakPathTiles.Emplace(Tile);
-			}
-			
-			if (bIsAllTileEmpty)
-			{
-				// 중간에 가로막히지 않고 도달 가능한 경로라면 이를 캐싱합니다.
-				if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter))
-				{
-					const int32 MoveDistance = CombatInterface->GetMoveDistance();
-					ATile* ReservingTile = PathTiles.IsValidIndex(MoveDistance) ? PathTiles[MoveDistance] : PathTiles.Last();
-
-					if (!SelectedData)
-					{
-						FPlayerCharacterReservedMove MovePathData;
-						MovePathData.PlayerCharacter = SelectedCharacter;
-						MovePathData.PathTiles = WeakPathTiles;
-						MovePathData.TargetTile = ReservingTile;
-						PlayerCharacterReservedMoveData.Emplace(MovePathData);
-					}
-					else
-					{
-						SelectedData->PathTiles = WeakPathTiles;
-						SelectedData->TargetTile = ReservingTile;
-					}
-					TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter.Get(), ReservingTile);
-				}
-				break;
-			}
-			WeakPathTiles.Reset();
-		}
-	}
-}
-
-void ALethePlayerController::ProcessAllPlayerMove()
-{
-	ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState());
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!LetheGameState || !TileManagerSubsystem)
-	{
-		return;
-	}
-	
-	// 경로를 예약한 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
-	for (auto& ReservedMoveData : PlayerCharacterReservedMoveData)
-	{
-		// 경로가 더이상 남지 않았다면 다음 캐릭터로 넘어갑니다.
-		if (ReservedMoveData.PathTiles.IsEmpty())
-		{
-			continue;
-		}
-		
-		const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ReservedMoveData.PlayerCharacter);
-		UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-		if (!AbilitySystemComponent)
-		{
-			continue;
-		}
-
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		TArray<FGameplayAbilitySpec*> AbilitySpecs;
-		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
-		AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
-		if (AbilitySpecs.IsEmpty())
-		{
-			return;
-		}
-		
-		FAbilityActivationData AbilityActivationData;
-		AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-		AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-		AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-		AbilityActivationData.TargetTile = ReservedMoveData.TargetTile;
-		
-		LetheGameState->ActivateAbility(AbilityActivationData);
-	
-		// 캐싱된 경로에서 도달한 타일까지 제거합니다.
-		int32 RemoveNum = 1;
-		for (const auto& PathTile : ReservedMoveData.PathTiles)
-		{
-			if (PathTile == ReservedMoveData.TargetTile)
-			{
-				break;
-			}
-			++RemoveNum;
-		}
-		for (int32 RemoveIndex = RemoveNum; RemoveIndex > 0; --RemoveIndex)
-		{
-			if (!ReservedMoveData.PathTiles.IsEmpty())
-			{
-				ReservedMoveData.PathTiles.RemoveAt(0);
-			}
-		}
-		
-		// 다음 이동할 타일을 예약합니다.
-		if (!ReservedMoveData.PathTiles.IsEmpty())
-		{
-			if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ReservedMoveData.PlayerCharacter))
-			{
-				const int32 MoveDistance = CombatInterface->GetMoveDistance();
-				const auto& ReservingTile = ReservedMoveData.PathTiles.IsValidIndex(MoveDistance) ? ReservedMoveData.PathTiles[MoveDistance] : ReservedMoveData.PathTiles.Last();
-				if (ReservingTile.IsValid())
-				{
-					TileManagerSubsystem->RemovePlayerReservedTile(ReservedMoveData.TargetTile.Get());
-					ReservedMoveData.TargetTile = ReservingTile;
-					TileManagerSubsystem->ReservePlayerMoveTile(ReservedMoveData.PlayerCharacter.Get(), ReservingTile.Get());
-				}
-			}
-		}
-	}
-
-	// 모든 플레이어 캐릭터의 이동을 마쳤다면 다음 페이즈로 넘어갑니다.
-	LetheGameState->GoEnemyPlanningPhase();
-}
-
-void ALethePlayerController::ProcessPlayerMove(const TArray<ATile*>& TilesInRange, const FAbilityActivationData& AbilityActivationData) const
-{
-	if (!SelectedCharacter.IsValid())
-	{
-		return;
-	}
-	
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		if (TilesInRange.Contains(AbilityActivationData.TargetTile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(AbilityActivationData.TargetTile.Get()))
-		{
-			// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-			TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter.Get(), AbilityActivationData.TargetTile.Get());
-					
-			if (const ALetheGameState* LetheGameState = Cast<ALetheGameState>(GetWorld()->GetGameState()))
-			{
-				LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
-			}
-		}
-	}
+	PlayerAbilityContextComponent->ProcessAllMoves();
 }
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
@@ -448,17 +271,8 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	
 	if (CurrentPhaseState == EPhaseState::DrawPhase)
 	{
-		// Combat Phase로 진입 시 예약해뒀던 모든 예약 이동을 초기화합니다.
-		TArray<AActor*> PlayerCharacters;
-		for (const auto& ReservedMoveData : PlayerCharacterReservedMoveData)
-		{
-			PlayerCharacters.Emplace(ReservedMoveData.PlayerCharacter.Get());
-		}
-		if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-		{
-			TileManagerSubsystem->ResetPlayerReservedTile(PlayerCharacters);
-		}
-		PlayerCharacterReservedMoveData.Reset();
+		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
+		PlayerAbilityContextComponent->ResetReservedMoveData();
 	}
 }
 
@@ -532,84 +346,18 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
-	if (ActorSelector && OwnerASC)
+	if (!PlayerAbilityContextComponent->RequestUseCard(OwnerASC, CardTag, InHandIndex))
 	{
-		// 카드 사용 시엔 검출된 타일 위에 반드시 캐릭터가 있어야 합니다.
-		FTileAndActor OutTileAndActor;
-		ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-		if (OutTileAndActor.Tile && OutTileAndActor.Actor)
-		{
-			// CardTag에 해당하는 CardAbilitySpec을 모두 가져옵니다.
-			TArray<FGameplayAbilitySpec*> AbilitySpecs;
-			const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
-			OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
-
-			// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
-			// TODO: 현재는 첫번째 거로 사용합니다.
-	
-			if (!AbilitySpecs.IsEmpty())
-			{
-				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability))
-				{
-					TArray<ATile*> OutTiles;
-					ActorSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
-				
-					// Ability 사용 범위 내의 타일을 선택한 경우 들어가는 분기입니다.
-					if (OutTiles.Contains(OutTileAndActor.Tile))
-					{
-						// Ability가 사용될 수 있도록 이벤트 데이터를 생성합니다.
-						FAbilityActivationData AbilityActivationData;
-						AbilityActivationData.Index = InHandIndex;
-						AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-						AbilityActivationData.AbilityTag = CardTag;
-						AbilityActivationData.AbilityOwnerASC = OwnerASC;
-						AbilityActivationData.TargetTile = OutTileAndActor.Tile;
-
-						if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-						{
-							// 카드 사용을 시작합니다.
-							LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
-							return;
-						}
-					}
-				}
-			}
-		}
+		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
-
-	// nullptr, CardTag에 해당하는 Ability 없음, 카드 사용 범위 바깥에 사용 시도 등 모종의 이유로 실패하면 이곳으로 내려옵니다.
-	OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 }
 
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
 {
-	TArray<FGameplayAbilitySpecHandle> OutAbilityHandles;
-	OwnerASC->GetAllAbilities(OutAbilityHandles);
-	for (const FGameplayAbilitySpecHandle& Handle : OutAbilityHandles)
-	{
-		const FGameplayAbilitySpec* Spec = OwnerASC->FindAbilitySpecFromHandle(Handle);
-		if (!Spec || !Spec->Ability)
-		{
-			continue;
-		}
-
-		if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
-		{
-			if (CardAbility->GetAssetTags().HasAllExact(CardTag.GetSingleTagContainer()))
-			{
-				OutText = CardAbility->GetCardDescription(OwnerASC, 1);
-				return;
-			}
-		}
-	}
+	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, CardTag, OutText);
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const
 {
 	return LetheHUD;
-}
-
-UPreviewCoordinatorComponent* ALethePlayerController::GetPreviewCoordinatorComponent() const
-{
-	return PreviewCoordinatorComponent;
 }

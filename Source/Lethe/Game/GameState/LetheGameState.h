@@ -16,10 +16,10 @@ enum class EPhaseState : uint8
 	None,
 	EnemyPlanningPhase,
 
-	// None Combat Phase
+	// 비전투 페이즈
 	PlayerMovePhase,
 
-	// Combat Phase
+	// 전투 페이즈
 	DrawPhase,
 	PlayerTurnPhase,
 	EnemyTurnPhase,

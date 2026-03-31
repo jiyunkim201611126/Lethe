@@ -24,3 +24,13 @@ FGameplayTag APlayerCharacterBase::GetCharacterTag()
 	
 	return CharacterTag;
 }
+
+void APlayerCharacterBase::SetPersonalColor(const FLinearColor& InColor)
+{
+	PersonalColor = InColor;
+}
+
+FLinearColor APlayerCharacterBase::GetPersonalColor_Implementation()
+{
+	return PersonalColor;
+}

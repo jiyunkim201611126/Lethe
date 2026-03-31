@@ -94,12 +94,11 @@ private:
 	// CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다.
 	TWeakObjectPtr<const ULetheCardAbility> SelectedCardAbility;
 	TWeakObjectPtr<UAbilitySystemComponent> SelectedCardOwnerASC;
+	TWeakObjectPtr<AActor> SelectedCharacter;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ArrowRenderer")
 	TSubclassOf<AArrowRenderer> ArrowRendererClass;
 
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
-
-	TWeakObjectPtr<AActor> SelectedCharacter;
 };

@@ -200,7 +200,7 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 void UPlayerAbilityContextComponent::ResetReservedMoveData()
 {
 	TArray<AActor*> PlayerCharacters;
-	for (const auto& ReservedMove : ReservedMoves)
+	for (const FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
 		if (ReservedMove.PlayerCharacter.IsValid())
 		{

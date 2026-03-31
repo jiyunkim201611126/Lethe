@@ -16,7 +16,12 @@ class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlaye
 public:
 	APlayerCharacterBase(const FObjectInitializer& ObjectInitializer);
 	
-	virtual FGameplayTag GetCharacterTag() override;	
+	virtual FGameplayTag GetCharacterTag() override;
+
+	//~ Begin IPlayerCharacterInterface
+	virtual void SetPersonalColor(const FLinearColor& InColor) override;
+	virtual FLinearColor GetPersonalColor_Implementation() override;
+	//~ End of IPlayerCharacterInterface
 
 protected:
 	// 캐릭터 식별을 위해 사용하는 Id입니다.
@@ -28,4 +33,7 @@ protected:
 	// Id로 찾은 Tag가 런타임 중 동적으로 채워집니다.
 	// Id는 출시 이후 절대 변경되지 않으나, CharacterTag는 필요에 따라 변경될 수 있기 때문에 이와 같은 방법을 사용합니다.
 	FGameplayTag CharacterTag;
+
+private:
+	FLinearColor PersonalColor;
 };

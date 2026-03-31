@@ -50,8 +50,7 @@ private:
 
 		bool IsValid() const
 		{
-			// 모든 경로를 소모한 경우, TargetTile은 null일 수 있습니다.
-			return PlayerCharacter.IsValid() && AbilitySystemComponent.IsValid() && !PathTiles.IsEmpty();
+			return PlayerCharacter.IsValid() && AbilitySystemComponent.IsValid() && !PathTiles.IsEmpty() && TargetTile.IsValid();
 		}
 	};
 

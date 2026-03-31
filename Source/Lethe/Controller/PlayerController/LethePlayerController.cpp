@@ -45,7 +45,7 @@ void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 
 void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 {
-	if (SelectedCardAbility.IsValid() || !ActorSelector)
+	if (SelectedCardAbility.IsValid())
 	{
 		// 선택된 카드가 있다면 얼리리턴합니다.
 		return;
@@ -154,7 +154,7 @@ void ALethePlayerController::ProcessAllPlayerMove() const
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
-	if (!ActorSelector || !ArrowRenderer)
+	if (!ArrowRenderer)
 	{
 		return false;
 	}
@@ -318,23 +318,20 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 			ArrowRenderer->SetActive(false);
 		}
 
-		if (PreviewCoordinatorComponent)
-		{
-			const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
-			UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
+		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 
-			if (TargetASC)
-			{
-				FPreviewContext PreviewContext;
-				PreviewContext.CurrentTargetASCs.Emplace(TargetASC);
-				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
-				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
-				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-			}
-			else
-			{
-				PreviewCoordinatorComponent->StopAllPreview();
-			}
+		if (TargetASC)
+		{
+			FPreviewContext PreviewContext;
+			PreviewContext.CurrentTargetASCs.Emplace(TargetASC);
+			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
+			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
+			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
+		}
+		else
+		{
+			PreviewCoordinatorComponent->StopAllPreview();
 		}
 	}
 }

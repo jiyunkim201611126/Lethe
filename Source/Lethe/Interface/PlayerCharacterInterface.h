@@ -20,4 +20,9 @@ class LETHE_API IPlayerCharacterInterface
 
 public:
 	virtual FGameplayTag GetCharacterTag() = 0;
+
+	virtual void SetPersonalColor(const FLinearColor& InColor);
+
+	UFUNCTION(BlueprintNativeEvent)
+	FLinearColor GetPersonalColor();
 };

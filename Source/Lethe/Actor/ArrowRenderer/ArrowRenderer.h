@@ -6,6 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "ArrowRenderer.generated.h"
 
+namespace ESplinePointType
+{
+	enum Type : int;
+}
+
 class USplineComponent;
 class USplineMeshComponent;
 
@@ -21,15 +26,27 @@ public:
 	virtual void BeginPlay() override;
 	//~ End of AActor Interface
 
-	void SetPoints(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead = true) const;
-	void SetActive(bool bActive) const;
+	void InitializeMovePreviewSplineMeshes(int32 InitialMeshCount);
+	
+	void DrawSkillPreviewArrow(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead = true) const;
+	void DrawMovePreviewArrow(const TArray<TArray<FVector>>& MovePathLocations);
+	void DeactivateArrow();
+
+private:
+	void SetAllSplinePointsType(const ESplinePointType::Type PointType) const;
+	
+	void EnsureMovePreviewSplineMeshCount(int32 RequiredCount);
+	USplineMeshComponent* CreateMovePreviewSplineMeshComponent();
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<USplineComponent> Spline;
-	
+
 	UPROPERTY(VisibleDefaultsOnly)
-	TObjectPtr<USplineMeshComponent> SplineMesh;
+	TObjectPtr<USplineMeshComponent> SkillPreviewSplineMeshComponent;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<USplineMeshComponent>> MovePreviewSplineMeshComponents;
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UStaticMeshComponent> ArrowHead;

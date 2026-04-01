@@ -86,7 +86,7 @@ void ALetheAIController::ProcessTelegraphPlan() const
 
 void ALetheAIController::DeactivateArrow() const
 {
-	ArrowRenderer->SetActive(false);
+	ArrowRenderer->DeactivateArrow();
 }
 
 void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const
@@ -281,7 +281,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
-				ArrowRenderer->SetPoints(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
+				ArrowRenderer->DrawSkillPreviewArrow(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
 			}
 		}
 	}

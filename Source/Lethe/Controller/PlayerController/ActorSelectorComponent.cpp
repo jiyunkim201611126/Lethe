@@ -135,6 +135,8 @@ void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndA
 
 bool UActorSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const
 {
+	OutTiles.Reset();
+	
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))

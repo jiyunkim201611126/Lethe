@@ -53,6 +53,7 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	EnhancedInputComponent->BindAction(NumberAction, ETriggerEvent::Triggered, this, &ThisClass::NumberKeyPressed);
 	EnhancedInputComponent->BindAction(LeftMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::LeftMouseButtonClicked);
 	EnhancedInputComponent->BindAction(RightMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::RightMouseButtonClicked);
+	EnhancedInputComponent->BindAction(SpaceAction, ETriggerEvent::Completed, this, &ThisClass::SpaceKeyPressed);
 }
 
 void ALethePawn::Move(const FInputActionValue& InputActionValue)
@@ -107,5 +108,13 @@ void ALethePawn::RightMouseButtonClicked()
 	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
 	{
 		PlayerController->ResetSelectedCharacter();
+	}
+}
+
+void ALethePawn::SpaceKeyPressed()
+{
+	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
+	{
+		PlayerController->ToggleMovePreview();
 	}
 }

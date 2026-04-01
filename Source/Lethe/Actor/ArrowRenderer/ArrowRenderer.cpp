@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "ArrowRenderer.h"
 
@@ -16,10 +16,11 @@ AArrowRenderer::AArrowRenderer()
 	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	Spline->SetupAttachment(RootComponent);
 
-	SplineMesh = CreateDefaultSubobject<USplineMeshComponent>(TEXT("SplineMesh"));
-	SplineMesh->SetupAttachment(RootComponent);
-	SplineMesh->SetForwardAxis(ESplineMeshAxis::Y);
-	SplineMesh->SetVisibility(false);
+	SkillPreviewSplineMeshComponent = CreateDefaultSubobject<USplineMeshComponent>(TEXT("SkillPreviewSplineMesh"));
+	SkillPreviewSplineMeshComponent->SetupAttachment(RootComponent);
+	SkillPreviewSplineMeshComponent->SetForwardAxis(ESplineMeshAxis::Y);
+	SkillPreviewSplineMeshComponent->SetVisibility(false);
+	SkillPreviewSplineMeshComponent->SetMobility(EComponentMobility::Movable);
 
 	ArrowHead = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ArrowHead"));
 	ArrowHead->SetupAttachment(RootComponent);
@@ -31,18 +32,23 @@ void AArrowRenderer::BeginPlay()
 	Super::BeginPlay();
 
 	ArrowBodyDynamicMaterialInstance = UMaterialInstanceDynamic::Create(ArrowBodyMaterial, this);
-	SplineMesh->SetMaterial(0, ArrowBodyDynamicMaterialInstance);
+	SkillPreviewSplineMeshComponent->SetMaterial(0, ArrowBodyDynamicMaterialInstance);
 
 	ArrowBodyDynamicMaterialInstance->SetScalarParameterValue(FlowSpeedParamName, FlowSpeed);
 }
 
-void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead) const
+void AArrowRenderer::InitializeMovePreviewSplineMeshes(const int32 InitialMeshCount)
+{
+	EnsureMovePreviewSplineMeshCount(InitialMeshCount);
+}
+
+void AArrowRenderer::DrawSkillPreviewArrow(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead) const
 {
 	if (!SourceActor || !TargetActor)
 	{
 		return;
 	}
-	
+
 	const FVector StartLocation = SourceActor->GetActorLocation();
 	const FVector EndLocation = TargetActor->GetActorLocation();
 
@@ -67,18 +73,20 @@ void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetAc
 		Spline->ClearSplinePoints(false);
 		Spline->AddSplinePoint(AdjustedStartLocation, ESplineCoordinateSpace::Local, false);
 		Spline->AddSplinePoint(MidLocation, ESplineCoordinateSpace::Local, false);
-		Spline->AddSplinePoint(AdjustedEndLocation, ESplineCoordinateSpace::Local, true);
+		Spline->AddSplinePoint(AdjustedEndLocation, ESplineCoordinateSpace::Local, false);
 
-		const FVector MeshStart = Spline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
-		const FVector MeshEnd = Spline->GetLocationAtSplinePoint(2, ESplineCoordinateSpace::Local);
-		const FVector MeshStartTan = Spline->GetTangentAtSplinePoint(0, ESplineCoordinateSpace::Local);
-		const FVector MeshEndTan = Spline->GetTangentAtSplinePoint(2, ESplineCoordinateSpace::Local);
-		SplineMesh->SetStartAndEnd(MeshStart, MeshStartTan, MeshEnd, MeshEndTan);
-		SplineMesh->SetVisibility(true);
+		const FVector StartPos = Spline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		const FVector StartTangent = Spline->GetTangentAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		const FVector EndPos = Spline->GetLocationAtSplinePoint(2, ESplineCoordinateSpace::Local);
+		const FVector EndTangent = Spline->GetTangentAtSplinePoint(2, ESplineCoordinateSpace::Local);
+		SkillPreviewSplineMeshComponent->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent);
+		SkillPreviewSplineMeshComponent->SetVisibility(true);
+
+		SetAllSplinePointsType(ESplinePointType::Curve);
 	}
 	else
 	{
-		SplineMesh->SetVisibility(false);
+		SkillPreviewSplineMeshComponent->SetVisibility(false);
 	}
 
 	if (bRenderArrowHead)
@@ -93,8 +101,116 @@ void AArrowRenderer::SetPoints(const AActor* SourceActor, const AActor* TargetAc
 	}
 }
 
-void AArrowRenderer::SetActive(const bool bActive) const
+void AArrowRenderer::DrawMovePreviewArrow(const TArray<TArray<FVector>>& MovePathLocations)
 {
-	SplineMesh->SetVisibility(bActive);
-	ArrowHead->SetVisibility(bActive);
+	DeactivateArrow();
+
+	// SplineMeshComponent를 필요한 만큼 생성합니다.
+	int32 RequiredMeshCount = 0;
+	for (const TArray<FVector>& TileLocations : MovePathLocations)
+	{
+		RequiredMeshCount += FMath::Max(TileLocations.Num() - 1, 0);
+	}
+
+	EnsureMovePreviewSplineMeshCount(RequiredMeshCount);
+
+	// 타일 사이마다 직선으로 표시되는 SplineMeshComponent를 하나씩 배치합니다.
+	int32 MeshIndex = 0;
+	for (const TArray<FVector>& TileLocations : MovePathLocations)
+	{
+		for (int32 TileIndex = 0; TileIndex < TileLocations.Num() - 1; ++TileIndex)
+		{
+			if (!MovePreviewSplineMeshComponents.IsValidIndex(MeshIndex))
+			{
+				return;
+			}
+
+			const FVector StartPos = TileLocations[TileIndex];
+			const FVector EndPos = TileLocations[TileIndex + 1];
+			const FVector SegmentTangent = EndPos - StartPos;
+			MovePreviewSplineMeshComponents[MeshIndex]->SetStartAndEnd(StartPos, SegmentTangent, EndPos, SegmentTangent);
+			MovePreviewSplineMeshComponents[MeshIndex]->SetVisibility(true);
+			++MeshIndex;
+		}
+	}
+}
+
+void AArrowRenderer::DeactivateArrow()
+{
+	Spline->ClearSplinePoints(false);
+
+	if (SkillPreviewSplineMeshComponent)
+	{
+		SkillPreviewSplineMeshComponent->SetVisibility(false);
+	}
+
+	for (USplineMeshComponent* SplineMeshComponent : MovePreviewSplineMeshComponents)
+	{
+		SplineMeshComponent->SetVisibility(false);
+	}
+
+	ArrowHead->SetVisibility(false);
+}
+
+void AArrowRenderer::SetAllSplinePointsType(const ESplinePointType::Type PointType) const
+{
+	const int32 NumPoints = Spline->GetNumberOfSplinePoints();
+
+	for (int32 Index = 0; Index < NumPoints; ++Index)
+	{
+		Spline->SetSplinePointType(Index, PointType);
+	}
+
+	Spline->UpdateSpline();
+}
+
+void AArrowRenderer::EnsureMovePreviewSplineMeshCount(const int32 RequiredCount)
+{
+	// 꺾인 직선을 표현하기 위해선 (타일 개수 - 1)만큼의 MeshComponent가 필요합니다.
+	// 아주 정확하게는, (타일 개수 - 현재 이동 예약한 캐릭터 개수)지만 그냥 널널하게 생성합니다.
+	while (MovePreviewSplineMeshComponents.Num() < RequiredCount)
+	{
+		USplineMeshComponent* NewSplineMeshComponent = CreateMovePreviewSplineMeshComponent();
+		if (!NewSplineMeshComponent)
+		{
+			return;
+		}
+
+		MovePreviewSplineMeshComponents.Emplace(NewSplineMeshComponent);
+	}
+}
+
+USplineMeshComponent* AArrowRenderer::CreateMovePreviewSplineMeshComponent()
+{
+	if (!SkillPreviewSplineMeshComponent)
+	{
+		return nullptr;
+	}
+
+	const FName ComponentName = *FString::Printf(TEXT("MovePreviewSplineMesh_%d"), MovePreviewSplineMeshComponents.Num());
+	USplineMeshComponent* NewSplineMeshComponent = NewObject<USplineMeshComponent>(this, ComponentName);
+	if (!NewSplineMeshComponent)
+	{
+		return nullptr;
+	}
+
+	NewSplineMeshComponent->SetupAttachment(RootComponent);
+	NewSplineMeshComponent->SetForwardAxis(ESplineMeshAxis::Y);
+	NewSplineMeshComponent->SetVisibility(false);
+	NewSplineMeshComponent->SetStaticMesh(SkillPreviewSplineMeshComponent->GetStaticMesh());
+	NewSplineMeshComponent->SetMobility(EComponentMobility::Movable);
+
+	if (ArrowBodyDynamicMaterialInstance)
+	{
+		NewSplineMeshComponent->SetMaterial(0, ArrowBodyDynamicMaterialInstance);
+	}
+	else
+	{
+		NewSplineMeshComponent->SetMaterial(0, SkillPreviewSplineMeshComponent->GetMaterial(0));
+	}
+
+	AddInstanceComponent(NewSplineMeshComponent);
+	NewSplineMeshComponent->RegisterComponent();
+
+	return NewSplineMeshComponent;
 }

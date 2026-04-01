@@ -12,6 +12,7 @@
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
+#include "Lethe/Lethe.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -107,6 +108,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			// 이동 타일을 예약합니다.
 			PlayerAbilityContextComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
 			ResetSelectedCharacter();
+			RefreshMovePreview();
 		}
 		break;
 	case EPhaseState::PlayerTurnPhase:
@@ -147,9 +149,40 @@ void ALethePlayerController::ResetSelectedCharacter()
 	}
 }
 
+void ALethePlayerController::ToggleMovePreview()
+{
+	if (CurrentPhaseState != EPhaseState::PlayerMovePhase)
+	{
+		return;
+	}
+
+	bIsPreviewingMove = !bIsPreviewingMove;
+	RefreshMovePreview();
+}
+
+void ALethePlayerController::RefreshMovePreview() const
+{
+	if (CurrentPhaseState != EPhaseState::PlayerMovePhase || !bIsPreviewingMove)
+	{
+		ArrowRenderer->DeactivateArrow();
+		return;
+	}
+	
+	TArray<TArray<FVector>> MovePathLocations;
+	if (PlayerAbilityContextComponent->TryGetMovePathLocations(MovePathLocations))
+	{
+		ArrowRenderer->DrawMovePreviewArrow(MovePathLocations);
+	}
+	else
+	{
+		ArrowRenderer->DeactivateArrow();
+	}
+}
+
 void ALethePlayerController::ProcessAllPlayerMove() const
 {
 	PlayerAbilityContextComponent->ProcessAllMoves();
+	RefreshMovePreview();
 }
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
@@ -207,7 +240,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	SelectedCardOwnerASC = nullptr;
 	ActorSelector->UnhighlightActorsByAbility();
 	ActorSelector->UnhighlightActorByMouse();
-	ArrowRenderer->SetActive(false);
+	ArrowRenderer->DeactivateArrow();
 	if (OnCancelCardSelectCancelDelegate.IsBound())
 	{
 		OnCancelCardSelectCancelDelegate.Broadcast();
@@ -311,11 +344,11 @@ void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const 
 		const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor();
 		if (SelectedCardOwnerActor && CurrentActor)
 		{
-			ArrowRenderer->SetPoints(SelectedCardOwnerActor, CurrentActor);
+			ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
 		}
 		else
 		{
-			ArrowRenderer->SetActive(false);
+			ArrowRenderer->DeactivateArrow();
 		}
 
 		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);

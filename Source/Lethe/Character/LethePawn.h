@@ -41,6 +41,7 @@ private:
 	void NumberKeyPressed(const FInputActionValue& InputActionValue);
 	void LeftMouseButtonClicked();
 	void RightMouseButtonClicked();
+	void SpaceKeyPressed();
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -69,6 +70,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> RightMouseButtonClickAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> SpaceAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	float MoveSpeed = 10.f;

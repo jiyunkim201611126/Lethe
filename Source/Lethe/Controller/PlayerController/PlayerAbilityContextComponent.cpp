@@ -334,3 +334,35 @@ void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilityS
 		}
 	}
 }
+
+bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TArray<TArray<FVector>>& MovePathLocations) const
+{
+	MovePathLocations.Reset();
+
+	const FVector MovePreviewLocationOffset = FVector(0.f, 0.f, 1.f);
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return false;
+	}
+	
+	for (const FPlayerCharacterReservedMove& ReserveMove : ReservedMoves)
+	{
+		if (!ReserveMove.IsValid())
+		{
+			continue;
+		}
+		
+		TArray<FVector>& TileLocations = MovePathLocations.AddDefaulted_GetRef();
+		const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReserveMove.PlayerCharacter.Get());
+		TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
+		for (const auto& PathTile : ReserveMove.PathTiles)
+		{
+			if (PathTile.IsValid())
+			{
+				TileLocations.Emplace(PathTile->GetActorLocation() + MovePreviewLocationOffset);
+			}
+		}
+	}
+	return !MovePathLocations.IsEmpty();
+}

@@ -40,6 +40,8 @@ public:
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
+	void ToggleMovePreview();
+	void RefreshMovePreview() const;
 	void ProcessAllPlayerMove() const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
@@ -101,4 +103,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
+
+	uint8 bIsPreviewingMove : 1 = false;
 };

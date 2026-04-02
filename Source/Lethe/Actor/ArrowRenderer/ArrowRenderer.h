@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "ArrowRenderer.generated.h"
 
+class APlayerCharacterBase;
+
 namespace ESplinePointType
 {
 	enum Type : int;
@@ -29,7 +31,7 @@ public:
 	void InitializeMovePreviewSplineMeshes(int32 InitialMeshCount);
 	
 	void DrawSkillPreviewArrow(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead = true) const;
-	void DrawMovePreviewArrow(const TArray<TArray<FVector>>& MovePathLocations);
+	void DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations);
 	void DeactivateArrow();
 
 private:
@@ -65,4 +67,7 @@ protected:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> ArrowBodyDynamicMaterialInstance;
+
+	UPROPERTY(Transient)
+	TMap<TWeakObjectPtr<APlayerCharacterBase>, TObjectPtr<UMaterialInstanceDynamic>> MovePreviewDynamicMaterialInstances;
 };

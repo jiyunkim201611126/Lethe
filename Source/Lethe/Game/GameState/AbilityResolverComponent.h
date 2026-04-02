@@ -31,7 +31,7 @@ enum class ETryAbilityActivationResult : uint8
 
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
-DECLARE_DELEGATE(FOnFinishEnemyActivationQueue);
+DECLARE_DELEGATE(FOnFinishActivationQueue);
 
 UCLASS()
 class LETHE_API UAbilityResolverComponent : public UActorComponent
@@ -53,7 +53,11 @@ public:
 	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ResetEnemyActivationData();
 
-	// Queue와 관계없이 Ability를 즉시 발동할 때 사용하는 함수로, MoveAbility 등을 사용할 때 호출합니다.
+	/**
+	 * Queue와 관계없이 Ability를 즉시 발동할 때 사용하는 함수로, 현재는 Enemy의 MoveAbility 발동을 위해 사용합니다.
+	 * 여러 번의 BFS를 수행해야 하는 EnemyPlanPhase 특성상, 모든 AI가 한 번에 예약을 걸면 프레임 드랍이 발생할 확률이 높습니다.
+	 * 때문에 EnemyPlanPhase는 AI마다 시간차를 두어 로직이 수행되고, 이는 예약하는 방식으로는 구현이 까다로워 즉시 발동 API를 하나 추가했습니다.
+	 */
 	void ActivateAbility(FAbilityActivationData& ActivationData);
 	
 	void OnAbilityActivationFailed();
@@ -76,7 +80,7 @@ private:
 public:
 	FOnUseCardResolved OnCardUseResolved;
 	FOnActivateEnemyAbility OnActivateEnemyAbility;
-	FOnFinishEnemyActivationQueue OnFinishEnemyActivationQueue;
+	FOnFinishActivationQueue OnFinishActivationQueue;
 
 private:
 	UPROPERTY()

@@ -20,14 +20,14 @@ void ALetheGameState::BeginPlay()
 	}
 	
 	AbilityResolverComponent->OnActivateEnemyAbility.BindUObject(this, &ThisClass::OnActivateEnemyAbility);
-	AbilityResolverComponent->OnFinishEnemyActivationQueue.BindUObject(this, &ThisClass::OnFinishEnemyExecutionQueue);
+	AbilityResolverComponent->OnFinishActivationQueue.BindUObject(this, &ThisClass::OnFinishActivationQueue);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->SetDummyActor(nullptr);
 	AbilityResolverComponent->OnActivateEnemyAbility.Unbind();
-	AbilityResolverComponent->OnFinishEnemyActivationQueue.Unbind();
+	AbilityResolverComponent->OnFinishActivationQueue.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -134,9 +134,12 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	CurrentEnemy->ProcessPlanPhase();
 }
 
-void ALetheGameState::OnFinishEnemyExecutionQueue()
+void ALetheGameState::OnFinishActivationQueue()
 {
-	GoEnemyPlanningPhase();
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase || CurrentPhaseState == EPhaseState::EnemyTurnPhase)
+	{
+		GoEnemyPlanningPhase();
+	}
 }
 
 bool ALetheGameState::ShouldGoCombatPhase() const

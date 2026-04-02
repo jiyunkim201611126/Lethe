@@ -30,7 +30,7 @@ void APlayerCharacterBase::SetPersonalColor(const FLinearColor& InColor)
 	PersonalColor = InColor;
 }
 
-FLinearColor APlayerCharacterBase::GetPersonalColor_Implementation()
+const FLinearColor& APlayerCharacterBase::GetPersonalColor()
 {
 	return PersonalColor;
 }

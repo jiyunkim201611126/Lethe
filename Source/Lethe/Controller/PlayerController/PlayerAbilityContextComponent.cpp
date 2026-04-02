@@ -6,6 +6,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -153,7 +154,7 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		AbilityActivationData.TargetTile = ReservedMove.TargetTile;
-		LetheGameState->ActivateAbility(AbilityActivationData);
+		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 
 		// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거합니다.
 		int32 RemoveNum = 1;
@@ -192,9 +193,6 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 			}
 		}
 	}
-
-	// 모든 플레이어 캐릭터의 이동을 마쳤다면 다음 페이즈로 넘어갑니다.
-	LetheGameState->GoEnemyPlanningPhase();
 }
 
 void UPlayerAbilityContextComponent::ResetReservedMoveData()
@@ -335,7 +333,7 @@ void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilityS
 	}
 }
 
-bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TArray<TArray<FVector>>& MovePathLocations) const
+bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations) const
 {
 	MovePathLocations.Reset();
 
@@ -346,21 +344,24 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TArray<TArray<FVect
 		return false;
 	}
 	
-	for (const FPlayerCharacterReservedMove& ReserveMove : ReservedMoves)
+	for (const FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
-		if (!ReserveMove.IsValid())
+		if (!ReservedMove.IsValid())
 		{
 			continue;
 		}
-		
-		TArray<FVector>& TileLocations = MovePathLocations.AddDefaulted_GetRef();
-		const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReserveMove.PlayerCharacter.Get());
-		TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
-		for (const auto& PathTile : ReserveMove.PathTiles)
+
+		if (APlayerCharacterBase* ReservedCharacter = Cast<APlayerCharacterBase>(ReservedMove.PlayerCharacter))
 		{
-			if (PathTile.IsValid())
+			TArray<FVector>& TileLocations = MovePathLocations.FindOrAdd(ReservedCharacter);
+			const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove.PlayerCharacter.Get());
+			TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
+			for (const auto& PathTile : ReservedMove.PathTiles)
 			{
-				TileLocations.Emplace(PathTile->GetActorLocation() + MovePreviewLocationOffset);
+				if (PathTile.IsValid())
+				{
+					TileLocations.Emplace(PathTile->GetActorLocation() + MovePreviewLocationOffset);
+				}
 			}
 		}
 	}

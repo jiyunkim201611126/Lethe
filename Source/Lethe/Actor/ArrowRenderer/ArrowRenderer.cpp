@@ -5,6 +5,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "GameFramework/Character.h"
+#include "Lethe/Character/PlayerCharacterBase.h"
 
 AArrowRenderer::AArrowRenderer()
 {
@@ -101,35 +102,46 @@ void AArrowRenderer::DrawSkillPreviewArrow(const AActor* SourceActor, const AAct
 	}
 }
 
-void AArrowRenderer::DrawMovePreviewArrow(const TArray<TArray<FVector>>& MovePathLocations)
+void AArrowRenderer::DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations)
 {
 	DeactivateArrow();
 
 	// SplineMeshComponent를 필요한 만큼 생성합니다.
 	int32 RequiredMeshCount = 0;
-	for (const TArray<FVector>& TileLocations : MovePathLocations)
+	for (const auto& MovePathLocation : MovePathLocations)
 	{
-		RequiredMeshCount += FMath::Max(TileLocations.Num() - 1, 0);
+		RequiredMeshCount += FMath::Max(MovePathLocation.Value.Num() - 1, 0);
 	}
-
 	EnsureMovePreviewSplineMeshCount(RequiredMeshCount);
 
 	// 타일 사이마다 직선으로 표시되는 SplineMeshComponent를 하나씩 배치합니다.
 	int32 MeshIndex = 0;
-	for (const TArray<FVector>& TileLocations : MovePathLocations)
+	for (const auto& MovePathLocation : MovePathLocations)
 	{
-		for (int32 TileIndex = 0; TileIndex < TileLocations.Num() - 1; ++TileIndex)
+		// PlayerCharacter의 PersonalColor를 사용하는 MaterialInstance를 가져오거나 생성합니다.
+		UMaterialInstanceDynamic* MovePreviewMaterialInstance = MovePreviewDynamicMaterialInstances.FindRef(MovePathLocation.Key);
+		if (!MovePreviewMaterialInstance)
+		{
+			MovePreviewMaterialInstance = UMaterialInstanceDynamic::Create(ArrowBodyMaterial, this);
+			if (MovePreviewMaterialInstance)
+			{
+				MovePreviewMaterialInstance->SetVectorParameterValue(TEXT("Color"), MovePathLocation.Key->GetPersonalColor());
+			}
+		}
+		
+		for (int32 TileIndex = 0; TileIndex < MovePathLocation.Value.Num() - 1; ++TileIndex)
 		{
 			if (!MovePreviewSplineMeshComponents.IsValidIndex(MeshIndex))
 			{
 				return;
 			}
 
-			const FVector StartPos = TileLocations[TileIndex];
-			const FVector EndPos = TileLocations[TileIndex + 1];
+			const FVector StartPos = MovePathLocation.Value[TileIndex];
+			const FVector EndPos = MovePathLocation.Value[TileIndex + 1];
 			const FVector SegmentTangent = EndPos - StartPos;
 			MovePreviewSplineMeshComponents[MeshIndex]->SetStartAndEnd(StartPos, SegmentTangent, EndPos, SegmentTangent);
 			MovePreviewSplineMeshComponents[MeshIndex]->SetVisibility(true);
+			MovePreviewSplineMeshComponents[MeshIndex]->SetMaterial(0, MovePreviewMaterialInstance);
 			++MeshIndex;
 		}
 	}
@@ -199,15 +211,6 @@ USplineMeshComponent* AArrowRenderer::CreateMovePreviewSplineMeshComponent()
 	NewSplineMeshComponent->SetVisibility(false);
 	NewSplineMeshComponent->SetStaticMesh(SkillPreviewSplineMeshComponent->GetStaticMesh());
 	NewSplineMeshComponent->SetMobility(EComponentMobility::Movable);
-
-	if (ArrowBodyDynamicMaterialInstance)
-	{
-		NewSplineMeshComponent->SetMaterial(0, ArrowBodyDynamicMaterialInstance);
-	}
-	else
-	{
-		NewSplineMeshComponent->SetMaterial(0, SkillPreviewSplineMeshComponent->GetMaterial(0));
-	}
 
 	AddInstanceComponent(NewSplineMeshComponent);
 	NewSplineMeshComponent->RegisterComponent();

@@ -80,7 +80,7 @@ private:
 	void SetPhase(const EPhaseState NewPhase);
 
 	void ProcessCurrentEnemyPlan();
-	void OnFinishEnemyExecutionQueue();
+	void OnFinishActivationQueue();
 
 	bool ShouldGoCombatPhase() const;
 

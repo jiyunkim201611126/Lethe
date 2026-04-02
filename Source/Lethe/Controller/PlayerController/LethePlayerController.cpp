@@ -12,7 +12,6 @@
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
-#include "Lethe/Lethe.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -168,7 +167,7 @@ void ALethePlayerController::RefreshMovePreview() const
 		return;
 	}
 	
-	TArray<TArray<FVector>> MovePathLocations;
+	TMap<APlayerCharacterBase*, TArray<FVector>> MovePathLocations;
 	if (PlayerAbilityContextComponent->TryGetMovePathLocations(MovePathLocations))
 	{
 		ArrowRenderer->DrawMovePreviewArrow(MovePathLocations);

@@ -23,6 +23,5 @@ public:
 
 	virtual void SetPersonalColor(const FLinearColor& InColor);
 
-	UFUNCTION(BlueprintNativeEvent)
-	FLinearColor GetPersonalColor();
+	virtual const FLinearColor& GetPersonalColor() = 0;
 };

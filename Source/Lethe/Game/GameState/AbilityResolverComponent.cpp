@@ -59,6 +59,7 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 		
 		return;
 	}
+	OnFinishActivationQueue.ExecuteIfBound();
 }
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbility()
@@ -168,7 +169,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	case ETryAbilityActivationResult::Success:
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		OnFinishEnemyActivationQueue.ExecuteIfBound();
+		OnFinishActivationQueue.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));

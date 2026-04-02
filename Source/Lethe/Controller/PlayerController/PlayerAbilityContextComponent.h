@@ -8,6 +8,7 @@
 #include "PlayerAbilityContextComponent.generated.h"
 
 class AActor;
+class APlayerCharacterBase;
 class ATile;
 class UActorSelectorComponent;
 class UAbilitySystemComponent;
@@ -38,7 +39,7 @@ public:
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
 
-	bool TryGetMovePathLocations(TArray<TArray<FVector>>& MovePathLocations) const;
+	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations) const;
 
 private:
 	TWeakObjectPtr<UActorSelectorComponent> ActorSelector;

@@ -20,7 +20,7 @@ public:
 
 	//~ Begin IPlayerCharacterInterface
 	virtual void SetPersonalColor(const FLinearColor& InColor) override;
-	virtual FLinearColor GetPersonalColor_Implementation() override;
+	virtual const FLinearColor& GetPersonalColor() override;
 	//~ End of IPlayerCharacterInterface
 
 protected:

@@ -13,29 +13,26 @@ class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
 	GENERATED_BODY()
 
 public:
-	//~ Begin ICombatInterface
-	virtual void OnDamageTaken() override;
-	virtual void Die() override;
-	//~ End of ICombatInterface
-	
 	void SetEnemyAbilityPriority(const int32 InPriority);
 	int32 GetEnemyAbilityPriority() const;
 
 	void ProcessPlanPhase() const;
 	void ProcessTelegraphPlan() const;
+	
+	//~ Begin ICombatInterface
+	virtual void OnDamageTaken() override;
+	virtual void Die() override;
+	//~ End of ICombatInterface
+
+	void StartCombat() const;
 
 	const FBFSRange& GetAbilityRange() const;
-	const FBFSRange& GetDetectionRange() const;
 
 protected:
 	// 캐릭터의 사정거리입니다.
 	// TODO: 현재로선 간단하게 구현하기 위해 이곳에 선언되었으나, 추후 Ability에 선언된 AbilityRange를 사용하도록 구현할 필요가 있습니다.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
 	FBFSRange AbilityRange;
-
-	// 캐릭터의 경계 범위입니다.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
-	FBFSRange DetectionRange;
 
 private:
 	int32 AbilityPriority = INT_MAX;

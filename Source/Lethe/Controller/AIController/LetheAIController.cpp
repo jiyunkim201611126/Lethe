@@ -287,22 +287,11 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 	}
 }
 
-bool ALetheAIController::IsPlayerCharacterInDetectionRange()
-{
-	if (const AEnemyCharacterBase* EnemyCharacter = GetPawn<AEnemyCharacterBase>())
-	{
-		const FBFSRange& AbilityRange = EnemyCharacter->GetDetectionRange();
-		TArray<ATile*> PlayerCharacterTiles;
-		FindNearestPlayerCharacterTiles(AbilityRange.BFSType, AbilityRange.Distance, PlayerCharacterTiles);
-		return !PlayerCharacterTiles.IsEmpty();
-	}
-	return false;
-}
-
 void ALetheAIController::StartCombat()
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
 	}
+	bIsCombating = true;
 }

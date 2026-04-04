@@ -41,9 +41,6 @@ public:
 	void SelectAndTelegraphRandomAbility(ATile* TargetTile) const;
 
 	UFUNCTION(BlueprintCallable)
-	bool IsPlayerCharacterInDetectionRange();
-
-	UFUNCTION(BlueprintCallable)
 	void StartCombat();
 
 protected:
@@ -69,4 +66,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
+
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	bool bIsCombating = false;
 };

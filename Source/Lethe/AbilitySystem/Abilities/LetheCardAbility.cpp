@@ -14,6 +14,7 @@
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/LetheTextManager.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 {
@@ -170,7 +171,7 @@ FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclass
 
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	Super::Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	if (!TryValidateAndCommitActivation(Handle, ActorInfo, ActivationInfo, TriggerEventData))
 	{
@@ -210,6 +211,18 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		false,
 		1.f);
 	PlayMontageAndWaitTask->ReadyForActivation();
+
+	// 소음 발생 로직을 시작합니다.
+	const AActor* AvatarActor = GetAvatarActorFromActorInfo();
+	if (AvatarActor && AvatarActor->Implements<UPlayerCharacterInterface>())
+	{
+		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		{
+			const ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
+			const ATile* TargetTile = TileManagerSubsystem->GetTileUnderActor(CachedTargetActor.Get());
+			ActivateNoise(StandingTile, TargetTile);
+		}
+	}
 }
 
 bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

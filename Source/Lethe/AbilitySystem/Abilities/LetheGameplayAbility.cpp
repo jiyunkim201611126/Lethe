@@ -2,11 +2,68 @@
 
 #include "LetheGameplayAbility.h"
 
+#include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 FBFSRange ULetheGameplayAbility::GetAbilityRange() const
 {
 	return AbilityRange;
+}
+
+void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile* TargetTile)
+{
+	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		for (const FNoisePolicy& NoisePolicy : NoisePolicies)
+		{
+			// 소음이 시작될 타일을 선택합니다.
+			const ATile* NoiseStartTile = nullptr;
+			switch (NoisePolicy.NoiseStartTile)
+			{
+			case ENoiseStartTile::StandingTile:
+				NoiseStartTile = StandingTile;
+				break;
+			case ENoiseStartTile::TargetTile:
+				NoiseStartTile = TargetTile;
+				break;
+			}
+
+			if (NoiseStartTile)
+			{
+				// 소음 범위 내의 모든 적을 가져옵니다.
+				TSet<FCubeCoord> EnemyTileCoords;
+				TArray<AEnemyCharacterBase*> CombatStartingEnemies;
+				TileManagerSubsystem->TileBFS(NoiseStartTile->GetCubeCoord(), NoisePolicy.NoiseRange.Distance, NoisePolicy.NoiseRange.BFSType, EnemyTileCoords,
+					[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+					{
+						return true;
+					},
+					[&TileManagerSubsystem, &CombatStartingEnemies](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+					{
+						if (TileData && TileData->TileActor.IsValid())
+						{
+							if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+							{
+								if (AEnemyCharacterBase* Enemy = Cast<AEnemyCharacterBase>(ActorOnTile))
+								{
+									CombatStartingEnemies.Emplace(Enemy);
+									return true;
+								}
+							}
+						}
+						return false;
+					});
+
+				// 소음 범위 내의 모든 적을 전투 상태로 변경합니다.
+				for (const AEnemyCharacterBase* Enemy : CombatStartingEnemies)
+				{
+					Enemy->StartCombat();
+				}
+			}
+		}
+	}
 }
 
 #if WITH_EDITOR

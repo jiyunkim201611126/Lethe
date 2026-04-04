@@ -5,6 +5,32 @@
 #include "Lethe/Controller/AIController/LetheAIController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 
+void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority)
+{
+	AbilityPriority = InPriority;
+}
+
+int32 AEnemyCharacterBase::GetEnemyAbilityPriority() const
+{
+	return AbilityPriority;
+}
+
+void AEnemyCharacterBase::ProcessPlanPhase() const
+{
+	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
+	{
+		AIController->ProcessPlanPhase();
+	}
+}
+
+void AEnemyCharacterBase::ProcessTelegraphPlan() const
+{
+	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
+	{
+		AIController->ProcessTelegraphPlan();
+	}
+}
+
 void AEnemyCharacterBase::OnDamageTaken()
 {
 	Super::OnDamageTaken();
@@ -34,38 +60,15 @@ void AEnemyCharacterBase::Die()
 	Destroy();
 }
 
-void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority)
+void AEnemyCharacterBase::StartCombat() const
 {
-	AbilityPriority = InPriority;
-}
-
-int32 AEnemyCharacterBase::GetEnemyAbilityPriority() const
-{
-	return AbilityPriority;
-}
-
-void AEnemyCharacterBase::ProcessPlanPhase() const
-{
-	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
+	if (ALetheAIController* AIController = GetController<ALetheAIController>())
 	{
-		AIController->ProcessPlanPhase();
-	}
-}
-
-void AEnemyCharacterBase::ProcessTelegraphPlan() const
-{
-	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
-	{
-		AIController->ProcessTelegraphPlan();
+		AIController->StartCombat();
 	}
 }
 
 const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
 {
 	return AbilityRange;
-}
-
-const FBFSRange& AEnemyCharacterBase::GetDetectionRange() const
-{
-	return DetectionRange;
 }

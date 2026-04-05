@@ -92,6 +92,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 				{
 					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
 					TileManagerSubsystem->OccupyPlayerMoveTile(SpawnedCharacter, TileActor);
+					TileManagerSubsystem->RegisterPlayerCharacter(SpawnedCharacter);
 					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 					SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->CardBacksideColor);
 				}

@@ -208,18 +208,9 @@ void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCha
 
 void UPlayerAbilityContextComponent::ResetReservedMoveData()
 {
-	TArray<AActor*> PlayerCharacters;
-	for (const FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
-	{
-		if (ReservedMove.PlayerCharacter.IsValid())
-		{
-			PlayerCharacters.Emplace(ReservedMove.PlayerCharacter.Get());
-		}
-	}
-
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		TileManagerSubsystem->ResetPlayerOccupiedTile(PlayerCharacters);
+		TileManagerSubsystem->ResetPlayerOccupiedTile();
 	}
 
 	ReservedMoves.Reset();

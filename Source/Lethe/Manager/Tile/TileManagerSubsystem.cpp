@@ -10,6 +10,8 @@
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	PlayerCharacterOccupiedTiles.Reserve(PLAYER_CHARACTER_NUMBER);
 }
 
 void UTileManagerSubsystem::Deinitialize()
@@ -354,14 +356,17 @@ void UTileManagerSubsystem::RemovePlayerOccupiedTile(ATile* Tile)
 	PlayerCharacterOccupiedTiles.Remove(Tile);
 }
 
-void UTileManagerSubsystem::ResetPlayerOccupiedTile(const TArray<AActor*>& PlayerCharacters)
+void UTileManagerSubsystem::ResetPlayerOccupiedTile()
 {
 	PlayerCharacterOccupiedTiles.Reset();
-	for (const AActor* PlayerCharacter : PlayerCharacters)
+	for (const auto& PlayerCharacter : PlayerCharacters)
 	{
-		if (ATile* Tile = GetTileUnderActor(PlayerCharacter))
+		if (PlayerCharacter.IsValid())
 		{
-			PlayerCharacterOccupiedTiles.Emplace(Tile);
+			if (ATile* Tile = GetTileUnderActor(PlayerCharacter.Get()))
+			{
+				PlayerCharacterOccupiedTiles.Emplace(Tile);
+			}
 		}
 	}
 }
@@ -460,6 +465,11 @@ void UTileManagerSubsystem::UnmapByActor(AActor* InActor)
 		}
 	}
 	ActorToTileMap.Remove(InActor);
+}
+
+void UTileManagerSubsystem::RegisterPlayerCharacter(AActor* PlayerCharacter)
+{
+	PlayerCharacters.Emplace(PlayerCharacter);
 }
 
 AActor* UTileManagerSubsystem::GetActorOnTile(const ATile* InTile) const

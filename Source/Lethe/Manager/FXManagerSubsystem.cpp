@@ -142,7 +142,7 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 	// 이미 로드 중인 경우 들어가는 분기입니다.
 	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
 	{
-		// 로드 중인 에셋이 로딩 완료 시점에 이 요청에 대해서도 함께 처리하기 위해 배열에 추가합니다.
+		// 로드 중인 에셋이 로드 완료 시점에 이 요청에 대해서도 함께 처리하기 위해 배열에 추가합니다.
 		ExistingRequest->PlayRequests.Add(NewPlayData);
 		return;
 	}
@@ -234,7 +234,11 @@ void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPa
 	}
 	else
 	{
-		UE_LOG(LogFXManager, Warning, TEXT("로딩 후, USoundBase가 유효하지 않습니다."));
+		UE_LOG(LogFXManager, Warning, TEXT("로드 후, USoundBase가 유효하지 않습니다."));
+		for (const auto& Callback : CompletedRequest.GetterCallbacks)
+		{
+			Callback(nullptr);
+		}
 	}
 }
 
@@ -280,7 +284,7 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 	}
 	
 	// 새로 로드를 시작해야 하는 경우 여기로 내려옵니다.
-	// 에셋 로딩이 완료되면 위에서 초기화한 정보들을 참조할 수 있도록 배열에 추가합니다.
+	// 에셋 로드가 완료되면 위에서 초기화한 정보들을 참조할 수 있도록 배열에 추가합니다.
 	FNiagaraAsyncLoadRequest NewRequest;
 	NewRequest.SpawnRequests.Add(NewPlayData);
 	PendingNiagaraLoadRequests.Add(AssetPath, NewRequest);
@@ -309,7 +313,7 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 
 	const FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
 
-	// 이미 에셋이 로드되어있는 경우 들어가는 분기입니다.
+	// 이미 에셋이 로드되어 있는 경우 들어가는 분기입니다.
 	if (NiagaraToLoad.IsValid())
 	{
 		OnLoadedCallback(NiagaraToLoad.Get());
@@ -365,7 +369,11 @@ void UFXManagerSubsystem::OnNiagaraAsyncLoadComplete(FSoftObjectPath LoadedAsset
 	}
 	else
 	{
-		UE_LOG(LogFXManager, Warning, TEXT("로딩 후, UNiagaraSystem이 유효하지 않습니다."));
+		UE_LOG(LogFXManager, Warning, TEXT("로드 후, UNiagaraSystem이 유효하지 않습니다."));
+		for (const auto& Callback : CompletedRequest.GetterCallbacks)
+		{
+			Callback(nullptr);
+		}
 	}
 }
 

@@ -212,7 +212,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		1.f);
 	PlayMontageAndWaitTask->ReadyForActivation();
 
-	// 소음 발생 로직을 시작합니다.
+	// 플레이어 캐릭터인 경우 소음 발생 로직을 시작합니다.
 	const AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	if (AvatarActor && AvatarActor->Implements<UPlayerCharacterInterface>())
 	{

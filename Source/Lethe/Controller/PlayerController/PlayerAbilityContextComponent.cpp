@@ -124,7 +124,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 
 void UPlayerAbilityContextComponent::ProcessAllMoves()
 {
-	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!LetheGameState || !TileManagerSubsystem)
 	{
@@ -146,7 +146,7 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		ReservedMove.AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
 		if (AbilitySpecs.IsEmpty())
 		{
-			return;
+			continue;
 		}
 
 		FAbilityActivationData AbilityActivationData;
@@ -354,13 +354,15 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 		if (APlayerCharacterBase* ReservedCharacter = Cast<APlayerCharacterBase>(ReservedMove.PlayerCharacter))
 		{
 			TArray<FVector>& TileLocations = MovePathLocations.FindOrAdd(ReservedCharacter);
-			const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove.PlayerCharacter.Get());
-			TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
-			for (const auto& PathTile : ReservedMove.PathTiles)
+			if (const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove.PlayerCharacter.Get()))
 			{
-				if (PathTile.IsValid())
+				TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
+				for (const auto& PathTile : ReservedMove.PathTiles)
 				{
-					TileLocations.Emplace(PathTile->GetActorLocation() + MovePreviewLocationOffset);
+					if (PathTile.IsValid())
+					{
+						TileLocations.Emplace(PathTile->GetActorLocation() + MovePreviewLocationOffset);
+					}
 				}
 			}
 		}

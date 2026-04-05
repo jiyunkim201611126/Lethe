@@ -118,14 +118,20 @@ void AArrowRenderer::DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVe
 	int32 MeshIndex = 0;
 	for (const auto& MovePathLocation : MovePathLocations)
 	{
+		APlayerCharacterBase* PlayerCharacter = MovePathLocation.Key;
+		if (!PlayerCharacter)
+		{
+			continue;
+		}
+		
 		// PlayerCharacter의 PersonalColor를 사용하는 MaterialInstance를 가져오거나 생성합니다.
-		UMaterialInstanceDynamic* MovePreviewMaterialInstance = MovePreviewDynamicMaterialInstances.FindRef(MovePathLocation.Key);
+		auto& MovePreviewMaterialInstance = MovePreviewDynamicMaterialInstances.FindOrAdd(PlayerCharacter);
 		if (!MovePreviewMaterialInstance)
 		{
 			MovePreviewMaterialInstance = UMaterialInstanceDynamic::Create(ArrowBodyMaterial, this);
 			if (MovePreviewMaterialInstance)
 			{
-				MovePreviewMaterialInstance->SetVectorParameterValue(TEXT("Color"), MovePathLocation.Key->GetPersonalColor());
+				MovePreviewMaterialInstance->SetVectorParameterValue(TEXT("Color"), PlayerCharacter->GetPersonalColor());
 			}
 		}
 		

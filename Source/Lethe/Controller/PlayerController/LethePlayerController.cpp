@@ -180,8 +180,11 @@ void ALethePlayerController::ProcessAllPlayerMoves() const
 
 void ALethePlayerController::OnPlayerMovedResolved(const AActor* MovedCharacter) const
 {
-	PlayerAbilityContextComponent->OnPlayerMoveResolved(MovedCharacter);
-	RefreshMovePreview();
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		PlayerAbilityContextComponent->OnPlayerMoveResolved(MovedCharacter);
+		RefreshMovePreview();
+	}
 }
 
 bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)

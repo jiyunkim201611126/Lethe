@@ -54,7 +54,8 @@ private:
 
 		bool IsValid() const
 		{
-			return PlayerCharacter.IsValid() && AbilitySystemComponent.IsValid() && !PathTiles.IsEmpty() && TargetTile.IsValid();
+			// 목적지에 도착했다면 PathTiles는 비어있을 수 있으니 검사하지 않습니다.
+			return PlayerCharacter.IsValid() && AbilitySystemComponent.IsValid() && TargetTile.IsValid();
 		}
 	};
 

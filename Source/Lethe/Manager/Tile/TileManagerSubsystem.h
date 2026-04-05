@@ -54,10 +54,10 @@ public:
 	void OccupyPlayerMoveTile(const AActor* Character, ATile* Tile);
 	void RemovePlayerOccupiedTile(ATile* Tile);
 	void ResetPlayerOccupiedTile();
-	bool CanMoveToTileForPlayerCharacter(const ATile* Tile) const;
+	bool CanPlayerMoveToTile(const ATile* Tile) const;
 	
 	UFUNCTION(BlueprintPure)
-	bool CanMoveToTileForEnemyAI(const ATile* Tile) const;
+	bool CanEnemyAIMoveToTile(const ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord) const;
 

@@ -159,7 +159,7 @@ ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const in
 				// EnemyAI가 이동 가능한 타일만 선택합니다.
 				if (TileData && TileData->TileActor.IsValid())
 				{
-					return TileManagerSubsystem->CanMoveToTileForEnemyAI(TileData->TileActor.Get());
+					return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TileActor.Get());
 				}
 				return false;
 			});

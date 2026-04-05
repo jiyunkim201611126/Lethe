@@ -371,7 +371,7 @@ void UTileManagerSubsystem::ResetPlayerOccupiedTile()
 	}
 }
 
-bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(const ATile* Tile) const
+bool UTileManagerSubsystem::CanPlayerMoveToTile(const ATile* Tile) const
 {
 	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
 	{
@@ -386,9 +386,9 @@ bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(const ATile* Tile) c
 	return !PlayerCharacterOccupiedTiles.Contains(Tile);
 }
 
-bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(const ATile* Tile) const
+bool UTileManagerSubsystem::CanEnemyAIMoveToTile(const ATile* Tile) const
 {
-	// 타일 위에 아무것도 없다면 이동할 수 있습니다.
+	// 타일 무언가 있다면 이동할 수 없습니다.
 	return !GetActorOnTile(Tile);
 }
 

@@ -47,7 +47,6 @@ public:
 	
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const;
-	bool TryGetPlayerCharacterMovableTiles(TArray<ATile*>& OutTiles, const AActor* PlayerCharacter, const FBFSRange& MoveRange) const;
 
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;

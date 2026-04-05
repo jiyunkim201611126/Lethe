@@ -5,6 +5,7 @@
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -341,34 +342,43 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::ReservePlayerMoveTile(const AActor* Character, ATile* Tile)
+void UTileManagerSubsystem::OccupyPlayerMoveTile(const AActor* Character, ATile* Tile)
 {
 	const ATile* CurrentTile = GetTileUnderActor(Character);
-	PlayerCharacterReservedTiles.Remove(CurrentTile);
-	PlayerCharacterReservedTiles.Emplace(Tile);
+	PlayerCharacterOccupiedTiles.Remove(CurrentTile);
+	PlayerCharacterOccupiedTiles.Emplace(Tile);
 }
 
-void UTileManagerSubsystem::RemovePlayerReservedTile(ATile* Tile)
+void UTileManagerSubsystem::RemovePlayerOccupiedTile(ATile* Tile)
 {
-	PlayerCharacterReservedTiles.Remove(Tile);
+	PlayerCharacterOccupiedTiles.Remove(Tile);
 }
 
-void UTileManagerSubsystem::ResetPlayerReservedTile(const TArray<AActor*>& PlayerCharacters)
+void UTileManagerSubsystem::ResetPlayerOccupiedTile(const TArray<AActor*>& PlayerCharacters)
 {
-	PlayerCharacterReservedTiles.Reset();
+	PlayerCharacterOccupiedTiles.Reset();
 	for (const AActor* PlayerCharacter : PlayerCharacters)
 	{
 		if (ATile* Tile = GetTileUnderActor(PlayerCharacter))
 		{
-			PlayerCharacterReservedTiles.Emplace(Tile);
+			PlayerCharacterOccupiedTiles.Emplace(Tile);
 		}
 	}
 }
 
 bool UTileManagerSubsystem::CanMoveToTileForPlayerCharacter(const ATile* Tile) const
 {
-	// 예약된 타일을 걸러주지 않으면 빠른 조작 시 플레이어 캐릭터끼리 겹치는 경우가 있으므로 막아줍니다.
-	return !PlayerCharacterReservedTiles.Contains(Tile);
+	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
+	{
+		if (!ActorOnTile->Implements<UPlayerCharacterInterface>())
+		{
+			// 플레이어 캐릭터가 아닌 다른 액터가 있다면 이동할 수 없습니다.
+			return false;
+		}
+	}
+	
+	// 아무것도 없거나 플레이어 캐릭터가 타일 위에 있는 경우, 타일 점유 상태를 확인합니다.
+	return !PlayerCharacterOccupiedTiles.Contains(Tile);
 }
 
 bool UTileManagerSubsystem::CanMoveToTileForEnemyAI(const ATile* Tile) const

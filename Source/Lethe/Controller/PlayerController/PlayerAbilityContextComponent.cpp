@@ -45,7 +45,7 @@ bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacte
 			FBFSRange MoveRange;
 			MoveRange.BFSType = EBFSType::Connection;
 			MoveRange.Distance = CombatInterface->GetMoveDistance();
-			ActorSelector->TryGetTilesByDepth(OutTilesInRange, SelectedCharacter, MoveRange);
+			ActorSelector->TryGetPlayerCharacterMovableTiles(OutTilesInRange, SelectedCharacter, MoveRange);
 		}
 	}
 	return !OutTilesInRange.IsEmpty();
@@ -71,7 +71,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	});
 	if (SelectedData)
 	{
-		TileManagerSubsystem->RemovePlayerReservedTile(SelectedData->TargetTile.Get());
+		TileManagerSubsystem->RemovePlayerOccupiedTile(SelectedData->TargetTile.Get());
 	}
 
 	// TargetTile을 향한 모든 가능 경로를 가져옵니다.
@@ -116,7 +116,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 				SelectedData->PathTiles = WeakPathTiles;
 				SelectedData->TargetTile = ReservingTile;
 			}
-			TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter, ReservingTile);
+			TileManagerSubsystem->OccupyPlayerMoveTile(SelectedCharacter, ReservingTile);
 			break;
 		}
 	}
@@ -155,42 +155,53 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		AbilityActivationData.TargetTile = ReservedMove.TargetTile;
 		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+	}
+}
 
-		// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거합니다.
-		int32 RemoveNum = 1;
-		for (const auto& PathTile : ReservedMove.PathTiles)
+void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCharacter)
+{
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+	
+	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
+	{
+		if (ReservedMove.IsValid() && ReservedMove.PlayerCharacter == MovedCharacter)
 		{
-			if (PathTile.IsValid() && PathTile == ReservedMove.TargetTile)
-			{
-				break;
-			}
-			++RemoveNum;
-		}
-		for (int32 RemoveIndex = RemoveNum; RemoveIndex > 0; --RemoveIndex)
-		{
-			if (!ReservedMove.PathTiles.IsEmpty())
-			{
-				ReservedMove.PathTiles.RemoveAt(0);
-			}
-		}
-
-		// 다음 이동할 타일을 예약합니다.
-		if (!ReservedMove.PathTiles.IsEmpty())
-		{
-			const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ReservedMove.PlayerCharacter);
-			if (!CombatInterface)
+			// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거합니다.
+			const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(MovedCharacter);
+			if (!CurrentTile)
 			{
 				continue;
 			}
 
-			const int32 MoveDistance = CombatInterface->GetMoveDistance();
-			const auto& ReservingTile = ReservedMove.PathTiles.IsValidIndex(MoveDistance) ? ReservedMove.PathTiles[MoveDistance] : ReservedMove.PathTiles.Last();
-			if (ReservingTile.IsValid())
+			const int32 Index = ReservedMove.PathTiles.IndexOfByKey(CurrentTile);
+			if (Index != INDEX_NONE)
 			{
-				TileManagerSubsystem->RemovePlayerReservedTile(ReservedMove.TargetTile.Get());
-				ReservedMove.TargetTile = ReservingTile;
-				TileManagerSubsystem->ReservePlayerMoveTile(ReservedMove.PlayerCharacter.Get(), ReservingTile.Get());
+				ReservedMove.PathTiles.RemoveAt(0, Index + 1);
 			}
+			
+			// 다음 이동할 타일을 예약합니다.
+			if (!ReservedMove.PathTiles.IsEmpty())
+			{
+				const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ReservedMove.PlayerCharacter);
+				if (!CombatInterface)
+				{
+					continue;
+				}
+
+				const int32 NextTileIndex = CombatInterface->GetMoveDistance() - 1;
+				const auto& ReservingTile = ReservedMove.PathTiles.IsValidIndex(NextTileIndex) ? ReservedMove.PathTiles[NextTileIndex] : ReservedMove.PathTiles.Last();
+				if (ReservingTile.IsValid())
+				{
+					TileManagerSubsystem->RemovePlayerOccupiedTile(ReservedMove.TargetTile.Get());
+					ReservedMove.TargetTile = ReservingTile;
+					TileManagerSubsystem->OccupyPlayerMoveTile(ReservedMove.PlayerCharacter.Get(), ReservingTile.Get());
+				}
+			}
+			return;
 		}
 	}
 }
@@ -208,7 +219,7 @@ void UPlayerAbilityContextComponent::ResetReservedMoveData()
 
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		TileManagerSubsystem->ResetPlayerReservedTile(PlayerCharacters);
+		TileManagerSubsystem->ResetPlayerOccupiedTile(PlayerCharacters);
 	}
 
 	ReservedMoves.Reset();
@@ -226,7 +237,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 		if (TilesInRange.Contains(TargetTile) && TileManagerSubsystem->CanMoveToTileForPlayerCharacter(TargetTile))
 		{
 			// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-			TileManagerSubsystem->ReservePlayerMoveTile(SelectedCharacter, TargetTile);
+			TileManagerSubsystem->OccupyPlayerMoveTile(SelectedCharacter, TargetTile);
 
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
@@ -333,9 +344,9 @@ void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilityS
 	}
 }
 
-bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations) const
+bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const
 {
-	MovePathLocations.Reset();
+	OutMovePathLocations.Reset();
 
 	const FVector MovePreviewLocationOffset = FVector(0.f, 0.f, 1.f);
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
@@ -353,7 +364,8 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 
 		if (APlayerCharacterBase* ReservedCharacter = Cast<APlayerCharacterBase>(ReservedMove.PlayerCharacter))
 		{
-			TArray<FVector>& TileLocations = MovePathLocations.FindOrAdd(ReservedCharacter);
+			TArray<FVector>& TileLocations = OutMovePathLocations.FindOrAdd(ReservedCharacter);
+			TileLocations.Reserve(ReservedMove.PathTiles.Num() + 1);
 			if (const ATile* PlayerCharacterTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove.PlayerCharacter.Get()))
 			{
 				TileLocations.Emplace(PlayerCharacterTile->GetActorLocation() + MovePreviewLocationOffset);
@@ -367,5 +379,5 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 			}
 		}
 	}
-	return !MovePathLocations.IsEmpty();
+	return !OutMovePathLocations.IsEmpty();
 }

@@ -51,9 +51,9 @@ public:
 	 */
 	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const;
 
-	void ReservePlayerMoveTile(const AActor* Character, ATile* Tile);
-	void RemovePlayerReservedTile(ATile* Tile);
-	void ResetPlayerReservedTile(const TArray<AActor*>& PlayerCharacters);
+	void OccupyPlayerMoveTile(const AActor* Character, ATile* Tile);
+	void RemovePlayerOccupiedTile(ATile* Tile);
+	void ResetPlayerOccupiedTile(const TArray<AActor*>& PlayerCharacters);
 	bool CanMoveToTileForPlayerCharacter(const ATile* Tile) const;
 	
 	UFUNCTION(BlueprintPure)
@@ -102,8 +102,11 @@ private:
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
-	// 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 캐릭터가 동일한 타일을 선택하지 않도록 막는 역할입니다.
-	TSet<TWeakObjectPtr<ATile>> PlayerCharacterReservedTiles;
+	/**
+	 * 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 캐릭터가 동일한 타일을 선택하지 않도록 막는 역할입니다.
+	 * 캐릭터가 MoveAbility 사용을 예약한 경우, 해당 캐릭터가 현재 서있는 타일을 제거하고 이동하려는 타일을 배열에 추가하는 식으로 관리합니다.
+	 */
+	TSet<TWeakObjectPtr<ATile>> PlayerCharacterOccupiedTiles;
 };
 
 /**

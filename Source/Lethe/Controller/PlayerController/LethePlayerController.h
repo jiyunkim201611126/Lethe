@@ -42,7 +42,8 @@ public:
 	void ResetSelectedCharacter();
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;
-	void ProcessAllPlayerMove() const;
+	void ProcessAllPlayerMoves() const;
+	void OnPlayerMovedResolved(const AActor* MovedCharacter) const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
@@ -104,5 +105,5 @@ private:
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
 
-	uint8 bIsPreviewingMove : 1 = false;
+	uint8 bIsReservedMovePreviewingMove : 1 = false;
 };

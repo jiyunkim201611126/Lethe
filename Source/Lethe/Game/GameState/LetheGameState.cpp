@@ -177,7 +177,12 @@ void ALetheGameState::OnAbilityActivationFailed() const
 	AbilityResolverComponent->OnAbilityActivationFailed();
 }
 
-void ALetheGameState::OnEnemyPlanMoveResolved()
+void ALetheGameState::OnResolvePlayerMove(const AActor* MovedCharacter) const
+{
+	OnPlayerMoveResolved.ExecuteIfBound(MovedCharacter);
+}
+
+void ALetheGameState::OnResolveEnemyPlanMove()
 {
 	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{

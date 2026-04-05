@@ -85,7 +85,7 @@ void UCardPanelWidgetController::ProcessAllPlayerMove() const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->ProcessAllPlayerMove();
+		LethePlayerController->ProcessAllPlayerMoves();
 	}
 }
 

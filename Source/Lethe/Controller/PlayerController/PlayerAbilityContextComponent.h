@@ -31,6 +31,7 @@ public:
 	// 비전투 페이즈에 MoveAbility를 사용하는 함수입니다.
 	void ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile);
 	void ProcessAllMoves();
+	void OnPlayerMoveResolved(const AActor* MovedCharacter);
 	void ResetReservedMoveData();
 
 	// 전투 페이즈에 MoveAbility를 사용하는 함수입니다.
@@ -39,7 +40,7 @@ public:
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
 
-	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations) const;
+	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const;
 
 private:
 	TWeakObjectPtr<UActorSelectorComponent> ActorSelector;

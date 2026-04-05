@@ -150,18 +150,13 @@ void ALethePlayerController::ResetSelectedCharacter()
 
 void ALethePlayerController::ToggleMovePreview()
 {
-	if (CurrentPhaseState != EPhaseState::PlayerMovePhase)
-	{
-		return;
-	}
-
-	bIsPreviewingMove = !bIsPreviewingMove;
+	bIsReservedMovePreviewingMove = !bIsReservedMovePreviewingMove;
 	RefreshMovePreview();
 }
 
 void ALethePlayerController::RefreshMovePreview() const
 {
-	if (CurrentPhaseState != EPhaseState::PlayerMovePhase || !bIsPreviewingMove)
+	if (!bIsReservedMovePreviewingMove)
 	{
 		ArrowRenderer->DeactivateArrow();
 		return;
@@ -178,9 +173,14 @@ void ALethePlayerController::RefreshMovePreview() const
 	}
 }
 
-void ALethePlayerController::ProcessAllPlayerMove() const
+void ALethePlayerController::ProcessAllPlayerMoves() const
 {
 	PlayerAbilityContextComponent->ProcessAllMoves();
+}
+
+void ALethePlayerController::OnPlayerMovedResolved(const AActor* MovedCharacter) const
+{
+	PlayerAbilityContextComponent->OnPlayerMoveResolved(MovedCharacter);
 	RefreshMovePreview();
 }
 
@@ -278,6 +278,8 @@ void ALethePlayerController::BeginPlay()
 					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
 				});
 		}
+		
+		LetheGameState->OnPlayerMoveResolved.BindUObject(this, &ThisClass::OnPlayerMovedResolved);
 	}
 }
 
@@ -293,6 +295,8 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			AbilityResolverComponent->OnCardUseResolved.Unbind();
 		}
+
+		LetheGameState->OnPlayerMoveResolved.Unbind();
 	}
 	Super::EndPlay(EndPlayReason);
 }
@@ -305,6 +309,10 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	{
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
 		PlayerAbilityContextComponent->ResetReservedMoveData();
+		if (bIsReservedMovePreviewingMove)
+		{
+			ToggleMovePreview();
+		}
 	}
 }
 

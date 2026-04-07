@@ -29,7 +29,7 @@ public:
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
 	
-	//초기화
+	/** 타일 생성 시동 함수입니다. */
 	UFUNCTION(BlueprintCallable)
 	void MakeNewTileMap();
 
@@ -79,14 +79,14 @@ public:
 private:
 	struct FShortestPathSearchData
 	{
-		// StartTile로부터 각 좌표까지의 최단 거리(최초 도달 Depth)를 기록한 Map입니다.
+		/** StartTile로부터 각 좌표까지의 최단 거리(최초 도달 Depth)를 기록한 Map입니다. */
 		TMap<FCubeCoord, int32> DistanceMap;
-		// Key 좌표에 최단 거리로 도달할 수 있는 직전 좌표들을 Value로 기록한 Map입니다.
+		/** Key 좌표에 최단 거리로 도달할 수 있는 직전 좌표들을 Value로 기록한 Map입니다. */
 		TMap<FCubeCoord, TArray<FCubeCoord>> ParentCoordMap;
 		int32 ShortestDistanceToTarget = INDEX_NONE;
 	};
 
-	// StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다.
+	/** StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다. */
 	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const;
 	const FStageData* GetStageData(const FName& StageName) const;
 	
@@ -100,11 +100,11 @@ private:
 	UPROPERTY()
 	TMap<int32, FRoomData> RoomDataMap;
 
-	// 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다.
+	/** 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다. */
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
 
-	// 플레이어 캐릭터를 캐싱해두는 배열로, TODO: 추후 PawnManagerSubsystem 등의 클래스가 구현되면 그 곳으로 옮길 가능성이 있습니다.
+	/** 플레이어 캐릭터를 캐싱해두는 배열로, TODO: 추후 PawnManagerSubsystem 등의 클래스가 구현되면 그 곳으로 옮길 가능성이 있습니다. */
 	TArray<TWeakObjectPtr<AActor>> PlayerCharacters;
 
 	/**

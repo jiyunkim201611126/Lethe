@@ -31,6 +31,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Ability")
 	static bool CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap);
 
-	// 반사 데미지, 흡혈 등 ExecCalc만으로는 해결할 수 없는 데미지 규칙의 경우, 실제 적용과 Preview에서 모두 사용하기 위해 공용으로 구현된 함수입니다.
+	/** 반사 데미지, 흡혈 등 ExecCalc만으로는 해결할 수 없는 데미지 규칙의 경우, 실제 적용과 Preview에서 모두 사용하기 위해 공용으로 구현된 함수입니다. */
 	static void ResolveDamageRules(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const float IncomingDamage, TMap<FGameplayAttribute, float>& OutDataForSource, TMap<FGameplayAttribute, float>& OutDataForTarget);
 };

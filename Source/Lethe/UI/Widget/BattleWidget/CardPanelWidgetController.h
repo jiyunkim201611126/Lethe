@@ -7,6 +7,7 @@
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
+enum class EPhaseState : uint8;
 class ALethePlayerController;
 class ALetheGameState;
 class UCardDefinitionData;
@@ -18,7 +19,6 @@ struct FGameplayEventData;
 struct FCardSelfViewInfo;
 struct FGameplayAbilitySpec;
 struct FGameplayAbilitySpecHandle;
-enum class EPhaseState : uint8;
 
 /**
  * CardWidget을 생성해 초기화하는 시점에 필요한 데이터입니다.

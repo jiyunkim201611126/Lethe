@@ -26,6 +26,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
+	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	bool TryGetEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 	bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const;
@@ -65,6 +66,7 @@ protected:
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
+	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);
 
@@ -72,7 +74,7 @@ private:
 	void ActiveFailed();
 	
 protected:
-	// Composite 패턴으로 조합해 사용할 수 있으며, 구조체 내부의 ApplyEffect나 Ability의 ApplyAllEffects를 호출해 사용합니다.
+	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
 	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
 	

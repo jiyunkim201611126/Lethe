@@ -14,35 +14,35 @@ class LETHE_API UStageInitData : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	//맵 시드 번호(0으로 놓을 시, 랜덤 시드를 사용함), 가능하면 0 ~ 9999 값으로
+	/** 맵 시드 번호(0으로 놓을 시, 랜덤 시드를 사용함), 가능하면 0 ~ 9999 값으로 */
 	UPROPERTY(EditDefaultsOnly)
 	int32 MapSeed = 0;
 	
-	//맵 가로 길이(반드시 홀수)
+	/** 맵 가로 길이(반드시 홀수) */
 	UPROPERTY(EditDefaultsOnly)
 	int32 MapWidth;
 	
-	//맵 세로 길이(반드시 홀수)
+	/** 맵 세로 길이(반드시 홀수) */
 	UPROPERTY(EditDefaultsOnly)
 	int32 MapHeight;
 
-	//최대 층 수
+	/** 최대 층 수 */
 	UPROPERTY(EditDefaultsOnly)
 	int32 MaxFloor;
 
-	//층 생성의 총 시도 횟수
+	/** 층 생성의 총 시도 횟수 */
 	UPROPERTY(EditDefaultsOnly)
 	int32 FloorIncrementTrialsCount;
 
-	//거리에 따른 타일 생성 확률 커브
+	/** 거리에 따른 타일 생성 확률 커브 */
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UCurveFloat> ProbabilityCurve;
 
-	//타일 생성 및 실패시, 연속성을 위해 확률 계산을 무시할 타일 수
+	/** 타일 생성 및 실패시, 연속성을 위해 확률 계산을 무시할 타일 수 */
 	UPROPERTY(EditDefaultsOnly)
 	int32 ConsecutiveTileCount;
 
-	//서로 다른 층의 타일이 연결될 때, 6경로 기준으로 평균 몇 개나 연결되도록 할 것인지 (6일 경우, 모든 경로가 연결됨)
+	/** 서로 다른 층의 타일이 연결될 때, 6경로 기준으로 평균 몇 개나 연결되도록 할 것인지 (6일 경우, 모든 경로가 연결됨) */
 	UPROPERTY(EditDefaultsOnly)
 	int32 AverageConnectionPerSixWays;
 };

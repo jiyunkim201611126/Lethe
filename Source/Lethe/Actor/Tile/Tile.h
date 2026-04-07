@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -57,10 +57,9 @@ protected:
 	TObjectPtr<UStaticMeshComponent> MainTile;
 
 private:
-	// 이 타일의 좌표입니다.
 	FCubeCoord CubeCoord;
 
-	// 해당 타일이 TopTile이면 nullptr입니다.
+	/** TopTile 변수의 값이 nullptr이면, 해당 객체가 가장 윗단에 위치한 TopTile입니다. */
 	TWeakObjectPtr<ATile> TopTile;
 
 	int32 OutlineColorByMouse = CUSTOM_DEPTH_RED;

@@ -40,11 +40,13 @@ public:
 	void AddLoader(UObject* Loader);
 	void RemoveLoader(UObject* Loader);
 
-	// AssetManager 효율을 위해 배열로 한 번에 CardDefinition 로드 요청하는 함수입니다.
+	/** AssetManager 효율을 위해 배열로 한 번에 CardDefinition 로드 요청하는 함수입니다. */
 	void LoadCardDefinitionData(const TArray<FGameplayTag>& InCardTags, FOnCardDefinitionsLoaded OnComplete);
-	// CardTag와 CharacterTag를 받아 CardSelfView, CharacterDefinition를 각각 1개씩 로드 요청하는 함수입니다.
+	
+	/** CardTag와 CharacterTag를 받아 CardSelfView, CharacterDefinition를 각각 1개씩 로드 요청하는 함수입니다. */
 	void LoadCardViewData(const FGameplayTag& InCardTag, const FGameplayTag& InCharacterTag, FOnCardViewLoaded OnComplete);
-	// CharacterTag 배열을 받아 CharacterDefinition을 로드 요청하는 함수입니다.
+	
+	/** CharacterTag 배열을 받아 CharacterDefinition을 로드 요청하는 함수입니다. */
 	void LoadCharacterDefinitionData(const TArray<FGameplayTag>& InCharacterTags, FOnCharacterDefinitionsLoaded OnComplete);
 
 	void ChangeCharacterDecksKeyToSave(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, TMap<uint64, FSavedCharacterDeck>& OutDecks) const;
@@ -61,12 +63,12 @@ private:
 	void FillCardTagInSavedCardStruct(FSavedCharacterDeck& OutDeck) const;
 
 private:
-	// Card, Character의 Tag를 Key, PrimaryAssetId를 Value로 하는 TMap입니다.
+	/** Card, Character의 Tag를 Key, PrimaryAssetId를 Value로 하는 TMap입니다. */
 	TMap<FGameplayTag, FPrimaryAssetId> CardDefinitionDataAssetIds;
 	TMap<FGameplayTag, FPrimaryAssetId> CardSelfViewDataAssetIds;
 	TMap<FGameplayTag, FPrimaryAssetId> CharacterDefinitionDataAssetIds;
 
-	// CardId를 Key, CardTag를 Value로 하는 TMap입니다.
+	/** CardId를 Key, CardTag를 Value로 하는 TMap입니다. */
 	TMap<uint64, FGameplayTag> CardIdToTags;
 
 	UPROPERTY()

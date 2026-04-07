@@ -21,7 +21,7 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 	
 public:
-	// Id는 출시 이후 절대 변경되어선 안 됩니다!!
+	/** ※!! Id는 출시 이후 절대 변경되어선 안 됩니다  !!※ */
 	UPROPERTY(EditDefaultsOnly, AssetRegistrySearchable)
 	uint64 CardId;
 	

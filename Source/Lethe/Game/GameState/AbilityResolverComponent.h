@@ -16,16 +16,16 @@ enum class ETryAbilityActivationResult : uint8
 	
 	AllAbilityUsed,
 	
-	// 잘못된 로직 작성으로 인한 실패의 경우 반환받게 됩니다.
+	/** 잘못된 로직 작성으로 인한 실패의 경우 반환받게 됩니다. */
 	FailedLogicError,
 	
-	// 강제 종료, 엔진상 버그 등으로 인한 실패의 경우 반환받게 됩니다.
+	/** 강제 종료, 엔진상 버그 등으로 인한 실패의 경우 반환받게 됩니다. */
 	FailedFatal,
 	
-	// 코스트 부족 혹은 모종의 이유로 인해 Ability가 GAS상 문제로 작동에 실패한 경우 반환받게 됩니다.
+	/** 코스트 부족 혹은 모종의 이유로 인해 Ability가 GAS상 문제로 작동에 실패한 경우 반환받게 됩니다. */
 	FailedNotActivated,
 	
-	// Enemy의 MoveAbility 사용 시 TargetTile이 없는 경우 반환받게 됩니다.
+	/** Enemy의 MoveAbility 사용 시 TargetTile이 없는 경우 반환받게 됩니다. */
 	FailedNoneTargetTileToMove,
 };
 
@@ -69,7 +69,7 @@ private:
 	ETryAbilityActivationResult TryActivateNextEnemyAbility();
 	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationData* ActivationData);
 
-	// Activation 처리 중 보류했던 Ability 종료/실패 콜백을 처리하는 함수입니다.
+	/** Activation 처리 중 보류했던 Ability 종료/실패 콜백을 처리하는 함수입니다. */
 	bool ProcessPendingAbilityCallbacks();
 	
 	void ProcessAbilitySucceeded();

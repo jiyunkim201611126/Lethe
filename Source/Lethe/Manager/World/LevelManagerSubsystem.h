@@ -43,7 +43,7 @@ public:
 	FOnStartLevelChanged OnStartLevelChanged;
 
 private:
-	// TODO: 임시로 CurrentLevelType에 DeckEditing을 할당해두었습니다. 추후 MainMenu 같은 레벨이 생기면 해당 enum 선언 후 할당해줍니다.
+	/** TODO: 임시로 CurrentLevelType에 DeckEditing을 할당해두었습니다. 추후 MainMenu 같은 레벨이 생기면 해당 enum 선언 후 할당해줍니다. */
 	ELevelType PreviousLevelType = ELevelType::None;
 	ELevelType CurrentLevelType = ELevelType::DeckEditing;
 	ELevelType NextLevelType = ELevelType::None;

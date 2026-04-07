@@ -25,11 +25,11 @@ protected:
 	//~ Begin UUserWidget Interface
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	//~ Enf of UUserWidget Interface
+	//~ End of UUserWidget Interface
 
 	//~ Begin ULetheUserWidget Interface
 	virtual void WidgetControllerSet_Implementation() override;
-	//~ Enf of ULetheUserWidget Interface
+	//~ End of ULetheUserWidget Interface
 
 protected:
 	UPROPERTY(meta = (BindWidget))

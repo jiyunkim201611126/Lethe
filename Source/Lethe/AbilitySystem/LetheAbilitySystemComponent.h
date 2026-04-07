@@ -12,7 +12,7 @@ class UCharacterDefinitionData;
 class ULetheGameplayAbility;
 struct FSavedCard;
 
-DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /*this*/, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
+DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
@@ -20,10 +20,10 @@ class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
 	GENERATED_BODY()
 
 public:
-	// Ability를 부여하는 함수입니다.
+	/** Ability를 부여하는 함수입니다. */
 	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities);
 	
-	// Ability를 부여함과 동시에 한 번 발동하는 함수입니다. 보통 Passive 구현에 사용합니다.
+	/** Ability를 부여함과 동시에 한 번 발동하는 함수입니다. 보통 Passive 구현에 사용합니다. */
 	void AddCharacterAbilitiesWithActive(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities);
 
 	void AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards);

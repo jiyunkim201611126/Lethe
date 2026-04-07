@@ -11,7 +11,7 @@ class UCanvasPanelSlot;
 class UCardWidget;
 class ULetheAbilitySystemComponent;
 
-// TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다.
+/** TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다. */
 USTRUCT(BlueprintType)
 struct FCharacterCards
 {
@@ -59,7 +59,7 @@ public:
 
 	void RefillDeck();
 
-	// 캐릭터 순서대로 순회할 필요가 있어 매개변수로 AbilitySystemReferences를 받아 순회하면서 ASCToCards에서 가져옵니다.
+	/** 캐릭터 순서대로 순회할 필요가 있어 매개변수로 AbilitySystemReferences를 받아 순회하면서 ASCToCards에서 가져옵니다. */
 	void MoveAllCards(const TArray<FAbilitySystemReference>& AbilitySystemReferences);
 	
 	bool AreAllDecksFull() const;

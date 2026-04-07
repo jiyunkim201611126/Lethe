@@ -8,6 +8,7 @@
 #include "Lethe/UI/Widget/LetheUserWidget.h"
 #include "CardPanelWidget.generated.h"
 
+enum class ECardAction : uint8;
 class UButton;
 class UCanvasPanel;
 class UCardPanelWidgetController;
@@ -16,7 +17,6 @@ class UCardWidget;
 class ULetheAbilitySystemComponent;
 class UViewCardDetailWidget;
 struct FCardInitParams;
-enum class ECardAction : uint8;
 
 UCLASS()
 class LETHE_API UCardPanelWidget : public ULetheUserWidget
@@ -50,7 +50,8 @@ private:
 	
 	void OnHandHovered(UCardWidget* CardWidget, const bool bHovered) const;
 	void SelectCard(UCardWidget* CardWidget);
-	// 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다.
+	
+	/** 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다. */
 	bool OnMouseButtonDownInCardUseSection() const;
 	bool OnMouseButtonUpInCardUseSection();
 	void CancelSelectedCard() const;

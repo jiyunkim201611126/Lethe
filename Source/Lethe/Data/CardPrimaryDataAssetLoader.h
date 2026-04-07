@@ -29,7 +29,7 @@ struct FLoadedCardInfo
 	FSavedCard SavedCardInfo;
 };
 
-DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /*CharacterTag*/, const TArray<FLoadedCardInfo>& /*LoadedCards*/, const bool /*bEquipped*/);
+DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const TArray<FLoadedCardInfo>& /* LoadedCards */, const bool /* bEquipped */);
 
 /**
  * DataLoadManagerSubsystem를 참조해 DataAsset 로드를 요청하는 담당 클래스입니다.

@@ -41,11 +41,10 @@ protected:
 	void ActivateNoise(const ATile* StandingTile, const ATile* TargetTile);
 
 protected:
-	// Ability 범위입니다.
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	FBFSRange AbilityRange;
 
-	// Noise 정책입니다.
+	/** 소음 발생 정책으로, 시작 타일과 그 범위를 지정하는 변수입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Noise")
 	TArray<FNoisePolicy> NoisePolicies;
 

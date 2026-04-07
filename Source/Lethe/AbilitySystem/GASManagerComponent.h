@@ -27,9 +27,10 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActorComponent Interface
 
-	// 해당 프로젝트는 PlayerState가 아닌 Character가 두 객체를 직접 생성하기 때문에, 아래 함수로 넘겨받아 할당합니다.
+	/** PlayerState가 아닌 Character가 ASC, AS를 직접 생성하기 때문에, 아래 함수로 넘겨받아 할당합니다. */
 	void SetAbilitySystemComponent(UAbilitySystemComponent* InAbilitySystemComponent);
 	void SetAttributeSet(UAttributeSet* InAttributeSet);
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	
 	virtual void InitAbilityActorInfo(UUserWidget* AttributeWidget);
@@ -40,7 +41,6 @@ public:
 	void OnDied() const;
 
 protected:
-	// GameplayEffect를 본인에게 적용하는 함수입니다.
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
 
 private:
@@ -48,11 +48,11 @@ private:
 	void OnPlanPhaseStarted() const;
 
 protected:
-	// 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다.
+	/** 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다. */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
-	// 턴 시작 시 Cost와 Mana를 회복하는 GameplayEffect입니다.
+	/** 턴 시작 시 Cost와 Mana를 회복하는 GameplayEffect입니다. */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> TurnStartRecovery;
 

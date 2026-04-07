@@ -113,17 +113,17 @@ public:
 	virtual void Deinitialize() override;
 	//~ End Subsystem Interface
 
-	// 사운드를 비동기 로드할 때 사용하는 함수입니다.
+	/** 사운드를 비동기 로드할 때 사용하는 함수입니다. */
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation = FRotator::ZeroRotator, const float VolumeMultiplier = 1.f, const float PitchMultiplier = 1.f);
 	void AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback);
 
-	// 나이아가라를 비동기 로드할 때 사용하는 함수입니다.
+	/** 나이아가라를 비동기 로드할 때 사용하는 함수입니다. */
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation = FRotator::ZeroRotator, const FVector Scale = FVector(1.f), bool bAutoDestroy = true, bool bAutoActivate = true);
 	void AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback);
 
-	// 동기 로드를 원하는 경우 사용하는 함수입니다.
+	/** 동기 로드를 원하는 경우 사용하는 함수입니다. */
 	USoundBase* GetSound(const FGameplayTag& SoundTag) const;
 	UNiagaraSystem* GetNiagara(const FGameplayTag& NiagaraTag) const;
 
@@ -137,7 +137,7 @@ private:
 private:
 	FDelegateHandle OnLevelChangeStartedHandle;
 	
-	// DataTable에 매핑되어있는 Tag와 에셋들은 탐색 효율을 위해 TMap으로 재구성되므로, 메모리 효율을 위해 Soft로 선언합니다.
+	/** DataTable에 매핑되어있는 Tag와 에셋들은 탐색 효율을 위해 TMap으로 재구성되므로, 메모리 효율을 위해 Soft로 선언합니다. */
 	UPROPERTY(Config)
 	TSoftObjectPtr<UDataTable> SoundDataTablePath;
 	
@@ -150,13 +150,13 @@ private:
 	UPROPERTY()
 	TMap<FGameplayTag, TSoftObjectPtr<UNiagaraSystem>> NiagaraMap;
 	
-	// 동일한 에셋에 대한 요청이 여러 개 동시에 들어올 경우, 로드가 끝날 때 모두 처리할 수 있도록 콜백 함수나 재생 관련 변수를 캐싱해 대기시키는 TMap입니다.
+	/** 동일한 에셋에 대한 요청이 여러 개 동시에 들어올 경우, 로드가 끝날 때 모두 처리할 수 있도록 콜백 함수나 재생 관련 변수를 캐싱해 대기시키는 TMap입니다. */
 	UPROPERTY()
 	TMap<FSoftObjectPath, FSoundAsyncLoadRequest> PendingSoundLoadRequests;
 	
 	UPROPERTY()
 	TMap<FSoftObjectPath, FNiagaraAsyncLoadRequest> PendingNiagaraLoadRequests;
 
-	// 멀티스레딩 안전성 확보를 위한 변수입니다.
+	/** 멀티스레딩 안전성 확보를 위한 변수입니다. */
 	FCriticalSection PendingRequestsLock;
 };

@@ -13,8 +13,10 @@ class ULetheImage;
 class USizeBox;
 struct FCardInitParams;
 
-// CardWidget이 현재 어디에 속해있는지 나타내는 Enum입니다.
-// 이미 CardPanelWidget이 이를 알고는 있으나, CardWidget이 알고 있어야 스스로 어떤 CardAction이 발생했는지 판별한 후 CardPanelWidget에게 알려줄 수 있습니다.
+/**
+ * CardWidget이 현재 어디에 속해있는지 나타내는 Enum입니다.
+ * 이미 CardPanelWidget이 이를 알고는 있으나, CardWidget이 알고 있어야 스스로 어떤 CardAction이 발생했는지 판별한 후 CardPanelWidget에게 알려줄 수 있습니다.
+ */
 UENUM()
 enum class ECardContainer : uint8
 {
@@ -24,7 +26,7 @@ enum class ECardContainer : uint8
 	Grave,
 };
 
-// GetCardActionForEvent 함수를 통해 코드를 정리할 용도로 선언한 Enum입니다.
+/** GetCardActionForEvent 함수를 통해 코드를 정리할 용도로 선언한 Enum입니다. */
 UENUM()
 enum class ECardMouseEvent : uint8
 {
@@ -83,10 +85,10 @@ public:
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
-	// 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다.
+	/** 현재 카드가 어떤 컨테이너에 속해있는지 전달받아 그에 따른 처리를 수행하는 함수입니다. */
 	void SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation = false);
 	
-	// 마우스 이벤트에 의해 호출되는 함수로, 목표 지점을 결정한 뒤 이동을 시작합니다.
+	/** 마우스 이벤트에 의해 호출되는 함수로, 목표 지점을 결정한 뒤 이동을 시작합니다. */
 	void SetTargetTransform(const FWidgetTransform& InTransform);
 
 	void MouseHovered(const bool bInHovered);

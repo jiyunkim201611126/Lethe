@@ -14,9 +14,9 @@ class LETHE_API UPlayerAttributeWidgetController : public UAttributeWidgetContro
 	GENERATED_BODY()
 
 public:
-	//~ Begin LetheWidgetController Interface
+	//~ Begin ULetheWidgetController Interface
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
-	//~ End LetheWidgetController Interface
+	//~ End of ULetheWidgetController Interface
 
 protected:
 	virtual void StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData) override;

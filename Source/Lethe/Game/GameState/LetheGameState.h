@@ -16,10 +16,10 @@ enum class EPhaseState : uint8
 	None,
 	EnemyPlanningPhase,
 
-	// 비전투 페이즈
+	/** 비전투 페이즈 */
 	PlayerMovePhase,
 
-	// 전투 페이즈
+	/** 전투 페이즈 */
 	DrawPhase,
 	PlayerTurnPhase,
 	EnemyTurnPhase,
@@ -55,10 +55,10 @@ public:
 
 	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;
 
-	// Ability를 Activate하는 데까진 성공했으나, 모종의 이유(층 수 차이, 이미 사망한 적 등)로 CardAbility에서 반려한 경우 호출되는 함수입니다.
+	/** Ability를 Activate하는 데까진 성공했으나, 모종의 이유(층 수 차이, 이미 사망한 적 등)로 CardAbility에서 반려한 경우 호출되는 함수입니다. */
 	void OnAbilityActivationFailed() const;
 
-	// 플레이어 캐릭터의 이동을 성공적으로 마친 경우 호출하는 함수입니다.
+	/** 플레이어 캐릭터의 이동을 성공적으로 마친 경우 호출하는 함수입니다. */
 	UFUNCTION(BlueprintCallable)
 	void OnResolvePlayerMove(const AActor* MovedCharacter) const;
 
@@ -107,15 +107,17 @@ private:
 	UPROPERTY()
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 
-	// 우선순위대로 정렬되는 현재 스폰된 적들입니다.
+	/** 우선순위대로 정렬되는 현재 스폰된 적들입니다. */
 	TArray<TWeakObjectPtr<AEnemyCharacterBase>> SpawnedEnemies;
 	int32 CurrentEnemyAbilityProcessIndex = 0;
 	
-	// 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
-	// 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
+	/**
+	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
+	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
+	 */
 	TArray<FAbilityActivationData> ReservedEnemyAbilityActivationData;
 	FTimerHandle PlanTimerHandle;
 
-	// 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다.
+	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다. */
 	TSet<TWeakObjectPtr<AEnemyCharacterBase>> CurrentCombatEnemies;
 };

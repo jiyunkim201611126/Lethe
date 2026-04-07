@@ -8,9 +8,9 @@
 #include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
+class ULetheCardAbility;
 struct FPreviewData;
 struct FPreviewContext;
-class ULetheCardAbility;
 struct FGameplayAttribute;
 struct FOnAttributeChangeData;
 
@@ -61,13 +61,13 @@ private:
 	void BroadcastHealthChanged() const;
 
 public:
-	// AttributeTag를 Key로, AttributeWidget이 콜백을 걸어두는 델리게이트를 Value로 하는 TMap들입니다.
+	/** AttributeTag를 Key로, AttributeWidget이 콜백을 걸어두는 델리게이트를 Value로 하는 TMap들입니다. */
 	TMap<FGameplayTag, FOnAttributeChanged> OnAttributeChangedMap;
 	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewAttributeChangedMap;
 	TMap<FGameplayTag, FOnAttributeChanged> OnPreviewEndedMap;
 
 protected:
-	// 실제 AttributeSet이 갖고 있는 Attribute Value를 캐싱해두는 TMap입니다.
+	/** 실제 AttributeSet이 갖고 있는 Attribute Value를 캐싱해두는 TMap입니다. */
 	TMap<FGameplayTag, float> CachedAttribute;
 	TSet<FGameplayTag> NowPreviewAttributes;
 };

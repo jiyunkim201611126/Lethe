@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -7,21 +7,25 @@
 #include "AbilitySystemComponent.h"
 #include "LetheAttributeSet.generated.h"
 
-// Getter, Setter, Initter를 자동 생성해주는 매크로를 호출하기 위해 정의하는 구문입니다.
-// 이 구문이 없으면 Getter, Setter, Initter를 변수마다 모두 작성해야 합니다.
-// 즉 Boilerplate 코드를 줄여주는 구문입니다.
+/**
+ * Getter, Setter, Initter를 자동 생성해주는 매크로를 호출하기 위해 정의하는 구문입니다.
+ * 이 구문이 없으면 Getter, Setter, Initter를 변수마다 모두 작성해야 합니다.
+ * 즉 Boilerplate 코드를 줄여주는 구문입니다.
+ */
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
-// 원문 그대로 사용하면 너무 추악하기 때문에 한 번 이쁘게 포장합니다.
+/** 원문 그대로 사용하면 너무 추악하기 때문에 한 번 이쁘게 포장합니다. */
 template<class T>
 using TStaticFuncPtr = TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
-// Attribute에게 변화가 적용되는 모든 상황에 대해서 Source와 Target을 추적하기 위해 선언, 초기화하는 구조체입니다.
-// 사실상 편의성을 위해 사용하는 구조체이며, 멤버 변수로 사용하지 않기 때문에 내부는 모두 일반 Raw 포인터로 선언되어 있습니다.
+/**
+ * Attribute에게 변화가 적용되는 모든 상황에 대해서 Source와 Target을 추적하기 위해 선언, 초기화하는 구조체입니다.
+ * 사실상 편의성을 위해 사용하는 구조체이며, 멤버 변수로 사용하지 않기 때문에 내부는 모두 일반 Raw 포인터로 선언되어 있습니다.
+ */
 USTRUCT(BlueprintType)
 struct FEffectProperties
 {
@@ -65,22 +69,22 @@ public:
 	ULetheAttributeSet();
 
 	//~ Begin UAttributeSet Interface
-	// GameplayEffect의 적용으로 인해 Attribute에 변동사항이 있으면 호출되는 함수입니다.
+	/** GameplayEffect의 적용으로 인해 Attribute에 변동사항이 있으면 호출되는 함수입니다. */
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-	// Attribute의 값이 변화할 때 호출되는 함수입니다.
+	/** Attribute의 값이 변화할 때 호출되는 함수입니다. */
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 	//~ End UAttributeSet Interface
 
 	static void InitializeAttributeTagMap();
 
 private:
-	// GE 적용 시점에 Source와 Target을 편리하게 추적하기 위해 구조체에 그 정보를 채워주는 함수입니다.
+	/** GE 적용 시점에 Source와 Target을 편리하게 추적하기 위해 구조체에 그 정보를 채워주는 함수입니다. */
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& EffectProperties) const;
 	
 	void ApplyIncomingDamage(const FEffectProperties& Props, const FGameplayEffectModCallbackData& Data);
 
 public:
-	// Attribute와 그에 해당하는 Tag를 매핑한 TMap입니다.
+	/** Attribute와 그에 해당하는 Tag를 매핑한 TMap입니다. */
 	static TMap<FGameplayAttribute, FGameplayTag> AttributesToTags;
 
 	/**
@@ -121,7 +125,7 @@ public:
 
 	/**
 	 * Stat Attributes
-	*/
+	 */
 
 	/*
 	UPROPERTY(BlueprintReadOnly, Category = "Stat Attributes")

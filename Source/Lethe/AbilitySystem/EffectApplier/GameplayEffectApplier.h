@@ -35,8 +35,10 @@ public:
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
-	// Ability 자체 Cost 외, Effect 적용 시 Source에게 발생하는 Attribute 변화를 Preview로 표시할 때 사용하는 함수들입니다.
+	/** Ability 자체 Cost 외, Preview용 데이터 계산을 위한 GE 클래스를 반환해주는 함수입니다. */
 	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
+	
+	/** Ability 자체 Cost 외, Effect 적용 시 Source에게 발생하는 Attribute 변화를 Preview로 표시할 때 사용하는 함수입니다. */
 	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 protected:

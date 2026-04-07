@@ -23,7 +23,7 @@ public:
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);
 
 protected:
-	// 데미지 타입과 그 속성 데미지를 정의하는 변수입니다.
+	/** 데미지 타입과 그 값을 정의하는 변수입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TMap<FGameplayTag, FScalableFloat> DamageValues;
 };

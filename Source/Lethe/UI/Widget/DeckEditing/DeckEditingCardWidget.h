@@ -7,13 +7,12 @@
 #include "Blueprint/UserWidget.h"
 #include "DeckEditingCardWidget.generated.h"
 
-/**
- * 복잡한 마우스 이벤트나 움직임 로직 없이, View만 담당하는 CardWidget입니다.
- */
-
 class UImage;
 class USizeBox;
 
+/**
+ * 복잡한 마우스 이벤트나 움직임 로직 없이, View만 담당하는 CardWidget입니다.
+ */
 UCLASS()
 class LETHE_API UDeckEditingCardWidget : public UUserWidget, public IUserObjectListEntry
 {

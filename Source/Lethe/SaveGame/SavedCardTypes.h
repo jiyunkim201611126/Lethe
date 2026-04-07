@@ -15,8 +15,10 @@ struct FSavedCard
 	UPROPERTY(EditDefaultsOnly)
 	uint64 CardId;
 
-	// Id로 찾은 Tag가 런타임 중 동적으로 채워집니다.
-	// Id는 출시 이후 절대 변경되지 않으나, CardTag는 필요에 따라 변경될 수 있기 때문에 이와 같은 방법을 사용합니다.
+	/**
+	 * Id로 찾은 Tag가 런타임 중 동적으로 채워집니다.
+	 * Id는 출시 이후 절대 변경되지 않으나, CardTag는 필요에 따라 변경될 수 있기 때문에 이와 같은 방법을 사용합니다.
+	 */
 	FGameplayTag CardTag;
 
 	UPROPERTY()

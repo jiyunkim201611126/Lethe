@@ -36,6 +36,9 @@ class LETHE_API ALethePlayerController : public APlayerController
 public:
 	ALethePlayerController();
 
+	void InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+	void InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+
 	void OnNumberKeyPressed(const int32 InNumber) const;
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();

@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/UI/Widget/LetheWidgetController.h"
 #include "UObject/Object.h"
 #include "CardLayoutManager.generated.h"
 
 class UCanvasPanelSlot;
 class UCardWidget;
 class ULetheAbilitySystemComponent;
+struct FAbilitySystemReference;
 
 /** TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다. */
 USTRUCT(BlueprintType)

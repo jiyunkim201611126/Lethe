@@ -12,6 +12,7 @@
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
+#include "Lethe/UI/Framework/LetheHUD.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -28,6 +29,16 @@ ALethePlayerController::ALethePlayerController()
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
+}
+
+void ALethePlayerController::InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+{
+	LetheHUD->InitPlayerUI(this, PS, ASC, AS, InAttributeWidget);
+}
+
+void ALethePlayerController::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+{
+	LetheHUD->InitEnemyUI(this, ASC, AS, InAttributeWidget);
 }
 
 void ALethePlayerController::OnNumberKeyPressed(const int32 InNumber) const

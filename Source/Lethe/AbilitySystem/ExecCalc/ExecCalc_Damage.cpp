@@ -9,23 +9,23 @@
 
 추후 ExecCalc 사용에 Attribute가 필요한 경우 주석처럼 사용하면 됩니다.
 
-struct FSVDamageStatics
+struct FLetheDamageStatics
 {
 	// 해당 클래스의 로직 내에서 사용할 Attribute를 여기에서 선언합니다.
-	//FGameplayEffectAttributeCaptureDefinition SourceAttack;
-	//FGameplayEffectAttributeCaptureDefinition TargetArmor;
+	FGameplayEffectAttributeCaptureDefinition SourceAttack;
+	FGameplayEffectAttributeCaptureDefinition TargetArmor;
 
-	FSVDamageStatics()
+	FLetheDamageStatics()
 	// 아래는 Attribute를 가져오는 규칙에 대한 명시입니다.
-	// SourceAttack(ULetheAttributeSet::GetAttackAttribute(), EGameplayEffectAttributeCaptureSource::Source, false),
-	// TargetArmor(ULetheAttributeSet::GetArmorAttribute(), EGameplayEffectAttributeCaptureSource::Target, false)
+	SourceAttack(ULetheAttributeSet::GetAttackAttribute(), EGameplayEffectAttributeCaptureSource::Source, false),
+	TargetArmor(ULetheAttributeSet::GetArmorAttribute(), EGameplayEffectAttributeCaptureSource::Target, false)
 	{
 	}
 };
 
-static const FSVDamageStatics& DamageStatics()
+static const FLetheDamageStatics& DamageStatics()
 {
-	static FSVDamageStatics DStatics;
+	static FLetheDamageStatics DStatics;
 	return DStatics;
 }
 

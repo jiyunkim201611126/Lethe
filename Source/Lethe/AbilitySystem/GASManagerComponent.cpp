@@ -10,7 +10,6 @@
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/UI/HUD/LetheHUD.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -55,21 +54,18 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
 	{
-		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
+		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			switch (TeamSide)
 			{
-				switch (TeamSide)
-				{
-				case ETeamSide::Player:
-					LetheHUD->InitPlayerUI(PlayerController, GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
-					break;
-				case ETeamSide::Enemy:
-					LetheHUD->InitEnemyUI(PlayerController, AbilitySystemComponent, AttributeSet, AttributeWidget);
-					break;
-				default:
-					break;
-				}
+			case ETeamSide::Player:
+				LethePlayerController->InitPlayerUI(GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
+				break;
+			case ETeamSide::Enemy:
+				LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet, AttributeWidget);
+				break;
+			default:
+				break;
 			}
 		}
 	}

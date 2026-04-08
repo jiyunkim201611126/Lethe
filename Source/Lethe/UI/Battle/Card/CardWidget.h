@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/TimelineComponent.h"
-#include "Lethe/UI/Widget/LetheUserWidget.h"
+#include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
 class ULetheAbilitySystemComponent;

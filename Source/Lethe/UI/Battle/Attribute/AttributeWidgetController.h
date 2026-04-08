@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
-#include "Lethe/UI/Widget/LetheWidgetController.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "AttributeWidgetController.generated.h"
 
 class ULetheCardAbility;

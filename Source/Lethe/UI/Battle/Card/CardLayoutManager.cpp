@@ -7,6 +7,8 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/Util.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
+#include "Slate/WidgetTransform.h"
 
 void UCardLayoutManager::Initialize(const FVector2D& CardSize)
 {

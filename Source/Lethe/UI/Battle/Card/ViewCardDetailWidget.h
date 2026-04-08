@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/UI/Widget/LetheUserWidget.h"
+#include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "ViewCardDetailWidget.generated.h"
 
 class UCardPanelWidgetController;

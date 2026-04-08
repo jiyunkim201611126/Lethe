@@ -5,11 +5,11 @@
 #include "Blueprint/UserWidget.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/UI/Widget/Attribute/AttributeWidget.h"
-#include "Lethe/UI/Widget/Attribute/AttributeWidgetController.h"
-#include "Lethe/UI/Widget/BattleWidget/CardPanelWidgetController.h"
-#include "Lethe/UI/Widget/Overlay/OverlayWidget.h"
-#include "Lethe/UI/Widget/Overlay/OverlayWidgetController.h"
+#include "Lethe/UI/Battle/Attribute/AttributeWidget.h"
+#include "Lethe/UI/Battle/Attribute/AttributeWidgetController.h"
+#include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
+#include "Lethe/UI/Battle/Overlay/OverlayWidget.h"
+#include "Lethe/UI/Battle/Overlay/OverlayWidgetController.h"
 
 void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
 {

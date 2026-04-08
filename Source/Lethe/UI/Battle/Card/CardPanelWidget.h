@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "CardLayoutManager.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/UI/Widget/LetheUserWidget.h"
+#include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardPanelWidget.generated.h"
 
 enum class ECardAction : uint8;

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Lethe/UI/Widget/LetheWidgetController.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
 enum class EPhaseState : uint8;

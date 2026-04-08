@@ -9,6 +9,7 @@
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Lethe/Lethe.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
 
 void UCardPanelWidget::NativeConstruct()
 {

@@ -5,8 +5,8 @@
 #include "PlayerAttributeWidgetController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/UI/Battle/ProgressBar/LetheProgressBar.h"
 #include "Lethe/UI/Core/LetheTextBlock.h"
-#include "Lethe/UI/Widget/ProgressBar/LetheProgressBar.h"
 
 void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 {

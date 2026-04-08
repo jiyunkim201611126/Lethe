@@ -7,7 +7,7 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-#include "Lethe/UI/HUD/LetheHUD.h"
+#include "Lethe/UI/Framework/LetheHUD.h"
 
 class UTileManagerSubsystem;
 

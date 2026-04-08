@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/UI/Widget/LetheWidgetController.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "OverlayWidgetController.generated.h"
 
 UCLASS(Abstract, Blueprintable)

@@ -24,8 +24,11 @@ struct FLetheGameplayTags
 	FGameplayTag Attributes_Vital_MaxMana;
 	FGameplayTag Attributes_Vital_Cost;
 	FGameplayTag Attributes_Vital_MaxCost;
+	FGameplayTag Attributes_Vital_MoveDistance;
+	FGameplayTag Attributes_Vital_MaxMoveDistance;
 	FGameplayTag Attributes_Vital_ManaRecovery;
 	FGameplayTag Attributes_Vital_CostRecovery;
+	FGameplayTag Attributes_Vital_MoveDistanceRecovery;
 	FGameplayTag Attributes_Meta_IncomingDamage;
 	//~ End of Attributes
 	

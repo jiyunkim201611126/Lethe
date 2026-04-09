@@ -116,12 +116,24 @@ public:
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxCost);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData MoveDistance;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveDistance);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData MaxMoveDistance;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxMoveDistance);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData ManaRecovery;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, ManaRecovery);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CostRecovery;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, CostRecovery);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData MoveDistanceRecovery;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveDistanceRecovery);
 
 	/**
 	 * Stat Attributes

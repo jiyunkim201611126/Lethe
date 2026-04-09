@@ -11,9 +11,10 @@
 #include "LetheCharacterBase.generated.h"
 
 class ALethePawn;
-class UAttributeSet;
 class UGameplayAbility;
 class UGASManagerComponent;
+class ULetheAbilitySystemComponent;
+class ULetheAttributeSet;
 class UWidgetComponent;
 
 UCLASS()
@@ -59,18 +60,13 @@ protected:
 	TObjectPtr<UGASManagerComponent> GASManagerComponent;
 
 	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<ULetheAbilitySystemComponent> AbilitySystemComponent;
 	
 	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
+	TObjectPtr<ULetheAttributeSet> AttributeSet;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
-
-	/** 캐릭터의 최대 이동 거리입니다. */
-	// TODO: 현재로선 간단하게 구현하기 위해 이곳에 선언되었으나, 추후 Attribute로 옮길 필요가 있습니다.
-	UPROPERTY(EditDefaultsOnly, Category = "Status")
-	int32 MoveDistance = 2;
 
 private:
 	int32 OutlineColorTransparent = CUSTOM_DEPTH_YELLOW_TRANSPARENT;

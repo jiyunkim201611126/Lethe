@@ -39,7 +39,7 @@ void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
 
 int32 ALetheCharacterBase::GetMoveDistance() const
 {
-	return MoveDistance;
+	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMoveDistance()));
 }
 
 void ALetheCharacterBase::OnDamageTaken()

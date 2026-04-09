@@ -19,7 +19,7 @@ void ULetheAttributeSet::InitializeAttributeTagMap()
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	if (AttributesToTags.IsEmpty())
 	{
-		AttributesToTags.Reserve(9);
+		AttributesToTags.Reserve(12);
 
 		AttributesToTags.Emplace(GetHealthAttribute(), LetheGameplayTags.Attributes_Vital_Health);
 		AttributesToTags.Emplace(GetMaxHealthAttribute(), LetheGameplayTags.Attributes_Vital_MaxHealth);
@@ -27,8 +27,11 @@ void ULetheAttributeSet::InitializeAttributeTagMap()
 		AttributesToTags.Emplace(GetMaxManaAttribute(), LetheGameplayTags.Attributes_Vital_MaxMana);
 		AttributesToTags.Emplace(GetCostAttribute(), LetheGameplayTags.Attributes_Vital_Cost);
 		AttributesToTags.Emplace(GetMaxCostAttribute(), LetheGameplayTags.Attributes_Vital_MaxCost);
+		AttributesToTags.Emplace(GetMoveDistanceAttribute(), LetheGameplayTags.Attributes_Vital_MoveDistance);
+		AttributesToTags.Emplace(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attributes_Vital_MaxMoveDistance);
 		AttributesToTags.Emplace(GetManaRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_ManaRecovery);
 		AttributesToTags.Emplace(GetCostRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_CostRecovery);
+		AttributesToTags.Emplace(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attributes_Vital_MoveDistanceRecovery);
 		AttributesToTags.Emplace(GetIncomingDamageAttribute(), LetheGameplayTags.Attributes_Meta_IncomingDamage);
 	}
 }
@@ -57,6 +60,10 @@ void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	if (Data.EvaluatedData.Attribute == GetCostAttribute())
 	{
 		SetCost(FMath::Clamp(GetCost(), 0.f, GetMaxCost()));
+	}
+	if (Data.EvaluatedData.Attribute == GetMoveDistanceAttribute())
+	{
+		SetMoveDistance(FMath::Clamp(GetMoveDistance(), 0.f , GetMaxMoveDistance()));
 	}
 }
 

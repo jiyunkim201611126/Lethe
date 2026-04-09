@@ -163,6 +163,7 @@ void UGASManagerComponent::OnPlanPhaseStarted() const
 	{
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetManaRecoveryAttribute()));
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetCostRecoveryAttribute()));
+		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attributes_Vital_MoveDistanceRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetMoveDistanceRecoveryAttribute()));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 	}
 }

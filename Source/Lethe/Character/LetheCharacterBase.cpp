@@ -4,8 +4,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "LethePawn.h"
+#include "Component/GASManagerComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Lethe/AbilitySystem/GASManagerComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
@@ -40,6 +40,11 @@ void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
 int32 ALetheCharacterBase::GetMoveDistance() const
 {
 	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMoveDistance()));
+}
+
+int32 ALetheCharacterBase::GetMaxMoveDistance() const
+{
+	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMaxMoveDistance()));
 }
 
 void ALetheCharacterBase::OnDamageTaken()

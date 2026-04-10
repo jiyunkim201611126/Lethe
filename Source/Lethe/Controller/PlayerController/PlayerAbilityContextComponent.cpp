@@ -58,61 +58,38 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 		return;
 	}
 
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
 	{
 		return;
 	}
 
-	// 기존에 예약해두었던 정보가 있다면 가져옵니다.
-	FPlayerCharacterReservedMove* SelectedData = ReservedMoves.FindByPredicate([SelectedCharacter](const FPlayerCharacterReservedMove& MoveData)
+	// 이미 예약된 이동이 있다면 가져오고, 없다면 생성합니다.
+	FPlayerCharacterReservedMove* MovePathData = ReservedMoves.FindByPredicate([SelectedCharacter](const FPlayerCharacterReservedMove& MoveData)
 	{
 		return MoveData.PlayerCharacter == SelectedCharacter;
 	});
+	if (!MovePathData)
+	{
+		MovePathData = &ReservedMoves.Emplace_GetRef();
+		MovePathData->PlayerCharacter = SelectedCharacter;
+		MovePathData->AbilitySystemComponent = AbilitySystemComponent;
+	}
 
 	// TargetTile을 향한 모든 가능 경로를 가져옵니다.
 	TArray<TArray<ATile*>> OutPathTilesArray;
 	TileManagerSubsystem->FindShortestPath(TileManagerSubsystem->GetTileUnderActor(SelectedCharacter), TargetTile, OutPathTilesArray, true);
 	for (const TArray<ATile*>& PathTiles : OutPathTilesArray)
 	{
-		if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter))
+		TArray<TWeakObjectPtr<ATile>> WeakPathTiles;
+		for (ATile* Tile : PathTiles)
 		{
-			const int32 MoveDistance = CombatInterface->GetMoveDistance();
-			
-			// 최단 경로 중, 바로 다음 이동할 타일의 점유 상태를 확인하고 이동 가능 여부를 결정합니다.
-			ATile* ReservingTile = PathTiles.IsValidIndex(MoveDistance - 1) ? PathTiles[MoveDistance - 1] : PathTiles.Last();
-			const bool bIsCurrentCharacterReservedTile = SelectedData && SelectedData->TargetTile == ReservingTile;
-			if (!TileManagerSubsystem->CanPlayerMoveToTile(ReservingTile) && !bIsCurrentCharacterReservedTile)
-			{
-				continue;
-			}
-			
-			TArray<TWeakObjectPtr<ATile>> WeakPathTiles;
-			for (ATile* Tile : PathTiles)
-			{
-				WeakPathTiles.Emplace(Tile);
-			}
-			
-			// 바로 다음 타일까지 이동 가능하다면 이를 캐싱하고, 바로 다음 타일 위치를 예약합니다.
-			if (!SelectedData)
-			{
-				FPlayerCharacterReservedMove MovePathData;
-				MovePathData.PlayerCharacter = SelectedCharacter;
-				MovePathData.AbilitySystemComponent = AbilitySystemComponent;
-				MovePathData.PathTiles = WeakPathTiles;
-				MovePathData.TargetTile = ReservingTile;
-				ReservedMoves.Emplace(MovePathData);
-			}
-			else
-			{
-				if (SelectedData)
-				{
-					TileManagerSubsystem->RemovePlayerOccupiedTile(SelectedData->TargetTile.Get());
-				}
-				SelectedData->PathTiles = WeakPathTiles;
-				SelectedData->TargetTile = ReservingTile;
-			}
-			TileManagerSubsystem->OccupyPlayerMoveTile(SelectedCharacter, ReservingTile);
+			WeakPathTiles.Emplace(Tile);
+		}
+		MovePathData->PathTiles = WeakPathTiles;
+
+		if (ReserveNextMoveTile(MovePathData, true))
+		{
 			break;
 		}
 	}
@@ -161,13 +138,12 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 
 void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCharacter)
 {
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
 	{
 		return;
 	}
 
-	// 기존에 예약해두었던 정보가 있다면 가져옵니다.
 	FPlayerCharacterReservedMove* SelectedData = ReservedMoves.FindByPredicate([MovedCharacter](const FPlayerCharacterReservedMove& MoveData)
 	{
 		return MoveData.PlayerCharacter == MovedCharacter;
@@ -193,35 +169,67 @@ void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCha
 		}
 		
 		// 다음 이동할 타일을 예약합니다.
-		if (!SelectedData->PathTiles.IsEmpty())
+		ReserveNextMoveTile(SelectedData, false);
+	}
+}
+
+bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReservedMove* SelectedData, const bool bIsFirstReserving) const
+{
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!SelectedData || !SelectedData->IsValid() || SelectedData->PathTiles.IsEmpty() || !TileManagerSubsystem)
+	{
+		return false;
+	}
+	
+	const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedData->PlayerCharacter);
+	if (!CombatInterface)
+	{
+		return false;
+	}
+
+	const int32 MaxMoveDistance = bIsFirstReserving ? CombatInterface->GetMoveDistance() - 1 : CombatInterface->GetMaxMoveDistance() - 1;
+	ATile* ReservingTile = GetNextReserveTile(SelectedData, MaxMoveDistance);
+
+	if (ReservingTile)
+	{
+		SelectedData->TargetTile = ReservingTile;
+	}
+	else
+	{
+		// 예약된 경로로 나아갈 수 없는 상태라면, TargetTile을 현재 타일로 초기화하고 경로를 비웁니다.
+		SelectedData->TargetTile = TileManagerSubsystem->GetTileUnderActor(SelectedData->PlayerCharacter.Get());
+		SelectedData->PathTiles.Empty();
+	}
+
+	// 점유 상태를 갱신합니다.
+	TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), SelectedData->TargetTile.Get());
+	return true;
+}
+
+ATile* UPlayerAbilityContextComponent::GetNextReserveTile(FPlayerCharacterReservedMove* SelectedData, const int32 MoveDistance) const
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!SelectedData || !SelectedData->IsValid() || SelectedData->PathTiles.IsEmpty() || !TileManagerSubsystem)
+	{
+		return nullptr;
+	}
+	
+	for (int32 Index = MoveDistance; Index >= 0; --Index)
+	{
+		const auto& ReservingTile = SelectedData->PathTiles.IsValidIndex(Index) ? SelectedData->PathTiles[Index] : nullptr;
+
+		if (ReservingTile.IsValid())
 		{
-			const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedData->PlayerCharacter);
-			if (!CombatInterface)
+			// 해당 타일로 이동 가능하거나, 애초에 현재 캐릭터가 점유한 타일이었다면 해당 타일을 반환합니다.
+			const bool bCanMove = TileManagerSubsystem->CanPlayerMoveToTile(ReservingTile.Get());
+			const bool bIsCurrentCharacterReservedTile = SelectedData && SelectedData->TargetTile == ReservingTile;
+			if (bCanMove || bIsCurrentCharacterReservedTile)
 			{
-				return;
-			}
-
-			const int32 NextTileIndex = CombatInterface->GetMoveDistance() - 1;
-			const auto& ReservingTile = SelectedData->PathTiles.IsValidIndex(NextTileIndex) ? SelectedData->PathTiles[NextTileIndex] : SelectedData->PathTiles.Last();
-
-			if (ReservingTile.IsValid())
-			{
-				TileManagerSubsystem->RemovePlayerOccupiedTile(SelectedData->TargetTile.Get());
-				
-				if (TileManagerSubsystem->CanPlayerMoveToTile(ReservingTile.Get()))
-				{
-					SelectedData->TargetTile = ReservingTile;
-				}
-				else
-				{
-					SelectedData->TargetTile = CurrentTile;
-					SelectedData->PathTiles.Empty();
-				}
-				
-				TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), ReservingTile.Get());
+				return ReservingTile.Get();
 			}
 		}
 	}
+	return nullptr;
 }
 
 void UPlayerAbilityContextComponent::ResetReservedMoveData()
@@ -234,7 +242,7 @@ void UPlayerAbilityContextComponent::ResetReservedMoveData()
 	ReservedMoves.Reset();
 }
 
-void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const
+void UPlayerAbilityContextComponent::RequestMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const
 {
 	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile)
 	{

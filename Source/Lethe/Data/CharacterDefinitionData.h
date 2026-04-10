@@ -30,7 +30,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APlayerCharacterBase> CharacterClass;
-	
+
+	/** 캐릭터의 PersonalColor이며, 카드의 뒷면에도 사용하는 색깔입니다. */
 	UPROPERTY(EditDefaultsOnly)
-	FColor CardBacksideColor;
+	FColor PersonalColor;
 };

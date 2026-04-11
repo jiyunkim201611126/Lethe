@@ -30,19 +30,19 @@ struct FCardInitParams
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ULetheAbilitySystemComponent* OwnerASC;
+	ULetheAbilitySystemComponent* OwnerASC = nullptr;
 	
 	UPROPERTY()
-	UCardViewData* CardViewData;
+	UCardViewData* CardViewData = nullptr;
 
 	UPROPERTY()
-	const UCardDefinitionData* CardDefinition;
+	const UCardDefinitionData* CardDefinition = nullptr;
 
 	UPROPERTY()
-	const UCardSelfViewData* CardSelfViewData;
+	const UCardSelfViewData* CardSelfViewData = nullptr;
 
 	UPROPERTY()
-	const UCharacterDefinitionData* CharacterDefinitionData;
+	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)

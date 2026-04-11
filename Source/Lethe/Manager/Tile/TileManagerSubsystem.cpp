@@ -347,21 +347,17 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 
 void UTileManagerSubsystem::OccupyPlayerMoveTile(AActor* Character, ATile* Tile)
 {
-	PlayerCharacterOccupiedTiles.Remove(Character);
-	PlayerCharacterOccupiedTiles.Emplace(Character, Tile);
+	PlayerCharacterOccupiedTiles.Add(Character, Tile);
 }
 
 void UTileManagerSubsystem::ResetPlayerOccupiedTile()
 {
-	PlayerCharacterOccupiedTiles.Reset();
-	for (const auto& PlayerCharacter : PlayerCharacters)
+	for (auto& Pair : PlayerCharacterOccupiedTiles)
 	{
-		if (PlayerCharacter.IsValid())
+		if (Pair.Key.IsValid() && Pair.Value.IsValid())
 		{
-			if (ATile* Tile = GetTileUnderActor(PlayerCharacter.Get()))
-			{
-				PlayerCharacterOccupiedTiles.Emplace(PlayerCharacter, Tile);
-			}
+			ATile* CurrentTile = GetTileUnderActor(Pair.Key.Get());
+			Pair.Value = CurrentTile;
 		}
 	}
 }
@@ -465,11 +461,6 @@ void UTileManagerSubsystem::UnmapByActor(AActor* InActor)
 		}
 	}
 	ActorToTileMap.Remove(InActor);
-}
-
-void UTileManagerSubsystem::RegisterPlayerCharacter(AActor* PlayerCharacter)
-{
-	PlayerCharacters.Emplace(PlayerCharacter);
 }
 
 AActor* UTileManagerSubsystem::GetActorOnTile(const ATile* InTile) const

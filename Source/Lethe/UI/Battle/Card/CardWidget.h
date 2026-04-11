@@ -65,7 +65,7 @@ struct FViewDetailData
 	FText CardNameText;
 	
 	UPROPERTY()
-	UObject* CardImage;
+	UObject* CardImage = nullptr;
 
 	FLinearColor CardFrontsideBorderColor;
 };

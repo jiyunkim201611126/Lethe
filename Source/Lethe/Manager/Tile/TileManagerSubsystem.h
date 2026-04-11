@@ -9,8 +9,8 @@
 #include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
-class AEnemyCharacterBase;
 enum class ETeamSide : uint8;
+class AEnemyCharacterBase;
 class ATile;
 class UStageInitData;
 struct FStageData;
@@ -51,7 +51,10 @@ public:
 	 */
 	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const;
 
+	/** 플레이어 캐릭터가 점유 중인 타일을 변경하는 함수입니다. */
 	void OccupyPlayerMoveTile(AActor* Character, ATile* Tile);
+
+	/** 기록된 점유 타일을 전부 '현재 밟고 있는 타일'로 초기화하는 함수입니다 */
 	void ResetPlayerOccupiedTile();
 	bool CanPlayerMoveToTile(const ATile* Tile) const;
 	
@@ -67,8 +70,6 @@ public:
 	bool MapTileAndActor(ATile* InTile, AActor* InActor);
 	void UnmapByTile(ATile* InTile);
 	void UnmapByActor(AActor* InActor);
-
-	void RegisterPlayerCharacter(AActor* PlayerCharacter);
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetActorOnTile(const ATile* InTile) const;
@@ -102,9 +103,6 @@ private:
 	/** 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다. */
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<ATile>> ActorToTileMap;
-
-	/** 플레이어 캐릭터를 캐싱해두는 배열로, TODO: 추후 PawnManagerSubsystem 등의 클래스가 구현되면 그 곳으로 옮길 가능성이 있습니다. */
-	TArray<TWeakObjectPtr<AActor>> PlayerCharacters;
 
 	/**
 	 * 현재 서있거나, MoveAbility로 이동하기 위해 예약한 타일로, 다른 캐릭터가 동일한 타일을 선택하지 않도록 막는 역할입니다.

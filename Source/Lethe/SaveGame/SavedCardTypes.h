@@ -13,7 +13,7 @@ struct FSavedCard
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	uint64 CardId;
+	uint64 CardId = 0;
 
 	/**
 	 * Id로 찾은 Tag가 런타임 중 동적으로 채워집니다.

@@ -18,13 +18,13 @@ struct FLoadedCardInfo
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UCardDefinitionData* CardDefinition;
+	UCardDefinitionData* CardDefinition = nullptr;
 
 	UPROPERTY()
-	UCardSelfViewData* SelfViewData;
+	UCardSelfViewData* SelfViewData = nullptr;
 
 	UPROPERTY()
-	UCharacterDefinitionData* CharacterDefinition;
+	UCharacterDefinitionData* CharacterDefinition = nullptr;
 
 	FSavedCard SavedCardInfo;
 };

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Lethe/Manager/World/LevelManagerSubsystem.h"
 #include "LevelData.generated.h"
 
 enum class ELevelType : uint8;
@@ -14,7 +15,7 @@ struct FLevelInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	ELevelType LevelType;
+	ELevelType LevelType = ELevelType::None;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> LevelAsset;

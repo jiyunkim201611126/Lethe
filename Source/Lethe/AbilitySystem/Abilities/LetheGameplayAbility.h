@@ -22,7 +22,7 @@ struct FNoisePolicy
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	ENoiseStartTile NoiseStartTile;
+	ENoiseStartTile NoiseStartTile = ENoiseStartTile::TargetTile;
 
 	UPROPERTY(EditDefaultsOnly)
 	FBFSRange NoiseRange;

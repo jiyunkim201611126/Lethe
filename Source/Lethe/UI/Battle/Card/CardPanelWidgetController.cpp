@@ -15,19 +15,16 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 콜백이 바인드되도록 막아줍니다.
 	if (!bInitialized)
 	{
-		LethePlayerController = Cast<ALethePlayerController>(PlayerController);
-		if (LethePlayerController)
-		{
-			LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
-			LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
-			LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
-		}
+		LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
+		
+		LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
+		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+		LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 		
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
-		if (LetheGameState.IsValid())
-		{
-			LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		}
+		check(LetheGameState.IsValid());
+		
+		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		
 		bInitialized = true;
 	}

@@ -30,7 +30,17 @@ void APlayerCharacterBase::SetPersonalColor(const FLinearColor& InColor)
 	PersonalColor = InColor;
 }
 
-const FLinearColor& APlayerCharacterBase::GetPersonalColor()
+const FLinearColor& APlayerCharacterBase::GetPersonalColor() const
 {
 	return PersonalColor;
+}
+
+void APlayerCharacterBase::SetPlayerOrderIndex(const int32 Index)
+{
+	PlayerOrderIndex = Index;	
+}
+
+int32 APlayerCharacterBase::GetPlayerOrderIndex() const
+{
+	return PlayerOrderIndex;
 }

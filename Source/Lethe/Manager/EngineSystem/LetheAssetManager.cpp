@@ -9,7 +9,7 @@
 ULetheAssetManager& ULetheAssetManager::Get()
 {
 	check(GEngine);
-	ULetheAssetManager* LetheAssetManager = Cast<ULetheAssetManager>(GEngine->AssetManager);
+	ULetheAssetManager* LetheAssetManager = CastChecked<ULetheAssetManager>(GEngine->AssetManager);
 	return *LetheAssetManager;
 }
 

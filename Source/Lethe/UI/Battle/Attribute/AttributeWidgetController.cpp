@@ -17,19 +17,17 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	// AttributeWidget과 1:1 대응되는 WidgetController이므로, 1개만 있으면 됩니다.
 	// 부모 클래스가 PlayerCharacter의 용도로도 사용될 수 있도록 Array로 선언했기 때문에 이처럼 구현합니다.
 	AbilitySystemReferences.Reserve(1);
-	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
-	ULetheAttributeSet* AttributeSet = Cast<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
+	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
+	ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
 	
 	FAbilitySystemReference AbilitySystemReference;
 	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
 	AbilitySystemReference.AttributeSet = AttributeSet;
 	AbilitySystemReferences.Emplace(AbilitySystemReference);
 	
-	if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-	{
-		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
-		LethePlayerController->OnPreviewDataUpdatedDelegate.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
-	}
+	ALethePlayerController* LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
+	LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
+	LethePlayerController->OnPreviewDataUpdatedDelegate.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
 }
 
 void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)

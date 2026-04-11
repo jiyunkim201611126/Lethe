@@ -80,20 +80,22 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
 		{
 			const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];
-			
-			FActorSpawnParameters SpawnParameters;
-			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
 			if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
 			{
+				FTransform SpawnTransform;
 				FVector SpawnLocation = TileActor->GetActorLocation();
-				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActor<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnLocation, TileActor->GetActorRotation(), SpawnParameters))
+				SpawnTransform.SetLocation(SpawnLocation);
+				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 				{
 					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
 					TileManagerSubsystem->OccupyPlayerMoveTile(SpawnedCharacter, TileActor);
 					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 					SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
+					SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);
+					
+					SpawnedCharacter->FinishSpawning(SpawnTransform);
 				}
 			}
 		}

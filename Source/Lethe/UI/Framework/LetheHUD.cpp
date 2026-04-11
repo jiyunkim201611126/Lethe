@@ -15,8 +15,8 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 
-	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
-	ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
+	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 
 	// WidgetController 객체를 생성합니다.
 	CreateOverlayWidgetController();
@@ -30,8 +30,8 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 
 	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
-	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
-	if (AttributeWidgetController && AttributeWidget)
+	UAttributeWidget* AttributeWidget = CastChecked<UAttributeWidget>(InAttributeWidget);
+	if (AttributeWidgetController)
 	{
 		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
@@ -48,11 +48,11 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 
 void ULetheHUD::InitEnemyUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
 {
-	ULetheAbilitySystemComponent* LetheASC = Cast<ULetheAbilitySystemComponent>(ASC);
-	ULetheAttributeSet* LetheAS = Cast<ULetheAttributeSet>(AS);
+	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
-	UAttributeWidget* AttributeWidget = Cast<UAttributeWidget>(InAttributeWidget);
-	if (AttributeWidgetController && AttributeWidget)
+	UAttributeWidget* AttributeWidget = CastChecked<UAttributeWidget>(InAttributeWidget);
+	if (AttributeWidgetController)
 	{
 		const FWidgetControllerParams WidgetControllerParams(PC, nullptr, ASC, AS);
 		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);

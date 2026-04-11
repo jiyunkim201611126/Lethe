@@ -16,9 +16,9 @@ void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UDeckManagerSubsystem::SaveDeck(const TMap<FGameplayTag, FSavedCharacterDeck>& InEquippedDecks, const TMap<FGameplayTag, FSavedCharacterDeck>& InUnequippedDecks)
 {
-	UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass));
+	UDeckSaveGame* DeckSaveGameObject = CastChecked<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass));
 	const UDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
-	if (DeckSaveGameObject && CardDataLoadManagerSubsystem)
+	if (CardDataLoadManagerSubsystem)
 	{
 		// Tag 기준으로 캐싱해두었던 데이터를 Id 기준으로 변경해 세이브합니다.
 		TMap<uint64, FSavedCharacterDeck> OutEquippedDecks;
@@ -45,29 +45,27 @@ void UDeckManagerSubsystem::LoadDeck()
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{
 			// 세이브 파일이 존재하는 경우 들어오는 분기입니다.
-			if (const UDeckSaveGame* LoadedDeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0)))
-			{
-				// Id 기준으로 세이브되었던 데이터를 Tag 기준으로 변경해 로드합니다.
-				TMap<FGameplayTag, FSavedCharacterDeck> OutEquippedDecks;
-				CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->EquippedDecks, OutEquippedDecks);
+			const UDeckSaveGame* LoadedDeckSaveGameObject = CastChecked<UDeckSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 			
-				EquippedDecks.Reset();
-				EquippedDecks = OutEquippedDecks;
-			
-				TMap<FGameplayTag, FSavedCharacterDeck> OutUnequippedDecks;
-				CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->UnequippedDecks, OutUnequippedDecks);
-			
-				UnequippedDecks.Reset();
-				UnequippedDecks = OutUnequippedDecks;
-			}
+			// Id 기준으로 세이브되었던 데이터를 Tag 기준으로 변경해 로드합니다.
+			TMap<FGameplayTag, FSavedCharacterDeck> OutEquippedDecks;
+			CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->EquippedDecks, OutEquippedDecks);
+		
+			EquippedDecks.Reset();
+			EquippedDecks = OutEquippedDecks;
+		
+			TMap<FGameplayTag, FSavedCharacterDeck> OutUnequippedDecks;
+			CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->UnequippedDecks, OutUnequippedDecks);
+		
+			UnequippedDecks.Reset();
+			UnequippedDecks = OutUnequippedDecks;
 		}
 		else
 		{
 			// 세이브파일이 존재하지 않는 경우 들어오는 분기입니다.
-			if (UDeckSaveGame* DeckSaveGameObject = Cast<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass)))
-			{
-				SaveDeck(DeckSaveGameObject->GetDefaultEquippedDecks(), DeckSaveGameObject->GetDefaultUnequippedDecks());
-			}
+			UDeckSaveGame* DeckSaveGameObject = CastChecked<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass));
+			
+			SaveDeck(DeckSaveGameObject->GetDefaultEquippedDecks(), DeckSaveGameObject->GetDefaultUnequippedDecks());
 		}
 	}
 }

@@ -2,24 +2,30 @@
 
 #include "LetheWidgetController.h"
 
-#include "GameFramework/PlayerState.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {
 	PlayerController = WidgetControllerParams.PlayerController;
 	PlayerState = WidgetControllerParams.PlayerState;
 
-	AbilitySystemReferences.Reserve(PLAYER_CHARACTER_NUMBER);
-	ULetheAbilitySystemComponent* AbilitySystemComponent = Cast<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
-	ULetheAttributeSet* AttributeSet = Cast<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
+	AbilitySystemReferences.SetNum(PLAYER_CHARACTER_NUMBER);
+	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
+	ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
 	
 	FAbilitySystemReference AbilitySystemReference;
 	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
 	AbilitySystemReference.AttributeSet = AttributeSet;
-	AbilitySystemReferences.Emplace(AbilitySystemReference);
+
+	const IPlayerCharacterInterface* PlayerCharacter = CastChecked<IPlayerCharacterInterface>(AbilitySystemComponent->GetAvatarActor());
+	const int32 OrderIndex = PlayerCharacter->GetPlayerOrderIndex();
+	if (AbilitySystemReferences.IsValidIndex(OrderIndex))
+	{
+		AbilitySystemReferences[OrderIndex] = AbilitySystemReference;
+	}
 }
 
 void ULetheWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)

@@ -54,10 +54,8 @@ struct FAbilitySystemReference
 	TObjectPtr<ULetheAttributeSet> AttributeSet;
 };
 
-
 /**
  * MVVM 패턴의 VM을 담당하는 Widget Controller입니다.
- * MVVM 패턴은 UI를 관리하는 패턴 중 GAS 기반의 프로젝트와 가장 잘 어울리는 패턴이라는 게 정설입니다.
  * HUD를 포함해 UI와 관련된 모든 객체(ASC, AttributeSet, PlayerController 등)이 모두 생성되었다고 판단되는 순간, HUD에 의해 생성되는 객체입니다.
  * 생성 이후 즉시 관련 객체들을 할당받으며, 그 객체들에게 콜백 함수를 바인드합니다.
  * 바인드를 마치면 모든 관련 Widget들에게 뿌려지게 되며, Widget들은 이를 변수로 할당하고 마찬가지로 콜백 함수를 바인드합니다.

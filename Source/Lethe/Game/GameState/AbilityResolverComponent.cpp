@@ -18,7 +18,7 @@ void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
 	DummyActor = InDummyActor;
 }
 
-void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData)
+void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	if (!ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
@@ -33,10 +33,9 @@ void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityAct
 			}
 		}
 	}
-
-	// 대기열에 추가한 후 Ability 사용을 시작합니다.
 	PlayerAbilityActivationData.Emplace(ActivationData);
-	if (!IsActivatingPlayerAbility())
+
+	if (bStartImmediately && !IsActivatingPlayerAbility())
 	{
 		// Ability가 사용 중이 아닐 때만 사용을 시작합니다.
 		StartActivatePlayerAbility();

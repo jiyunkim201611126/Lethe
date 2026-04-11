@@ -152,9 +152,14 @@ EPhaseState ALetheGameState::GetPhaseState() const
 	return CurrentPhaseState;
 }
 
-void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const
+void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately) const
 {
-	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData);
+	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData, bStartImmediately);
+}
+
+void ALetheGameState::StartActivatePlayerAbility() const
+{
+	AbilityResolverComponent->StartActivatePlayerAbility();
 }
 
 void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)

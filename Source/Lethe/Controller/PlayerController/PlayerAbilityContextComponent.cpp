@@ -105,8 +105,9 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 	}
 
 	// 예약된 경로대로 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
-	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
+	for (int32 Index = 0; Index < ReservedMoves.Num(); ++Index)
 	{
+		FPlayerCharacterReservedMove& ReservedMove = ReservedMoves[Index];
 		if (!ReservedMove.IsValid())
 		{
 			continue;
@@ -116,6 +117,15 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		if (ReservedMove.PathTiles.IsEmpty())
 		{
 			continue;
+		}
+
+		// 경로가 막혀 나아갈 수 없는 상태였다면 다시 한 번 확인해보고, 그래도 안 된다면 다음 캐릭터로 넘어갑니다.
+		if (!ReservedMove.TargetTile.IsValid())
+		{
+			if (!ReserveNextMoveTile(&ReservedMove, true))
+			{
+				continue;
+			}
 		}
 
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -132,8 +142,9 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		AbilityActivationData.TargetTile = ReservedMove.TargetTile;
-		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
+		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData, false);
 	}
+	LetheGameState->StartActivatePlayerAbility();
 }
 
 void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCharacter)
@@ -173,7 +184,7 @@ void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCha
 	}
 }
 
-bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReservedMove* SelectedData, const bool bIsFirstReserving) const
+bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReservedMove* SelectedData, const bool bUseCurrentMoveDistance) const
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!SelectedData || !SelectedData->IsValid() || SelectedData->PathTiles.IsEmpty() || !TileManagerSubsystem)
@@ -187,23 +198,21 @@ bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReserve
 		return false;
 	}
 
-	const int32 MaxMoveDistance = bIsFirstReserving ? CombatInterface->GetMoveDistance() - 1 : CombatInterface->GetMaxMoveDistance() - 1;
+	const int32 MaxMoveDistance = bUseCurrentMoveDistance ? CombatInterface->GetMoveDistance() - 1 : CombatInterface->GetMaxMoveDistance() - 1;
 	ATile* ReservingTile = GetNextReserveTile(SelectedData, MaxMoveDistance);
 
 	if (ReservingTile)
 	{
 		SelectedData->TargetTile = ReservingTile;
+		TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), ReservingTile);
+		return true;
 	}
-	else
-	{
-		// 예약된 경로로 나아갈 수 없는 상태라면, TargetTile을 현재 타일로 초기화하고 경로를 비웁니다.
-		SelectedData->TargetTile = TileManagerSubsystem->GetTileUnderActor(SelectedData->PlayerCharacter.Get());
-		SelectedData->PathTiles.Empty();
-	}
-
-	// 점유 상태를 갱신합니다.
-	TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), SelectedData->TargetTile.Get());
-	return true;
+	
+	// 예약된 경로로 나아갈 수 없는 상태라면, TargetTile을 비우고 점유 상태를 초기화합니다.
+	SelectedData->TargetTile = nullptr;
+	ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(SelectedData->PlayerCharacter.Get());
+	TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), CurrentTile);
+	return false;
 }
 
 ATile* UPlayerAbilityContextComponent::GetNextReserveTile(FPlayerCharacterReservedMove* SelectedData, const int32 MoveDistance) const

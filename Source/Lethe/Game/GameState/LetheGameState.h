@@ -49,7 +49,8 @@ public:
 
 	EPhaseState GetPhaseState() const;
 
-	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData) const;
+	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately = true) const;
+	void StartActivatePlayerAbility() const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 	void ActivateAbility(FAbilityActivationData& ActivationData) const;
 

@@ -6,7 +6,6 @@
 #include "Algo/AnyOf.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
-#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -364,16 +363,13 @@ void UTileManagerSubsystem::ResetPlayerOccupiedTile()
 
 bool UTileManagerSubsystem::CanPlayerMoveToTile(const ATile* Tile) const
 {
-	if (const AActor* ActorOnTile = GetActorOnTile(Tile))
+	if (GetActorOnTile(Tile))
 	{
-		if (!ActorOnTile->Implements<UPlayerCharacterInterface>())
-		{
-			// 플레이어 캐릭터가 아닌 다른 액터가 있다면 이동할 수 없습니다.
-			return false;
-		}
+		// 타일 무언가 있다면 이동할 수 없습니다.
+		return false;
 	}
 	
-	// 아무것도 없거나 플레이어 캐릭터가 타일 위에 있는 경우, 타일 점유 상태를 확인합니다.
+	// 타일 위에 아무것도 없다면 타일 점유 상태를 확인합니다.
 	const bool bOccupied = Algo::AnyOf(PlayerCharacterOccupiedTiles,
 		[Tile](const auto& Pair)
 		{

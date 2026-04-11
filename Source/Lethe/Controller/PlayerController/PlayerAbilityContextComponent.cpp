@@ -104,6 +104,14 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		return;
 	}
 
+	// 캐릭터 인덱스 순서대로 이동 예약을 정렬합니다.
+	ReservedMoves.Sort([](const FPlayerCharacterReservedMove& MoveDataA, const FPlayerCharacterReservedMove& MoveDataB)
+	{
+		const IPlayerCharacterInterface* PlayerCharacterA = CastChecked<IPlayerCharacterInterface>(MoveDataA.PlayerCharacter);
+		const IPlayerCharacterInterface* PlayerCharacterB = CastChecked<IPlayerCharacterInterface>(MoveDataB.PlayerCharacter);
+		return PlayerCharacterA->GetPlayerOrderIndex() < PlayerCharacterB->GetPlayerOrderIndex();
+	});
+
 	// 예약된 경로대로 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
 	for (int32 Index = 0; Index < ReservedMoves.Num(); ++Index)
 	{

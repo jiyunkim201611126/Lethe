@@ -7,6 +7,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "LetheGameState.generated.h"
 
+class ICombatInterface;
 class AEnemyCharacterBase;
 class ATile;
 
@@ -37,6 +38,7 @@ class LETHE_API ALetheGameState : public AGameStateBase
 public:
 	ALetheGameState();
 
+	void RegisterPlayerCharacter(AActor* PlayerCharacter);
 	void RegisterEnemy(AEnemyCharacterBase* Enemy);
 	void RegisterCombatEnemy(AEnemyCharacterBase* Enemy);
 	void UnregisterEnemy(AEnemyCharacterBase* Enemy);
@@ -73,6 +75,9 @@ public:
 
 	void OnPlanTimerEnded();
 
+	/** 이동 예약 수정 시 호출되는 함수로, 다음 턴 종료 입력 시 잔여 행동력 여부를 검사하도록 플래그를 수정하는 함수입니다. */
+	void InvalidateMoveTurnEndConfirmation();
+
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsProgressingPlayerAbility() const;
 
@@ -107,6 +112,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
+
+	TArray<TScriptInterface<ICombatInterface>> PlayerCharacters;
+
+	/** 해당 변수가 true인 경우 턴 종료 요청 시 행동력 잔여 여부를 확인해야 합니다. */
+	uint8 bMoveDistanceTurnEndConfirmed : 1 = true;
 
 	/** 우선순위대로 정렬되는 현재 스폰된 적들입니다. */
 	TArray<TWeakObjectPtr<AEnemyCharacterBase>> SpawnedEnemies;

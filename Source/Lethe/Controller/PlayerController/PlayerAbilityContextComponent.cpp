@@ -109,7 +109,11 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 	{
 		const IPlayerCharacterInterface* PlayerCharacterA = CastChecked<IPlayerCharacterInterface>(MoveDataA.PlayerCharacter);
 		const IPlayerCharacterInterface* PlayerCharacterB = CastChecked<IPlayerCharacterInterface>(MoveDataB.PlayerCharacter);
-		return PlayerCharacterA->GetPlayerOrderIndex() < PlayerCharacterB->GetPlayerOrderIndex();
+		if (PlayerCharacterA && PlayerCharacterB)
+		{
+			return PlayerCharacterA->GetPlayerOrderIndex() < PlayerCharacterB->GetPlayerOrderIndex();
+		}
+		return false;
 	});
 
 	// 예약된 경로대로 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
@@ -213,6 +217,12 @@ bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReserve
 	{
 		SelectedData->TargetTile = ReservingTile;
 		TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), ReservingTile);
+
+		// 입력을 통해 이동 예약을 변경했으므로, 턴 종료 입력 시 행동력 잔여 여부를 확인하고 턴 종료하도록 플래그를 수정합니다.
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		{
+			LetheGameState->InvalidateMoveTurnEndConfirmation();
+		}
 		return true;
 	}
 	

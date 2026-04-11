@@ -77,31 +77,33 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 			}
 		}
 
-		for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
-		{
-			const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];
-
-			const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
-			if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
-			{
-				FTransform SpawnTransform;
-				FVector SpawnLocation = TileActor->GetActorLocation();
-				SpawnTransform.SetLocation(SpawnLocation);
-				if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
-				{
-					TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
-					TileManagerSubsystem->OccupyPlayerMoveTile(SpawnedCharacter, TileActor);
-					SpawnedCharacter->SetLocationOnTile(SpawnLocation);
-					SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
-					SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);
-					
-					SpawnedCharacter->FinishSpawning(SpawnTransform);
-				}
-			}
-		}
 
 		if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
 		{
+			for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
+			{
+				const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];
+
+				const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
+				if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))
+				{
+					FTransform SpawnTransform;
+					FVector SpawnLocation = TileActor->GetActorLocation();
+					SpawnTransform.SetLocation(SpawnLocation);
+					if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+					{
+						TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
+						TileManagerSubsystem->OccupyPlayerMoveTile(SpawnedCharacter, TileActor);
+						SpawnedCharacter->SetLocationOnTile(SpawnLocation);
+						SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
+						SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);
+						
+						LetheGameState->RegisterPlayerCharacter(SpawnedCharacter);
+						SpawnedCharacter->FinishSpawning(SpawnTransform);
+					}
+				}
+			}
+			
 			int32 EnemyPriority = 0;
 			for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
 			{

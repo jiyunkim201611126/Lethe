@@ -3,6 +3,7 @@
 #include "LetheGameState.h"
 
 #include "Lethe/Character/EnemyCharacterBase.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 ALetheGameState::ALetheGameState()
 {
@@ -30,6 +31,11 @@ void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	AbilityResolverComponent->OnFinishActivationQueue.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+void ALetheGameState::RegisterPlayerCharacter(AActor* PlayerCharacter)
+{
+	PlayerCharacters.AddUnique(PlayerCharacter);
 }
 
 void ALetheGameState::RegisterEnemy(AEnemyCharacterBase* Enemy)
@@ -134,9 +140,36 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	CurrentEnemy->ProcessPlanPhase();
 }
 
+void ALetheGameState::InvalidateMoveTurnEndConfirmation()
+{
+	bMoveDistanceTurnEndConfirmed = true;
+}
+
 void ALetheGameState::OnFinishActivationQueue()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase || CurrentPhaseState == EPhaseState::EnemyTurnPhase)
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		if (bMoveDistanceTurnEndConfirmed)
+		{
+			// 행동력 잔여 여부를 확인해야 하는 경우 들어오는 분기입니다.
+			for (const auto& PlayerCharacter : PlayerCharacters)
+			{
+				if (0 < PlayerCharacter->GetMoveDistance())
+				{
+					// 잔여 행동력이 있다면 이번 입력에 턴 종료를 수행해선 안 됩니다.
+					// TODO: 잔여 행동력(MoveDistance)이 있다고 알림
+					bMoveDistanceTurnEndConfirmed = false;
+					return;
+				}
+			}
+		}
+
+		// 잔여 행동력이 없거나, 잔여 행동력이 있는 상태에서 이동 예약 수정 없이 턴 종료를 한 번 더 누른 경우 페이즈를 넘깁니다.
+		bMoveDistanceTurnEndConfirmed = true;
+		GoEnemyPlanningPhase();
+	}
+	
+	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
 		GoEnemyPlanningPhase();
 	}

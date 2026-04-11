@@ -84,7 +84,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<APlayerState> PlayerState;
 
-	/** 해당 배열의 Element는 Character의 BeginPlay가 호출된 순서대로 추가됩니다. */
+	/** 해당 배열의 요소들은 PlayerOrderIndex 순서대로 정렬됩니다. */
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TArray<FAbilitySystemReference> AbilitySystemReferences;
 };

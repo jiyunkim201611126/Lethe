@@ -14,7 +14,7 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	PlayerController = WidgetControllerParams.PlayerController;
 	PlayerState = WidgetControllerParams.PlayerState;
 
-	// AttributeWidget과 1:1 대응되는 WidgetController이므로, 1개만 있으면 됩니다.
+	// 캐릭터와 1:1 대응되는 WidgetController이므로, 1개만 있으면 됩니다.
 	// 부모 클래스가 PlayerCharacter의 용도로도 사용될 수 있도록 Array로 선언했기 때문에 이처럼 구현합니다.
 	AbilitySystemReferences.Reserve(1);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);

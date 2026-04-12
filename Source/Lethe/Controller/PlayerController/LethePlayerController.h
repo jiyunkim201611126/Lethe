@@ -5,18 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
-#include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Data/PhaseData.h"
 #include "LethePlayerController.generated.h"
 
-enum class EPhaseState : uint8;
 class AArrowRenderer;
 class APlayerCharacterBase;
 class ATile;
 class UAbilitySystemComponent;
 class UActorSelectorComponent;
+class UAttributeSet;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
+class ULetheWidgetController;
 class UPlayerAbilityContextComponent;
 class UPreviewCoordinatorComponent;
 struct FGameplayAbilityActorInfo;
@@ -36,8 +37,8 @@ class LETHE_API ALethePlayerController : public APlayerController
 public:
 	ALethePlayerController();
 
-	void InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
-	void InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+	ULetheWidgetController* InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 	void OnNumberKeyPressed(const int32 InNumber) const;
 	void OnWheeled(const float AttributeWidgetSize) const;

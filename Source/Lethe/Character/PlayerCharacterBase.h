@@ -40,6 +40,9 @@ protected:
 	 */
 	FGameplayTag CharacterTag;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UWidgetComponent> MarkerWidgetComponent;
+
 private:
 	FLinearColor PersonalColor;
 

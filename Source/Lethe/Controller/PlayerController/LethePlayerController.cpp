@@ -31,14 +31,15 @@ ALethePlayerController::ALethePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
-void ALethePlayerController::InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+ULetheWidgetController* ALethePlayerController::InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	LetheHUD->InitPlayerUI(this, PS, ASC, AS, InAttributeWidget);
+	LetheHUD->InitPlayerBattleUI(this, PS, ASC, AS);
+	return LetheHUD->CreatePlayerAttributeWidgetController(this, PS, ASC, AS);
 }
 
-void ALethePlayerController::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+ULetheWidgetController* ALethePlayerController::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	LetheHUD->InitEnemyUI(this, ASC, AS, InAttributeWidget);
+	return LetheHUD->CreateEnemyAttributeWidgetController(this, ASC, AS);
 }
 
 void ALethePlayerController::OnNumberKeyPressed(const int32 InNumber) const

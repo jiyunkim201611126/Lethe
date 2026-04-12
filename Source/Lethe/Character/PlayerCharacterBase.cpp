@@ -3,6 +3,7 @@
 #include "PlayerCharacterBase.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Lethe/Manager/DataLoadManagerSubsystem.h"
 
 APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -10,6 +11,9 @@ APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectIniti
 {
 	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	MarkerWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MarkerWidgetComponent"));
+	MarkerWidgetComponent->SetupAttachment(RootComponent);
 }
 
 FGameplayTag APlayerCharacterBase::GetCharacterTag()

@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AttributeWidget.h"
-#include "PlayerAttributeWidget.generated.h"
+#include "CharacterStatusWidget.h"
+#include "PlayerCharacterStatusWidget.generated.h"
 
-UCLASS()
-class LETHE_API UPlayerAttributeWidget : public UAttributeWidget
+UCLASS(Abstract, Blueprintable)
+class LETHE_API UPlayerCharacterStatusWidget : public UCharacterStatusWidget
 {
 	GENERATED_BODY()
 

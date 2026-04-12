@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AttributeWidgetController.h"
+#include "Lethe/Data/PhaseData.h"
 #include "PlayerAttributeWidgetController.generated.h"
 
 class ULetheCardAbility;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMarkerVisibilityChanged, const ESlateVisibility, Visibility);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UPlayerAttributeWidgetController : public UAttributeWidgetController
@@ -28,4 +31,16 @@ private:
 	
 	void OnCostChanged(const FOnAttributeChangeData& AttributeData);
 	void BroadcastCostChanged() const;
+	
+	void OnMoveDistanceChanged(const FOnAttributeChangeData& AttributeData);
+	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase);
+	void BroadcastMarkerVisibilityChanged() const;
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnMarkerVisibilityChanged OnMarkerVisibilityChanged;
+	
+private:
+	uint8 bHasRemainingMoveDistance : 1 = false;
+	EPhaseState CurrentPhaseState = EPhaseState::None;
 };

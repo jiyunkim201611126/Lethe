@@ -5,13 +5,12 @@
 #include "Blueprint/UserWidget.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/UI/Battle/Attribute/AttributeWidget.h"
 #include "Lethe/UI/Battle/Attribute/AttributeWidgetController.h"
 #include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidget.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidgetController.h"
 
-void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
 
@@ -19,24 +18,14 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 
 	// WidgetController 객체를 생성합니다.
-	CreateOverlayWidgetController();
+	GetOrCreateOverlayWidgetController();
 	// 총 4쌍의 ASC, AS를 WidgetController에게 넘겨줘야 하기 때문에 생성 시점이 아닌 여기서 호출합니다.
 	OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 	OverlayWidgetController->BindCallbacks(LetheASC, LetheAS);
 	
-	CreateCardWidgetController();
+	GetOrCreateCardWidgetController();
 	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 	CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS);
-
-	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
-	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
-	UAttributeWidget* AttributeWidget = CastChecked<UAttributeWidget>(InAttributeWidget);
-	if (AttributeWidgetController)
-	{
-		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
-		AttributeWidget->SetWidgetController(AttributeWidgetController);
-	}
 
 	if (!OverlayWidget)
 	{
@@ -46,22 +35,38 @@ void ULetheHUD::InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySy
 	}
 }
 
-void ULetheHUD::InitEnemyUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget)
+ULetheWidgetController* ULetheHUD::CreatePlayerAttributeWidgetController(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+{
+	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
+	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
+	if (AttributeWidgetController)
+	{
+		const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
+		ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+		ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
+		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
+		return AttributeWidgetController;
+	}
+	return nullptr;
+}
+
+ULetheWidgetController* ULetheHUD::CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
 	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
-	UAttributeWidget* AttributeWidget = CastChecked<UAttributeWidget>(InAttributeWidget);
 	if (AttributeWidgetController)
 	{
 		const FWidgetControllerParams WidgetControllerParams(PC, nullptr, ASC, AS);
 		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS);
-		AttributeWidget->SetWidgetController(AttributeWidgetController);
+		return AttributeWidgetController;
 	}
+	return nullptr;
 }
 
-UOverlayWidgetController* ULetheHUD::CreateOverlayWidgetController()
+UOverlayWidgetController* ULetheHUD::GetOrCreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
@@ -70,7 +75,7 @@ UOverlayWidgetController* ULetheHUD::CreateOverlayWidgetController()
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ULetheHUD::CreateCardWidgetController()
+UCardPanelWidgetController* ULetheHUD::GetOrCreateCardWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{

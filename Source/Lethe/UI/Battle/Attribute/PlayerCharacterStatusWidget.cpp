@@ -1,6 +1,6 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "PlayerAttributeWidget.h"
+#include "PlayerCharacterStatusWidget.h"
 
 #include "PlayerAttributeWidgetController.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -8,7 +8,7 @@
 #include "Lethe/UI/Battle/ProgressBar/LetheProgressBar.h"
 #include "Lethe/UI/Core/LetheTextBlock.h"
 
-void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
+void UPlayerCharacterStatusWidget::WidgetControllerSet_Implementation()
 {
 	Super::WidgetControllerSet_Implementation();
 	
@@ -28,37 +28,37 @@ void UPlayerAttributeWidget::WidgetControllerSet_Implementation()
 	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StopPreviewCost);
 }
 
-void UPlayerAttributeWidget::UpdateManaUI(const FAttributeData& NewData) const
+void UPlayerCharacterStatusWidget::UpdateManaUI(const FAttributeData& NewData) const
 {
 	ManaBar->SetBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
 	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
-void UPlayerAttributeWidget::UpdateCostUI(const FAttributeData& NewData)
+void UPlayerCharacterStatusWidget::UpdateCostUI(const FAttributeData& NewData)
 {
 	StopPreviewCostBlinking();
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }
 
-void UPlayerAttributeWidget::StartPreviewMana(const FAttributeData& NewData) const
+void UPlayerCharacterStatusWidget::StartPreviewMana(const FAttributeData& NewData) const
 {
 	ManaBar->SetPreviewBarPercent(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
 	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
-void UPlayerAttributeWidget::StartPreviewCost(const FAttributeData& NewData)
+void UPlayerCharacterStatusWidget::StartPreviewCost(const FAttributeData& NewData)
 {
 	PlayPreviewCostBlinking(GetWorld()->GetTimeSeconds());
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));
 }
 
-void UPlayerAttributeWidget::StopPreviewMana(const FAttributeData& NewData) const
+void UPlayerCharacterStatusWidget::StopPreviewMana(const FAttributeData& NewData) const
 {
 	ManaBar->StopPreview(UKismetMathLibrary::SafeDivide(NewData.CurrentValue, NewData.MaxValue));
 	ManaText->SetText(FText::Format(INVTEXT("{0} / {1}"), FMath::RoundToInt(NewData.CurrentValue), FMath::RoundToInt(NewData.MaxValue)));
 }
 
-void UPlayerAttributeWidget::StopPreviewCost(const FAttributeData& NewData)
+void UPlayerCharacterStatusWidget::StopPreviewCost(const FAttributeData& NewData)
 {
 	StopPreviewCostBlinking();
 	CardCostText->SetText(FText::Format(INVTEXT("{0}"), FMath::RoundToInt(NewData.CurrentValue)));

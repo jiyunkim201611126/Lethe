@@ -6,12 +6,13 @@
 #include "UObject/Object.h"
 #include "LetheHUD.generated.h"
 
-class UAttributeWidgetController;
 class UAbilitySystemComponent;
 class UAttributeSet;
+class UAttributeWidgetController;
 class UCardPanelWidget;
 class UCardPanelWidgetController;
 class UCardViewData;
+class ULetheWidgetController;
 class UOverlayWidget;
 class UOverlayWidgetController;
 class UPlayerAttributeWidgetController;
@@ -23,11 +24,12 @@ class LETHE_API ULetheHUD : public UObject
 	GENERATED_BODY()
 
 public:
-	void InitPlayerUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
-	void InitEnemyUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UUserWidget* InAttributeWidget);
+	void InitPlayerBattleUI(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+	ULetheWidgetController* CreatePlayerAttributeWidgetController(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+	ULetheWidgetController* CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 	
-	UOverlayWidgetController* CreateOverlayWidgetController();
-	UCardPanelWidgetController* CreateCardWidgetController();
+	UOverlayWidgetController* GetOrCreateOverlayWidgetController();
+	UCardPanelWidgetController* GetOrCreateCardWidgetController();
 	
 	UOverlayWidgetController* GetOverlayWidgetController() const;
 	UCardPanelWidgetController* GetCardPanelWidgetController() const;

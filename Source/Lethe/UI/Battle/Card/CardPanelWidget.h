@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CardLayoutManager.h"
-#include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Data/PhaseData.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardPanelWidget.generated.h"
 

@@ -2,10 +2,12 @@
 
 #include "PlayerAttributeWidgetController.h"
 
+#include "Components/SlateWrapperTypes.h"
 #include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
@@ -16,6 +18,12 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
+
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMoveDistanceAttribute()).AddUObject(this, &ThisClass::OnMoveDistanceChanged);
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+	}
 }
 
 void UPlayerAttributeWidgetController::OnManaChanged(const FOnAttributeChangeData& AttributeData)
@@ -70,4 +78,23 @@ void UPlayerAttributeWidgetController::StopAllPreview()
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	StopPreview(LetheGameplayTags.Attributes_Vital_Mana, LetheGameplayTags.Attributes_Vital_MaxMana);
 	StopPreview(LetheGameplayTags.Attributes_Vital_Cost, LetheGameplayTags.Attributes_Vital_MaxCost);
+}
+
+void UPlayerAttributeWidgetController::OnMoveDistanceChanged(const FOnAttributeChangeData& AttributeData)
+{
+	bHasRemainingMoveDistance = 0 < AttributeData.NewValue;
+	BroadcastMarkerVisibilityChanged();
+}
+
+void UPlayerAttributeWidgetController::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase)
+{
+	CurrentPhaseState = NewPhase;
+	BroadcastMarkerVisibilityChanged();
+}
+
+void UPlayerAttributeWidgetController::BroadcastMarkerVisibilityChanged() const
+{
+	const bool bShouldShow = CurrentPhaseState == EPhaseState::PlayerMovePhase && bHasRemainingMoveDistance;
+	const ESlateVisibility Visibility = bShouldShow ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
+	OnMarkerVisibilityChanged.Broadcast(Visibility);
 }

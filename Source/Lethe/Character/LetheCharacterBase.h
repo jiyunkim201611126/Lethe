@@ -67,9 +67,12 @@ protected:
 	TObjectPtr<ULetheAttributeSet> AttributeSet;
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UWidgetComponent> AttributeWidgetComponent;
+	TObjectPtr<UWidgetComponent> CharacterStatusWidgetComponent;
 
 private:
 	int32 OutlineColorTransparent = CUSTOM_DEPTH_YELLOW_TRANSPARENT;
 	int32 OutlineColor = CUSTOM_DEPTH_YELLOW;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UWidgetComponent>> AttributeWidgetComponents;
 };

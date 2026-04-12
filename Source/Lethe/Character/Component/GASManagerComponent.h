@@ -33,7 +33,7 @@ public:
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	
-	virtual void InitAbilityActorInfo(UUserWidget* AttributeWidget);
+	virtual void InitAbilityActorInfo(const TArray<UUserWidget*>& AttributeWidgets);
 	
 	virtual void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
 	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;

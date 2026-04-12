@@ -5,26 +5,12 @@
 #include "CoreMinimal.h"
 #include "AbilityResolverComponent.h"
 #include "GameFramework/GameStateBase.h"
+#include "Lethe/Data/PhaseData.h"
 #include "LetheGameState.generated.h"
 
 class ICombatInterface;
 class AEnemyCharacterBase;
 class ATile;
-
-UENUM()
-enum class EPhaseState : uint8
-{
-	None,
-	EnemyPlanningPhase,
-
-	/** 비전투 페이즈 */
-	PlayerMovePhase,
-
-	/** 전투 페이즈 */
-	DrawPhase,
-	PlayerTurnPhase,
-	EnemyTurnPhase,
-};
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, const AActor* /* MovedCharacter */);

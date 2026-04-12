@@ -93,6 +93,12 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 			break;
 		}
 	}
+
+	// 이동 예약 입력이 수행됐으므로, 턴 종료 입력 시 행동력 잔여 여부를 확인하고 턴을 종료하도록 플래그를 수정합니다.
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->InvalidateMoveTurnEndConfirmation();
+	}
 }
 
 void UPlayerAbilityContextComponent::ProcessAllMoves()
@@ -217,12 +223,6 @@ bool UPlayerAbilityContextComponent::ReserveNextMoveTile(FPlayerCharacterReserve
 	{
 		SelectedData->TargetTile = ReservingTile;
 		TileManagerSubsystem->OccupyPlayerMoveTile(SelectedData->PlayerCharacter.Get(), ReservingTile);
-
-		// 입력을 통해 이동 예약을 변경했으므로, 턴 종료 입력 시 행동력 잔여 여부를 확인하고 턴 종료하도록 플래그를 수정합니다.
-		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-		{
-			LetheGameState->InvalidateMoveTurnEndConfirmation();
-		}
 		return true;
 	}
 	

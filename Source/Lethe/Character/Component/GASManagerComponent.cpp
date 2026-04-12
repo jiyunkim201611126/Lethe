@@ -10,6 +10,7 @@
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/UI/Framework/LetheUserWidget.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -45,7 +46,7 @@ UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
+void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& AttributeWidgets)
 {
 	APawn* OwnerPawn = GetOwner<APawn>();
 	
@@ -59,10 +60,22 @@ void UGASManagerComponent::InitAbilityActorInfo(UUserWidget* AttributeWidget)
 			switch (TeamSide)
 			{
 			case ETeamSide::Player:
-				LethePlayerController->InitPlayerUI(GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet, AttributeWidget);
+				{
+					ULetheWidgetController* WidgetController = LethePlayerController->InitPlayerUI(GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
+					for (UUserWidget* AttributeWidget : AttributeWidgets)
+					{
+						CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
+					}
+				}
 				break;
 			case ETeamSide::Enemy:
-				LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet, AttributeWidget);
+				{
+					ULetheWidgetController* WidgetController = LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet);
+					for (UUserWidget* AttributeWidget : AttributeWidgets)
+					{
+						CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
+					}
+				}
 				break;
 			default:
 				break;

@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
-#include "AttributeWidget.generated.h"
+#include "CharacterStatusWidget.generated.h"
 
-struct FAttributeData;
 class ULetheTextBlock;
 class ULetheProgressBar;
+struct FAttributeData;
 
-UCLASS()
-class LETHE_API UAttributeWidget : public ULetheUserWidget
+UCLASS(Abstract, Blueprintable)
+class LETHE_API UCharacterStatusWidget : public ULetheUserWidget
 {
 	GENERATED_BODY()
 

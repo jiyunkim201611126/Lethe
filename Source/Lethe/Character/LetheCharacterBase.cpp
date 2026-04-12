@@ -9,6 +9,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/UI/Framework/LetheUserWidget.h"
 
 ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -21,8 +22,8 @@ ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitial
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 	AttributeSet = CreateDefaultSubobject<ULetheAttributeSet>(TEXT("AttributeSet"));
 
-	AttributeWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AttributeWidgetComponent"));
-	AttributeWidgetComponent->SetupAttachment(RootComponent);
+	CharacterStatusWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CharacterStatusWidgetComponent"));
+	CharacterStatusWidgetComponent->SetupAttachment(RootComponent);
 }
 
 UAbilitySystemComponent* ALetheCharacterBase::GetAbilitySystemComponent() const
@@ -60,6 +61,18 @@ void ALetheCharacterBase::Die()
 void ALetheCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TArray<UWidgetComponent*> WidgetComponents;
+	GetComponents(UWidgetComponent::StaticClass(), WidgetComponents);
+	WidgetComponents.RemoveAllSwap([](const UWidgetComponent* Component)
+	{
+		if (const UUserWidget* Widget = Component->GetWidget())
+		{
+			return !Widget->IsA(ULetheUserWidget::StaticClass());
+		}
+		return true;
+	});
+	AttributeWidgetComponents = MoveTemp(WidgetComponents);
 
 	InitAbilityActorInfo();
 
@@ -115,16 +128,22 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 {
 	GASManagerComponent->SetAbilitySystemComponent(AbilitySystemComponent);
 	GASManagerComponent->SetAttributeSet(AttributeSet);
-	GASManagerComponent->InitAbilityActorInfo(AttributeWidgetComponent->GetWidget());
+
+	TArray<UUserWidget*> AttributeWidgets;
+	for (const UWidgetComponent* WidgetComponent : AttributeWidgetComponents)
+	{
+		AttributeWidgets.Emplace(WidgetComponent->GetWidget());
+	}
+	GASManagerComponent->InitAbilityActorInfo(AttributeWidgets);
 }
 
 void ALetheCharacterBase::OnCameraHeightChanged(const float InWidgetSize) const
 {
-	if (AttributeWidgetComponent)
+	for (const UWidgetComponent* WidgetComponent : AttributeWidgetComponents)
 	{
-		if (UUserWidget* AttributeWidget = AttributeWidgetComponent->GetWidget())
+		if (UUserWidget* Widget = WidgetComponent->GetWidget())
 		{
-			AttributeWidget->SetRenderScale(FVector2D(InWidgetSize));
+			Widget->SetRenderScale(FVector2D(InWidgetSize));
 		}
 	}
 }

@@ -3,7 +3,6 @@
 #include "LetheGameState.h"
 
 #include "Lethe/Character/EnemyCharacterBase.h"
-#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 ALetheGameState::ALetheGameState()
 {

@@ -91,7 +91,7 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 	if (LetheGameState.IsValid() && LethePlayerController)
 	{
 		// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
-		if (!LetheGameState->IsProgressingPlayerAbility())
+		if (!LetheGameState->IsResolvingPlayerAbility())
 		{
 			LethePlayerController->SetCardSelected(false);
 			LethePlayerController->ResetSelectedCharacter();

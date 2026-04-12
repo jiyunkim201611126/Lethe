@@ -57,10 +57,10 @@ public:
 	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const;
 
 private:
-	bool ReserveNextMoveTile(FPlayerCharacterReservedMove* SelectedData, const bool bUseCurrentMoveDistance) const;
+	bool ReserveNextMoveTile(FPlayerCharacterReservedMove* ReservedMove, const bool bUseCurrentMoveDistance) const;
 
 	/** 경로상에서 가장 멀리 도달할 수 있는 타일을 반환하는 함수입니다. */
-	ATile* GetNextReserveTile(FPlayerCharacterReservedMove* SelectedData, const int32 MoveDistance) const;
+	ATile* GetNextReserveTile(FPlayerCharacterReservedMove* ReservedMove, const int32 MoveDistance) const;
 
 private:
 	TWeakObjectPtr<UActorSelectorComponent> ActorSelector;

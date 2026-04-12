@@ -204,7 +204,7 @@ void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
 			
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
-				LetheGameState->ActivateAbility(MoveAbilityActivationData);
+				LetheGameState->ActivateAbility(MoveAbilityActivationData, ETeamSide::Enemy);
 			}
 		}
 	}

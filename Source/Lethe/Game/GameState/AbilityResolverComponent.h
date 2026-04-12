@@ -58,11 +58,11 @@ public:
 	 * 여러 번의 BFS를 수행해야 하는 EnemyPlanPhase 특성상, 모든 AI가 한 번에 예약을 걸면 프레임 드랍이 발생할 확률이 높습니다.
 	 * 때문에 EnemyPlanPhase는 AI마다 시간차를 두어 로직이 수행되고, 이는 예약하는 방식으로는 구현이 까다로워 즉시 발동 API를 하나 추가했습니다.
 	 */
-	void ActivateAbility(FAbilityActivationData& ActivationData);
+	void ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide);
 	
 	void OnAbilityActivationFailed();
 
-	bool IsActivatingPlayerAbility() const;
+	bool IsResolvingPlayerAbility() const;
 
 private:
 	ETryAbilityActivationResult TryActivateNextPlayerAbility();

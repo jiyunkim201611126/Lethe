@@ -189,7 +189,7 @@ void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationDat
 	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData, bStartImmediately);
 }
 
-void ALetheGameState::StartActivatePlayerAbility() const
+void ALetheGameState::StartActivatePlayerMoveAbilities() const
 {
 	AbilityResolverComponent->StartActivatePlayerAbility();
 }
@@ -199,9 +199,9 @@ void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData
 	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
 }
 
-void ALetheGameState::ActivateAbility(FAbilityActivationData& ActivationData) const
+void ALetheGameState::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const
 {
-	AbilityResolverComponent->ActivateAbility(ActivationData);
+	AbilityResolverComponent->ActivateAbility(ActivationData, TeamSide);
 }
 
 void ALetheGameState::OnActivateEnemyAbility(AActor* AbilityInstigator) const
@@ -245,7 +245,7 @@ UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const
 	return AbilityResolverComponent;
 }
 
-bool ALetheGameState::IsProgressingPlayerAbility() const
+bool ALetheGameState::IsResolvingPlayerAbility() const
 {
-	return AbilityResolverComponent->IsActivatingPlayerAbility();
+	return AbilityResolverComponent->IsResolvingPlayerAbility();
 }

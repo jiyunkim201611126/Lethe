@@ -38,9 +38,10 @@ public:
 	EPhaseState GetPhaseState() const;
 
 	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately = true) const;
-	void StartActivatePlayerAbility() const;
+	/** PlayerMovePhase에만 사용하는 함수로, 모든 MoveAbility ActivationData를 밀어넣은 후 호출합니다. */
+	void StartActivatePlayerMoveAbilities() const;
 	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
-	void ActivateAbility(FAbilityActivationData& ActivationData) const;
+	void ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const;
 
 	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;
 
@@ -65,7 +66,7 @@ public:
 	void InvalidateMoveTurnEndConfirmation();
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
-	bool IsProgressingPlayerAbility() const;
+	bool IsResolvingPlayerAbility() const;
 
 protected:
 	//~ Begin AActor Interface
@@ -103,7 +104,7 @@ private:
 
 	/** 해당 변수가 true인 경우 턴 종료 요청 시 행동력 잔여 여부를 확인해야 합니다. */
 	uint8 bMoveDistanceTurnEndConfirmed : 1 = true;
-
+	
 	/** 우선순위대로 정렬되는 현재 스폰된 적들입니다. */
 	TArray<TWeakObjectPtr<AEnemyCharacterBase>> SpawnedEnemies;
 	int32 CurrentEnemyAbilityProcessIndex = 0;

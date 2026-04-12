@@ -35,7 +35,7 @@ void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityAct
 	}
 	PlayerAbilityActivationData.Emplace(ActivationData);
 
-	if (bStartImmediately && !IsActivatingPlayerAbility())
+	if (bStartImmediately && !IsResolvingPlayerAbility())
 	{
 		// Ability가 사용 중이 아닐 때만 사용을 시작합니다.
 		StartActivatePlayerAbility();
@@ -168,6 +168,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	case ETryAbilityActivationResult::Success:
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
+		CurrentActivationCharacterTeamSide = ETeamSide::None;
 		OnFinishActivationQueue.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
@@ -190,10 +191,14 @@ void UAbilityResolverComponent::ResetEnemyActivationData()
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 }
 
-void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& ActivationData)
+void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide)
 {
+	CurrentActivationCharacterTeamSide = TeamSide;
+	
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
+	bIsHandlingAbilityActivation = true;
 	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
+	bIsHandlingAbilityActivation = false;
 	if (Result == ETryAbilityActivationResult::FailedLogicError)
 	{
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다."));
@@ -385,7 +390,7 @@ void UAbilityResolverComponent::ProcessAbilityFailed()
 	}
 }
 
-bool UAbilityResolverComponent::IsActivatingPlayerAbility() const
+bool UAbilityResolverComponent::IsResolvingPlayerAbility() const
 {
 	return bIsResolvingPlayerAbility;
 }

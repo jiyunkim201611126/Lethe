@@ -108,18 +108,12 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 	{
 		return;
 	}
-	
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
 
 	// 캐릭터 인덱스 순서대로 이동 예약을 정렬합니다.
 	ReservedMoves.Sort([](const FPlayerCharacterReservedMove& ReservedMoveA, const FPlayerCharacterReservedMove& ReservedMoveB)
 	{
-		const IPlayerCharacterInterface* PlayerCharacterA = CastChecked<IPlayerCharacterInterface>(ReservedMoveA.PlayerCharacter);
-		const IPlayerCharacterInterface* PlayerCharacterB = CastChecked<IPlayerCharacterInterface>(ReservedMoveB.PlayerCharacter);
+		const IPlayerCharacterInterface* PlayerCharacterA = Cast<IPlayerCharacterInterface>(ReservedMoveA.PlayerCharacter);
+		const IPlayerCharacterInterface* PlayerCharacterB = Cast<IPlayerCharacterInterface>(ReservedMoveB.PlayerCharacter);
 		if (PlayerCharacterA && PlayerCharacterB)
 		{
 			return PlayerCharacterA->GetPlayerOrderIndex() < PlayerCharacterB->GetPlayerOrderIndex();
@@ -128,6 +122,10 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 	});
 
 	// 예약된 경로대로 모든 플레이어 캐릭터의 MoveAbility를 발동시킵니다.
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+	
+	bool bShouldStartActivate = false;
 	for (int32 Index = 0; Index < ReservedMoves.Num(); ++Index)
 	{
 		FPlayerCharacterReservedMove& ReservedMove = ReservedMoves[Index];
@@ -151,9 +149,7 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 			}
 		}
 
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
-		const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
 		ReservedMove.AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
 		if (AbilitySpecs.IsEmpty())
 		{
@@ -166,8 +162,13 @@ void UPlayerAbilityContextComponent::ProcessAllMoves()
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		AbilityActivationData.TargetTile = ReservedMove.TargetTile;
 		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData, false);
+		bShouldStartActivate = true;
 	}
-	LetheGameState->StartActivatePlayerMoveAbilities();
+	
+	if (bShouldStartActivate)
+	{
+		LetheGameState->StartActivatePlayerMoveAbilities();
+	}
 }
 
 void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCharacter)

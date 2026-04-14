@@ -39,6 +39,10 @@ public:
 	
 	FCubeCoord GetCubeCoord() const;
 
+	void AddOccupiedCount();
+	void SubtractOccupiedCount();
+	int32 GetOccupiedCount() const;
+
 protected:
 	UFUNCTION(BlueprintPure)
 	bool IsTopTile() const;
@@ -64,4 +68,8 @@ private:
 
 	int32 OutlineColorByMouse = CUSTOM_DEPTH_RED;
 	int32 OutlineColorByCard = 0;
+
+	/** PlayerMovePhase에 사용되는 값으로, 플레이어 캐릭터가 경로 예약 시 해당 타일을 지나치는 경우 1씩 늘어납니다. */
+	UPROPERTY(VisibleInstanceOnly)
+	int32 OccupiedCount = 0;
 };

@@ -106,6 +106,21 @@ FCubeCoord ATile::GetCubeCoord() const
 	return CubeCoord;
 }
 
+void ATile::AddOccupiedCount()
+{
+	++OccupiedCount;
+}
+
+void ATile::SubtractOccupiedCount()
+{
+	--OccupiedCount;
+}
+
+int32 ATile::GetOccupiedCount() const
+{
+	return OccupiedCount;
+}
+
 bool ATile::IsTopTile() const
 {
 	return !TopTile.IsValid();

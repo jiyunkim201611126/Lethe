@@ -3,15 +3,12 @@
 #include "TileManagerSubsystem.h"
 
 #include "TileGenerator.h"
-#include "Algo/AnyOf.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
 
 void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	PlayerCharacterOccupiedTiles.Reserve(PLAYER_CHARACTER_NUMBER);
 }
 
 void UTileManagerSubsystem::Deinitialize()
@@ -344,38 +341,10 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	return !OutPathTiles.IsEmpty();
 }
 
-void UTileManagerSubsystem::OccupyPlayerMoveTile(AActor* Character, ATile* Tile)
-{
-	PlayerCharacterOccupiedTiles.Add(Character, Tile);
-}
-
-void UTileManagerSubsystem::ResetPlayerOccupiedTile()
-{
-	for (auto& Pair : PlayerCharacterOccupiedTiles)
-	{
-		if (Pair.Key.IsValid() && Pair.Value.IsValid())
-		{
-			ATile* CurrentTile = GetTileUnderActor(Pair.Key.Get());
-			Pair.Value = CurrentTile;
-		}
-	}
-}
-
 bool UTileManagerSubsystem::CanPlayerMoveToTile(const ATile* Tile) const
 {
-	if (GetActorOnTile(Tile))
-	{
-		// 타일 무언가 있다면 이동할 수 없습니다.
-		return false;
-	}
-	
-	// 타일 위에 아무것도 없다면 타일 점유 상태를 확인합니다.
-	const bool bOccupied = Algo::AnyOf(PlayerCharacterOccupiedTiles,
-		[Tile](const auto& Pair)
-		{
-			return Pair.Value == Tile;
-		});
-	return !bOccupied;
+	// 타일 무언가 있다면 이동할 수 없습니다.
+	return !GetActorOnTile(Tile);
 }
 
 bool UTileManagerSubsystem::CanEnemyAIMoveToTile(const ATile* Tile) const

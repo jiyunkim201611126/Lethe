@@ -78,11 +78,11 @@ void UCardPanelWidgetController::GoPlayerTurnPhase() const
 	}
 }
 
-void UCardPanelWidgetController::ProcessAllPlayerMove() const
+void UCardPanelWidgetController::StartResolvePlayerMoves() const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->ProcessAllPlayerMoves();
+		LethePlayerController->StartResolvePlayerMoves();
 	}
 }
 

@@ -386,7 +386,7 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 	switch (CurrentPhaseState)
 	{
 	case EPhaseState::PlayerMovePhase:
-		CardPanelWidgetController->ProcessAllPlayerMove();
+		CardPanelWidgetController->StartResolvePlayerMoves();
 		break;
 	case EPhaseState::PlayerTurnPhase:
 		{

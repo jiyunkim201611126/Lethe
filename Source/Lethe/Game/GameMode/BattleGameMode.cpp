@@ -93,7 +93,6 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 					if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 					{
 						TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
-						TileManagerSubsystem->OccupyPlayerMoveTile(SpawnedCharacter, TileActor);
 						SpawnedCharacter->SetLocationOnTile(SpawnLocation);
 						SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
 						SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);

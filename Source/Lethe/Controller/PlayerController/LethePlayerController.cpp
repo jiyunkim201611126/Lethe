@@ -185,9 +185,9 @@ void ALethePlayerController::RefreshMovePreview() const
 	}
 }
 
-void ALethePlayerController::ProcessAllPlayerMoves() const
+void ALethePlayerController::StartResolvePlayerMoves() const
 {
-	PlayerAbilityContextComponent->ProcessAllMoves();
+	PlayerAbilityContextComponent->StartResolveMoves();
 }
 
 void ALethePlayerController::OnPlayerMovedResolved(const AActor* MovedCharacter) const

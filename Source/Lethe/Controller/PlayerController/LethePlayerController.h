@@ -46,7 +46,7 @@ public:
 	void ResetSelectedCharacter();
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;
-	void ProcessAllPlayerMoves() const;
+	void StartResolvePlayerMoves() const;
 	void OnPlayerMovedResolved(const AActor* MovedCharacter) const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());

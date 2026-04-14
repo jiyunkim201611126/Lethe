@@ -139,32 +139,22 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	CurrentEnemy->ProcessPlanPhase();
 }
 
-void ALetheGameState::InvalidateMoveTurnEndConfirmation()
-{
-	bMoveDistanceTurnEndConfirmed = true;
-}
-
 void ALetheGameState::OnFinishActivationQueue()
 {
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
-		if (bMoveDistanceTurnEndConfirmed)
+		for (const auto& PlayerCharacter : PlayerCharacters)
 		{
-			// 행동력 잔여 여부를 확인해야 하는 경우 들어오는 분기입니다.
-			for (const auto& PlayerCharacter : PlayerCharacters)
+			if (0 < PlayerCharacter->GetMoveDistance())
 			{
-				if (0 < PlayerCharacter->GetMoveDistance())
-				{
-					// 잔여 행동력이 있다면 이번 입력에 턴 종료를 수행해선 안 됩니다.
-					// TODO: 잔여 행동력(MoveDistance)이 있다고 알림
-					bMoveDistanceTurnEndConfirmed = false;
-					return;
-				}
+				// 잔여 행동력이 있다면 이번 입력에 턴 종료를 수행해선 안 됩니다.
+				// TODO: 잔여 행동력(MoveDistance)이 있다고 알림
+				bShouldDeferEndPlayerMovePhase = false;
+				return;
 			}
 		}
 
-		// 잔여 행동력이 없거나, 잔여 행동력이 있는 상태에서 이동 예약 수정 없이 턴 종료를 한 번 더 누른 경우 페이즈를 넘깁니다.
-		bMoveDistanceTurnEndConfirmed = true;
+		bShouldDeferEndPlayerMovePhase = false;
 		GoEnemyPlanningPhase();
 	}
 	
@@ -177,6 +167,16 @@ void ALetheGameState::OnFinishActivationQueue()
 bool ALetheGameState::ShouldGoCombatPhase() const
 {
 	return !CurrentCombatEnemies.IsEmpty();
+}
+
+void ALetheGameState::TryGoEnemyPlanningPhase()
+{
+	if (bShouldDeferEndPlayerMovePhase)
+	{
+		bShouldDeferEndPlayerMovePhase = false;
+		return;
+	}
+	GoEnemyPlanningPhase();
 }
 
 EPhaseState ALetheGameState::GetPhaseState() const
@@ -238,6 +238,11 @@ void ALetheGameState::OnPlanTimerEnded()
 {
 	++CurrentEnemyAbilityProcessIndex;
 	ProcessCurrentEnemyPlan();
+}
+
+void ALetheGameState::SetShouldDeferEndPlayerMovePhase()
+{
+	bShouldDeferEndPlayerMovePhase = true;
 }
 
 UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const

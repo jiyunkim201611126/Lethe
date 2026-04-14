@@ -65,6 +65,9 @@ public:
 
 	/** 이동 완료 후 예약 경로와 상태를 갱신하고 다음 이동을 큐에 추가합니다. */
 	void OnPlayerMoveResolved(const AActor* MovedCharacter);
+
+	/** 비전투 페이즈 진입/재진입 시 호출되는 함수로, MoveDistance가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
+	void SetAllReservedMovesWaitingForQueue();
 	
 	void ResetReservedMoveData();
 	

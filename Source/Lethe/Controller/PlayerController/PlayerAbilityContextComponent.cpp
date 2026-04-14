@@ -100,6 +100,11 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 		for (const ATile* Tile : OutPathTilesArray[PathIndex])
 		{
 			CurrentOccupiedCount += Tile->GetOccupiedCount();
+			if (TileManagerSubsystem->GetActorOnTile(Tile))
+			{
+				// 타일 위에 캐릭터가 서있다면 가중치를 1 추가합니다.
+				++CurrentOccupiedCount;
+			}
 		}
 
 		// 현재 경로를 아무도 지나지 않는 상태라면 이 경로를 선택합니다.
@@ -138,10 +143,10 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 		}
 	}
 
-	// 이동 예약 입력이 수행됐으므로, 턴 종료 입력 시 행동력 잔여 여부를 확인하고 턴을 종료하도록 플래그를 수정합니다.
+	// 이동 예약을 수정했으므로, 턴 종료 버튼 클릭 시 잔여 행동력 여부를 한 번 점검해야 합니다.
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->InvalidateMoveTurnEndConfirmation();
+		LetheGameState->SetShouldDeferEndPlayerMovePhase();
 	}
 }
 
@@ -255,7 +260,7 @@ ATile* UPlayerAbilityContextComponent::GetNextReserveTile(FPlayerCharacterReserv
 
 void UPlayerAbilityContextComponent::StartResolveMoves()
 {
-	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!LetheGameState || LetheGameState->IsResolvingPlayerAbility())
 	{
 		return;
@@ -264,6 +269,10 @@ void UPlayerAbilityContextComponent::StartResolveMoves()
 	if (AddMoveActivationData())
 	{
 		LetheGameState->StartActivatePlayerMoveAbilities();
+	}
+	else
+	{
+		LetheGameState->TryGoEnemyPlanningPhase();
 	}
 }
 
@@ -336,6 +345,14 @@ void UPlayerAbilityContextComponent::OnPlayerMoveResolved(const AActor* MovedCha
 	if (bShouldAddActivationData)
 	{
 		AddMoveActivationData();
+	}
+}
+
+void UPlayerAbilityContextComponent::SetAllReservedMovesWaitingForQueue()
+{
+	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
+	{
+		ReservedMove.State = EReservedMoveState::WaitingForQueue;
 	}
 }
 

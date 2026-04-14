@@ -319,15 +319,22 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
 	CurrentPhaseState = NewState;
-	
-	if (CurrentPhaseState == EPhaseState::DrawPhase)
+
+	switch (CurrentPhaseState)
 	{
+	case EPhaseState::EnemyPlanningPhase:
+		PlayerAbilityContextComponent->SetAllReservedMovesWaitingForQueue();
+		break;
+	case EPhaseState::DrawPhase:
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
 		PlayerAbilityContextComponent->ResetReservedMoveData();
 		if (bIsReservedMovePreviewingMove)
 		{
 			ToggleMovePreview();
 		}
+		break;
+	default:
+		break;
 	}
 }
 

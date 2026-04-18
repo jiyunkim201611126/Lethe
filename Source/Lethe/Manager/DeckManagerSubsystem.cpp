@@ -2,7 +2,7 @@
 
 #include "DeckManagerSubsystem.h"
 
-#include "DataLoadManagerSubsystem.h"
+#include "CardDataLoadSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 
 void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -17,7 +17,7 @@ void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UDeckManagerSubsystem::SaveDeck(const TMap<FGameplayTag, FSavedCharacterDeck>& InEquippedDecks, const TMap<FGameplayTag, FSavedCharacterDeck>& InUnequippedDecks)
 {
 	UDeckSaveGame* DeckSaveGameObject = CastChecked<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass));
-	const UDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
+	const UCardDataLoadSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 	if (CardDataLoadManagerSubsystem)
 	{
 		// Tag 기준으로 캐싱해두었던 데이터를 Id 기준으로 변경해 세이브합니다.
@@ -40,7 +40,7 @@ void UDeckManagerSubsystem::SaveDeck(const TMap<FGameplayTag, FSavedCharacterDec
 
 void UDeckManagerSubsystem::LoadDeck()
 {
-	if (const UDataLoadManagerSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>())
+	if (const UCardDataLoadSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>())
 	{
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{

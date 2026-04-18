@@ -4,7 +4,7 @@
 
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Lethe/Manager/DataLoadManagerSubsystem.h"
+#include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 
 APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -20,12 +20,9 @@ FGameplayTag APlayerCharacterBase::GetCharacterTag()
 {
 	if (!CharacterTag.IsValid())
 	{
-		if (const UDataLoadManagerSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>())
-		{
-			CharacterTag = DataLoadManagerSubsystem->GetCharacterTagById(CharacterId);
-		}
+		const ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
+		LetheAssetManager.TryGetCharacterTagById(CharacterId, CharacterTag);
 	}
-	
 	return CharacterTag;
 }
 

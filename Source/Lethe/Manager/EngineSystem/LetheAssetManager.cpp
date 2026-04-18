@@ -28,8 +28,6 @@ void ULetheAssetManager::StartInitialLoading()
 
 	// 커스텀 Context를 사용하기 위해 반드시 호출해줘야 하는 함수입니다.
 	UAbilitySystemGlobals::Get().InitGlobalData();
-
-	BuildAssetIdCaches();
 }
 
 bool ULetheAssetManager::TryGetCardDefinitionAssetId(const FGameplayTag& CardTag, FPrimaryAssetId& OutAssetId) const

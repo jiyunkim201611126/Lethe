@@ -14,6 +14,9 @@ class LETHE_API ULetheAssetManager : public UAssetManager
 
 public:
 	static ULetheAssetManager& Get();
+	
+	/** 에셋 색인 후 관련 정보를 사용하기 편리하도록 캐싱하는 함수입니다. */
+	void BuildAssetIdCaches();
 
 	bool TryGetCardDefinitionAssetId(const FGameplayTag& CardTag, FPrimaryAssetId& OutAssetId) const;
 	bool TryGetCardSelfViewAssetId(const FGameplayTag& CardTag, FPrimaryAssetId& OutAssetId) const;
@@ -26,11 +29,11 @@ public:
 	bool TryGetCharacterIdByTag(const FGameplayTag& CharacterTag, uint64& OutCharacterId) const;
 
 protected:
+	//~ Begin UAssetManager Interface
 	virtual void StartInitialLoading() override;
+	//~ End of UAssetManager Interface
 
 private:
-	/** 에셋 색인 후 관련 정보를 사용하기 편리하도록 캐싱하는 함수입니다. */
-	void BuildAssetIdCaches();
 	void BuildCardDefinitionCache();
 	void BuildCardSelfViewCache();
 	void BuildCharacterDefinitionCache();

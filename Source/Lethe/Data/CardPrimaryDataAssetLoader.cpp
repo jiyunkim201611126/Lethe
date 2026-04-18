@@ -3,7 +3,7 @@
 #include "CardPrimaryDataAssetLoader.h"
 
 #include "Card/CardDefinitionData.h"
-#include "Lethe/Manager/DataLoadManagerSubsystem.h"
+#include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Engine/GameInstance.h"
 
 UCardPrimaryDataAssetLoader* UCardPrimaryDataAssetLoader::CreateLoader(UObject* Outer)
@@ -12,7 +12,7 @@ UCardPrimaryDataAssetLoader* UCardPrimaryDataAssetLoader::CreateLoader(UObject* 
 
 	if (Loader->GetWorld())
 	{
-		Loader->DataLoadManager = Loader->GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
+		Loader->DataLoadManager = Loader->GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 	}
 
 	return Loader;

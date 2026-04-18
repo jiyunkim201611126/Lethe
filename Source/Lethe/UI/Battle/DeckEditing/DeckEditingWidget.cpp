@@ -9,7 +9,7 @@
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Data/CardPrimaryDataAssetLoader.h"
-#include "Lethe/Manager/DataLoadManagerSubsystem.h"
+#include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
 
@@ -77,7 +77,7 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 		CharacterEquippedDeckListObjects.FindOrAdd(CharacterTag);
 		CharacterUnequippedDeckListObjects.FindOrAdd(CharacterTag);
 
-		UDataLoadManagerSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
+		UCardDataLoadSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 		UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this);
 		if (DataLoadManagerSubsystem && Loader)
 		{

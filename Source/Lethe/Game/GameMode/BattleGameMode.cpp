@@ -7,7 +7,7 @@
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Manager/DataLoadManagerSubsystem.h"
+#include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -22,7 +22,7 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	 */
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
-	UDataLoadManagerSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataLoadManagerSubsystem>();
+	UCardDataLoadSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 
 	if (TileManagerSubsystem && DeckManagerSubsystem && DataLoadManagerSubsystem)
 	{

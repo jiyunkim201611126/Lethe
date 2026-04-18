@@ -10,7 +10,7 @@
 class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
-class UDataLoadManagerSubsystem;
+class UCardDataLoadSubsystem;
 
 USTRUCT(BlueprintType)
 struct FLoadedCardInfo
@@ -57,7 +57,7 @@ private:
 	void SelfDestruct();
 
 	UPROPERTY()
-	TObjectPtr<UDataLoadManagerSubsystem> DataLoadManager;
+	TObjectPtr<UCardDataLoadSubsystem> DataLoadManager;
 	
 	FGameplayTag ForCharacterTag;
 	bool bIsFromEquippedDeck;

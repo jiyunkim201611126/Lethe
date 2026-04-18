@@ -223,7 +223,11 @@ void ALetheGameState::OnResolveEnemyPlanMove()
 {
 	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
-		SpawnedEnemies[CurrentEnemyAbilityProcessIndex]->ProcessTelegraphPlan();
+		const TWeakObjectPtr<AEnemyCharacterBase>& AbilityProcessedEnemy = SpawnedEnemies[CurrentEnemyAbilityProcessIndex];
+		if (AbilityProcessedEnemy.IsValid())
+		{
+			AbilityProcessedEnemy->ProcessTelegraphPlan();
+		}
 	}
 
 	// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.

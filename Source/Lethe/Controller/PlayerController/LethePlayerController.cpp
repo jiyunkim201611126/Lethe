@@ -323,6 +323,7 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	switch (CurrentPhaseState)
 	{
 	case EPhaseState::EnemyPlanningPhase:
+		// 비전투 페이즈로 진입 시, 예약해뒀던 모든 이동이 큐에 들어갈 수 있도록 상태를 활성화합니다.
 		PlayerAbilityContextComponent->SetAllReservedMovesWaitingForQueue();
 		break;
 	case EPhaseState::DrawPhase:

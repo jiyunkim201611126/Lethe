@@ -22,9 +22,9 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	 */
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
-	UCardDataLoadSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
+	const UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 
-	if (TileManagerSubsystem && DeckManagerSubsystem && DataLoadManagerSubsystem)
+	if (TileManagerSubsystem && DeckManagerSubsystem && CardDataLoadSubsystem)
 	{
 		// 타일부터 생성합니다.
 		TileManagerSubsystem->MakeNewTileMap();
@@ -38,12 +38,12 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 		}
 
 		// 콜백을 붙여놓고 Data Asset 로드를 요청합니다.
-		const FOnCharacterDefinitionsLoaded OnComplete = FOnCharacterDefinitionsLoaded::CreateUObject(this, &ThisClass::OnCharacterDefinitionDataLoaded);
-		DataLoadManagerSubsystem->LoadCharacterDefinitionData(CharacterTags, OnComplete);
+		const FOnPrimaryDataAssetsLoaded OnComplete = FOnPrimaryDataAssetsLoaded::CreateUObject(this, &ThisClass::OnCharacterDefinitionDataLoaded);
+		CardDataLoadSubsystem->LoadPrimaryDataAssets(CharacterTags, ECardDataAssetType::CharacterDefinition, OnComplete);
 	}
 }
 
-void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDefinitionData*>& CharacterDefinitionDatas) const
+void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitionDatas) const
 {
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
@@ -82,7 +82,11 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UCharacterDef
 		{
 			for (int32 CharacterIndex = 0; CharacterIndex < CharacterDefinitionDatas.Num(); CharacterIndex++)
 			{
-				const UCharacterDefinitionData* CharacterDefinitionData = CharacterDefinitionDatas[CharacterIndex];
+				const UCharacterDefinitionData* CharacterDefinitionData = Cast<UCharacterDefinitionData>(CharacterDefinitionDatas[CharacterIndex]);
+				if (!CharacterDefinitionData)
+				{
+					continue;
+				}
 
 				const FCubeCoord TargetCoord = CharacterIndex == 0 ? MostLeftTileCoord : MostLeftTileCoord + FCubeCoord::GetDirection(6 - CharacterIndex);
 				if (ATile* TileActor = TileManagerSubsystem->GetTile(TargetCoord))

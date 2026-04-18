@@ -60,7 +60,7 @@ bool ULetheAssetManager::TryGetCharacterDefinitionAssetId(const FGameplayTag& Ch
 	return false;
 }
 
-bool ULetheAssetManager::TryGetCardTagById(uint64 CardId, FGameplayTag& OutCardTag) const
+bool ULetheAssetManager::TryGetCardTagById(const uint64 CardId, FGameplayTag& OutCardTag) const
 {
 	if (const FGameplayTag* FoundCardTag = CardIdToTags.Find(CardId))
 	{
@@ -80,7 +80,7 @@ bool ULetheAssetManager::TryGetCardIdByTag(const FGameplayTag& CardTag, uint64& 
 	return false;
 }
 
-bool ULetheAssetManager::TryGetCharacterTagById(uint64 CharacterId, FGameplayTag& OutCharacterTag) const
+bool ULetheAssetManager::TryGetCharacterTagById(const uint64 CharacterId, FGameplayTag& OutCharacterTag) const
 {
 	if (const FGameplayTag* FoundCharacterTag = CharacterIdToTags.Find(CharacterId))
 	{

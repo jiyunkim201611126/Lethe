@@ -8,7 +8,6 @@
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/Card/CardViewData.h"
-#include "Lethe/Data/CardPrimaryDataAssetLoader.h"
 #include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
@@ -77,13 +76,11 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 		CharacterEquippedDeckListObjects.FindOrAdd(CharacterTag);
 		CharacterUnequippedDeckListObjects.FindOrAdd(CharacterTag);
 
-		UCardDataLoadSubsystem* DataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
-		UCardPrimaryDataAssetLoader* Loader = UCardPrimaryDataAssetLoader::CreateLoader(this);
-		if (DataLoadManagerSubsystem && Loader)
+		UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
+		if (CardDataLoadSubsystem)
 		{
-			DataLoadManagerSubsystem->AddLoader(Loader);
 			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &ThisClass::OnAllCardsLoaded);
-			Loader->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);
+			CardDataLoadSubsystem->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);
 		}
 		else
 		{

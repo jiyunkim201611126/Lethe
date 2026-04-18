@@ -4,17 +4,72 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CardDataLoadSubsystem.generated.h"
 
 class UCardDefinitionData;
 class UCardSelfViewData;
 class UCharacterDefinitionData;
+class UPrimaryDataAsset;
 struct FSavedCharacterDeck;
 
-DECLARE_DELEGATE_OneParam(FOnCardDefinitionsLoaded, const TArray<UCardDefinitionData*>&)
-DECLARE_DELEGATE_TwoParams(FOnCardViewLoaded, UCardSelfViewData*, UCharacterDefinitionData*)
-DECLARE_DELEGATE_OneParam(FOnCharacterDefinitionsLoaded, const TArray<UCharacterDefinitionData*>&);
+DECLARE_DELEGATE_OneParam(FOnPrimaryDataAssetsLoaded, const TArray<UPrimaryDataAsset*>&)
+DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const TArray<FLoadedCardInfo>& /* LoadedCards */, const bool /* bEquipped */);
+
+UENUM()
+enum class ECardDataAssetType : uint8
+{
+	CardDefinition,
+	CardSelfView,
+	CharacterDefinition
+};
+
+USTRUCT(BlueprintType)
+struct FLoadedCardInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UCardDefinitionData> CardDefinition = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UCardSelfViewData> SelfViewData = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UCharacterDefinitionData> CharacterDefinition = nullptr;
+
+	FSavedCard SavedCardInfo;
+};
+
+USTRUCT()
+struct FPendingCardDataLoadRequest
+{
+	GENERATED_BODY()
+
+	FGameplayTag CharacterTag;
+	uint8 bEquipped : 1 = false;
+
+	FOnAllCardDataLoaded OnLoadedCallback;
+
+	TArray<FSavedCard> LoadRequestedCards;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UCardDefinitionData>> LoadedCardDefinitions;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UCardSelfViewData>> LoadedCardViews;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UCharacterDefinitionData>> LoadedCharacterDefinitions;
+
+	UPROPERTY()
+	TArray<FLoadedCardInfo> LoadedCardInfos;
+
+	uint8 bCardDefinitionsLoaded : 1 = false;
+	uint8 bCardViewsLoaded : 1 = false;
+	uint8 bCharacterDefinitionsLoaded : 1 = false;
+};
 
 /**
  * AssetManager를 통해 카드용 PrimaryDataAsset들을 로드하는 Subsystem입니다.
@@ -22,8 +77,7 @@ DECLARE_DELEGATE_OneParam(FOnCharacterDefinitionsLoaded, const TArray<UCharacter
  * LetheAssetManager가 캐싱한 에셋 식별 정보를 사용해 CardDefinition, CardSelfView, CharacterDefinition Data Asset들을 비동기 로드해서 콜백으로 돌려줍니다.
  * 이를 통해 프로젝트에 수많은 카드가 존재해도, 런타임에 필요한 카드 관련 에셋만 메모리에 올려서 사용할 수 있습니다.
  *
- * 결과적으로 담당하는 역할은, PrimaryDataAsset 로드 요청이 오면 비동기 콜백으로 반환입니다.
- * DataAssetLoader와는 '개별적으로 로드 요청이 가능하다'는 차이점이 있습니다.
+ * 결과적으로 담당하는 역할은, PrimaryDataAsset 로드 요청이 오면 호출부가 사용하기 좋은 단위의 비동기 콜백으로 반환하는 것입니다.
  */
 UCLASS()
 class LETHE_API UCardDataLoadSubsystem : public UGameInstanceSubsystem
@@ -36,29 +90,29 @@ public:
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
 
-	void AddLoader(UObject* Loader);
-	void RemoveLoader(UObject* Loader);
+	/** 캐릭터의 카드 덱을 모두 로드합니다. */
+	void LoadCardData(const FGameplayTag& CharacterTag, const TArray<FSavedCard>& Cards, bool bEquipped, const FOnAllCardDataLoaded& OnLoadedCallback);
 
-	/** AssetManager 효율을 위해 배열로 한 번에 CardDefinition 로드 요청하는 함수입니다. */
-	void LoadCardDefinitionData(const TArray<FGameplayTag>& InCardTags, FOnCardDefinitionsLoaded OnComplete) const;
-	
-	/** CardTag와 CharacterTag를 받아 CardSelfView, CharacterDefinition를 각각 1개씩 로드 요청하는 함수입니다. */
-	void LoadCardViewData(const FGameplayTag& InCardTag, const FGameplayTag& InCharacterTag, FOnCardViewLoaded OnComplete) const;
-	
-	/** CharacterTag 배열을 받아 CharacterDefinition을 로드 요청하는 함수입니다. */
-	void LoadCharacterDefinitionData(const TArray<FGameplayTag>& InCharacterTags, FOnCharacterDefinitionsLoaded OnComplete) const;
+	/** GameplayTag 배열과 로드할 데이터 타입을 받아 PrimaryDataAsset 로드를 요청합니다. */
+	void LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGameplayTags, const ECardDataAssetType AssetType, FOnPrimaryDataAssetsLoaded OnComplete) const;
 
 	void ChangeCharacterDecksKeyToSave(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, TMap<uint64, FSavedCharacterDeck>& OutDecks) const;
 	void ChangeCharacterDecksKeyToLoad(const TMap<uint64, FSavedCharacterDeck>& InDecks, TMap<FGameplayTag, FSavedCharacterDeck>& OutDecks) const;
 
 private:
-	void OnCardDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCardDefinitionsLoaded& OnComplete) const;
-	void OnCardViewDataLoaded(const FPrimaryAssetId& SelfViewId, const FPrimaryAssetId& CharacterDefinitionId, const FOnCardViewLoaded& OnComplete) const;
-	void OnCharacterDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCharacterDefinitionsLoaded& OnComplete) const;
+	void OnPrimaryDataAssetsLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnPrimaryDataAssetsLoaded& OnComplete) const;
+	bool TryGetPrimaryAssetId(const FGameplayTag& GameplayTag, const ECardDataAssetType AssetType, FPrimaryAssetId& OutAssetId) const;
+
+	void OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedDefinitions);
+	void OnCardViewsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardViews);
+	void OnCharacterDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions);
+	void TryFinishCardDataLoad(const uint64 RequestId);
 	
 	void FillCardTagInSavedCardStruct(FSavedCharacterDeck& OutDeck) const;
 
 private:
+	uint64 NextCardDataLoadRequestId = 1;
+
 	UPROPERTY()
-	TArray<TObjectPtr<UObject>> ActivatedLoaders;
+	TMap<uint64, FPendingCardDataLoadRequest> PendingCardDataLoadRequests;
 };

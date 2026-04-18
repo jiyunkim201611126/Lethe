@@ -3,7 +3,8 @@
 #include "CardDataLoadSubsystem.h"
 
 #include "Engine/AssetManager.h"
-#include "Lethe/Data/CardPrimaryDataAssetLoader.h"
+#include "Engine/DataAsset.h"
+#include "Lethe/Util.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
@@ -20,44 +21,71 @@ void UCardDataLoadSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UCardDataLoadSubsystem::Deinitialize()
 {
-	for (UObject* Loader : ActivatedLoaders)
-	{
-		if (UCardPrimaryDataAssetLoader* DataAssetLoader = Cast<UCardPrimaryDataAssetLoader>(Loader))
-		{
-			DataAssetLoader->Destruct();
-		}
-	}
-	ActivatedLoaders.Empty();
+	PendingCardDataLoadRequests.Empty();
+	
 	Super::Deinitialize();
 }
 
-void UCardDataLoadSubsystem::AddLoader(UObject* Loader)
+void UCardDataLoadSubsystem::LoadCardData(const FGameplayTag& CharacterTag, const TArray<FSavedCard>& Cards, const bool bEquipped, const FOnAllCardDataLoaded& OnLoadedCallback)
 {
-	ActivatedLoaders.Emplace(Loader);
+	if (Cards.IsEmpty())
+	{
+		// 로드에 실패한 경우에도 콜백을 일단 호출해 완료 이벤트는 발생시켜줍니다.
+		OnLoadedCallback.ExecuteIfBound(CharacterTag, {}, bEquipped);
+		return;
+	}
+
+	// 요청 정보를 묶어 캐싱합니다.
+	const uint64 RequestId = NextCardDataLoadRequestId++;
+	FPendingCardDataLoadRequest& Request = PendingCardDataLoadRequests.Emplace(RequestId);
+	Request.CharacterTag = CharacterTag;
+	Request.bEquipped = bEquipped;
+	Request.OnLoadedCallback = OnLoadedCallback;
+	Request.LoadRequestedCards = Cards;
+
+	// 로드할 CardTag들을 가져옵니다.
+	TArray<FGameplayTag> CardTags;
+	CardTags.Reserve(Cards.Num());
+	for (const FSavedCard& SavedCard : Cards)
+	{
+		CardTags.Emplace(SavedCard.CardTag);
+	}
+
+	const FOnPrimaryDataAssetsLoaded OnDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedDefinitions)
+	{
+		OnCardDefinitionsLoadedForRequest(RequestId, LoadedDefinitions);
+	});
+	LoadPrimaryDataAssets(CardTags, ECardDataAssetType::CardDefinition, OnDefinitionsLoaded);
+
+	const FOnPrimaryDataAssetsLoaded OnViewsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCardViews)
+	{
+		OnCardViewsLoadedForRequest(RequestId, LoadedCardViews);
+	});
+	LoadPrimaryDataAssets(CardTags, ECardDataAssetType::CardSelfView, OnViewsLoaded);
+
+	const FOnPrimaryDataAssetsLoaded OnCharacterDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
+	{
+		OnCharacterDefinitionsLoadedForRequest(RequestId, LoadedCharacterDefinitions);
+	});
+	LoadPrimaryDataAssets({ CharacterTag }, ECardDataAssetType::CharacterDefinition, OnCharacterDefinitionsLoaded);
 }
 
-void UCardDataLoadSubsystem::RemoveLoader(UObject* Loader)
-{
-	ActivatedLoaders.Remove(Loader);
-}
-
-void UCardDataLoadSubsystem::LoadCardDefinitionData(const TArray<FGameplayTag>& InCardTags, FOnCardDefinitionsLoaded OnComplete) const
+void UCardDataLoadSubsystem::LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGameplayTags, const ECardDataAssetType AssetType, FOnPrimaryDataAssetsLoaded OnComplete) const
 {
 	ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
 
 	TArray<FPrimaryAssetId> AssetsToLoad;
 
-	// 매개변수로 받은 CardTag로 로드할 PrimaryDataAsset의 Id를 가져옵니다.
-	for (const FGameplayTag& CardTag : InCardTags)
+	for (const FGameplayTag& GameplayTag : InGameplayTags)
 	{
-		FPrimaryAssetId CardDefinitionAssetId;
-		if (LetheAssetManager.TryGetCardDefinitionAssetId(CardTag, CardDefinitionAssetId))
+		FPrimaryAssetId AssetId;
+		if (TryGetPrimaryAssetId(GameplayTag, AssetType, AssetId))
 		{
-			AssetsToLoad.Emplace(CardDefinitionAssetId);
+			AssetsToLoad.Emplace(AssetId);
 		}
 		else
 		{
-			checkf(false, TEXT("CardTag: %s에 해당하는 CardDefinition DataAsset이 없습니다."), *CardTag.GetTagName().ToString());
+			checkf(false, TEXT("GameplayTag: %s에 해당하는 DataAsset을 찾을 수 없습니다. AssetType: %s"), *GameplayTag.GetTagName().ToString(), *LogHelper::EnumToString(AssetType));
 		}
 	}
 	
@@ -66,25 +94,25 @@ void UCardDataLoadSubsystem::LoadCardDefinitionData(const TArray<FGameplayTag>& 
 		// 로드할 객체가 있다면 로드를 시작합니다.
 		LetheAssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, AssetsToLoad, OnComplete]()
 		{
-			OnCardDefinitionDataLoaded(AssetsToLoad, OnComplete);
+			OnPrimaryDataAssetsLoaded(AssetsToLoad, OnComplete);
 		}));
 	}
 	else
 	{
-		OnComplete.ExecuteIfBound(TArray<UCardDefinitionData*>());
+		OnComplete.ExecuteIfBound(TArray<UPrimaryDataAsset*>());
 	}
 }
 
-void UCardDataLoadSubsystem::OnCardDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCardDefinitionsLoaded& OnComplete) const
+void UCardDataLoadSubsystem::OnPrimaryDataAssetsLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnPrimaryDataAssetsLoaded& OnComplete) const
 {
 	const ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
 	
-	TArray<UCardDefinitionData*> LoadedAssets;
+	TArray<UPrimaryDataAsset*> LoadedAssets;
 
 	for (const FPrimaryAssetId& Id : LoadedAssetsId)
 	{
 		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
-		UCardDefinitionData* LoadedAsset = CastChecked<UCardDefinitionData>(LetheAssetManager.GetPrimaryAssetObject(Id));
+		UPrimaryDataAsset* LoadedAsset = CastChecked<UPrimaryDataAsset>(LetheAssetManager.GetPrimaryAssetObject(Id));
 		LoadedAssets.Emplace(LoadedAsset);
 	}
 
@@ -92,91 +120,121 @@ void UCardDataLoadSubsystem::OnCardDefinitionDataLoaded(const TArray<FPrimaryAss
 	OnComplete.ExecuteIfBound(LoadedAssets);
 }
 
-void UCardDataLoadSubsystem::LoadCardViewData(const FGameplayTag& InCardTag, const FGameplayTag& InCharacterTag, FOnCardViewLoaded OnComplete) const
-{
-	ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
-
-	TArray<FPrimaryAssetId> AssetsToLoad;
-
-	FPrimaryAssetId SelfViewId;
-	FPrimaryAssetId CharacterDefinitionId;
-	LetheAssetManager.TryGetCardSelfViewAssetId(InCardTag, SelfViewId);
-	LetheAssetManager.TryGetCharacterDefinitionAssetId(InCharacterTag, CharacterDefinitionId);
-
-	if (SelfViewId.IsValid() && CharacterDefinitionId.IsValid())
-	{
-		AssetsToLoad.Emplace(SelfViewId);
-		AssetsToLoad.Emplace(CharacterDefinitionId);
-		
-		LetheAssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, SelfViewId, CharacterDefinitionId, OnComplete]()
-		{
-			OnCardViewDataLoaded(SelfViewId, CharacterDefinitionId, OnComplete);
-		}));
-	}
-	else
-	{
-		checkf(false, TEXT("CardTag: %s, 혹은 CharacterTag: %s에 해당하는 CardViewData DataAsset이 없습니다."), *InCardTag.GetTagName().ToString(), *InCharacterTag.GetTagName().ToString());
-	}
-}
-
-void UCardDataLoadSubsystem::LoadCharacterDefinitionData(const TArray<FGameplayTag>& InCharacterTags, FOnCharacterDefinitionsLoaded OnComplete) const
-{
-	ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
-
-	TArray<FPrimaryAssetId> AssetsToLoad;
-
-	for (const FGameplayTag& CharacterTag : InCharacterTags)
-	{
-		FPrimaryAssetId CharacterDefinitionAssetId;
-		if (LetheAssetManager.TryGetCharacterDefinitionAssetId(CharacterTag, CharacterDefinitionAssetId))
-		{
-			AssetsToLoad.Emplace(CharacterDefinitionAssetId);
-		}
-		else
-		{
-			checkf(false, TEXT("CharacterTag: %s에 해당하는 CharacterDefinition DataAsset이 없습니다."), *CharacterTag.GetTagName().ToString());
-		}
-	}
-	
-	if (!AssetsToLoad.IsEmpty())
-	{
-		// 로드할 객체가 있다면 로드를 시작합니다.
-		LetheAssetManager.LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, AssetsToLoad, OnComplete]()
-		{
-			OnCharacterDefinitionDataLoaded(AssetsToLoad, OnComplete);
-		}));
-	}
-	else
-	{
-		OnComplete.ExecuteIfBound(TArray<UCharacterDefinitionData*>());
-	}
-}
-
-void UCardDataLoadSubsystem::OnCharacterDefinitionDataLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnCharacterDefinitionsLoaded& OnComplete) const
+bool UCardDataLoadSubsystem::TryGetPrimaryAssetId(const FGameplayTag& GameplayTag, const ECardDataAssetType AssetType, FPrimaryAssetId& OutAssetId) const
 {
 	const ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
-			
-	TArray<UCharacterDefinitionData*> LoadedAssets;
 
-	for (const FPrimaryAssetId& Id : LoadedAssetsId)
+	switch (AssetType)
 	{
-		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
-		UCharacterDefinitionData* LoadedAsset = CastChecked<UCharacterDefinitionData>(LetheAssetManager.GetPrimaryAssetObject(Id));
-		LoadedAssets.Emplace(LoadedAsset);
+	case ECardDataAssetType::CardDefinition:
+		return LetheAssetManager.TryGetCardDefinitionAssetId(GameplayTag, OutAssetId);
+	case ECardDataAssetType::CardSelfView:
+		return LetheAssetManager.TryGetCardSelfViewAssetId(GameplayTag, OutAssetId);
+	case ECardDataAssetType::CharacterDefinition:
+		return LetheAssetManager.TryGetCharacterDefinitionAssetId(GameplayTag, OutAssetId);
+	default:
+		return false;
 	}
-
-	// 로드된 객체를 콜백으로 전달합니다.
-	OnComplete.ExecuteIfBound(LoadedAssets);
 }
 
-void UCardDataLoadSubsystem::OnCardViewDataLoaded(const FPrimaryAssetId& SelfViewId, const FPrimaryAssetId& CharacterDefinitionId, const FOnCardViewLoaded& OnComplete) const
+void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedDefinitions)
 {
-	const ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
-	
-	UCardSelfViewData* SelfViewData = CastChecked<UCardSelfViewData>(LetheAssetManager.GetPrimaryAssetObject(SelfViewId));
-	UCharacterDefinitionData* CharacterDefinitionData = CastChecked<UCharacterDefinitionData>(LetheAssetManager.GetPrimaryAssetObject(CharacterDefinitionId));
-	
-	OnComplete.ExecuteIfBound(SelfViewData, CharacterDefinitionData);
+	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
+	if (!Request)
+	{
+		return;
+	}
+
+	Request->LoadedCardDefinitions.Reset(LoadedDefinitions.Num());
+	for (UPrimaryDataAsset* LoadedDefinition : LoadedDefinitions)
+	{
+		Request->LoadedCardDefinitions.Emplace(Cast<UCardDefinitionData>(LoadedDefinition));
+	}
+	Request->bCardDefinitionsLoaded = true;
+
+	TryFinishCardDataLoad(RequestId);
+}
+
+void UCardDataLoadSubsystem::OnCardViewsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardViews)
+{
+	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
+	if (!Request)
+	{
+		return;
+	}
+
+	Request->LoadedCardViews.Reset(LoadedCardViews.Num());
+	for (UPrimaryDataAsset* LoadedCardView : LoadedCardViews)
+	{
+		Request->LoadedCardViews.Emplace(Cast<UCardSelfViewData>(LoadedCardView));
+	}
+	Request->bCardViewsLoaded = true;
+
+	TryFinishCardDataLoad(RequestId);
+}
+
+void UCardDataLoadSubsystem::OnCharacterDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
+{
+	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
+	if (!Request)
+	{
+		return;
+	}
+
+	Request->LoadedCharacterDefinitions.Reset(LoadedCharacterDefinitions.Num());
+	for (UPrimaryDataAsset* LoadedCharacterDefinition : LoadedCharacterDefinitions)
+	{
+		Request->LoadedCharacterDefinitions.Emplace(Cast<UCharacterDefinitionData>(LoadedCharacterDefinition));
+	}
+	Request->bCharacterDefinitionsLoaded = true;
+
+	TryFinishCardDataLoad(RequestId);
+}
+
+void UCardDataLoadSubsystem::TryFinishCardDataLoad(const uint64 RequestId)
+{
+	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
+	if (!Request || !Request->bCardDefinitionsLoaded || !Request->bCardViewsLoaded || !Request->bCharacterDefinitionsLoaded)
+	{
+		return;
+	}
+
+	UCharacterDefinitionData* CharacterDefinition = Request->LoadedCharacterDefinitions.IsEmpty() ? nullptr : Request->LoadedCharacterDefinitions[0].Get();
+
+	for (const FSavedCard& SavedCard : Request->LoadRequestedCards)
+	{
+		FLoadedCardInfo Info;
+		Info.SavedCardInfo = SavedCard;
+		Info.CharacterDefinition = CharacterDefinition;
+
+		for (const TObjectPtr<UCardDefinitionData>& CardDefinition : Request->LoadedCardDefinitions)
+		{
+			if (CardDefinition && CardDefinition->CardId == SavedCard.CardId)
+			{
+				Info.CardDefinition = CardDefinition;
+				break;
+			}
+		}
+
+		for (const TObjectPtr<UCardSelfViewData>& CardView : Request->LoadedCardViews)
+		{
+			if (CardView && CardView->CardId == SavedCard.CardId)
+			{
+				Info.SelfViewData = CardView;
+				break;
+			}
+		}
+
+		Request->LoadedCardInfos.Emplace(Info);
+	}
+
+	const FGameplayTag CharacterTag = Request->CharacterTag;
+	const bool bEquipped = Request->bEquipped;
+	const FOnAllCardDataLoaded OnLoadedCallback = Request->OnLoadedCallback;
+	const TArray<FLoadedCardInfo> LoadedCardInfos = MoveTemp(Request->LoadedCardInfos);
+	PendingCardDataLoadRequests.Remove(RequestId);
+
+	OnLoadedCallback.ExecuteIfBound(CharacterTag, LoadedCardInfos, bEquipped);
 }
 
 void UCardDataLoadSubsystem::ChangeCharacterDecksKeyToSave(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, TMap<uint64, FSavedCharacterDeck>& OutDecks) const

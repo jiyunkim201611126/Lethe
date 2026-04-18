@@ -17,15 +17,15 @@ void UDeckManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UDeckManagerSubsystem::SaveDeck(const TMap<FGameplayTag, FSavedCharacterDeck>& InEquippedDecks, const TMap<FGameplayTag, FSavedCharacterDeck>& InUnequippedDecks)
 {
 	UDeckSaveGame* DeckSaveGameObject = CastChecked<UDeckSaveGame>(UGameplayStatics::CreateSaveGameObject(DeckSaveGameClass));
-	const UCardDataLoadSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
-	if (CardDataLoadManagerSubsystem)
+	const UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
+	if (CardDataLoadSubsystem)
 	{
 		// Tag 기준으로 캐싱해두었던 데이터를 Id 기준으로 변경해 세이브합니다.
 		TMap<uint64, FSavedCharacterDeck> OutEquippedDecks;
-		CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToSave(InEquippedDecks, OutEquippedDecks);
+		CardDataLoadSubsystem->ChangeCharacterDecksKeyToSave(InEquippedDecks, OutEquippedDecks);
 
 		TMap<uint64, FSavedCharacterDeck> OutUnequippedDecks;
-		CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToSave(InUnequippedDecks, OutUnequippedDecks);
+		CardDataLoadSubsystem->ChangeCharacterDecksKeyToSave(InUnequippedDecks, OutUnequippedDecks);
 		
 		DeckSaveGameObject->EquippedDecks = OutEquippedDecks;
 		DeckSaveGameObject->UnequippedDecks = OutUnequippedDecks;
@@ -40,7 +40,7 @@ void UDeckManagerSubsystem::SaveDeck(const TMap<FGameplayTag, FSavedCharacterDec
 
 void UDeckManagerSubsystem::LoadDeck()
 {
-	if (const UCardDataLoadSubsystem* CardDataLoadManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>())
+	if (const UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>())
 	{
 		if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 		{
@@ -49,13 +49,13 @@ void UDeckManagerSubsystem::LoadDeck()
 			
 			// Id 기준으로 세이브되었던 데이터를 Tag 기준으로 변경해 로드합니다.
 			TMap<FGameplayTag, FSavedCharacterDeck> OutEquippedDecks;
-			CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->EquippedDecks, OutEquippedDecks);
+			CardDataLoadSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->EquippedDecks, OutEquippedDecks);
 		
 			EquippedDecks.Reset();
 			EquippedDecks = OutEquippedDecks;
 		
 			TMap<FGameplayTag, FSavedCharacterDeck> OutUnequippedDecks;
-			CardDataLoadManagerSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->UnequippedDecks, OutUnequippedDecks);
+			CardDataLoadSubsystem->ChangeCharacterDecksKeyToLoad(LoadedDeckSaveGameObject->UnequippedDecks, OutUnequippedDecks);
 		
 			UnequippedDecks.Reset();
 			UnequippedDecks = OutUnequippedDecks;

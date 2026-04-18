@@ -9,6 +9,7 @@
 
 class ALetheCharacterBase;
 class UCharacterDefinitionData;
+class UPrimaryDataAsset;
 
 UCLASS()
 class LETHE_API ABattleGameMode : public ALetheGameMode
@@ -19,7 +20,7 @@ public:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 
 private:
-	void OnCharacterDefinitionDataLoaded(const TArray<UCharacterDefinitionData*>& CharacterDefinitionDatas) const;
+	void OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitionDatas) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

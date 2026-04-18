@@ -24,3 +24,13 @@ namespace ArrayShuffle
 		}
 	}
 }
+
+namespace LogHelper
+{
+	/** 로그나 메시지를 찍을 때 사용하는 함수입니다. */
+	template<typename T>
+	FString EnumToString(T Value)
+	{
+		return StaticEnum<T>()->GetNameStringByValue(static_cast<int64>(Value));
+	}
+}

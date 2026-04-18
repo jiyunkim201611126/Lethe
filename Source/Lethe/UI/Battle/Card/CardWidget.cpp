@@ -9,7 +9,6 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
-#include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/UI/Core/LetheImage.h"
 
@@ -44,8 +43,8 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 {
 	OwnerASC = InitParams.OwnerASC;
 	CardTag = InitParams.CardDefinition->CardTag;
-	CardImage->SetBrushFromTexture(InitParams.CardSelfViewData->CardTexture);
-	CardNameText = InitParams.CardSelfViewData->CardNameText;
+	CardImage->SetBrushFromTexture(InitParams.CardDefinition->CardTexture);
+	CardNameText = InitParams.CardDefinition->CardNameText;
 	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->PersonalColor));
 }

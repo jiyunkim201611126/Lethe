@@ -6,7 +6,6 @@
 #include "Components/Button.h"
 #include "Components/TileView.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
-#include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
@@ -103,7 +102,7 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 	{
 		for (const FLoadedCardInfo& CardInfo : LoadedCards)
 		{
-			if (!CardInfo.CardDefinition || !CardInfo.SelfViewData)
+			if (!CardInfo.CardDefinition)
 			{
 				continue;
 			}
@@ -114,7 +113,7 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.			
 				CardListObject->SavedCardInfo = CardInfo.SavedCardInfo;
 				CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
-				CardListObject->CardTexture = CardInfo.SelfViewData->CardTexture;
+				CardListObject->CardTexture = CardInfo.CardDefinition->CardTexture;
 
 				// 일단 캐싱해둔 후 유저의 조작에 맞춰 TileView에 추가/제거하면서 업데이트합니다.
 				DeckListObjects->CardListObjects.Emplace(CardListObject);

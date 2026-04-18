@@ -49,7 +49,7 @@ void ULetheAbilitySystemComponent::OnAllCardsLoaded(const FGameplayTag& Characte
 			GiveAbility(Spec);
 
 			// 카드 위젯이 생성될 수 있도록 콜백을 호출합니다.
-			OnAbilityGivenDelegate.ExecuteIfBound(this, CardInfo.CardDefinition, CardInfo.SelfViewData, CardInfo.CharacterDefinition);
+			OnAbilityGivenDelegate.ExecuteIfBound(this, CardInfo.CardDefinition, CardInfo.CharacterDefinition);
 		}
 	}
 }

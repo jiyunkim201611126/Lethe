@@ -30,13 +30,12 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCharacterDefinitionData* CharacterDefinitionData) const
 {
 	FCardInitParams InitParams;
 	InitParams.OwnerASC = OwnerASC;
 	InitParams.CardViewData = CardViewData;
 	InitParams.CardDefinition = CardDefinitionData;
-	InitParams.CardSelfViewData = CardSelfViewData;
 	InitParams.CharacterDefinitionData = CharacterDefinitionData;
 	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }

@@ -7,12 +7,11 @@
 #include "LetheAbilitySystemComponent.generated.h"
 
 class UCardDefinitionData;
-class UCardSelfViewData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
 struct FSavedCard;
 
-DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCardDefinitionData*, const UCardSelfViewData*, const UCharacterDefinitionData*);
+DECLARE_DELEGATE_ThreeParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCardDefinitionData*, const UCharacterDefinitionData*);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent

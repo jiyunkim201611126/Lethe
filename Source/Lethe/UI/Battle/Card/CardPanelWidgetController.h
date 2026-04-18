@@ -11,12 +11,10 @@ enum class EPhaseState : uint8;
 class ALethePlayerController;
 class ALetheGameState;
 class UCardDefinitionData;
-class UCardSelfViewData;
 class UCardViewData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
 struct FGameplayEventData;
-struct FCardSelfViewInfo;
 struct FGameplayAbilitySpec;
 struct FGameplayAbilitySpecHandle;
 
@@ -37,9 +35,6 @@ struct FCardInitParams
 
 	UPROPERTY()
 	const UCardDefinitionData* CardDefinition = nullptr;
-
-	UPROPERTY()
-	const UCardSelfViewData* CardSelfViewData = nullptr;
 
 	UPROPERTY()
 	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;
@@ -77,7 +72,7 @@ public:
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
 
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCardSelfViewData* CardSelfViewData, const UCharacterDefinitionData* CharacterDefinitionData) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCharacterDefinitionData* CharacterDefinitionData) const;
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;

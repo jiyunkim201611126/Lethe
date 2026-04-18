@@ -3,9 +3,9 @@
 #include "LetheAssetManager.h"
 
 #include "AbilitySystemGlobals.h"
+#include "Engine/DataAsset.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
-#include "Lethe/Data/Card/CardSelfViewData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
@@ -30,29 +30,55 @@ void ULetheAssetManager::StartInitialLoading()
 	UAbilitySystemGlobals::Get().InitGlobalData();
 }
 
-bool ULetheAssetManager::TryGetCardDefinitionAssetId(const FGameplayTag& CardTag, FPrimaryAssetId& OutAssetId) const
+void ULetheAssetManager::LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGameplayTags, FOnPrimaryDataAssetsLoaded OnComplete)
 {
-	if (const FPrimaryAssetId* FoundAssetId = CardDefinitionAssetIds.Find(CardTag))
+	TArray<FPrimaryAssetId> AssetsToLoad;
+
+	for (const FGameplayTag& GameplayTag : InGameplayTags)
 	{
-		OutAssetId = *FoundAssetId;
-		return true;
+		FPrimaryAssetId AssetId;
+		if (TryGetAssetId(GameplayTag, AssetId))
+		{
+			AssetsToLoad.Emplace(AssetId);
+		}
+		else
+		{
+			checkf(false, TEXT("GameplayTag: %s에 해당하는 DataAsset을 찾을 수 없습니다."), *GameplayTag.GetTagName().ToString());
+		}
 	}
-	return false;
+
+	if (!AssetsToLoad.IsEmpty())
+	{
+		// 로드할 객체가 있다면 로드를 시작합니다.
+		LoadPrimaryAssets(AssetsToLoad, TArray<FName>{}, FStreamableDelegate::CreateWeakLambda(this, [this, AssetsToLoad, OnComplete]()
+		{
+			OnPrimaryDataAssetsLoaded(AssetsToLoad, OnComplete);
+		}));
+	}
+	else
+	{
+		OnComplete.ExecuteIfBound(TArray<UPrimaryDataAsset*>());
+	}
 }
 
-bool ULetheAssetManager::TryGetCardSelfViewAssetId(const FGameplayTag& CardTag, FPrimaryAssetId& OutAssetId) const
+void ULetheAssetManager::OnPrimaryDataAssetsLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnPrimaryDataAssetsLoaded& OnComplete) const
 {
-	if (const FPrimaryAssetId* FoundAssetId = CardSelfViewAssetIds.Find(CardTag))
+	TArray<UPrimaryDataAsset*> LoadedAssets;
+
+	for (const FPrimaryAssetId& Id : LoadedAssetsId)
 	{
-		OutAssetId = *FoundAssetId;
-		return true;
+		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
+		UPrimaryDataAsset* LoadedAsset = CastChecked<UPrimaryDataAsset>(GetPrimaryAssetObject(Id));
+		LoadedAssets.Emplace(LoadedAsset);
 	}
-	return false;
+
+	// 로드된 객체를 콜백으로 반환합니다.
+	OnComplete.ExecuteIfBound(LoadedAssets);
 }
 
-bool ULetheAssetManager::TryGetCharacterDefinitionAssetId(const FGameplayTag& CharacterTag, FPrimaryAssetId& OutAssetId) const
+bool ULetheAssetManager::TryGetAssetId(const FGameplayTag& GameplayTag, FPrimaryAssetId& OutAssetId) const
 {
-	if (const FPrimaryAssetId* FoundAssetId = CharacterDefinitionAssetIds.Find(CharacterTag))
+	if (const FPrimaryAssetId* FoundAssetId = TagToAssetId.Find(GameplayTag))
 	{
 		OutAssetId = *FoundAssetId;
 		return true;
@@ -62,7 +88,7 @@ bool ULetheAssetManager::TryGetCharacterDefinitionAssetId(const FGameplayTag& Ch
 
 bool ULetheAssetManager::TryGetCardTagById(const uint64 CardId, FGameplayTag& OutCardTag) const
 {
-	if (const FGameplayTag* FoundCardTag = CardIdToTags.Find(CardId))
+	if (const FGameplayTag* FoundCardTag = CardIdToTag.Find(CardId))
 	{
 		OutCardTag = *FoundCardTag;
 		return true;
@@ -72,7 +98,7 @@ bool ULetheAssetManager::TryGetCardTagById(const uint64 CardId, FGameplayTag& Ou
 
 bool ULetheAssetManager::TryGetCardIdByTag(const FGameplayTag& CardTag, uint64& OutCardId) const
 {
-	if (const uint64* FoundCardId = CardTagToIds.Find(CardTag))
+	if (const uint64* FoundCardId = CardTagToId.Find(CardTag))
 	{
 		OutCardId = *FoundCardId;
 		return true;
@@ -82,7 +108,7 @@ bool ULetheAssetManager::TryGetCardIdByTag(const FGameplayTag& CardTag, uint64& 
 
 bool ULetheAssetManager::TryGetCharacterTagById(const uint64 CharacterId, FGameplayTag& OutCharacterTag) const
 {
-	if (const FGameplayTag* FoundCharacterTag = CharacterIdToTags.Find(CharacterId))
+	if (const FGameplayTag* FoundCharacterTag = CharacterIdToTag.Find(CharacterId))
 	{
 		OutCharacterTag = *FoundCharacterTag;
 		return true;
@@ -92,7 +118,7 @@ bool ULetheAssetManager::TryGetCharacterTagById(const uint64 CharacterId, FGamep
 
 bool ULetheAssetManager::TryGetCharacterIdByTag(const FGameplayTag& CharacterTag, uint64& OutCharacterId) const
 {
-	if (const uint64* FoundCharacterId = CharacterTagToIds.Find(CharacterTag))
+	if (const uint64* FoundCharacterId = CharacterTagToId.Find(CharacterTag))
 	{
 		OutCharacterId = *FoundCharacterId;
 		return true;
@@ -102,8 +128,13 @@ bool ULetheAssetManager::TryGetCharacterIdByTag(const FGameplayTag& CharacterTag
 
 void ULetheAssetManager::BuildAssetIdCaches()
 {
+	TagToAssetId.Empty();
+	CardIdToTag.Empty();
+	CardTagToId.Empty();
+	CharacterIdToTag.Empty();
+	CharacterTagToId.Empty();
+
 	BuildCardDefinitionCache();
-	BuildCardSelfViewCache();
 	BuildCharacterDefinitionCache();
 }
 
@@ -135,42 +166,15 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 		CardTag.FromExportString(FoundCardTagString);
 
 		checkf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
-		checkf(!CardIdToTags.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
-		checkf(!CardTagToIds.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
+		checkf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
+		checkf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
+		checkf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
 		
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CardDefinitionAssetData);
 		
-		CardDefinitionAssetIds.Emplace(CardTag, AssetId);
-		CardIdToTags.Emplace(CardId, CardTag);
-		CardTagToIds.Emplace(CardTag, CardId);
-	}
-}
-
-void ULetheAssetManager::BuildCardSelfViewCache()
-{
-	TArray<FAssetData> CardSelfViewAssetDataList;
-	GetPrimaryAssetDataList(FPrimaryAssetType(TEXT("CardSelfView")), CardSelfViewAssetDataList);
-	for (const FAssetData& CardSelfViewAssetData : CardSelfViewAssetDataList)
-	{
-		FString FoundCardIdString;
-		const bool bHasCardId = CardSelfViewAssetData.GetTagValue(GET_MEMBER_NAME_CHECKED(UCardSelfViewData, CardId), FoundCardIdString);
-		if (!bHasCardId)
-		{
-			continue;
-		}
-
-		uint64 CardId = 0;
-		if (!LexTryParseString(CardId, *FoundCardIdString))
-		{
-			continue;
-		}
-
-		const FGameplayTag* CardTag = CardIdToTags.Find(CardId);
-		checkf(CardTag, TEXT("CardId: %llu가 일치하지 않는 CardDefinition과 CardSelfView Data Asset이 존재합니다."), CardId);
-		checkf(!CardSelfViewAssetIds.Contains(*CardTag), TEXT("CardId: %llu가 중복인 CardSelfView Data Asset이 존재합니다."), CardId);
-
-		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CardSelfViewAssetData);
-		CardSelfViewAssetIds.Emplace(*CardTag, AssetId);
+		TagToAssetId.Emplace(CardTag, AssetId);
+		CardIdToTag.Emplace(CardId, CardTag);
+		CardTagToId.Emplace(CardTag, CardId);
 	}
 }
 
@@ -200,13 +204,14 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 		CharacterTag.FromExportString(FoundCharacterTagString);
 
 		checkf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
-		checkf(!CharacterIdToTags.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
-		checkf(!CharacterTagToIds.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
+		checkf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
+		checkf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
+		checkf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
 
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CharacterDefinitionAssetData);
 
-		CharacterDefinitionAssetIds.Emplace(CharacterTag, AssetId);
-		CharacterIdToTags.Emplace(CharacterId, CharacterTag);
-		CharacterTagToIds.Emplace(CharacterTag, CharacterId);
+		TagToAssetId.Emplace(CharacterTag, AssetId);
+		CharacterIdToTag.Emplace(CharacterId, CharacterTag);
+		CharacterTagToId.Emplace(CharacterTag, CharacterId);
 	}
 }

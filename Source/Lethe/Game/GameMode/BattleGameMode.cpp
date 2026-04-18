@@ -7,8 +7,8 @@
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
-#include "Lethe/Manager/CardDataLoadSubsystem.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
+#include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
@@ -22,9 +22,8 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	 */
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>();
-	const UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 
-	if (TileManagerSubsystem && DeckManagerSubsystem && CardDataLoadSubsystem)
+	if (TileManagerSubsystem && DeckManagerSubsystem)
 	{
 		// 타일부터 생성합니다.
 		TileManagerSubsystem->MakeNewTileMap();
@@ -39,7 +38,7 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 
 		// 콜백을 붙여놓고 Data Asset 로드를 요청합니다.
 		const FOnPrimaryDataAssetsLoaded OnComplete = FOnPrimaryDataAssetsLoaded::CreateUObject(this, &ThisClass::OnCharacterDefinitionDataLoaded);
-		CardDataLoadSubsystem->LoadPrimaryDataAssets(CharacterTags, ECardDataAssetType::CharacterDefinition, OnComplete);
+		ULetheAssetManager::Get().LoadPrimaryDataAssets(CharacterTags, OnComplete);
 	}
 }
 

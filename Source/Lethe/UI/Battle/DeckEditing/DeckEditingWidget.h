@@ -13,7 +13,6 @@ class UCardViewData;
 class UDeckEditingCardListObject;
 class ULetheGameplayAbility;
 class UTileView;
-struct FCardSelfViewInfo;
 struct FGameplayTag;
 struct FSavedCharacterDeck;
 

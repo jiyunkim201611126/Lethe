@@ -18,9 +18,6 @@ class LETHE_API ULetheAssetManager : public UAssetManager
 
 public:
 	static ULetheAssetManager& Get();
-	
-	/** 에셋 색인 후 관련 정보를 사용하기 편리하도록 캐싱하는 함수입니다. */
-	void BuildAssetIdCaches();
 
 	/** GameplayTag 배열에 매핑된 PrimaryDataAsset 로드를 요청합니다. */
 	void LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGameplayTags, FOnPrimaryDataAssetsLoaded OnComplete);
@@ -36,15 +33,22 @@ public:
 protected:
 	//~ Begin UAssetManager Interface
 	virtual void StartInitialLoading() override;
+	virtual void PostInitialAssetScan() override;
 	//~ End of UAssetManager Interface
 
 private:
 	void OnPrimaryDataAssetsLoaded(const TArray<FPrimaryAssetId>& LoadedAssetsId, const FOnPrimaryDataAssetsLoaded& OnComplete) const;
-
+	
+	/** 에셋 색인 후 관련 정보를 사용하기 편리하도록 캐싱하는 함수입니다. */
+	void BuildAssetIdCaches();
 	void BuildCardDefinitionCache();
 	void BuildCharacterDefinitionCache();
 
 private:
+	/**
+	 * PrimaryDataAsset에 할당된 GameplayTag를 가져와 Key로, PrimaryAssetId를 Value로 캐싱해둡니다.
+	 * GameplayTag와 PrimaryDataAsset은 반드시 1:1 매핑이어야 합니다.
+	 */
 	TMap<FGameplayTag, FPrimaryAssetId> TagToAssetId;
 
 	TMap<uint64, FGameplayTag> CardIdToTag;
@@ -52,4 +56,13 @@ private:
 
 	TMap<uint64, FGameplayTag> CharacterIdToTag;
 	TMap<FGameplayTag, uint64> CharacterTagToId;
+
+protected:
+#if WITH_EDITOR
+	virtual void PostInitProperties() override;
+	virtual void BeginDestroy() override;
+	
+	void OnAssetUpdatedOnDisk(const FAssetData& AssetData);
+	FDelegateHandle OnAssetUpdateOnDiskHandle;
+#endif
 };

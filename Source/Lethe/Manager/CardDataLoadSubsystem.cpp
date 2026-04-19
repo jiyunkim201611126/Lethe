@@ -8,14 +8,6 @@
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/SaveGame/SavedCardTypes.h"
 
-void UCardDataLoadSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-
-	// AssetManager의 게임 시작 시점 초기화 관련한 함수가 딱히 적당한 게 없어 여기서 호출합니다.
-	ULetheAssetManager::Get().BuildAssetIdCaches();
-}
-
 void UCardDataLoadSubsystem::Deinitialize()
 {
 	PendingCardDataLoadRequests.Empty();

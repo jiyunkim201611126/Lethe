@@ -30,6 +30,13 @@ void ULetheAssetManager::StartInitialLoading()
 	UAbilitySystemGlobals::Get().InitGlobalData();
 }
 
+void ULetheAssetManager::PostInitialAssetScan()
+{
+	BuildAssetIdCaches();
+	
+	Super::PostInitialAssetScan();
+}
+
 void ULetheAssetManager::LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGameplayTags, FOnPrimaryDataAssetsLoaded OnComplete)
 {
 	TArray<FPrimaryAssetId> AssetsToLoad;
@@ -165,10 +172,13 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 		FGameplayTag CardTag;
 		CardTag.FromExportString(FoundCardTagString);
 
-		checkf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
-		checkf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
-		checkf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
-		checkf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
+		if (!ensureAlwaysMsgf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString()))
+		{
+			continue;
+		}
+		ensureAlwaysMsgf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
+		ensureAlwaysMsgf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
+		ensureAlwaysMsgf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
 		
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CardDefinitionAssetData);
 		
@@ -203,10 +213,13 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 		FGameplayTag CharacterTag;
 		CharacterTag.FromExportString(FoundCharacterTagString);
 
-		checkf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
-		checkf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
-		checkf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
-		checkf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
+		if (!ensureAlwaysMsgf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString()))
+		{
+			continue;
+		}
+		ensureAlwaysMsgf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
+		ensureAlwaysMsgf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
+		ensureAlwaysMsgf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
 
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CharacterDefinitionAssetData);
 
@@ -215,3 +228,36 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 		CharacterTagToId.Emplace(CharacterTag, CharacterId);
 	}
 }
+
+#if WITH_EDITOR
+void ULetheAssetManager::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry")->Get();
+		OnAssetUpdateOnDiskHandle = AssetRegistry.OnAssetUpdatedOnDisk().AddUObject(this, &ThisClass::OnAssetUpdatedOnDisk);
+	}
+}
+
+void ULetheAssetManager::BeginDestroy()
+{
+	if (FModuleManager::Get().IsModuleLoaded("AssetRegistry"))
+	{
+		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry")->Get();
+		AssetRegistry.OnAssetUpdatedOnDisk().Remove(OnAssetUpdateOnDiskHandle);
+	}
+	
+	Super::BeginDestroy();
+}
+
+void ULetheAssetManager::OnAssetUpdatedOnDisk(const FAssetData& AssetData)
+{
+	if (AssetData.AssetClassPath == UCardDefinitionData::StaticClass()->GetClassPathName() ||
+		AssetData.AssetClassPath == UCharacterDefinitionData::StaticClass()->GetClassPathName())
+	{
+		BuildAssetIdCaches();
+	}
+}
+#endif

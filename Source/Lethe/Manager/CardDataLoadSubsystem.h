@@ -67,7 +67,6 @@ class LETHE_API UCardDataLoadSubsystem : public UGameInstanceSubsystem
 
 public:
 	//~ Begin USubsystem Interface
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
 

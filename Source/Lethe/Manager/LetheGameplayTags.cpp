@@ -16,32 +16,32 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Character_Test3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Character.Test3"), FString(""));
 	
-	GameplayTags.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.Health"), FString(""));
-	GameplayTags.Attributes_Vital_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MaxHealth"), FString(""));
-	GameplayTags.Attributes_Vital_Mana = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.Mana"), FString(""));
-	GameplayTags.Attributes_Vital_MaxMana = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MaxMana"), FString(""));
-	GameplayTags.Attributes_Vital_Cost = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.Cost"), FString(""));
-	GameplayTags.Attributes_Vital_MaxCost = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MaxCost"), FString(""));
-	GameplayTags.Attributes_Vital_MoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MoveDistance"), FString(""));
-	GameplayTags.Attributes_Vital_MaxMoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MaxMoveDistance"), FString(""));
+	GameplayTags.Attribute_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.Health"), FString(""));
+	GameplayTags.Attribute_Vital_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MaxHealth"), FString(""));
+	GameplayTags.Attribute_Vital_Mana = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.Mana"), FString(""));
+	GameplayTags.Attribute_Vital_MaxMana = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MaxMana"), FString(""));
+	GameplayTags.Attribute_Vital_Cost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.Cost"), FString(""));
+	GameplayTags.Attribute_Vital_MaxCost = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MaxCost"), FString(""));
+	GameplayTags.Attribute_Vital_MoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MoveDistance"), FString(""));
+	GameplayTags.Attribute_Vital_MaxMoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MaxMoveDistance"), FString(""));
 	
-	GameplayTags.Attributes_Vital_ManaRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.ManaRecovery"), FString(""));
-	GameplayTags.Attributes_Vital_CostRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.CostRecovery"), FString(""));
-	GameplayTags.Attributes_Vital_MoveDistanceRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Vital.MoveDistanceRecovery"), FString(""));
+	GameplayTags.Attribute_Vital_ManaRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.ManaRecovery"), FString(""));
+	GameplayTags.Attribute_Vital_CostRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.CostRecovery"), FString(""));
+	GameplayTags.Attribute_Vital_MoveDistanceRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MoveDistanceRecovery"), FString(""));
 	
-	GameplayTags.Attributes_Meta_IncomingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attributes.Meta.IncomingDamage"), FString(""));
+	GameplayTags.Attribute_Meta_IncomingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Meta.IncomingDamage"), FString(""));
 
 	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Damage"), FString(""));
@@ -53,12 +53,12 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Ability_Move = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Ability.Move"), FString(""));
 	
-	GameplayTags.Card_Types_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Types.Physical"), FString(""));
-	GameplayTags.Card_Types_Magic = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Types.Magic"), FString(""));
-	GameplayTags.Card_Types_Util = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Card.Types.Util"), FString(""));
+	GameplayTags.Card_Type_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Card.Type.Physical"), FString(""));
+	GameplayTags.Card_Type_Magic = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Card.Type.Magic"), FString(""));
+	GameplayTags.Card_Type_Util = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Card.Type.Util"), FString(""));
 	
 	GameplayTags.State_Character_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("State.Character.Dead"), FString(""));

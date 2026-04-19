@@ -16,16 +16,16 @@ void UPlayerCharacterStatusWidget::WidgetControllerSet_Implementation()
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
-	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::UpdateManaUI);
-	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
-	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
+	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Mana).AddUObject(this, &ThisClass::UpdateManaUI);
+	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_MaxMana).AddUObject(this, &ThisClass::UpdateManaUI);
+	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Cost).AddUObject(this, &ThisClass::UpdateCostUI);
 
-	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::StartPreviewMana);
-	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_MaxMana).AddUObject(this, &ThisClass::StartPreviewMana);
-	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StartPreviewCost);
+	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Mana).AddUObject(this, &ThisClass::StartPreviewMana);
+	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_MaxMana).AddUObject(this, &ThisClass::StartPreviewMana);
+	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Cost).AddUObject(this, &ThisClass::StartPreviewCost);
 	
-	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Mana).AddUObject(this, &ThisClass::StopPreviewMana);
-	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Cost).AddUObject(this, &ThisClass::StopPreviewCost);
+	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attribute_Vital_Mana).AddUObject(this, &ThisClass::StopPreviewMana);
+	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attribute_Vital_Cost).AddUObject(this, &ThisClass::StopPreviewCost);
 }
 
 void UPlayerCharacterStatusWidget::UpdateManaUI(const FAttributeData& NewData) const

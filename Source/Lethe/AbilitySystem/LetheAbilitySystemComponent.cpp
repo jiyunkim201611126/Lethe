@@ -2,7 +2,7 @@
 
 #include "LetheAbilitySystemComponent.h"
 
-#include "Abilities/LetheGameplayAbility.h"
+#include "Ability/LetheGameplayAbility.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/CardDataLoadSubsystem.h"

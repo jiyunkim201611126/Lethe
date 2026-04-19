@@ -18,18 +18,18 @@ struct FLetheGameplayTags
 	//~ End of Characters
 
 	//~ Begin Attributes
-	FGameplayTag Attributes_Vital_Health;
-	FGameplayTag Attributes_Vital_MaxHealth;
-	FGameplayTag Attributes_Vital_Mana;
-	FGameplayTag Attributes_Vital_MaxMana;
-	FGameplayTag Attributes_Vital_Cost;
-	FGameplayTag Attributes_Vital_MaxCost;
-	FGameplayTag Attributes_Vital_MoveDistance;
-	FGameplayTag Attributes_Vital_MaxMoveDistance;
-	FGameplayTag Attributes_Vital_ManaRecovery;
-	FGameplayTag Attributes_Vital_CostRecovery;
-	FGameplayTag Attributes_Vital_MoveDistanceRecovery;
-	FGameplayTag Attributes_Meta_IncomingDamage;
+	FGameplayTag Attribute_Vital_Health;
+	FGameplayTag Attribute_Vital_MaxHealth;
+	FGameplayTag Attribute_Vital_Mana;
+	FGameplayTag Attribute_Vital_MaxMana;
+	FGameplayTag Attribute_Vital_Cost;
+	FGameplayTag Attribute_Vital_MaxCost;
+	FGameplayTag Attribute_Vital_MoveDistance;
+	FGameplayTag Attribute_Vital_MaxMoveDistance;
+	FGameplayTag Attribute_Vital_ManaRecovery;
+	FGameplayTag Attribute_Vital_CostRecovery;
+	FGameplayTag Attribute_Vital_MoveDistanceRecovery;
+	FGameplayTag Attribute_Meta_IncomingDamage;
 	//~ End of Attributes
 	
 	//~ Begin Damage Types
@@ -44,9 +44,9 @@ struct FLetheGameplayTags
 	//~ End of Ability
 	
 	//~ Begin Card Types
-	FGameplayTag Card_Types_Physical;
-	FGameplayTag Card_Types_Magic;
-	FGameplayTag Card_Types_Util;
+	FGameplayTag Card_Type_Physical;
+	FGameplayTag Card_Type_Magic;
+	FGameplayTag Card_Type_Util;
 	//~ End Card Types
 
 	//~ Begin CharacterState

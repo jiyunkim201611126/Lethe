@@ -5,7 +5,7 @@
 #include "AttributeSet.h"
 #include "GameplayTagContainer.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
@@ -77,10 +77,10 @@ void UPreviewCoordinatorComponent::ConvertAttributeToTag(const TMap<FGameplayAtt
 		if (const FGameplayTag* AttributeTag = ULetheAttributeSet::AttributesToTags.Find(Elem.Key))
 		{
 			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-			if (AttributeTag->MatchesTag(LetheGameplayTags.Attributes_Meta_IncomingDamage))
+			if (AttributeTag->MatchesTag(LetheGameplayTags.Attribute_Meta_IncomingDamage))
 			{
 				// Damage Attribute인 경우 Health Attribute로 바꾸고, 값도 음수로 바꿔서 넣어줍니다.
-				OutMap.FindOrAdd(LetheGameplayTags.Attributes_Vital_Health) -= Elem.Value;
+				OutMap.FindOrAdd(LetheGameplayTags.Attribute_Vital_Health) -= Elem.Value;
 			}
 			else
 			{

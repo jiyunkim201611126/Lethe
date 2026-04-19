@@ -3,7 +3,7 @@
 #include "PlayerAttributeWidgetController.h"
 
 #include "Components/SlateWrapperTypes.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
@@ -36,9 +36,9 @@ void UPlayerAttributeWidgetController::BroadcastManaChanged() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FAttributeData Data;
-	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_Mana);
-	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_MaxMana);
-	if (const FOnAttributeChanged* OnManaChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attributes_Vital_Mana))
+	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_Mana);
+	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_MaxMana);
+	if (const FOnAttributeChanged* OnManaChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attribute_Vital_Mana))
 	{
 		OnManaChanged->Broadcast(Data);
 	}
@@ -54,9 +54,9 @@ void UPlayerAttributeWidgetController::BroadcastCostChanged() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FAttributeData Data;
-	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_Cost);
-	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_MaxCost);
-	if (const FOnAttributeChanged* OnCostChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attributes_Vital_Cost))
+	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_Cost);
+	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_MaxCost);
+	if (const FOnAttributeChanged* OnCostChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attribute_Vital_Cost))
 	{
 		OnCostChanged->Broadcast(Data);
 	}
@@ -67,8 +67,8 @@ void UPlayerAttributeWidgetController::StartAllPreview(const TMap<FGameplayTag, 
 	Super::StartAllPreview(InPreviewData);
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	StartPreview(LetheGameplayTags.Attributes_Vital_Mana, LetheGameplayTags.Attributes_Vital_MaxMana, InPreviewData);
-	StartPreview(LetheGameplayTags.Attributes_Vital_Cost, LetheGameplayTags.Attributes_Vital_MaxCost, InPreviewData);
+	StartPreview(LetheGameplayTags.Attribute_Vital_Mana, LetheGameplayTags.Attribute_Vital_MaxMana, InPreviewData);
+	StartPreview(LetheGameplayTags.Attribute_Vital_Cost, LetheGameplayTags.Attribute_Vital_MaxCost, InPreviewData);
 }
 
 void UPlayerAttributeWidgetController::StopAllPreview()
@@ -76,8 +76,8 @@ void UPlayerAttributeWidgetController::StopAllPreview()
 	Super::StopAllPreview();
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	StopPreview(LetheGameplayTags.Attributes_Vital_Mana, LetheGameplayTags.Attributes_Vital_MaxMana);
-	StopPreview(LetheGameplayTags.Attributes_Vital_Cost, LetheGameplayTags.Attributes_Vital_MaxCost);
+	StopPreview(LetheGameplayTags.Attribute_Vital_Mana, LetheGameplayTags.Attribute_Vital_MaxMana);
+	StopPreview(LetheGameplayTags.Attribute_Vital_Cost, LetheGameplayTags.Attribute_Vital_MaxCost);
 }
 
 void UPlayerAttributeWidgetController::OnMoveDistanceChanged(const FOnAttributeChangeData& AttributeData)

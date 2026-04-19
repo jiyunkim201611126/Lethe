@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "PreviewData.generated.h"
 
 USTRUCT()

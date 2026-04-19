@@ -4,7 +4,7 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -46,9 +46,9 @@ void UAttributeWidgetController::BroadcastHealthChanged() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FAttributeData Data;
-	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_Health);
-	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attributes_Vital_MaxHealth);
-	if (const FOnAttributeChanged* OnHealthChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attributes_Vital_Health))
+	Data.CurrentValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_Health);
+	Data.MaxValue = CachedAttribute.FindRef(LetheGameplayTags.Attribute_Vital_MaxHealth);
+	if (const FOnAttributeChanged* OnHealthChanged = OnAttributeChangedMap.Find(LetheGameplayTags.Attribute_Vital_Health))
 	{
 		OnHealthChanged->Broadcast(Data);
 	}
@@ -147,11 +147,11 @@ void UAttributeWidgetController::StopPreview(const FGameplayTag& CurrentTag, con
 void UAttributeWidgetController::StartAllPreview(const TMap<FGameplayTag, float>& InPreviewData)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	StartPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth, InPreviewData);
+	StartPreview(LetheGameplayTags.Attribute_Vital_Health, LetheGameplayTags.Attribute_Vital_MaxHealth, InPreviewData);
 }
 
 void UAttributeWidgetController::StopAllPreview()
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	StopPreview(LetheGameplayTags.Attributes_Vital_Health, LetheGameplayTags.Attributes_Vital_MaxHealth);
+	StopPreview(LetheGameplayTags.Attribute_Vital_Health, LetheGameplayTags.Attribute_Vital_MaxHealth);
 }

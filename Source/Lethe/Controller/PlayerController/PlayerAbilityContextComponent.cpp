@@ -4,8 +4,8 @@
 
 #include "ActorSelectorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
-#include "Lethe/AbilitySystem/Abilities/LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"

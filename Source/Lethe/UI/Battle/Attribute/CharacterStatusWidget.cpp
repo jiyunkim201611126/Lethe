@@ -15,9 +15,9 @@ void UCharacterStatusWidget::WidgetControllerSet_Implementation()
 	// Attribute에 해당하는 Tag를 통해서 매핑된 Delegate를 가져와 함수를 바인드합니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
-	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::UpdateHealthUI);
-	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::StartPreviewHealth);
-	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attributes_Vital_Health).AddUObject(this, &ThisClass::StopPreviewHealth);
+	AttributeWidgetController->OnAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Health).AddUObject(this, &ThisClass::UpdateHealthUI);
+	AttributeWidgetController->OnPreviewAttributeChangedMap.Emplace(LetheGameplayTags.Attribute_Vital_Health).AddUObject(this, &ThisClass::StartPreviewHealth);
+	AttributeWidgetController->OnPreviewEndedMap.Emplace(LetheGameplayTags.Attribute_Vital_Health).AddUObject(this, &ThisClass::StopPreviewHealth);
 }
 
 void UCharacterStatusWidget::UpdateHealthUI(const FAttributeData& NewData) const

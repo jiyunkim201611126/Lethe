@@ -50,7 +50,7 @@ void ULetheAssetManager::LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGam
 		}
 		else
 		{
-			checkf(false, TEXT("GameplayTag: %s에 해당하는 DataAsset을 찾을 수 없습니다."), *GameplayTag.GetTagName().ToString());
+			ensureMsgf(false, TEXT("GameplayTag: %s에 해당하는 DataAsset을 찾을 수 없습니다."), *GameplayTag.GetTagName().ToString());
 		}
 	}
 
@@ -150,6 +150,11 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 	// CardDefinition 타입의 모든 에셋 메타데이터를 가져옵니다. 로드하는 과정이 아닙니다.
 	TArray<FAssetData> CardDefinitionAssetDataList;
 	GetPrimaryAssetDataList(FPrimaryAssetType(TEXT("CardDefinition")), CardDefinitionAssetDataList);
+	if (!ensureMsgf(!CardDefinitionAssetDataList.IsEmpty(), TEXT("CardDefinition DataAsset을 읽어오는 데에 실패했습니다.")))
+	{
+		return;
+	}
+	
 	for (const FAssetData& CardDefinitionAssetData : CardDefinitionAssetDataList)
 	{
 		// 찾은 메타데이터에서 CardId를 가져와 PrimaryAssetId와 매핑합니다.
@@ -172,13 +177,13 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 		FGameplayTag CardTag;
 		CardTag.FromExportString(FoundCardTagString);
 
-		if (!ensureAlwaysMsgf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString()))
+		if (!ensureMsgf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString()))
 		{
 			continue;
 		}
-		ensureAlwaysMsgf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
-		ensureAlwaysMsgf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
-		ensureAlwaysMsgf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
+		ensureMsgf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
+		ensureMsgf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
+		ensureMsgf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
 		
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CardDefinitionAssetData);
 		
@@ -192,6 +197,11 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 {
 	TArray<FAssetData> CharacterDefinitionAssetDataList;
 	GetPrimaryAssetDataList(FPrimaryAssetType(TEXT("CharacterDefinition")), CharacterDefinitionAssetDataList);
+	if (!ensureMsgf(!CharacterDefinitionAssetDataList.IsEmpty(), TEXT("CharacterDefinition DataAsset을 읽어오는 데에 실패했습니다.")))
+	{
+		return;
+	}
+	
 	for (const FAssetData& CharacterDefinitionAssetData : CharacterDefinitionAssetDataList)
 	{
 		FString FoundCharacterIdString;
@@ -213,13 +223,13 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 		FGameplayTag CharacterTag;
 		CharacterTag.FromExportString(FoundCharacterTagString);
 
-		if (!ensureAlwaysMsgf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString()))
+		if (!ensureMsgf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString()))
 		{
 			continue;
 		}
-		ensureAlwaysMsgf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
-		ensureAlwaysMsgf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
-		ensureAlwaysMsgf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
+		ensureMsgf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
+		ensureMsgf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
+		ensureMsgf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
 
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CharacterDefinitionAssetData);
 

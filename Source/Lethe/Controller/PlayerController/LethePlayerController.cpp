@@ -7,7 +7,7 @@
 #include "PlayerAbilityContextComponent.h"
 #include "PreviewCoordinatorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/Abilities/LetheCardAbility.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"

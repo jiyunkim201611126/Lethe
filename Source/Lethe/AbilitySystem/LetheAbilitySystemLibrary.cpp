@@ -4,6 +4,7 @@
 
 #include "LetheAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
+#include "Lethe/LetheAbilityTypes.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
@@ -76,4 +77,22 @@ bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const ATile* Sou
 void ULetheAbilitySystemLibrary::ResolveDamageRules(const UAbilitySystemComponent* SourceASC, const UAbilitySystemComponent* TargetASC, const float IncomingDamage, TMap<FGameplayAttribute, float>& OutDataForSource, TMap<FGameplayAttribute, float>& OutDataForTarget)
 {
 	// 절대 Out 데이터 안에 IncomingDamage를 넣어선 안 됩니다.
+}
+
+void ULetheAbilitySystemLibrary::SetCueContextToEffectContext(const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle)
+{
+	if (FLetheGameplayEffectContext* EffectContext = static_cast<FLetheGameplayEffectContext*>(OutHandle.Get()))
+	{
+		EffectContext->SetCueDataContext(CueDataContext);
+	}
+}
+
+bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextHandle& EffectContextHandle, FCueDataContext& OutCueDataContext)
+{
+	if (const FLetheGameplayEffectContext* EffectContext = static_cast<const FLetheGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		OutCueDataContext = EffectContext->GetCueDataContext();
+		return true;
+	}
+	return false;
 }

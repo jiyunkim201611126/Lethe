@@ -13,6 +13,11 @@ struct FCueDataContext
 	/**
 	 * 이곳에 Cue 재생에 필요한 변수를 추가합니다.
 	 */
+	UPROPERTY(BlueprintReadWrite)
+	FGameplayTag SoundTag;
+	
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FVector> Locations;
 };
 
 /**
@@ -25,7 +30,8 @@ struct FLetheGameplayEffectContext : public FGameplayEffectContext
 	GENERATED_BODY()
 
 public:
-	const FCueDataContext& GetDamageData() const { return CueDataContext; }
+	void SetCueDataContext(const FCueDataContext& InCueDataContext);
+	const FCueDataContext& GetCueDataContext() const;
 
 	virtual UScriptStruct* GetScriptStruct() const override
 	{

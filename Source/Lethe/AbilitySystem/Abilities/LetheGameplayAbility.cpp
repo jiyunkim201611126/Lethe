@@ -2,6 +2,7 @@
 
 #include "LetheGameplayAbility.h"
 
+#include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -64,6 +65,12 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 			}
 		}
 	}
+}
+
+void ULetheGameplayAbility::MakeEffectContextForCue(const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle)
+{
+	OutHandle = MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo());
+	ULetheAbilitySystemLibrary::SetCueContextToEffectContext(CueDataContext, OutHandle);
 }
 
 #if WITH_EDITOR

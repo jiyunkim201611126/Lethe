@@ -6,9 +6,8 @@
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "NiagaraSystem.h"
+#include "Engine/StreamableManager.h"
 #include "FXManagerSubsystem.generated.h"
-
-struct FStreamableManager;
 
 USTRUCT(BlueprintType)
 struct FTaggedSoundRow : public FTableRowBase
@@ -56,6 +55,8 @@ USTRUCT()
 struct FSoundAsyncLoadRequest
 {
 	GENERATED_BODY()
+
+	TSharedPtr<FStreamableHandle> StreamableHandle;
 	
 	UPROPERTY()
 	TArray<FSoundAsyncPlayData> PlayRequests;
@@ -88,6 +89,8 @@ USTRUCT()
 struct FNiagaraAsyncLoadRequest
 {
 	GENERATED_BODY()
+
+	TSharedPtr<FStreamableHandle> StreamableHandle;
 	
 	UPROPERTY()
 	TArray<FNiagaraAsyncSpawnData> SpawnRequests;

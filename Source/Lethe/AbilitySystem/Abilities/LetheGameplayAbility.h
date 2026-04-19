@@ -7,6 +7,7 @@
 #include "Lethe/Data/Stage/TileData.h"
 #include "LetheGameplayAbility.generated.h"
 
+struct FCueDataContext;
 class UGameplayEffectApplier;
 
 UENUM(BlueprintType)
@@ -39,6 +40,10 @@ public:
 protected:
 	UFUNCTION(BlueprintCallable)
 	void ActivateNoise(const ATile* StandingTile, const ATile* TargetTile);
+
+	/** GameplayCue 재생 시 필요한 매개변수를 받아, Cue 용도로만 사용할 EffectContext를 만들어 Handle을 반환합니다. */
+	UFUNCTION(BlueprintCallable)
+	void MakeEffectContextForCue(UPARAM(ref)const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")

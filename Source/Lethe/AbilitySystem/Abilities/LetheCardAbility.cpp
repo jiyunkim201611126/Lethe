@@ -25,6 +25,7 @@ void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 			EffectApplier->ApplyEffect(this, TargetActor);
 		}
 	}
+	OnApplyAllEffects(CachedTargetActor.Get());
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -171,7 +172,7 @@ FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclass
 
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	Super::Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	if (!TryValidateAndCommitActivation(Handle, ActorInfo, ActivationInfo, TriggerEventData))
 	{

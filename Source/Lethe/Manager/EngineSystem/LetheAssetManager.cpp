@@ -236,7 +236,7 @@ void ULetheAssetManager::PostInitProperties()
 
 	if (!HasAnyFlags(RF_ClassDefaultObject))
 	{
-		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry")->Get();
+		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
 		OnAssetUpdateOnDiskHandle = AssetRegistry.OnAssetUpdatedOnDisk().AddUObject(this, &ThisClass::OnAssetUpdatedOnDisk);
 	}
 }
@@ -245,7 +245,7 @@ void ULetheAssetManager::BeginDestroy()
 {
 	if (FModuleManager::Get().IsModuleLoaded("AssetRegistry"))
 	{
-		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry")->Get();
+		IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
 		AssetRegistry.OnAssetUpdatedOnDisk().Remove(OnAssetUpdateOnDiskHandle);
 	}
 	

@@ -14,7 +14,7 @@ struct FCueDataContext
 	 * 이곳에 Cue 재생에 필요한 변수를 추가합니다.
 	 */
 	UPROPERTY(BlueprintReadWrite)
-	FGameplayTag SoundTag;
+	FGameplayTag AssetTag;
 	
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FVector> Locations;

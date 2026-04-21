@@ -34,24 +34,23 @@ struct FPendingCardDataLoadRequest
 {
 	GENERATED_BODY()
 
+	/** DataAsset 로드를 위한 데이터 묶음입니다. */
 	FGameplayTag CharacterTag;
+	TArray<FSavedCard> LoadRequestedCards;
 	uint8 bEquipped : 1 = false;
 
+	/** 로드 완료 후 호출될 콜백입니다. */
 	FOnAllCardDataLoaded OnLoadedCallback;
 
-	TArray<FSavedCard> LoadRequestedCards;
-
+	/** 로드가 완료된 데이터입니다. */
 	UPROPERTY()
 	TArray<TObjectPtr<UCardDefinitionData>> LoadedCardDefinitions;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UCharacterDefinitionData>> LoadedCharacterDefinitions;
 
-	UPROPERTY()
-	TArray<FLoadedCardInfo> LoadedCardInfos;
-
 	uint8 bCardDefinitionsLoaded : 1 = false;
-	uint8 bCharacterDefinitionsLoaded : 1 = false;
+	uint8 bCharacterDefinitionLoaded : 1 = false;
 };
 
 /**

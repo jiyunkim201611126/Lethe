@@ -165,27 +165,42 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 
 		if (!bHasCardId || !bHasCardTag)
 		{
+			ensureMsgf(false, TEXT("CardId 또는 CardTag 메타데이터를 읽을 수 없는 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
 			continue;
 		}
 
 		uint64 CardId = 0;
 		if (!LexTryParseString(CardId, *FoundCardIdString))
 		{
+			ensureMsgf(false, TEXT("CardId 메타데이터를 파싱할 수 없는 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
+			continue;
+		}
+
+		if (CardId == 0)
+		{
+			ensureMsgf(false, TEXT("CardId가 0인 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
 			continue;
 		}
 		
 		FGameplayTag CardTag;
 		CardTag.FromExportString(FoundCardTagString);
 
-		if (!ensureMsgf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString()))
+		const bool bIsCardTagValid = ensureMsgf(CardTag.IsValid(), TEXT("CardTag 메타데이터가 유효하지 않은 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueGameplayTag = ensureMsgf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다. Asset: %s"), *CardTag.ToString(), *CardDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueCardId = ensureMsgf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다. Asset: %s"), CardId, *CardDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueCardTag = ensureMsgf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardTag.ToString(), *CardDefinitionAssetData.AssetName.ToString());
+		
+		if (!bIsCardTagValid || !bIsUniqueGameplayTag || !bIsUniqueCardId || !bIsUniqueCardTag)
 		{
 			continue;
 		}
-		ensureMsgf(!TagToAssetId.Contains(CardTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CardTag.ToString());
-		ensureMsgf(!CardIdToTag.Contains(CardId), TEXT("CardId: %llu가 중복인 CardDefinition Data Asset이 존재합니다."), CardId);
-		ensureMsgf(!CardTagToId.Contains(CardTag), TEXT("CardTag: %s가 중복인 CardDefinition Data Asset이 존재합니다."), *CardTag.ToString());
 		
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CardDefinitionAssetData);
+		if (!AssetId.IsValid())
+		{
+			ensureMsgf(false, TEXT("AssetId를 가져올 수 없는 CardDefinition Data Asset이 존재합니다. Asset: %s"), *CardDefinitionAssetData.AssetName.ToString());
+			continue;
+		}
 		
 		TagToAssetId.Emplace(CardTag, AssetId);
 		CardIdToTag.Emplace(CardId, CardTag);
@@ -211,27 +226,42 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 
 		if (!bHasCharacterId || !bHasCharacterTag)
 		{
+			ensureMsgf(false, TEXT("CharacterId 또는 CharacterTag 메타데이터를 읽을 수 없는 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
 			continue;
 		}
 
 		uint64 CharacterId = 0;
 		if (!LexTryParseString(CharacterId, *FoundCharacterIdString))
 		{
+			ensureMsgf(false, TEXT("CharacterId 메타데이터를 파싱할 수 없는 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
+			continue;
+		}
+
+		if (CharacterId == 0)
+		{
+			ensureMsgf(false, TEXT("CharacterId가 0인 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
 			continue;
 		}
 
 		FGameplayTag CharacterTag;
 		CharacterTag.FromExportString(FoundCharacterTagString);
 
-		if (!ensureMsgf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString()))
+		const bool bIsCharacterTagValid = ensureMsgf(CharacterTag.IsValid(), TEXT("CharacterTag 메타데이터가 유효하지 않은 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueGameplayTag = ensureMsgf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다. Asset: %s"), *CharacterTag.ToString(), *CharacterDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueCharacterId = ensureMsgf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), CharacterId, *CharacterDefinitionAssetData.AssetName.ToString());
+		const bool bIsUniqueCharacterTag = ensureMsgf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterTag.ToString(), *CharacterDefinitionAssetData.AssetName.ToString());
+
+		if (!bIsCharacterTagValid || !bIsUniqueGameplayTag || !bIsUniqueCharacterId || !bIsUniqueCharacterTag)
 		{
 			continue;
 		}
-		ensureMsgf(!TagToAssetId.Contains(CharacterTag), TEXT("GameplayTag: %s가 중복인 PrimaryDataAsset이 존재합니다."), *CharacterTag.ToString());
-		ensureMsgf(!CharacterIdToTag.Contains(CharacterId), TEXT("CharacterId: %llu가 중복인 CharacterDefinition Data Asset이 존재합니다."), CharacterId);
-		ensureMsgf(!CharacterTagToId.Contains(CharacterTag), TEXT("CharacterTag: %s가 중복인 CharacterDefinition Data Asset이 존재합니다."), *CharacterTag.ToString());
-
+		
 		FPrimaryAssetId AssetId = GetPrimaryAssetIdForData(CharacterDefinitionAssetData);
+		if (!AssetId.IsValid())
+		{
+			ensureMsgf(false, TEXT("AssetId를 가져올 수 없는 CharacterDefinition Data Asset이 존재합니다. Asset: %s"), *CharacterDefinitionAssetData.AssetName.ToString());
+			continue;
+		}
 
 		TagToAssetId.Emplace(CharacterTag, AssetId);
 		CharacterIdToTag.Emplace(CharacterId, CharacterTag);

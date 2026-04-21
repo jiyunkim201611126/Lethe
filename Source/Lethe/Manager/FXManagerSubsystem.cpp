@@ -35,7 +35,7 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			if (Row && Row->SoundTag.IsValid() && !Row->SoundAsset.IsNull())
 			{
-				if (!ensureAlwaysMsgf(!SoundMap.Contains(Row->SoundTag), TEXT("GameplayTag: %s가 중복인 사운드 에셋이 존재합니다."), *Row->SoundTag.ToString()))
+				if (!ensureMsgf(!SoundMap.Contains(Row->SoundTag), TEXT("GameplayTag: %s가 중복인 사운드 에셋이 존재합니다."), *Row->SoundTag.ToString()))
 				{
 					continue;
 				}
@@ -54,7 +54,7 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		{
 			if (Row && Row->NiagaraTag.IsValid() && !Row->NiagaraAsset.IsNull())
 			{
-				if (!ensureAlwaysMsgf(!NiagaraMap.Contains(Row->NiagaraTag), TEXT("GameplayTag: %s가 중복인 나이아가라 에셋이 존재합니다."), *Row->NiagaraTag.ToString()))
+				if (!ensureMsgf(!NiagaraMap.Contains(Row->NiagaraTag), TEXT("GameplayTag: %s가 중복인 나이아가라 에셋이 존재합니다."), *Row->NiagaraTag.ToString()))
 				{
 					continue;
 				}

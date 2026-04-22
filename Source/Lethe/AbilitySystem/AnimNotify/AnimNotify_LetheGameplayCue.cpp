@@ -6,6 +6,11 @@
 #include "AbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 
+UAnimNotify_LetheGameplayCue::UAnimNotify_LetheGameplayCue()
+{
+	NotifyColor = FColor(40, 180, 255);
+}
+
 void UAnimNotify_LetheGameplayCue::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);

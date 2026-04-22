@@ -14,12 +14,14 @@ class LETHE_API UAnimNotify_LetheGameplayCue : public UAnimNotify
 	GENERATED_BODY()
 
 public:
+	UAnimNotify_LetheGameplayCue();
+	
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayCue")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GameplayCue")
 	FGameplayTag GameplayCueTag;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayCue")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GameplayCue")
 	FCueDataContext CueDataContext;
 };

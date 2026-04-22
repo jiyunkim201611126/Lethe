@@ -39,7 +39,10 @@ protected:
 	//~ End of UGameplayAbility Interface
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnApplyAllEffects(AActor* TargetActor);
+	void OnApplyAllEffectsPerTarget(AActor* TargetActor);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnApplyAllEffects(const TArray<AActor*>& TargetActors);
 	
 	template<typename T>
 	T* GetEffectApplier()

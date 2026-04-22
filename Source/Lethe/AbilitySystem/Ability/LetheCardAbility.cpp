@@ -25,7 +25,7 @@ void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
 			EffectApplier->ApplyEffect(this, TargetActor);
 		}
 	}
-	OnApplyAllEffects(TargetActor);
+	OnApplyAllEffectsPerTarget(TargetActor);
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -310,13 +310,16 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	{
 		if (!CachedTargetActors.IsEmpty())
 		{
+			TArray<AActor*> TargetActors;
 			for (const auto& TargetActor : CachedTargetActors)
 			{
 				if (TargetActor.IsValid() && TargetActor->Implements<UAbilitySystemInterface>())
 				{
+					TargetActors.Emplace(TargetActor.Get());
 					ApplyAllEffects(TargetActor.Get());
 				}
 			}
+			OnApplyAllEffects(TargetActors);
 		}
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))

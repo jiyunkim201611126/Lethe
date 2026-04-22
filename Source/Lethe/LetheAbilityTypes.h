@@ -15,7 +15,7 @@ struct FCueDataContext
 	 */
 
 	/** 사운드, 나이아가라 에셋과 매핑된 태그입니다. */
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FGameplayTag AssetTag;
 	
 	UPROPERTY(BlueprintReadWrite)

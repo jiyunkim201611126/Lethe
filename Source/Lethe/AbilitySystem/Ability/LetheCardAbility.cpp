@@ -284,7 +284,6 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 		if (CachedTargetActor.IsValid() && CachedTargetActor->Implements<UAbilitySystemInterface>())
 		{
 			ApplyAllEffects(CachedTargetActor.Get());
-			CachedTargetActor.Reset();
 		}
 	}
 	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))

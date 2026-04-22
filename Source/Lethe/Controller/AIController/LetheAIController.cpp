@@ -199,7 +199,7 @@ void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
 			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
-			MoveAbilityActivationData.TargetTile = TargetTile;
+			MoveAbilityActivationData.TargetTile.Emplace(TargetTile);
 			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
 			
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
@@ -265,7 +265,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.TargetTile = TargetTile;
+			ActivationData.TargetTile.Emplace(TargetTile);
 			ActivationData.Payload.Instigator = ControlledEnemy;
 
 			CandidateAbilityData.Emplace(ActivationData);

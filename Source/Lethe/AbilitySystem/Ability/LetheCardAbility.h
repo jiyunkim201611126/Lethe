@@ -75,6 +75,8 @@ private:
 
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 	void ActiveFailed();
+
+	void ResetCachedValues();
 	
 protected:
 	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
@@ -85,7 +87,8 @@ protected:
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;
 
 private:
-	TWeakObjectPtr<AActor> CachedTargetActor;
+	TWeakObjectPtr<const ATile> CachedCenterTargetTile;
+	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 
 #if WITH_EDITOR
 public:

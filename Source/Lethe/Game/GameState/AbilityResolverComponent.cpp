@@ -224,37 +224,53 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	if (ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
 	{
-		if (!ActivationData->TargetTile.IsValid())
+		if (ActivationData->TargetTile.IsEmpty() || !ActivationData->TargetTile[0].IsValid())
 		{
 			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
 		}
 		
-		ActivationData->Payload.OptionalObject = ActivationData->TargetTile.Get();
+		ActivationData->Payload.OptionalObject = ActivationData->TargetTile[0].Get();
 	}
 	else
 	{
-		if (!ActivationData->TargetTile.IsValid())
+		if (ActivationData->TargetTile.IsEmpty() || !ActivationData->TargetTile[0].IsValid())
 		{
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
-		
-		if (AActor* Target = TileManagerSubsystem->GetActorOnTile(ActivationData->TargetTile.Get()))
+
+		TArray<TWeakObjectPtr<AActor>> TargetActors;
+		for (const auto& TargetTile : ActivationData->TargetTile)
 		{
-			ActivationData->Payload.Target = Target;
-		}
-		else
-		{
-			if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
+			if (TargetTile.IsValid())
 			{
+				TargetActors.Emplace(TileManagerSubsystem->GetActorOnTile(TargetTile.Get()));
+			}
+		}
+
+		FGameplayAbilityTargetData_ActorArray* ActorArrayData = new FGameplayAbilityTargetData_ActorArray();
+		if (TargetActors.IsEmpty())
+		{
+			switch (CurrentActivationCharacterTeamSide)
+			{
+			case ETeamSide::Player:
 				// 플레이어는 Tile 위에 대상이 없는 상태로 여기까지 왔다면 로직 오류입니다.
 				return ETryAbilityActivationResult::FailedLogicError;
+			case ETeamSide::Enemy:
+				{
+					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
+					const FVector DummyActorLocation = ActivationData->TargetTile[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+					DummyActor->SetActorLocation(DummyActorLocation);
+					TargetActors.Emplace(DummyActor);
+				}
+				break;
+			default:
+				break;
 			}
-			
-			// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
-			const FVector DummyActorLocation = ActivationData->TargetTile.Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
-			DummyActor->SetActorLocation(DummyActorLocation);
-			ActivationData->Payload.Target = DummyActor;
 		}
+
+		ActorArrayData->SetActors(TargetActors);
+		ActivationData->Payload.OptionalObject = ActivationData->TargetTile[0].Get();
+		ActivationData->Payload.TargetData.Add(ActorArrayData);
 	}
 	
 	// ASC를 캐싱하고 콜백을 붙여둡니다.

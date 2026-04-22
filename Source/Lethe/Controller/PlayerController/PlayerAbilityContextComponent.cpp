@@ -198,7 +198,7 @@ bool UPlayerAbilityContextComponent::AddMoveActivationData()
 		AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 		AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
-		AbilityActivationData.TargetTile = NextTile;
+		AbilityActivationData.TargetTile.Emplace(NextTile);
 		LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData, false);
 		
 		bIsActivationDataAdded = true;
@@ -398,7 +398,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 				AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 				AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-				AbilityActivationData.TargetTile = TargetTile;
+				AbilityActivationData.TargetTile.Emplace(TargetTile);
 				LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 			}
 		}
@@ -457,7 +457,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 	AbilityActivationData.AbilityTag = CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
-	AbilityActivationData.TargetTile = OutTileAndActor.Tile;
+	AbilityActivationData.TargetTile.Emplace(OutTileAndActor.Tile);
 	LetheGameState->AddPlayerAbilityActivationData(AbilityActivationData);
 	return true;
 }

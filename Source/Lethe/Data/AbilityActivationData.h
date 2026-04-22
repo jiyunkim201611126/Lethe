@@ -25,7 +25,7 @@ struct FAbilityActivationData
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
-	TWeakObjectPtr<ATile> TargetTile;
+	TArray<TWeakObjectPtr<ATile>> TargetTile;
 
 	UPROPERTY()
 	FGameplayEventData Payload;

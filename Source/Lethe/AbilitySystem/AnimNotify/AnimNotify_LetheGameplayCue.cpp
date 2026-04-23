@@ -5,6 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
+#include "GameplayCueManager.h"
 
 UAnimNotify_LetheGameplayCue::UAnimNotify_LetheGameplayCue()
 {
@@ -26,7 +27,7 @@ void UAnimNotify_LetheGameplayCue::Notify(USkeletalMeshComponent* MeshComp, UAni
 		return;
 	}
 
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerActor);
+	const UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerActor);
 	if (!ASC)
 	{
 		return;
@@ -48,6 +49,6 @@ void UAnimNotify_LetheGameplayCue::Notify(USkeletalMeshComponent* MeshComp, UAni
 	FGameplayCueParameters CueParameters;
 	CueParameters.EffectContext = EffectContextHandle;
 	CueParameters.Instigator = OwnerActor;
-
-	ASC->ExecuteGameplayCue(GameplayCueTag, CueParameters);
+	
+	UGameplayCueManager::ExecuteGameplayCue_NonReplicated(OwnerActor, GameplayCueTag, CueParameters);
 }

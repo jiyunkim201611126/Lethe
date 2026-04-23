@@ -355,6 +355,8 @@ void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, c
 		}
 	}
 	
+	ResetCachedValues();
+	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -367,6 +369,8 @@ void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 			EffectApplier->EndAbility();
 		}
 	}
+	
+	ResetCachedValues();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

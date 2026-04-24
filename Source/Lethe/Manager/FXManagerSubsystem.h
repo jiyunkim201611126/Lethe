@@ -98,8 +98,6 @@ struct FNiagaraAsyncLoadRequest
 	TArray<TFunction<void(UNiagaraSystem*)>> GetterCallbacks;
 };
 
-DECLARE_LOG_CATEGORY_EXTERN(LogFXManager, Log, All);
-
 /**
  * 나이아가라와 사운드를 비동기/동기 로드해 재생하거나 반환해주는 매니저 클래스입니다.
  * Tag와 1:1 매핑되는 에셋을 TSoftObjectPtr로 들고 있으며, 요청이 들어올 경우 [즉시 반환/비동기 로드 시작/콜백에 등록] 중 하나의 동작을 선택합니다.

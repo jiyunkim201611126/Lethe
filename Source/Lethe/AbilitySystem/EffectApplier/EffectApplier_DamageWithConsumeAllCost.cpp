@@ -7,6 +7,11 @@
 #include "Abilities/GameplayAbility.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 
+UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost()
+{
+	EffectApplierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("EffectApplier.Damage.WithConsumeAllCost")));
+}
+
 bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
 	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()));

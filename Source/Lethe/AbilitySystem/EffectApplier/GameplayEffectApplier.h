@@ -33,6 +33,7 @@ public:
 	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);
 	
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
+	const FGameplayTag& GetEffectApplierTag() const;
 	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
 	/** Ability 자체 Cost 외, Preview용 데이터 계산을 위한 GE 클래스를 반환해주는 함수입니다. */
@@ -44,6 +45,9 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;
+	
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag EffectApplierTag;
 
 	FGameplayEffectContextHandle EffectContextHandle;
 };

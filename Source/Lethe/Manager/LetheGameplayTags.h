@@ -61,7 +61,6 @@ struct FLetheGameplayTags
 	//~ End of StateTree Event
 
 	//~ Begin Montage Event
-	FGameplayTag Event_Montage_ApplyEffect;
 	FGameplayTag Event_Montage_EndAbility;
 	//~ End of Montage Event
 

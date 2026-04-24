@@ -16,16 +16,11 @@
 #include "Lethe/Manager/LetheTextManager.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void ULetheCardAbility::ApplyAllEffects(AActor* TargetActor)
+ULetheCardAbility::ULetheCardAbility()
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier && TargetActor)
-		{
-			EffectApplier->ApplyEffect(this, TargetActor);
-		}
-	}
-	OnApplyAllEffectsPerTarget(TargetActor);
+	FEffectApplyPolicy EffectApplyPolicy;
+	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
+	EffectApplyPolicies.Emplace(EffectApplyPolicy);
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -185,14 +180,18 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
 	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
 
-	UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		LetheGameplayTags.Event_Montage_ApplyEffect,
-		nullptr,
-		true,
-		true);
-	WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
-	WaitApplyEffectEventTask->ReadyForActivation();
+	// 갖고 있는 모든 EffectApplyPolicy의 MontageEventTag로 WaitGameplayEvent Task를 생성합니다.
+	for (const FEffectApplyPolicy& ApplyPolicy : EffectApplyPolicies)
+	{
+		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this,
+			ApplyPolicy.MontageEventTag,
+			nullptr,
+			true,
+			true);
+		WaitApplyEffectEventTask->EventReceived.AddDynamic(this, &ThisClass::OnEventReceived);
+		WaitApplyEffectEventTask->ReadyForActivation();
+	}
 
 	UAbilityTask_WaitGameplayEvent* WaitEndAbilityEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 		this,
@@ -304,28 +303,79 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 {
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	
-	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_ApplyEffect))
+	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
 	{
-		if (!CachedTargetActors.IsEmpty())
+		if (Payload.EventTag.MatchesTagExact(EffectApplyPolicy.MontageEventTag))
 		{
+			// 수신한 이벤트 태그와 EffectApplyPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
 			TArray<AActor*> TargetActors;
-			for (const auto& TargetActor : CachedTargetActors)
+			MakeTargetActorsByPolicy(EffectApplyPolicy, TargetActors);
+
+			for (AActor* TargetActor : TargetActors)
 			{
-				if (TargetActor.IsValid() && TargetActor->Implements<UAbilitySystemInterface>())
-				{
-					TargetActors.Emplace(TargetActor.Get());
-					ApplyAllEffects(TargetActor.Get());
-				}
+				ApplyEffectsByPolicy(EffectApplyPolicy, TargetActor);
 			}
-			OnApplyAllEffects(TargetActors);
+			
+			OnApplyEffect(EffectApplyPolicy.MontageEventTag, TargetActors);
+			return;
 		}
 	}
-	else if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
 	{
 		ResetCachedValues();
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+	}
+}
+
+void ULetheCardAbility::MakeTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<AActor*>& OutTargetActors)
+{
+	if (EffectApplyPolicy.TargetActorIndices.Contains(FEffectApplyPolicy::AllIndices))
+	{
+		// 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
+		for (const auto& CachedTargetActor : CachedTargetActors)
+		{
+			if (CachedTargetActor.IsValid())
+			{
+				OutTargetActors.AddUnique(CachedTargetActor.Get());
+			}
+		}
+		return;
+	}
+	
+	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, 캐싱해놓은 TargetActor에서 가져와 Out배열에 추가합니다.
+	for (const int32 TargetActorIndex : EffectApplyPolicy.TargetActorIndices)
+	{
+		if (CachedTargetActors.IsValidIndex(TargetActorIndex) && CachedTargetActors[TargetActorIndex].IsValid())
+		{
+			OutTargetActors.AddUnique(CachedTargetActors[TargetActorIndex].Get());
+		}
+		else
+		{
+			
+		}
+	}
+}
+
+void ULetheCardAbility::ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
+{
+	if (!TargetActor)
+	{
+		return;
+	}
+	
+	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	{
+		if (!EffectApplier)
+		{
+			continue;
+		}
+		
+		if (EffectApplyPolicy.EffectApplierTags.HasTagExact(EffectApplier->GetEffectApplierTag()))
+		{
+			EffectApplier->ApplyEffect(this, TargetActor);
+		}
 	}
 }
 

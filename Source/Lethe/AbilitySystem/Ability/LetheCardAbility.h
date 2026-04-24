@@ -7,6 +7,29 @@
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
 #include "LetheCardAbility.generated.h"
 
+USTRUCT(BlueprintType)
+struct FEffectApplyPolicy
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag MontageEventTag;
+
+	/** 적용할 EffectApplier 태그 모음입니다. */
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer EffectApplierTags;
+
+	/**
+	 * TargetActorIndices에 'AllIndices'를 할당한다는 건, 캐싱된 모든 TargetActors를 대상으로 삼겠다는 의미입니다.
+	 * 'AllIndices'이 들어간 이상 배열에는 1개의 요소만 있어야 합니다.
+	 */
+	static constexpr int32 AllIndices = -1;
+
+	/** TargetActor에게 적용할 EffectApplier Index입니다. */
+	UPROPERTY(EditDefaultsOnly)
+	TArray<int32> TargetActorIndices = { AllIndices };
+};
+
 /**
  * 해당 프로젝트에서 Card는 Ability를 표현하는 UMG 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
  */
@@ -16,13 +39,8 @@ class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
 	GENERATED_BODY()
 
 public:
-	/**
-	 * Card가 소유하고 있는 EffectApplier를 모두 순회하며 TargetActor에게 Effect를 부여하는 함수입니다.
-	 * 갖고 있는 Effect를 각각 다른 타이밍에 부여하고 싶다면 인덱스로 접근해 호출합니다.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Effect")
-	void ApplyAllEffects(AActor* TargetActor);
-
+	ULetheCardAbility();
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
@@ -39,10 +57,7 @@ protected:
 	//~ End of UGameplayAbility Interface
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnApplyAllEffectsPerTarget(AActor* TargetActor);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnApplyAllEffects(const TArray<AActor*>& TargetActors);
+	void OnApplyEffect(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
 	
 	template<typename T>
 	T* GetEffectApplier()
@@ -77,6 +92,8 @@ private:
 	void OnEventReceived(FGameplayEventData Payload);
 
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
+	void MakeTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<AActor*>& OutTargetActors);
+	void ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
 	void ActiveFailed();
 
 	void ResetCachedValues();
@@ -85,6 +102,9 @@ protected:
 	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
 	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	TArray<FEffectApplyPolicy> EffectApplyPolicies;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;

@@ -6,9 +6,8 @@
 #include "NiagaraSystem.h"
 #include "Engine/AssetManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Lethe/LetheLog.h"
 #include "World/LevelManagerSubsystem.h"
-
-DEFINE_LOG_CATEGORY(LogFXManager);
 
 void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {

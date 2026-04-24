@@ -44,6 +44,11 @@ TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetEffectClass() const
 	return EffectClass;
 }
 
+const FGameplayTag& UGameplayEffectApplier::GetEffectApplierTag() const
+{
+	return EffectApplierTag;
+}
+
 FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() const
 {
 	return EffectContextHandle;

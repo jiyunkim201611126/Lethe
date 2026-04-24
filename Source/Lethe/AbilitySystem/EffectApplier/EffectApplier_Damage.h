@@ -13,6 +13,8 @@ class LETHE_API UEffectApplier_Damage : public UGameplayEffectApplier
 	GENERATED_BODY()
 
 public:
+	UEffectApplier_Damage();
+	
 	//~ Begin UGameplayEffectApplier Interface
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
 	virtual bool TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const override;

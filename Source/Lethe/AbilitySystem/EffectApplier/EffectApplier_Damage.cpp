@@ -5,6 +5,11 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 
+UEffectApplier_Damage::UEffectApplier_Damage()
+{
+	EffectApplierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("EffectApplier.Damage.Default")));
+}
+
 void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
 	TArray<FGameplayEffectSpecHandle> OutSpecHandles;

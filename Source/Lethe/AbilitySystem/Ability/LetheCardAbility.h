@@ -30,6 +30,18 @@ struct FEffectApplyPolicy
 	TArray<int32> TargetActorIndices = { AllIndices };
 };
 
+/** TryGetEffectsForSourceAndTargetPreviewData 호출 시 사용하는 구조체입니다. */
+struct FGameplayEffectPreviewData
+{
+	TMap<FGameplayAttribute, float> SourcePreviewData;
+	TMap<UAbilitySystemComponent*, TMap<FGameplayAttribute, float>> TargetPreviewData;
+
+	bool IsEmpty() const
+	{
+		return SourcePreviewData.IsEmpty() && TargetPreviewData.IsEmpty();
+	}
+};
+
 /**
  * 해당 프로젝트에서 Card는 Ability를 표현하는 UMG 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
  */
@@ -47,7 +59,7 @@ public:
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	bool TryGetEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
-	bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const;
+	bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const;
 
 protected:
 	//~ Begin UGameplayAbility Interface
@@ -92,8 +104,9 @@ private:
 	void OnEventReceived(FGameplayEventData Payload);
 
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
-	void MakeTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<AActor*>& OutTargetActors);
+	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const;
 	void ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
+	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
 	void ActiveFailed();
 
 	void ResetCachedValues();

@@ -367,36 +367,24 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	ActorSelector->UnhighlightActorByMouse();
 }
 
-void ALethePlayerController::OnOtherTileDetected(const AActor* LastActor, const AActor* CurrentActor) const
+void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* CurrentActor) const
 {
-	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
+	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid() && CurrentActor)
 	{
-		const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor();
-		if (SelectedCardOwnerActor && CurrentActor)
-		{
-			ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
-		}
-		else
-		{
-			ArrowRenderer->DeactivateArrow();
-		}
-
-		const IAbilitySystemInterface* CurrentTargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(CurrentActor);
-		UAbilitySystemComponent* TargetASC = CurrentTargetAbilitySystemInterface ? CurrentTargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-
-		if (TargetASC)
+		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 		{
 			FPreviewContext PreviewContext;
-			PreviewContext.CurrentTargetASCs.Emplace(TargetASC);
+			PreviewContext.CurrentTargetActors.Emplace(CurrentActor);
 			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-		}
-		else
-		{
-			PreviewCoordinatorComponent->StopAllPreview();
+			ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
+			return;
 		}
 	}
+	
+	PreviewCoordinatorComponent->StopAllPreview();
+	ArrowRenderer->DeactivateArrow();
 }
 
 void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData) const

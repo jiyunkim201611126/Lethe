@@ -47,9 +47,12 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 		return false;
 	}
 	
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
 	{
-		if (EffectApplier)
+		TArray<UGameplayEffectApplier*> PolicyEffectAppliers;
+		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
+		
+		for (const UGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
 		{
 			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
 			
@@ -65,37 +68,67 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 	return !OutPreviewData.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, UAbilitySystemComponent* TargetASC, TMap<FGameplayAttribute, float>& OutPreviewDataForSource, TMap<FGameplayAttribute, float>& OutPreviewDataForTarget) const
+bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const
 {
-	if (!SourceASC || !TargetASC)
+	if (!SourceASC || TargetActors.IsEmpty())
 	{
 		return false;
 	}
 	
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
 	{
-		// Ability 사용 시 효과는 대행자가 있으므로, EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
-		if (EffectApplier)
+		TArray<AActor*> PolicyTargetActors;
+		GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, PolicyTargetActors);
+
+		TArray<UGameplayEffectApplier*> PolicyEffectAppliers;
+		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
+		
+		for (AActor* TargetActor : PolicyTargetActors)
 		{
-			const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
-			
-			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
-			PreviewContextHandle.SetAbility(this);
-			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
+			if (!TargetActor)
 			{
-				TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
+				continue;
+			}
+
+			const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor);
+			UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+			if (!TargetASC)
+			{
+				continue;
+			}
+			
+			TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
+			for (const UGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
+			{
+				// EffectApplier에게 EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
+				const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
+				FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
+				PreviewContextHandle.SetAbility(this);
+				
+				TArray<FGameplayEffectSpecHandle> SpecHandles;
+				if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
+				{
+					TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
+				}
 			}
 		}
 	}
 	
-	// 반사 데미지, 흡혈 등 ExecCalc만으로는 구현 불가능한 규칙들을 Preview에도 적용하기 위해 아래 함수를 호출합니다.
-	if (const float* IncomingDamage = OutPreviewDataForTarget.Find(ULetheAttributeSet::GetIncomingDamageAttribute()))
+	// 반사 데미지, 흡혈 등 ExecCalc만으로는 구현 불가능한 규칙들을 Preview에도 적용하기 위해 아래 로직을 수행합니다.
+	for (auto& TargetPreviewData : OutPreviewData.TargetPreviewData)
 	{
-		ULetheAbilitySystemLibrary::ResolveDamageRules(SourceASC, TargetASC, *IncomingDamage, OutPreviewDataForSource, OutPreviewDataForTarget);
+		const UAbilitySystemComponent* TargetASC = TargetPreviewData.Key;
+		TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = TargetPreviewData.Value;
+		if (TargetASC)
+		{
+			if (const float* IncomingDamage = OutPreviewDataForTarget.Find(ULetheAttributeSet::GetIncomingDamageAttribute()))
+			{
+				ULetheAbilitySystemLibrary::ResolveDamageRules(SourceASC, TargetASC, *IncomingDamage, OutPreviewData.SourcePreviewData, OutPreviewDataForTarget);
+			}
+		}
 	}
 
-	return !OutPreviewDataForSource.IsEmpty() || !OutPreviewDataForTarget.IsEmpty();
+	return !OutPreviewData.IsEmpty();
 }
 
 bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
@@ -309,14 +342,26 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 		{
 			// 수신한 이벤트 태그와 EffectApplyPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
 			TArray<AActor*> TargetActors;
-			MakeTargetActorsByPolicy(EffectApplyPolicy, TargetActors);
-
-			for (AActor* TargetActor : TargetActors)
+			TargetActors.Reserve(CachedTargetActors.Num());
+			for (const auto& CachedTargetActor : CachedTargetActors)
 			{
-				ApplyEffectsByPolicy(EffectApplyPolicy, TargetActor);
+				if (CachedTargetActor.IsValid())
+				{
+					TargetActors.Emplace(CachedTargetActor.Get());
+				}
 			}
-			
-			OnApplyEffect(EffectApplyPolicy.MontageEventTag, TargetActors);
+
+			TArray<AActor*> OutTargetActors;
+			GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, OutTargetActors);
+
+			if (!OutTargetActors.IsEmpty())
+			{
+				for (AActor* TargetActor : OutTargetActors)
+				{
+					ApplyEffectsByPolicy(EffectApplyPolicy, TargetActor);
+				}
+				OnApplyEffect(EffectApplyPolicy.MontageEventTag, OutTargetActors);
+			}
 			return;
 		}
 	}
@@ -329,31 +374,27 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 	}
 }
 
-void ULetheCardAbility::MakeTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<AActor*>& OutTargetActors)
+void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const
 {
 	if (EffectApplyPolicy.TargetActorIndices.Contains(FEffectApplyPolicy::AllIndices))
 	{
 		// 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
-		for (const auto& CachedTargetActor : CachedTargetActors)
+		for (AActor* TargetActor : SourceTargetActors)
 		{
-			if (CachedTargetActor.IsValid())
+			if (TargetActor)
 			{
-				OutTargetActors.AddUnique(CachedTargetActor.Get());
+				OutTargetActors.AddUnique(TargetActor);
 			}
 		}
 		return;
 	}
 	
-	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, 캐싱해놓은 TargetActor에서 가져와 Out배열에 추가합니다.
+	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
 	for (const int32 TargetActorIndex : EffectApplyPolicy.TargetActorIndices)
 	{
-		if (CachedTargetActors.IsValidIndex(TargetActorIndex) && CachedTargetActors[TargetActorIndex].IsValid())
+		if (SourceTargetActors.IsValidIndex(TargetActorIndex) && SourceTargetActors[TargetActorIndex])
 		{
-			OutTargetActors.AddUnique(CachedTargetActors[TargetActorIndex].Get());
-		}
-		else
-		{
-			
+			OutTargetActors.AddUnique(SourceTargetActors[TargetActorIndex]);
 		}
 	}
 }
@@ -364,17 +405,32 @@ void ULetheCardAbility::ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApp
 	{
 		return;
 	}
+
+	TArray<UGameplayEffectApplier*> OutEffectAppliers;
+	GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
 	
+	for (UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+	{
+		EffectApplier->ApplyEffect(this, TargetActor);
+	}
+}
+
+void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const
+{
 	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
 	{
 		if (!EffectApplier)
 		{
 			continue;
 		}
-		
+
 		if (EffectApplyPolicy.EffectApplierTags.HasTagExact(EffectApplier->GetEffectApplierTag()))
 		{
-			EffectApplier->ApplyEffect(this, TargetActor);
+			OutEffectAppliers.AddUnique(EffectApplier);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectApplyPolicy가 존재합니다. Ability: %s"), *GetName());
 		}
 	}
 }

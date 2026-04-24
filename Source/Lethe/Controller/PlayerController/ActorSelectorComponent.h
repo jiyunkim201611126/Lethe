@@ -27,7 +27,7 @@ struct FTileAndActor
 	AActor* Actor = nullptr;
 };
 
-DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, const AActor*, const AActor*);
+DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, AActor*, AActor*);
 
 /**
  * 타일, 캐릭터 선택과 하이라이팅을 담당하는 클래스입니다.

@@ -40,8 +40,8 @@ void UActorSelectorComponent::HighlightActorByMouse(AActor* Actor, const bool bT
 			// 새롭게 검출된 액터가 타일인 경우 들어오는 분기입니다.
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
-				const AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredActor.GetObject()));
-				const AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredActor.GetObject()));
+				AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredActor.GetObject()));
+				AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredActor.GetObject()));
 				if (LastActor != CurrentActor)
 				{
 					OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);

@@ -85,11 +85,6 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 		
 		for (AActor* TargetActor : PolicyTargetActors)
 		{
-			if (!TargetActor)
-			{
-				continue;
-			}
-
 			const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor);
 			UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 			if (!TargetASC)
@@ -430,7 +425,7 @@ void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& Effe
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectApplyPolicy가 존재합니다. Ability: %s"), *GetName());
+			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectApplyPolicy가 존재합니다. Ability: %s", *GetName());
 		}
 	}
 }

@@ -1,3 +1,8 @@
 ﻿#include "LetheLog.h"
 
+DEFINE_LOG_CATEGORY(LogTile);
 DEFINE_LOG_CATEGORY(LogFXManager);
+DEFINE_LOG_CATEGORY(LogBGMManager);
+DEFINE_LOG_CATEGORY(LogTextManager);
+DEFINE_LOG_CATEGORY(LogAttrbitueSet);
+DEFINE_LOG_CATEGORY(LogAbility);

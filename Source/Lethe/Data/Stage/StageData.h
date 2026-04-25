@@ -8,6 +8,13 @@
 
 enum class ETileMeshType : uint8;
 
+UENUM(BlueprintType)
+enum class EStageType : uint8
+{
+	None,
+	Forest,
+};
+
 /**
  * 스테이지 데이터를 담은 구조체
  */
@@ -15,6 +22,9 @@ USTRUCT()
 struct FStageData : public FTableRowBase
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	EStageType StageType;
 
 	/** 타일 블루프린트 클래스 */
 	UPROPERTY(EditDefaultsOnly)

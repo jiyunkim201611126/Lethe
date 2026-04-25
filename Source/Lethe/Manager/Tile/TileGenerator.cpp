@@ -3,6 +3,7 @@
 #include "TileGenerator.h"
 
 #include "Engine/World.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
@@ -525,13 +526,13 @@ bool FTileGenerator::GenerateTileMap(UWorld* World, const FStageData* StageData,
 	if (StageInitData->MapSeed == 0)
 	{
 		const int32 RandomSeed = FMath::RandRange(0, 10000);
-		UE_LOG(LogTemp, Warning, TEXT("Random Seed : %d"), RandomSeed);
+		LETHE_LOG(LogTile, Log, "Random Seed : %d", RandomSeed);
 		RandomStream.Initialize(RandomSeed);
 	}
 	else
 	{
 		RandomStream.Initialize(StageInitData->MapSeed);
-		UE_LOG(LogTemp, Warning, TEXT("Map Seed : %d"), StageInitData->MapSeed);
+		LETHE_LOG(LogTile, Log, "Map Seed : %d", StageInitData->MapSeed);
 	}
 
 	TileGeneratorInternal::InitMapData(OutResult.TileDataMap, StageInitData);

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "Lethe/LetheLog.h"
 
 UENUM()
 enum class EStringTableType : uint8
@@ -25,7 +26,7 @@ public:
 
 		if (Text.GetSourceText().IsEmpty())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Text가 비어있습니다. Table: %s / Key: %s"), *TableId.ToString(), *Key);
+			LETHE_LOG(LogTextManager, Error, "Text가 비어있습니다. Table: %s / Key: %s", *TableId.ToString(), *Key);
 		}
 
 		if constexpr (sizeof...(Args) > 0)

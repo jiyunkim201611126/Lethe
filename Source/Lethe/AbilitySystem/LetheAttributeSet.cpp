@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "LetheAbilitySystemLibrary.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/Interface/CombatInterface.h"
 
 TMap<FGameplayAttribute, FGameplayTag> ULetheAttributeSet::AttributesToTags;
@@ -119,7 +120,8 @@ void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, con
 		// 새로운 체력을 계산해 할당합니다.
 		const float NewHealth = GetHealth() - LocalIncomingDamage;
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		UE_LOG(LogTemp, Log, TEXT("SVAttributeSet - Damage Applied"));
+		
+		LETHE_LOG(LogAttrbitueSet, Log, "SVAttributeSet - Damage Applied");
 
 		// 데미지 적용 시 발생하는 Source와 Target의 Attribute 변화를 계산해 가져옵니다.
 		TMap<FGameplayAttribute, float> OutDataForSource;

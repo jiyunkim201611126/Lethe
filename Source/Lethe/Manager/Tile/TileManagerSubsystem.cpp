@@ -21,7 +21,7 @@ void UTileManagerSubsystem::Deinitialize()
 void UTileManagerSubsystem::MakeNewTileMap()
 {
 	// 절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
-	if (const FStageData* StageData = GetStageData(FName("Forest")))
+	if (const FStageData* StageData = GetStageData(EStageType::Forest))
 	{
 		if (const UStageInitData* StageInitData = StageData->StageInitData.LoadSynchronous())
 		{
@@ -35,11 +35,21 @@ void UTileManagerSubsystem::MakeNewTileMap()
 	}
 }
 
-const FStageData* UTileManagerSubsystem::GetStageData(const FName& StageName) const
+const FStageData* UTileManagerSubsystem::GetStageData(const EStageType StageType) const
 {
+	// 현재는 Stage가 많지 않아, 테이블 내 모든 데이터를 순회하는 방식입니다.
+	// 추후 Stage가 2자릿수로 늘어난다면 Init 타이밍에 TMap으로 캐싱하는 방식으로 교체합니다.
 	if (const UDataTable* LoadedStageDataTable = StageDataTable.LoadSynchronous())
 	{
-		return LoadedStageDataTable->FindRow<FStageData>(StageName, TEXT(""));
+		TArray<FStageData*> LoadedStageData;
+		LoadedStageDataTable->GetAllRows(TEXT(""), LoadedStageData);
+		for (const FStageData* StageData : LoadedStageData)
+		{
+			if (StageData->StageType == StageType)
+			{
+				return StageData;
+			}
+		}
 	}
 	return nullptr;
 }

@@ -9,6 +9,7 @@
 #include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
+enum class EStageType : uint8;
 enum class ETeamSide : uint8;
 class AEnemyCharacterBase;
 class ATile;
@@ -83,7 +84,7 @@ private:
 
 	/** StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다. */
 	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const;
-	const FStageData* GetStageData(const FName& StageName) const;
+	const FStageData* GetStageData(const EStageType StageType) const;
 	
 private:
 	UPROPERTY(Config)

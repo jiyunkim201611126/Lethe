@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "CardPanelWidgetController.h"
 

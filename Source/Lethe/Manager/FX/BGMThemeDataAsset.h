@@ -7,13 +7,16 @@
 #include "Lethe/Data/Stage/StageData.h"
 #include "BGMThemeDataAsset.generated.h"
 
+class USoundBase;
+class USoundWave;
+
 USTRUCT(BlueprintType)
 struct FBGMTracks
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<USoundBase> Wave;
+	TObjectPtr<USoundWave> Wave;
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USoundBase> LoopMetaSound;
@@ -43,7 +46,7 @@ struct FBGMTheme
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, TObjectPtr<USoundBase>> Tracks;
+	TMap<FName, FBGMTracks> Tracks;
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FBGMTransitionPoint> TransitionPoints;
@@ -59,7 +62,7 @@ class LETHE_API UBGMThemeDataAsset : public UDataAsset
 
 public:
 	const FBGMTheme* GetTheme(const EStageType StageType) const;
-	USoundBase* GetTrack(const EStageType StageType, const FName TrackType) const;
+	const FBGMTracks* GetTrack(const EStageType StageType, const FName TrackType) const;
 	bool GetNextTransitionInfo(const EStageType StageType, const FName FromTrackType, const FName ToTrackType, const float CurrentTrackTime, float& OutDelay, float& OutTargetTrackTime) const;
 
 protected:

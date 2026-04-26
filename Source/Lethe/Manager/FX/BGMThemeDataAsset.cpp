@@ -2,12 +2,14 @@
 
 #include "BGMThemeDataAsset.h"
 
+#include "Sound/SoundWave.h"
+
 const FBGMTheme* UBGMThemeDataAsset::GetTheme(const EStageType StageType) const
 {
 	return BGMThemes.Find(StageType);
 }
 
-USoundBase* UBGMThemeDataAsset::GetTrack(const EStageType StageType, const FName TrackType) const
+const FBGMTracks* UBGMThemeDataAsset::GetTrack(const EStageType StageType, const FName TrackType) const
 {
 	const FBGMTheme* BGMTheme = GetTheme(StageType);
 	if (!BGMTheme)
@@ -15,14 +17,14 @@ USoundBase* UBGMThemeDataAsset::GetTrack(const EStageType StageType, const FName
 		return nullptr;
 	}
 
-	return BGMTheme->Tracks.FindRef(TrackType);
+	return BGMTheme->Tracks.Find(TrackType);
 }
 
 bool UBGMThemeDataAsset::GetNextTransitionInfo(const EStageType StageType, const FName FromTrackType, const FName ToTrackType, const float CurrentTrackTime, float& OutDelay, float& OutTargetTrackTime) const
 {
 	const FBGMTheme* BGMTheme = GetTheme(StageType);
-	const USoundBase* FromTrackSound = GetTrack(StageType, FromTrackType);
-	if (!BGMTheme || !FromTrackSound)
+	const FBGMTracks* FromTrack = GetTrack(StageType, FromTrackType);
+	if (!BGMTheme || !FromTrack || !FromTrack->Wave)
 	{
 		return false;
 	}
@@ -51,7 +53,7 @@ bool UBGMThemeDataAsset::GetNextTransitionInfo(const EStageType StageType, const
 			continue;
 		}
 
-		const float FromTrackDuration = FromTrackSound->GetDuration();
+		const float FromTrackDuration = FromTrack->Wave->GetDuration();
 		const float Delay = CurrentTrackTime <= FromTrackTransitionTime
 			? FromTrackTransitionTime - CurrentTrackTime
 			: FromTrackDuration - CurrentTrackTime + FromTrackTransitionTime;

@@ -10,8 +10,8 @@
 void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName TrackType)
 {
 	const FBGMTheme* BGMTheme = nullptr;
-	USoundBase* BGMSound = nullptr;
-	if (!LoadBGM(StageType, TrackType, BGMTheme, BGMSound))
+	const FBGMTracks* BGMTrack = nullptr;
+	if (!LoadBGM(StageType, TrackType, BGMTheme, BGMTrack))
 	{
 		return;
 	}
@@ -19,7 +19,13 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 	// 아무것도 재생하고 있지 않은 상태라면 Current 슬롯에 넣어 재생합니다.
 	if (PlaybackState == EBGMPlaybackState::Stopped)
 	{
-		PlaySlot(Current, StageType, TrackType, BGMSound, 0.f, false);
+		PlaySlot(Current, StageType, TrackType, *BGMTrack, 0.f);
+		if (!Current.Component)
+		{
+			return;
+		}
+
+		Current.Component->Play(0.f);
 		PlaybackState = EBGMPlaybackState::Playing;
 		return;
 	}
@@ -77,10 +83,10 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 		}
 	}
 
-	ScheduleTransition(StageType, TrackType, BGMSound, TransitionDelay, TargetTrackTime);
+	ScheduleTransition(StageType, TrackType, *BGMTrack, TransitionDelay, TargetTrackTime);
 }
 
-bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, USoundBase*& OutSound)
+bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, const FBGMTracks*& OutTrack)
 {
 	if (!BGMDataAsset)
 	{
@@ -100,8 +106,8 @@ bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName Track
 		return false;
 	}
 
-	OutSound = BGMDataAsset->GetTrack(StageType, TrackType);
-	if (!OutSound)
+	OutTrack = BGMDataAsset->GetTrack(StageType, TrackType);
+	if (!OutTrack || !OutTrack->Wave || !OutTrack->LoopMetaSound)
 	{
 		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Track이 없습니다.", *TrackType.ToString());
 		return false;
@@ -110,7 +116,7 @@ bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName Track
 	return true;
 }
 
-void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const USoundBase* Sound, const float TransitionDelay, const float StartTime)
+void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime)
 {
 	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
 	GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
@@ -118,8 +124,8 @@ void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const 
 
 	Transition.StageType = StageType;
 	Transition.TrackType = TrackType;
-	Transition.Duration = Sound->GetDuration();
-	Transition.StartTime = FMath::Fmod(StartTime, Transition.Duration);
+	Transition.Duration = Track.Wave->GetDuration();
+	Transition.TrackStartTime = StartTime;
 
 	if (TransitionDelay <= 0.f)
 	{
@@ -135,13 +141,13 @@ void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const 
 void UBGMManagerSubsystem::StartTransition()
 {
 	const FBGMTheme* BGMTheme = nullptr;
-	USoundBase* BGMSound = nullptr;
-	if (!LoadBGM(Transition.StageType, Transition.TrackType, BGMTheme, BGMSound) || !Current.Component)
+	const FBGMTracks* BGMTrack = nullptr;
+	if (!LoadBGM(Transition.StageType, Transition.TrackType, BGMTheme, BGMTrack) || !Current.Component)
 	{
 		return;
 	}
 
-	PlaySlot(Transition, Transition.StageType, Transition.TrackType, BGMSound, Transition.StartTime, true);
+	PlaySlot(Transition, Transition.StageType, Transition.TrackType, *BGMTrack, Transition.TrackStartTime);
 	if (!Transition.Component)
 	{
 		return;
@@ -149,7 +155,7 @@ void UBGMManagerSubsystem::StartTransition()
 
 	PlaybackState = EBGMPlaybackState::Transitioning;
 	Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
-	Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.StartTime);
+	Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
 
 	FTimerHandle FinishTimerHandle;
 	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
@@ -159,12 +165,6 @@ void UBGMManagerSubsystem::StartTransition()
 void UBGMManagerSubsystem::FinishTransition()
 {
 	StopSlot(Current);
-
-	if (Transition.Component)
-	{
-		Transition.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopTransition);
-		Transition.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopCurrent);
-	}
 
 	Current = Transition;
 	Transition.Reset();
@@ -180,12 +180,10 @@ void UBGMManagerSubsystem::FinishTransition()
 	}
 }
 
-void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot)
+void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
 {
 	if (Slot.Component)
 	{
-		Slot.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopCurrent);
-		Slot.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopTransition);
 		Slot.Component->Deactivate();
 		Slot.Component->DestroyComponent();
 	}
@@ -193,9 +191,9 @@ void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot)
 	Slot.Reset();
 }
 
-void UBGMManagerSubsystem::PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, USoundBase* Sound, const float StartTime, const bool bUseTransitionLoop)
+void UBGMManagerSubsystem::PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const
 {
-	Slot.Component = UGameplayStatics::CreateSound2D(this, Sound, 1.f, 1.f, StartTime, nullptr, true, false);
+	Slot.Component = UGameplayStatics::CreateSound2D(this, Track.LoopMetaSound, 1.f, 1.f, 0.f, nullptr, true, false);
 	if (!Slot.Component)
 	{
 		return;
@@ -203,42 +201,11 @@ void UBGMManagerSubsystem::PlaySlot(FBGMPlaybackSlot& Slot, const EStageType Sta
 
 	Slot.StageType = StageType;
 	Slot.TrackType = TrackType;
-	Slot.Duration = Sound->GetDuration();
-	Slot.StartTime = FApp::GetCurrentTime() - StartTime;
-	if (bUseTransitionLoop)
-	{
-		Slot.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopTransition);
-	}
-	else
-	{
-		Slot.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopCurrent);
-		Slot.Component->Play(StartTime);
-	}
+	Slot.Duration = Track.Wave->GetDuration();
+	Slot.PlaybackStartTime = FApp::GetCurrentTime() - StartTime;
 }
 
 float UBGMManagerSubsystem::GetCurrentTrackTime() const
 {
-	return FMath::Fmod(FApp::GetCurrentTime() - Current.StartTime, Current.Duration);
-}
-
-void UBGMManagerSubsystem::LoopCurrent()
-{
-	if (!Current.Component)
-	{
-		return;
-	}
-
-	Current.StartTime = FApp::GetCurrentTime();
-	Current.Component->Play(0.f);
-}
-
-void UBGMManagerSubsystem::LoopTransition()
-{
-	if (!Transition.Component)
-	{
-		return;
-	}
-
-	Transition.StartTime = FApp::GetCurrentTime();
-	Transition.Component->Play(0.f);
+	return FMath::Fmod(FApp::GetCurrentTime() - Current.PlaybackStartTime, Current.Duration);
 }

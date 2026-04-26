@@ -28,7 +28,8 @@ struct FBGMPlaybackSlot
 	EStageType StageType = EStageType::None;
 	FName TrackType;
 	float Duration = 0.f;
-	double StartTime = 0.0;
+	float TrackStartTime = 0.f;
+	double PlaybackStartTime = 0.0;
 
 	void Reset()
 	{
@@ -36,7 +37,8 @@ struct FBGMPlaybackSlot
 		StageType = EStageType::None;
 		TrackType = NAME_None;
 		Duration = 0.f;
-		StartTime = 0.0;
+		TrackStartTime = 0.f;
+		PlaybackStartTime = 0.0;
 	}
 };
 
@@ -50,19 +52,13 @@ public:
 	void PlayBGM(const EStageType StageType, const FName TrackType);
 
 private:
-	bool LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, USoundBase*& OutSound);
-	void ScheduleTransition(const EStageType StageType, const FName TrackType, const USoundBase* Sound, const float TransitionDelay, const float StartTime);
+	bool LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, const FBGMTracks*& OutTrack);
+	void ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime);
 	void StartTransition();
 	void FinishTransition();
-	void StopSlot(FBGMPlaybackSlot& Slot);
-	void PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, USoundBase* Sound, const float StartTime, const bool bUseTransitionLoop);
+	void StopSlot(FBGMPlaybackSlot& Slot) const;
+	void PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const;
 	float GetCurrentTrackTime() const;
-
-	UFUNCTION()
-	void LoopCurrent();
-
-	UFUNCTION()
-	void LoopTransition();
 
 private:
 	UPROPERTY(Config)

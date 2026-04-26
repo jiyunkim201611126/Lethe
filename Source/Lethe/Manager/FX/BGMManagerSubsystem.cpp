@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "BGMManagerSubsystem.h"
 
@@ -9,210 +9,236 @@
 
 void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName TrackType)
 {
+	const FBGMTheme* BGMTheme = nullptr;
+	USoundBase* BGMSound = nullptr;
+	if (!LoadBGM(StageType, TrackType, BGMTheme, BGMSound))
+	{
+		return;
+	}
+
+	// 아무것도 재생하고 있지 않은 상태라면 Current 슬롯에 넣어 재생합니다.
+	if (PlaybackState == EBGMPlaybackState::Stopped)
+	{
+		PlaySlot(Current, StageType, TrackType, BGMSound, 0.f, false);
+		PlaybackState = EBGMPlaybackState::Playing;
+		return;
+	}
+
+	// 이미 동일한 BGM을 재생하고 있는 경우 들어가는 분기입니다.
+	if (Current.StageType == StageType && Current.TrackType == TrackType)
+	{
+		// 아직 Transition이 시작되지 않았다면 대기 상태인 모든 BGM을 취소합니다.
+		if (PlaybackState == EBGMPlaybackState::TransitionScheduled)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+			StopSlot(Transition);
+			PlaybackState = EBGMPlaybackState::Playing;
+			PendingStageType = EStageType::None;
+			PendingTrackType = NAME_None;
+			return;
+		}
+
+		// 일반 재생 상태라면 요청을 무시합니다.
+		if (PlaybackState == EBGMPlaybackState::Playing)
+		{
+			return;
+		}
+	}
+
+	// Transition 중이거나 예약이 걸려있는 상태에서, Transition 대상 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
+	if ((PlaybackState == EBGMPlaybackState::TransitionScheduled || PlaybackState == EBGMPlaybackState::Transitioning)
+		&& Transition.StageType == StageType && Transition.TrackType == TrackType)
+	{
+		return;
+	}
+
+	// 예약 대기 상태인 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
+	if (PendingStageType == StageType && PendingTrackType == TrackType)
+	{
+		return;
+	}
+
+	// Transition 중이라면 예약 대기 상태에 걸어놓습니다.
+	if (PlaybackState == EBGMPlaybackState::Transitioning)
+	{
+		PendingStageType = StageType;
+		PendingTrackType = TrackType;
+		return;
+	}
+
+	// 그 외의 경우 Transition 예약이 필요하므로 아래 로직을 수행합니다.
+	float TransitionDelay = 0.f;
+	float TargetTrackTime = 0.f;
+	if (Current.StageType == StageType)
+	{
+		if (!BGMDataAsset->GetNextTransitionInfo(StageType, Current.TrackType, TrackType, GetCurrentTrackTime(), TransitionDelay, TargetTrackTime))
+		{
+			LETHE_LOG(LogBGMManager, Warning, "%s Stage의 %s -> %s TransitionPoint가 없습니다. 즉시 전환합니다.", *LogHelper::EnumToString(StageType), *Current.TrackType.ToString(), *TrackType.ToString());
+		}
+	}
+
+	ScheduleTransition(StageType, TrackType, BGMSound, TransitionDelay, TargetTrackTime);
+}
+
+bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, USoundBase*& OutSound)
+{
 	if (!BGMDataAsset)
 	{
 		BGMDataAsset = BGMDataAssetPath.LoadSynchronous();
 	}
-	
+
 	if (!BGMDataAsset)
 	{
 		LETHE_LOG(LogBGMManager, Error, "BGMDataAssetPath가 설정되지 않았습니다.");
-		return;
-	}
-	
-	const FBGMTheme* CurrentBGMTheme = BGMDataAsset->GetTheme(StageType);
-	if (!CurrentBGMTheme)
-	{
-		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Stage가 없습니다.", *LogHelper::EnumToString(StageType));
-		return;
+		return false;
 	}
 
-	USoundBase* BGMSoundAsset = CurrentBGMTheme->Tracks.FindRef(TrackType);
-	if (!BGMSoundAsset)
+	OutTheme = BGMDataAsset->GetTheme(StageType);
+	if (!OutTheme)
 	{
-		return;
+		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Theme가 없습니다.", *LogHelper::EnumToString(StageType));
+		return false;
 	}
 
-	if (!CurrentComponent)
+	OutSound = BGMDataAsset->GetTrack(StageType, TrackType);
+	if (!OutSound)
 	{
-		// 처음 BGM을 재생하는 경우 들어오는 분기입니다.
-		CurrentComponent = UGameplayStatics::SpawnSound2D(this, BGMSoundAsset, 1.f, 1.f, 0.f, nullptr, true, false);
-		if (CurrentComponent)
-		{
-			AudioStartTime = FApp::GetCurrentTime();
-			CurrentAudioTrackLength = CurrentBGMTheme->BGMTrackLength;
-		}
-		return;
+		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Track이 없습니다.", *TrackType.ToString());
+		return false;
 	}
 
-	// 현재 재생 중인 BGM과 동일한 BGM을 재생하려 하는 경우 들어가는 분기입니다.
-	if (CurrentComponent->GetSound() == BGMSoundAsset)
-	{
-		// 아직 Transition이 진행되지 않았다면 대기 상태인 BGM들을 모두 폐기합니다.
-		if (!bIsTransitioning)
-		{
-			GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
-			TransitionBGMStageType = EStageType::None;
-			if (TransitionComponent)
-			{
-				TransitionComponent->Deactivate();
-				TransitionComponent->DestroyComponent();
-				TransitionComponent = nullptr;
-			}
-			PendingBGMStageType = EStageType::None;
-			if (PendingComponent)
-			{
-				PendingComponent->Deactivate();
-				PendingComponent->DestroyComponent();
-				PendingComponent = nullptr;
-			}
-			return;
-		}
-	}
-
-	// 중복 요청인 경우 무시합니다.
-	if (TransitionComponent && TransitionComponent->GetSound() == BGMSoundAsset)
-	{
-		return;
-	}
-
-	// 현재 재생 중인 BGM의 재생 지점 시간을 계산합니다.
-	const double CurrentTime = FApp::GetCurrentTime();
-	const float CurrentAudioTrackTime = FMath::Fmod(CurrentTime - AudioStartTime, CurrentAudioTrackLength);
-	
-	// 현재 Transition 중이 아닌 경우 들어가는 분기입니다.
-	if (!bIsTransitioning)
-	{
-		// 이미 걸어뒀던 타이머는 해제합니다.
-		GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
-		
-		// 현재 재생 중인 BGM과 동일한 지점에서 재생을 시작합니다.
-		TransitionBGMStageType = StageType;
-		if (TransitionComponent)
-		{
-			TransitionComponent->Deactivate();
-			TransitionComponent->DestroyComponent();
-		}
-		TransitionComponent = UGameplayStatics::CreateSound2D(this, BGMSoundAsset, 1.f, 1.f, CurrentAudioTrackTime, nullptr, true, false);
-		if (TransitionComponent)
-		{
-			TransitionComponent->FadeIn(0.f, 0.f, CurrentAudioTrackTime);
-
-			// 가장 가까운 TransitionPoint에서 Transition이 시작될 수 있도록 타이머를 걸어줍니다.
-			const float TransitionStartDelay = GetTransitionStartDelay(CurrentAudioTrackTime);
-			SetTransitionTimer(TransitionStartDelay);
-		}
-		return;
-	}
-
-	// 이미 Transition 중이라면 대기시킵니다.
-	PendingBGMStageType = StageType;
-	if (PendingComponent)
-	{
-		PendingComponent->Deactivate();
-		PendingComponent->DestroyComponent();
-	}
-	PendingComponent = UGameplayStatics::CreateSound2D(this, BGMSoundAsset, 1.f, 1.f, CurrentAudioTrackTime, nullptr, true, false);
-	if (PendingComponent)
-	{
-		PendingComponent->FadeIn(0.f, 0.f, CurrentAudioTrackTime);
-	}
+	return true;
 }
 
-float UBGMManagerSubsystem::GetTransitionStartDelay(const float CurrentAudioTrackTime) const
+void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const USoundBase* Sound, const float TransitionDelay, const float StartTime)
 {
-	if (TransitionComponent)
+	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
+	GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+	StopSlot(Transition);
+
+	Transition.StageType = StageType;
+	Transition.TrackType = TrackType;
+	Transition.Duration = Sound->GetDuration();
+	Transition.StartTime = FMath::Fmod(StartTime, Transition.Duration);
+
+	if (TransitionDelay <= 0.f)
 	{
-		const FBGMTheme* BGMTheme = BGMDataAsset->GetTheme(TransitionBGMStageType);
-		if (!BGMTheme)
-		{
-			return 0.f;
-		}
-
-		// 현재 재생 시간을 기준으로 가장 가까운 TransitionPoint를 반환합니다.
-		for (const float TransitionPoint : BGMTheme->TransitionPoints)
-		{
-			if (CurrentAudioTrackTime < TransitionPoint)
-			{
-				return TransitionPoint - CurrentAudioTrackTime;
-			}
-		}
-
-		// 이미 TransitionPoint를 모두 지나쳤다면, 남은 시간과 가장 앞에 있는 TransitionPoint를 더해서 반환합니다.
-		if (!BGMTheme->TransitionPoints.IsEmpty())
-		{
-			const float RemainTrackTime = CurrentAudioTrackLength - CurrentAudioTrackTime; 
-			const float FirstTransitionPoint = BGMTheme->TransitionPoints[0];
-			return RemainTrackTime + FirstTransitionPoint;
-		}
+		StartTransition();
+		return;
 	}
 
-	return 0.f;
-}
-
-void UBGMManagerSubsystem::SetTransitionTimer(const float TransitionStartDelay)
-{
-	const FTimerDelegate TransitionTimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::StartTransition);
-	GetWorld()->GetTimerManager().SetTimer(TransitionTimerHandle, TransitionTimerDelegate, TransitionStartDelay, false);
+	PlaybackState = EBGMPlaybackState::TransitionScheduled;
+	const FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::StartTransition);
+	GetWorld()->GetTimerManager().SetTimer(TransitionTimerHandle, TimerDelegate, TransitionDelay, false);
 }
 
 void UBGMManagerSubsystem::StartTransition()
 {
-	const FBGMTheme* BGMTheme = BGMDataAsset->GetTheme(TransitionBGMStageType);
-	if (!BGMTheme)
+	const FBGMTheme* BGMTheme = nullptr;
+	USoundBase* BGMSound = nullptr;
+	if (!LoadBGM(Transition.StageType, Transition.TrackType, BGMTheme, BGMSound) || !Current.Component)
 	{
 		return;
 	}
-	
-	if (BGMTheme && CurrentComponent && TransitionComponent)
+
+	PlaySlot(Transition, Transition.StageType, Transition.TrackType, BGMSound, Transition.StartTime, true);
+	if (!Transition.Component)
 	{
-		const USoundBase* TransitionSound = TransitionComponent->GetSound();
-		if (!TransitionSound)
-		{
-			return;
-		}
+		return;
+	}
 
-		const float NextTrackLength = BGMTheme->BGMTrackLength;
+	PlaybackState = EBGMPlaybackState::Transitioning;
+	Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
+	Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.StartTime);
 
-		// BGM이 변경되었으므로 기록된 시간들을 변경된 BGM에 맞춰 갱신합니다.
-		const double CurrentTime = FApp::GetCurrentTime();
-		const float CurrentAudioTrackTime = FMath::Fmod(CurrentTime - AudioStartTime, CurrentAudioTrackLength);
-		AudioStartTime = CurrentTime - CurrentAudioTrackTime;
-		CurrentAudioTrackLength = NextTrackLength;
-		
-		bIsTransitioning = true;
-		const float FadeDuration = BGMTheme->FadeDuration;
-		CurrentComponent->FadeOut(FadeDuration, 0.f);
-		TransitionComponent->AdjustVolume(FadeDuration, 1.f);
+	FTimerHandle FinishTimerHandle;
+	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
+	GetWorld()->GetTimerManager().SetTimer(FinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
+}
 
-		FTimerHandle OnTransitionEndedTimerHandle;
-		const FTimerDelegate OnTransitionEndedTimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::OnTransitionEnded);
-		GetWorld()->GetTimerManager().SetTimer(OnTransitionEndedTimerHandle, OnTransitionEndedTimerDelegate, FadeDuration, false);
+void UBGMManagerSubsystem::FinishTransition()
+{
+	StopSlot(Current);
+
+	if (Transition.Component)
+	{
+		Transition.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopTransition);
+		Transition.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopCurrent);
+	}
+
+	Current = Transition;
+	Transition.Reset();
+	PlaybackState = EBGMPlaybackState::Playing;
+
+	if (PendingTrackType != NAME_None)
+	{
+		const EStageType RequestedStageType = PendingStageType;
+		const FName RequestedTrackType = PendingTrackType;
+		PendingStageType = EStageType::None;
+		PendingTrackType = NAME_None;
+		PlayBGM(RequestedStageType, RequestedTrackType);
 	}
 }
 
-void UBGMManagerSubsystem::OnTransitionEnded()
+void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot)
 {
-	bIsTransitioning = false;
-	TransitionBGMStageType = EStageType::None;
-	if (CurrentComponent)
+	if (Slot.Component)
 	{
-		CurrentComponent->Deactivate();
-		CurrentComponent->DestroyComponent();
+		Slot.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopCurrent);
+		Slot.Component->OnAudioFinished.RemoveDynamic(this, &ThisClass::LoopTransition);
+		Slot.Component->Deactivate();
+		Slot.Component->DestroyComponent();
 	}
-	CurrentComponent = TransitionComponent;
-	TransitionComponent = nullptr;
 
-	if (PendingComponent)
+	Slot.Reset();
+}
+
+void UBGMManagerSubsystem::PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, USoundBase* Sound, const float StartTime, const bool bUseTransitionLoop)
+{
+	Slot.Component = UGameplayStatics::CreateSound2D(this, Sound, 1.f, 1.f, StartTime, nullptr, true, false);
+	if (!Slot.Component)
 	{
-		TransitionBGMStageType = PendingBGMStageType;
-		TransitionComponent = PendingComponent;
-		PendingComponent = nullptr;
-		PendingBGMStageType = EStageType::None;
-		
-		const double CurrentTime = FApp::GetCurrentTime();
-		const float CurrentAudioTrackTime = FMath::Fmod(CurrentTime - AudioStartTime, CurrentAudioTrackLength);
-		const float TransitionStartDelay = GetTransitionStartDelay(CurrentAudioTrackTime);
-		SetTransitionTimer(TransitionStartDelay);
+		return;
 	}
+
+	Slot.StageType = StageType;
+	Slot.TrackType = TrackType;
+	Slot.Duration = Sound->GetDuration();
+	Slot.StartTime = FApp::GetCurrentTime() - StartTime;
+	if (bUseTransitionLoop)
+	{
+		Slot.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopTransition);
+	}
+	else
+	{
+		Slot.Component->OnAudioFinished.AddDynamic(this, &ThisClass::LoopCurrent);
+		Slot.Component->Play(StartTime);
+	}
+}
+
+float UBGMManagerSubsystem::GetCurrentTrackTime() const
+{
+	return FMath::Fmod(FApp::GetCurrentTime() - Current.StartTime, Current.Duration);
+}
+
+void UBGMManagerSubsystem::LoopCurrent()
+{
+	if (!Current.Component)
+	{
+		return;
+	}
+
+	Current.StartTime = FApp::GetCurrentTime();
+	Current.Component->Play(0.f);
+}
+
+void UBGMManagerSubsystem::LoopTransition()
+{
+	if (!Transition.Component)
+	{
+		return;
+	}
+
+	Transition.StartTime = FApp::GetCurrentTime();
+	Transition.Component->Play(0.f);
 }

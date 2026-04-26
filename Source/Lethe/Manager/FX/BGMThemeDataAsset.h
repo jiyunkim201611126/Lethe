@@ -8,23 +8,48 @@
 #include "BGMThemeDataAsset.generated.h"
 
 USTRUCT(BlueprintType)
+struct FBGMTracks
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USoundBase> Wave;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USoundBase> LoopMetaSound;
+};
+
+USTRUCT(BlueprintType)
+struct FBGMTransitionPoint
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FName TrackA;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TrackATime = 0.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName TrackB;
+
+	UPROPERTY(EditDefaultsOnly)
+	float TrackBTime = 0.f;
+};
+
+USTRUCT(BlueprintType)
 struct FBGMTheme
 {
 	GENERATED_BODY()
 
-	/** 모든 BGM의 길이는 반드시 동일해야 합니다. */
 	UPROPERTY(EditDefaultsOnly)
-	float BGMTrackLength = 180.f;
+	TMap<FName, TObjectPtr<USoundBase>> Tracks;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FBGMTransitionPoint> TransitionPoints;
 
 	UPROPERTY(EditDefaultsOnly)
 	float FadeDuration = 2.f;
-
-	/** 반드시 오름차순으로 정렬되어 있어야 하며, 반드시 BGMTrackLength보다 낮은 수치여야 합니다. */
-	UPROPERTY(EditDefaultsOnly)
-	TArray<float> TransitionPoints;
-
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, TObjectPtr<USoundBase>> Tracks;
 };
 
 UCLASS()
@@ -34,6 +59,8 @@ class LETHE_API UBGMThemeDataAsset : public UDataAsset
 
 public:
 	const FBGMTheme* GetTheme(const EStageType StageType) const;
+	USoundBase* GetTrack(const EStageType StageType, const FName TrackType) const;
+	bool GetNextTransitionInfo(const EStageType StageType, const FName FromTrackType, const FName ToTrackType, const float CurrentTrackTime, float& OutDelay, float& OutTargetTrackTime) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

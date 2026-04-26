@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -8,6 +8,37 @@
 #include "BGMManagerSubsystem.generated.h"
 
 class UAudioComponent;
+
+enum class EBGMPlaybackState : uint8
+{
+	Stopped,
+	Playing,
+	TransitionScheduled,
+	Transitioning,
+};
+
+USTRUCT()
+struct FBGMPlaybackSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> Component;
+
+	EStageType StageType = EStageType::None;
+	FName TrackType;
+	float Duration = 0.f;
+	double StartTime = 0.0;
+
+	void Reset()
+	{
+		Component = nullptr;
+		StageType = EStageType::None;
+		TrackType = NAME_None;
+		Duration = 0.f;
+		StartTime = 0.0;
+	}
+};
 
 UCLASS(Config = Game)
 class LETHE_API UBGMManagerSubsystem : public UGameInstanceSubsystem
@@ -19,10 +50,19 @@ public:
 	void PlayBGM(const EStageType StageType, const FName TrackType);
 
 private:
-	float GetTransitionStartDelay(const float CurrentAudioTrackTime) const;
-	void SetTransitionTimer(const float TransitionStartDelay);
+	bool LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, USoundBase*& OutSound);
+	void ScheduleTransition(const EStageType StageType, const FName TrackType, const USoundBase* Sound, const float TransitionDelay, const float StartTime);
 	void StartTransition();
-	void OnTransitionEnded();
+	void FinishTransition();
+	void StopSlot(FBGMPlaybackSlot& Slot);
+	void PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, USoundBase* Sound, const float StartTime, const bool bUseTransitionLoop);
+	float GetCurrentTrackTime() const;
+
+	UFUNCTION()
+	void LoopCurrent();
+
+	UFUNCTION()
+	void LoopTransition();
 
 private:
 	UPROPERTY(Config)
@@ -30,26 +70,16 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UBGMThemeDataAsset> BGMDataAsset;
-	
-	/** 현재 재생 중인 AudioComponent입니다. */
-	UPROPERTY()
-	TObjectPtr<UAudioComponent> CurrentComponent;
 
-	/** 현재 Transition 중인 AudioComponent입니다. */
 	UPROPERTY()
-	TObjectPtr<UAudioComponent> TransitionComponent;
+	FBGMPlaybackSlot Current;
 
-	/** Transition 중일 때 다음으로 Transition될 AudioComponent입니다. */
 	UPROPERTY()
-	TObjectPtr<UAudioComponent> PendingComponent;
-	
-	EStageType TransitionBGMStageType = EStageType::None;
-	
-	EStageType PendingBGMStageType = EStageType::None;
-	
-	double AudioStartTime = 0.f;
-	float CurrentAudioTrackLength = 0.f;
+	FBGMPlaybackSlot Transition;
+
+	EStageType PendingStageType = EStageType::None;
+	FName PendingTrackType;
 
 	FTimerHandle TransitionTimerHandle;
-	uint8 bIsTransitioning : 1 = false;
+	EBGMPlaybackState PlaybackState = EBGMPlaybackState::Stopped;
 };

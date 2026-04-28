@@ -53,11 +53,13 @@ public:
 
 private:
 	bool LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, const FBGMTracks*& OutTrack);
+	void PrepareSlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const;
+	void StopSlot(FBGMPlaybackSlot& Slot) const;
+	
 	void ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime);
 	void StartTransition();
 	void FinishTransition();
-	void StopSlot(FBGMPlaybackSlot& Slot) const;
-	void PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const;
+	void AbortTransition();
 	float GetCurrentTrackTime() const;
 
 private:

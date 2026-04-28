@@ -19,7 +19,7 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 	// 아무것도 재생하고 있지 않은 상태라면 Current 슬롯에 넣어 재생합니다.
 	if (PlaybackState == EBGMPlaybackState::Stopped)
 	{
-		PlaySlot(Current, StageType, TrackType, *BGMTrack, 0.f);
+		PrepareSlot(Current, StageType, TrackType, *BGMTrack, 0.f);
 		if (!Current.Component)
 		{
 			return;
@@ -116,6 +116,33 @@ bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName Track
 	return true;
 }
 
+void UBGMManagerSubsystem::PrepareSlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const
+{
+	// 사운드를 생성해두기만 하고, 실제 재생은 StartTransition에서 수행합니다.
+	Slot.Component = UGameplayStatics::CreateSound2D(this, Track.LoopMetaSound, 1.f, 1.f, 0.f, nullptr, true, false);
+	if (!Slot.Component)
+	{
+		return;
+	}
+
+	Slot.StageType = StageType;
+	Slot.TrackType = TrackType;
+	Slot.Duration = Track.Wave->GetDuration();
+	Slot.TrackStartTime = StartTime;
+	Slot.PlaybackStartTime = FApp::GetCurrentTime() - StartTime;
+}
+
+void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
+{
+	if (Slot.Component)
+	{
+		Slot.Component->Deactivate();
+		Slot.Component->DestroyComponent();
+	}
+
+	Slot.Reset();
+}
+
 void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime)
 {
 	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
@@ -144,15 +171,18 @@ void UBGMManagerSubsystem::StartTransition()
 	const FBGMTracks* BGMTrack = nullptr;
 	if (!LoadBGM(Transition.StageType, Transition.TrackType, BGMTheme, BGMTrack) || !Current.Component)
 	{
+		AbortTransition();
 		return;
 	}
 
-	PlaySlot(Transition, Transition.StageType, Transition.TrackType, *BGMTrack, Transition.TrackStartTime);
+	PrepareSlot(Transition, Transition.StageType, Transition.TrackType, *BGMTrack, Transition.TrackStartTime);
 	if (!Transition.Component)
 	{
+		AbortTransition();
 		return;
 	}
 
+	// 곡 전환을 시작합니다.
 	PlaybackState = EBGMPlaybackState::Transitioning;
 	Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
 	Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
@@ -180,29 +210,21 @@ void UBGMManagerSubsystem::FinishTransition()
 	}
 }
 
-void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
+void UBGMManagerSubsystem::AbortTransition()
 {
-	if (Slot.Component)
+	GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+	StopSlot(Transition);
+
+	PlaybackState = Current.Component ? EBGMPlaybackState::Playing : EBGMPlaybackState::Stopped;
+
+	if (PendingTrackType != NAME_None)
 	{
-		Slot.Component->Deactivate();
-		Slot.Component->DestroyComponent();
+		const EStageType RequestedStageType = PendingStageType;
+		const FName RequestedTrackType = PendingTrackType;
+		PendingStageType = EStageType::None;
+		PendingTrackType = NAME_None;
+		PlayBGM(RequestedStageType, RequestedTrackType);
 	}
-
-	Slot.Reset();
-}
-
-void UBGMManagerSubsystem::PlaySlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const
-{
-	Slot.Component = UGameplayStatics::CreateSound2D(this, Track.LoopMetaSound, 1.f, 1.f, 0.f, nullptr, true, false);
-	if (!Slot.Component)
-	{
-		return;
-	}
-
-	Slot.StageType = StageType;
-	Slot.TrackType = TrackType;
-	Slot.Duration = Track.Wave->GetDuration();
-	Slot.PlaybackStartTime = FApp::GetCurrentTime() - StartTime;
 }
 
 float UBGMManagerSubsystem::GetCurrentTrackTime() const

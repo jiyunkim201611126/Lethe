@@ -33,6 +33,7 @@ bool UBGMThemeDataAsset::GetNextTransitionInfo(const EStageType StageType, const
 	float BestDelay = MAX_FLT;
 	float BestTargetTrackTime = 0.f;
 
+	// TransitionPoints에서 From <-> To 매핑을 탐색합니다.
 	for (const FBGMTransitionPoint& TransitionPoint : BGMTheme->TransitionPoints)
 	{
 		float FromTrackTransitionTime;
@@ -53,15 +54,15 @@ bool UBGMThemeDataAsset::GetNextTransitionInfo(const EStageType StageType, const
 			continue;
 		}
 
+		// 현재 곡 재생 시간에 따라 실제 딜레이를 계산합니다.
 		const float FromTrackDuration = FromTrack->Wave->GetDuration();
-		const float Delay = CurrentTrackTime <= FromTrackTransitionTime
-			? FromTrackTransitionTime - CurrentTrackTime
-			: FromTrackDuration - CurrentTrackTime + FromTrackTransitionTime;
+		const float Delay = FromTrackTransitionTime - CurrentTrackTime;
+		const float ResultDelay = CurrentTrackTime <= FromTrackTransitionTime ? Delay : FromTrackDuration - Delay;
 
-		if (Delay < BestDelay)
+		if (ResultDelay < BestDelay)
 		{
 			bFound = true;
-			BestDelay = Delay;
+			BestDelay = ResultDelay;
 			BestTargetTrackTime = ToTrackTransitionTime;
 		}
 	}

@@ -11,6 +11,11 @@
 			"AdditionalDependencies": [
 				"GameplayAbilities"
 			]
+		},
+		{
+			"Name": "LetheEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

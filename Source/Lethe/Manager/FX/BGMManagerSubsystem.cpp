@@ -7,7 +7,7 @@
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
 
-void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName TrackType)
+void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FName TrackType, const bool bPlayImmediately)
 {
 	const FBGMTheme* BGMTheme = nullptr;
 	const FBGMTracks* BGMTrack = nullptr;
@@ -20,13 +20,11 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 	if (PlaybackState == EBGMPlaybackState::Stopped)
 	{
 		PrepareSlot(Current, StageType, TrackType, *BGMTrack, 0.f);
-		if (!Current.Component)
+		if (Current.Component)
 		{
-			return;
+			Current.Component->Play(0.f);
+			PlaybackState = EBGMPlaybackState::Playing;
 		}
-
-		Current.Component->Play(0.f);
-		PlaybackState = EBGMPlaybackState::Playing;
 		return;
 	}
 
@@ -39,6 +37,7 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 			GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
 			StopSlot(Transition);
 			PlaybackState = EBGMPlaybackState::Playing;
+			bIsPendingImmediately = false;
 			PendingStageType = EStageType::None;
 			PendingTrackType = NAME_None;
 			return;
@@ -51,10 +50,37 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 		}
 	}
 
-	// Transition 중이거나 예약이 걸려있는 상태에서, Transition 대상 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
-	if ((PlaybackState == EBGMPlaybackState::TransitionScheduled || PlaybackState == EBGMPlaybackState::Transitioning)
-		&& Transition.StageType == StageType && Transition.TrackType == TrackType)
+	if (bPlayImmediately)
 	{
+		if (PlaybackState != EBGMPlaybackState::Transitioning)
+		{
+			// Transition 중이 아니라면 모든 예약 상태를 파기하고 즉시 Transition을 시작합니다.
+			bIsPendingImmediately = false;
+			PendingStageType = EStageType::None;
+			PendingTrackType = NAME_None;
+			ScheduleTransition(StageType, TrackType, *BGMTrack, 0.f, 0.f);
+			return;
+		}
+		
+		// Transition 중이라면 예약 대기 상태로 걸어놓습니다.
+		bIsPendingImmediately = true;
+		PendingStageType = StageType;
+		PendingTrackType = TrackType;
+		return;
+	}
+
+	// Transition 예약이 걸려있는 상태에서, Transition 대상 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
+	if (PlaybackState == EBGMPlaybackState::TransitionScheduled && Transition.StageType == StageType && Transition.TrackType == TrackType)
+	{
+		return;
+	}
+
+	// Transition 중일 때 Transition 대상 BGM과 동일한 BGM 재생 요청이라면, Pending을 초기화합니다.
+	if (PlaybackState == EBGMPlaybackState::Transitioning && Transition.StageType == StageType && Transition.TrackType == TrackType)
+	{
+		bIsPendingImmediately = false;
+		PendingStageType = EStageType::None;
+		PendingTrackType = NAME_None;
 		return;
 	}
 
@@ -67,6 +93,7 @@ void UBGMManagerSubsystem::PlayBGM(const EStageType StageType, const FName Track
 	// Transition 중이라면 예약 대기 상태에 걸어놓습니다.
 	if (PlaybackState == EBGMPlaybackState::Transitioning)
 	{
+		bIsPendingImmediately = false;
 		PendingStageType = StageType;
 		PendingTrackType = TrackType;
 		return;
@@ -184,8 +211,15 @@ void UBGMManagerSubsystem::StartTransition()
 
 	// 곡 전환을 시작합니다.
 	PlaybackState = EBGMPlaybackState::Transitioning;
-	Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
-	Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
+	if (Current.Component)
+	{
+		Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
+	}
+
+	if (Transition.Component)
+	{
+		Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
+	}
 
 	FTimerHandle FinishTimerHandle;
 	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
@@ -198,15 +232,18 @@ void UBGMManagerSubsystem::FinishTransition()
 
 	Current = Transition;
 	Transition.Reset();
+
 	PlaybackState = EBGMPlaybackState::Playing;
 
 	if (PendingTrackType != NAME_None)
 	{
+		const bool bImmediately = bIsPendingImmediately;
 		const EStageType RequestedStageType = PendingStageType;
 		const FName RequestedTrackType = PendingTrackType;
+		bIsPendingImmediately = false;
 		PendingStageType = EStageType::None;
 		PendingTrackType = NAME_None;
-		PlayBGM(RequestedStageType, RequestedTrackType);
+		RequestPlayBGM(RequestedStageType, RequestedTrackType, bImmediately);
 	}
 }
 
@@ -219,11 +256,13 @@ void UBGMManagerSubsystem::AbortTransition()
 
 	if (PendingTrackType != NAME_None)
 	{
+		const bool bImmediately = bIsPendingImmediately;
 		const EStageType RequestedStageType = PendingStageType;
 		const FName RequestedTrackType = PendingTrackType;
+		bIsPendingImmediately = false;
 		PendingStageType = EStageType::None;
 		PendingTrackType = NAME_None;
-		PlayBGM(RequestedStageType, RequestedTrackType);
+		RequestPlayBGM(RequestedStageType, RequestedTrackType, bImmediately);
 	}
 }
 

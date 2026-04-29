@@ -57,7 +57,7 @@ bool UBGMThemeDataAsset::GetNextTransitionInfo(const EStageType StageType, const
 		// 현재 곡 재생 시간에 따라 실제 딜레이를 계산합니다.
 		const float FromTrackDuration = FromTrack->Wave->GetDuration();
 		const float Delay = FromTrackTransitionTime - CurrentTrackTime;
-		const float ResultDelay = CurrentTrackTime <= FromTrackTransitionTime ? Delay : FromTrackDuration - Delay;
+		const float ResultDelay = CurrentTrackTime <= FromTrackTransitionTime ? Delay : FromTrackDuration + Delay;
 
 		if (ResultDelay < BestDelay)
 		{

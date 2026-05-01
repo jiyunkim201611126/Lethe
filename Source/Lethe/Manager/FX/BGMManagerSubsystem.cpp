@@ -34,7 +34,7 @@ void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FNam
 		// 아직 Transition이 시작되지 않았다면 대기 상태인 모든 BGM을 취소합니다.
 		if (PlaybackState == EBGMPlaybackState::TransitionScheduled)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
+			GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
 			StopSlot(Transition);
 			PlaybackState = EBGMPlaybackState::Playing;
 			bIsPendingImmediately = false;
@@ -176,8 +176,8 @@ void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
 void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime)
 {
 	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
-	GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
-	GetWorld()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
+	GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
+	GetGameInstance()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
 	StopSlot(Transition);
 
 	Transition.StageType = StageType;
@@ -193,7 +193,7 @@ void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const 
 
 	PlaybackState = EBGMPlaybackState::TransitionScheduled;
 	const FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::StartTransition);
-	GetWorld()->GetTimerManager().SetTimer(TransitionStartTimerHandle, TimerDelegate, TransitionDelay, false);
+	GetGameInstance()->GetTimerManager().SetTimer(TransitionStartTimerHandle, TimerDelegate, TransitionDelay, false);
 }
 
 void UBGMManagerSubsystem::StartTransition()
@@ -226,7 +226,7 @@ void UBGMManagerSubsystem::StartTransition()
 	}
 
 	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
-	GetWorld()->GetTimerManager().SetTimer(TransitionFinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
+	GetGameInstance()->GetTimerManager().SetTimer(TransitionFinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
 }
 
 void UBGMManagerSubsystem::FinishTransition()
@@ -252,8 +252,8 @@ void UBGMManagerSubsystem::FinishTransition()
 
 void UBGMManagerSubsystem::AbortTransition()
 {
-	GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
-	GetWorld()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
+	GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
+	GetGameInstance()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
 	StopSlot(Transition);
 
 	PlaybackState = Current.Component ? EBGMPlaybackState::Playing : EBGMPlaybackState::Stopped;

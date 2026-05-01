@@ -43,7 +43,7 @@ public:
 
 	void SetDummyActor(AActor* InDummyActor);
 
-	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately);
+	void EnqueuePlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately);
 	void StartActivatePlayerAbility();
 	void HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ProcessAllPlayerAbilitiesFailed();

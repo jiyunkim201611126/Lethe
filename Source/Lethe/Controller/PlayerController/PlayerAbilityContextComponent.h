@@ -29,16 +29,16 @@ enum class EReservedMoveState : uint8
 	Finished
 };
 
-enum class EReachType : uint8
+enum class EMoveActionType : uint8
 {
 	/** TargetTile에 무언가 올라간 상태에 Swap도 불가능한 상태입니다. */
 	CantReach,
 
 	/** GA_Move를 통해 도달할 수 있는 상태입니다. */
-	Move,
+	MoveAbility,
 
 	/** GA_Swap을 통해 도달할 수 있는 상태입니다. */
-	Swap,
+	SwapAbility,
 };
 	
 struct FPlayerCharacterReservedMove
@@ -87,28 +87,29 @@ public:
 	void SetAllReservedMovesWaitingForQueue();
 	
 	void ResetReservedMoveData();
+
+	/** 이동 예약된 모든 타일들의 Location을 반환합니다. */
+	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const;
 	
 	/** 전투 페이즈 중 선택한 타일로 즉시 MoveAbility 사용을 요청합니다. */
 	void RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const;
-
+	
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
-
-	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const;
 
 private:
 	/**
 	 * 다음 예약 이동을 Ability 큐에 추가합니다.
 	 * OnPlayerMoveResolved를 통해 들어온 경우 AbilityResolverComponent의 StartActivatePlayerAbility가 호출되기 직전 타이밍입니다.
 	 */
-	bool AddMoveActivationData();
+	bool TryEnqueueNextReservedMoveActivationData();
 	
-	/** 경로상에서 가장 멀리 도달할 수 있는 타일을 반환하는 함수입니다. */
-	EReachType GetNextReachableTile(const FPlayerCharacterReservedMove* SourceReservedMove, ATile*& OutNextTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
+	/** 내부적으로 GetActionType을 호출해 어떤 방식으로 도달할 수 있는지 반환하며, Swap을 통해 도달할 수 있는 경우 Out 인자들이 채워집니다. */
+	EMoveActionType ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, ATile*& OutNextTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
 
-	/** 해당 타일에 어떤 방식으로 도달할 수 있는지 반환하는 함수입니다. Out 인자는 Swap해야 하는 경우 채워집니다. */
-	EReachType CanReachTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
+	/** 해당 타일에 어떤 방식으로 도달할 수 있는지 반환하는 함수입니다. */
+	EMoveActionType GetActionType(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
 
 	/**	예약 경로와 현재 MoveDistance만 기준으로 TargetTile에 도달 가능한지 확인합니다. */
 	bool CanReachReservedTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile) const;

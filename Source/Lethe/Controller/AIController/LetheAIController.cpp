@@ -276,7 +276,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityData.Num() - 1);
 			if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
-				LetheGameState->AddEnemyAbilityActivationData(CandidateAbilityData[RandomIndex]);
+				LetheGameState->EnqueueEnemyAbilityActivationData(CandidateAbilityData[RandomIndex]);
 			}
 			
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())

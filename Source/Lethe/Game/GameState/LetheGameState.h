@@ -39,10 +39,10 @@ public:
 
 	EPhaseState GetPhaseState() const;
 
-	void AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately = true) const;
+	void EnqueuePlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately = true) const;
 	/** PlayerMovePhase에만 사용하는 함수로, 모든 MoveAbility ActivationData를 밀어넣은 후 호출합니다. */
 	void StartActivatePlayerMoveAbilities() const;
-	void AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
+	void EnqueueEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
 	void ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const;
 
 	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;

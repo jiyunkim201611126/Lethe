@@ -184,9 +184,9 @@ EPhaseState ALetheGameState::GetPhaseState() const
 	return CurrentPhaseState;
 }
 
-void ALetheGameState::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately) const
+void ALetheGameState::EnqueuePlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately) const
 {
-	AbilityResolverComponent->AddPlayerAbilityActivationData(ActivationData, bStartImmediately);
+	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(ActivationData, bStartImmediately);
 }
 
 void ALetheGameState::StartActivatePlayerMoveAbilities() const
@@ -194,7 +194,7 @@ void ALetheGameState::StartActivatePlayerMoveAbilities() const
 	AbilityResolverComponent->StartActivatePlayerAbility();
 }
 
-void ALetheGameState::AddEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
+void ALetheGameState::EnqueueEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
 	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
 }

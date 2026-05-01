@@ -353,12 +353,22 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 
 bool UTileManagerSubsystem::CanPlayerMoveToTile(const ATile* Tile) const
 {
+	if (Tile == nullptr)
+	{
+		return false;
+	}
+	
 	// 타일 무언가 있다면 이동할 수 없습니다.
 	return !GetActorOnTile(Tile);
 }
 
 bool UTileManagerSubsystem::CanEnemyAIMoveToTile(const ATile* Tile) const
 {
+	if (Tile == nullptr)
+	{
+		return false;
+	}
+	
 	// 타일 무언가 있다면 이동할 수 없습니다.
 	return !GetActorOnTile(Tile);
 }

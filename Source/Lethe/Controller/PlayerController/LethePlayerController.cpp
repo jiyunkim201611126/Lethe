@@ -190,7 +190,7 @@ void ALethePlayerController::StartResolvePlayerMoves() const
 	PlayerAbilityContextComponent->StartResolveMoves();
 }
 
-void ALethePlayerController::OnPlayerMovedResolved(const AActor* MovedCharacter) const
+void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 {
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
@@ -379,12 +379,8 @@ void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* Curr
 			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
 			ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
-			return;
 		}
 	}
-	
-	PreviewCoordinatorComponent->StopAllPreview();
-	ArrowRenderer->DeactivateArrow();
 }
 
 void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData) const

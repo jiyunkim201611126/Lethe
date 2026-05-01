@@ -8,7 +8,7 @@
 
 struct FGameplayTag;
 
-UINTERFACE()
+UINTERFACE(NotBlueprintable)
 class UPlayerCharacterInterface : public UInterface
 {
 	GENERATED_BODY()

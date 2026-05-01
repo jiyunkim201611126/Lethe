@@ -214,7 +214,7 @@ void ALetheGameState::OnAbilityActivationFailed() const
 	AbilityResolverComponent->OnAbilityActivationFailed();
 }
 
-void ALetheGameState::OnResolvePlayerMove(const AActor* MovedCharacter) const
+void ALetheGameState::OnResolvePlayerMove(AActor* MovedCharacter) const
 {
 	OnPlayerMoveResolved.ExecuteIfBound(MovedCharacter);
 }

@@ -35,6 +35,7 @@ public:
 	virtual int32 GetMaxMoveDistance() const override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
+	virtual UAnimMontage* GetMoveAnimation() override;
 	//~ End of ICombatInterface
 
 	//~ Begin AActor Interface
@@ -68,6 +69,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> CharacterStatusWidgetComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UAnimMontage> MoveAnimation;
 
 private:
 	int32 OutlineColorTransparent = CUSTOM_DEPTH_YELLOW_TRANSPARENT;

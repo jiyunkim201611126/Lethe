@@ -28,6 +28,18 @@ enum class EReservedMoveState : uint8
 	/** 모든 MoveDistance를 소모했거나, 남은 경로가 없거나, 경로상의 캐릭터가 비켜주길 기다렸지만 아무도 움직이지 않았을 때 Finished 상태가 됩니다. */
 	Finished
 };
+
+enum class EReachType : uint8
+{
+	/** TargetTile에 무언가 올라간 상태에 Swap도 불가능한 상태입니다. */
+	CantReach,
+
+	/** GA_Move를 통해 도달할 수 있는 상태입니다. */
+	Move,
+
+	/** GA_Swap을 통해 도달할 수 있는 상태입니다. */
+	Swap,
+};
 	
 struct FPlayerCharacterReservedMove
 {
@@ -36,6 +48,8 @@ struct FPlayerCharacterReservedMove
 	TArray<TWeakObjectPtr<ATile>> PathTiles;
 	
 	EReservedMoveState State = EReservedMoveState::Finished;
+
+	uint8 bIsSwapTarget : 1 = false;
 
 	bool IsValid() const
 	{
@@ -63,8 +77,11 @@ public:
 	/** 예약된 이동 실행을 시작합니다. */
 	void StartResolveMoves();
 
+	/** 이동 완료 후 이벤트를 수신하는 함수입니다. */
+	void OnPlayerMoveResolved(AActor* MovedCharacter);
+
 	/** 이동 완료 후 예약 경로와 상태를 갱신하고 다음 이동을 큐에 추가합니다. */
-	void OnPlayerMoveResolved(const AActor* MovedCharacter);
+	void RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const;
 
 	/** 비전투 페이즈 진입/재진입 시 호출되는 함수로, MoveDistance가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
 	void SetAllReservedMovesWaitingForQueue();
@@ -88,10 +105,18 @@ private:
 	bool AddMoveActivationData();
 	
 	/** 경로상에서 가장 멀리 도달할 수 있는 타일을 반환하는 함수입니다. */
-	ATile* GetNextReserveTile(FPlayerCharacterReservedMove* ReservedMove) const;
+	EReachType GetNextReachableTile(const FPlayerCharacterReservedMove* SourceReservedMove, ATile*& OutNextTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
+
+	/** 해당 타일에 어떤 방식으로 도달할 수 있는지 반환하는 함수입니다. Out 인자는 Swap해야 하는 경우 채워집니다. */
+	EReachType CanReachTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
+
+	/**	예약 경로와 현재 MoveDistance만 기준으로 TargetTile에 도달 가능한지 확인합니다. */
+	bool CanReachReservedTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile) const;
 
 private:
 	TWeakObjectPtr<UActorSelectorComponent> ActorSelector;
 
 	TArray<FPlayerCharacterReservedMove> ReservedMoves;
+
+	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<AActor>> SwapSourceToTarget;
 };

@@ -41,6 +41,7 @@ struct FLetheGameplayTags
 
 	//~ Begin Ability
 	FGameplayTag Ability_Move;
+	FGameplayTag Ability_Swap;
 	//~ End of Ability
 	
 	//~ Begin Card Types

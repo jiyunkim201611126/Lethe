@@ -26,4 +26,7 @@ public:
 	
 	virtual void OnDamageTaken() = 0;
 	virtual void Die() = 0;
+	
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "GA_Move에 할당된 MoveAnimation을 사용하지 않는 상황, 혹은 할당이 안 되어 있는 상황에 사용합니다."))
+	virtual UAnimMontage* GetMoveAnimation() = 0;
 };

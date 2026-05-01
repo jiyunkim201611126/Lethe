@@ -52,6 +52,8 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.Ability_Move = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Ability.Move"), FString(""));
+	GameplayTags.Ability_Swap = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Ability.Swap"), FString(""));
 	
 	GameplayTags.Card_Type_Physical = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Card.Type.Physical"), FString(""));

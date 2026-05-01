@@ -13,7 +13,7 @@ class AEnemyCharacterBase;
 class ATile;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
-DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, const AActor* /* MovedCharacter */);
+DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
 
 UCLASS()
@@ -52,7 +52,7 @@ public:
 
 	/** 플레이어 캐릭터의 이동을 성공적으로 마친 경우 호출하는 함수입니다. */
 	UFUNCTION(BlueprintCallable)
-	void OnResolvePlayerMove(const AActor* MovedCharacter) const;
+	void OnResolvePlayerMove(AActor* MovedCharacter) const;
 
 	/**
 	 * Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.

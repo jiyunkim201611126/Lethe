@@ -58,6 +58,11 @@ void ALetheCharacterBase::Die()
 	GASManagerComponent->OnDied();
 }
 
+UAnimMontage* ALetheCharacterBase::GetMoveAnimation()
+{
+	return MoveAnimation;
+}
+
 void ALetheCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();

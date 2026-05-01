@@ -47,7 +47,7 @@ public:
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;
 	void StartResolvePlayerMoves() const;
-	void OnPlayerMovedResolved(const AActor* MovedCharacter) const;
+	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);

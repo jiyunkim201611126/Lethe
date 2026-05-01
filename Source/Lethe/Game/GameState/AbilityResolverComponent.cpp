@@ -21,7 +21,8 @@ void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
 void UAbilityResolverComponent::AddPlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (!ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
+	const bool bIsMoveAbility = ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+	if (!bIsMoveAbility)
 	{
 		// Move Ability가 아닌 경우 들어오는 분기입니다.
 		for (const FAbilityActivationData& RegisteredActivationData : PlayerAbilityActivationData)
@@ -222,7 +223,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	ActivationData->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
+	const bool bIsMoveAbility = ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+	if (bIsMoveAbility)
 	{
 		if (ActivationData->TargetTile.IsEmpty() || !ActivationData->TargetTile[0].IsValid())
 		{
@@ -351,7 +353,8 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 			if (PlayerAbilityActivationData.IsValidIndex(0))
 			{
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				if (!PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move))
+				const bool bIsMoveAbility = PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationData[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+				if (!bIsMoveAbility)
 				{
 					OnCardUseResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
 				}

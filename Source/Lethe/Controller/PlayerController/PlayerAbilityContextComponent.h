@@ -74,6 +74,9 @@ public:
 	/** PlayerMovePhase(비전투 페이즈)에 이동 예약을 시작합니다. */
 	void ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile);
 
+	/** 예약된 이동을 파기합니다. */
+	void RemoveReservedMove(const AActor* SelectedCharacter);
+
 	/** 예약된 이동 실행을 시작합니다. */
 	void StartResolveMoves();
 

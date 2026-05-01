@@ -78,22 +78,31 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		return;
 	}
 	
-	if ((!SelectedCharacter.IsValid() && !OutTileAndActor.Actor) || (SelectedCharacter.IsValid() && SelectedCharacter == OutTileAndActor.Actor))
+	if (!SelectedCharacter.IsValid() && !OutTileAndActor.Actor)
 	{
-		// 캐릭터 미선택 상태에서 빈 타일을 클릭했거나, 이미 선택된 캐릭터와 동일한 캐릭터를 선택한 경우 얼리리턴합니다.
+		// 캐릭터 미선택 상태에서 빈 타일을 클릭했다면 얼리리턴합니다.
 		return;
 	}
 
-	bool bIsSelectingCharacter = false;
-	if (OutTileAndActor.Actor)
+	if (SelectedCharacter.IsValid() && SelectedCharacter == OutTileAndActor.Actor)
 	{
-		// 클릭한 타일에 무언가 있다면 일단 캐릭터 선택 상태를 초기화하고, 캐릭터 선택 로직을 시작합니다.
+		// 선택했던 캐릭터가 서있던 타일을 선택한 경우(제자리 클릭) 들어오는 분기입니다.
+		if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+		{
+			PlayerAbilityContextComponent->RemoveReservedMove(SelectedCharacter.Get());
+			RefreshMovePreview();
+		}
 		ResetSelectedCharacter();
+		return;
+	}
+
+	// SelectedCharacter가 null이라면 이번 클릭으로 캐릭터를 선택 중인 상황입니다.
+	const bool bIsSelectingCharacter = !SelectedCharacter.IsValid();
+	if (bIsSelectingCharacter)
+	{
 		if (OutTileAndActor.Actor->Implements<UPlayerCharacterInterface>())
 		{
-			// 캐릭터를 캐싱하고, '이번 입력으로 캐릭터를 선택 중임'을 기록합니다.
 			SelectedCharacter = OutTileAndActor.Actor;
-			bIsSelectingCharacter = true;
 		}
 	}
 
@@ -389,7 +398,10 @@ void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* Curr
 	{
 		// 빈 타일에 마우스를 올린 경우 들어오는 분기입니다.
 		PreviewCoordinatorComponent->StopAllPreview();
-		ArrowRenderer->DeactivateArrow();
+		if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+		{
+			ArrowRenderer->DeactivateArrow();
+		}
 	}
 }
 

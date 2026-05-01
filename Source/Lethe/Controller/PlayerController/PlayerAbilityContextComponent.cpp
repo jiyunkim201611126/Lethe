@@ -65,27 +65,27 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	}
 
 	// 이미 예약된 이동이 있다면 가져오고, 없다면 생성합니다.
-	FPlayerCharacterReservedMove* ReservedMove = ReservedMoves.FindByPredicate([SelectedCharacter](const FPlayerCharacterReservedMove& InReservedMove)
+	FPlayerCharacterReservedMove* CurrentReservedMove = ReservedMoves.FindByPredicate([SelectedCharacter](const FPlayerCharacterReservedMove& InReservedMove)
 	{
 		return InReservedMove.PlayerCharacter == SelectedCharacter;
 	});
-	if (!ReservedMove)
+	if (!CurrentReservedMove)
 	{
-		ReservedMove = &ReservedMoves.Emplace_GetRef();
-		ReservedMove->PlayerCharacter = SelectedCharacter;
-		ReservedMove->AbilitySystemComponent = AbilitySystemComponent;
+		CurrentReservedMove = &ReservedMoves.Emplace_GetRef();
+		CurrentReservedMove->PlayerCharacter = SelectedCharacter;
+		CurrentReservedMove->AbilitySystemComponent = AbilitySystemComponent;
 	}
 
 	// 예약 전, 값을 초기화합니다.
-	for (const auto& Tile : ReservedMove->PathTiles)
+	for (const auto& Tile : CurrentReservedMove->PathTiles)
 	{
 		if (Tile.IsValid())
 		{
 			Tile->SubtractOccupiedCount();
 		}
 	}
-	ReservedMove->PathTiles.Reset();
-	ReservedMove->State = EReservedMoveState::Finished;
+	CurrentReservedMove->PathTiles.Reset();
+	CurrentReservedMove->State = EReservedMoveState::Finished;
 
 	// TargetTile을 향한 모든 가능 경로를 가져옵니다.
 	TArray<TArray<ATile*>> OutPathTilesArray;
@@ -131,15 +131,18 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	for (ATile* Tile : OutPathTilesArray[SelectedPathIndex])
 	{
 		Tile->AddOccupiedCount();
-		ReservedMove->PathTiles.Emplace(MakeWeakObjectPtr(Tile));
+		CurrentReservedMove->PathTiles.Emplace(MakeWeakObjectPtr(Tile));
 	}
 
-	// MoveDistance가 있는 경우 대기 상태로 변경합니다.
-	if (const ICombatInterface* Combat = Cast<ICombatInterface>(ReservedMove->PlayerCharacter))
+	// 모든 ReservedMove를 검사해서 MoveDistance가 있는 경우 대기 상태로 변경합니다.
+	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
-		if (Combat->GetMoveDistance() > 0)
+		if (const ICombatInterface* Combat = Cast<ICombatInterface>(ReservedMove.PlayerCharacter))
 		{
-			ReservedMove->State = EReservedMoveState::WaitingForQueue;
+			if (Combat->GetMoveDistance() > 0)
+			{
+				ReservedMove.State = EReservedMoveState::WaitingForQueue;
+			}
 		}
 	}
 
@@ -147,6 +150,18 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->SetShouldDeferEndPlayerMovePhase();
+	}
+}
+
+void UPlayerAbilityContextComponent::RemoveReservedMove(const AActor* SelectedCharacter)
+{
+	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
+	{
+		if (ReservedMove.PlayerCharacter == SelectedCharacter)
+		{
+			ReservedMove.PathTiles.Reset();
+			break;
+		}
 	}
 }
 

@@ -34,7 +34,7 @@ void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FNam
 		// 아직 Transition이 시작되지 않았다면 대기 상태인 모든 BGM을 취소합니다.
 		if (PlaybackState == EBGMPlaybackState::TransitionScheduled)
 		{
-			GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+			GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
 			StopSlot(Transition);
 			PlaybackState = EBGMPlaybackState::Playing;
 			bIsPendingImmediately = false;
@@ -62,10 +62,13 @@ void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FNam
 			return;
 		}
 		
-		// Transition 중이라면 예약 대기 상태로 걸어놓습니다.
+		// Transition 중일 때, Transition 예약 대기 상태와 다른 BGM인 경우일 때만 예약 대기로 걸어둡니다.
 		bIsPendingImmediately = true;
-		PendingStageType = StageType;
-		PendingTrackType = TrackType;
+		if (PendingStageType != StageType || PendingTrackType != TrackType)
+		{
+			PendingStageType = StageType;
+			PendingTrackType = TrackType;
+		}
 		return;
 	}
 
@@ -173,7 +176,8 @@ void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
 void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime)
 {
 	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
-	GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
 	StopSlot(Transition);
 
 	Transition.StageType = StageType;
@@ -189,7 +193,7 @@ void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const 
 
 	PlaybackState = EBGMPlaybackState::TransitionScheduled;
 	const FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::StartTransition);
-	GetWorld()->GetTimerManager().SetTimer(TransitionTimerHandle, TimerDelegate, TransitionDelay, false);
+	GetWorld()->GetTimerManager().SetTimer(TransitionStartTimerHandle, TimerDelegate, TransitionDelay, false);
 }
 
 void UBGMManagerSubsystem::StartTransition()
@@ -221,9 +225,8 @@ void UBGMManagerSubsystem::StartTransition()
 		Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
 	}
 
-	FTimerHandle FinishTimerHandle;
 	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
-	GetWorld()->GetTimerManager().SetTimer(FinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
+	GetWorld()->GetTimerManager().SetTimer(TransitionFinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
 }
 
 void UBGMManagerSubsystem::FinishTransition()
@@ -249,7 +252,8 @@ void UBGMManagerSubsystem::FinishTransition()
 
 void UBGMManagerSubsystem::AbortTransition()
 {
-	GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
 	StopSlot(Transition);
 
 	PlaybackState = Current.Component ? EBGMPlaybackState::Playing : EBGMPlaybackState::Stopped;
@@ -268,5 +272,10 @@ void UBGMManagerSubsystem::AbortTransition()
 
 float UBGMManagerSubsystem::GetCurrentTrackTime() const
 {
+	if (Current.Duration <= 0.f || Current.Duration == INDEFINITELY_LOOPING_DURATION)
+	{
+		LETHE_LOG(LogBGMManager, Error, "Stage: %s, Track: %s의 Duration이 유효하지 않습니다. Duration: %f", *LogHelper::EnumToString(Current.StageType), *Current.TrackType.ToString(), Current.Duration);
+		return 0.f;
+	}
 	return FMath::Fmod(FApp::GetCurrentTime() - Current.PlaybackStartTime, Current.Duration);
 }

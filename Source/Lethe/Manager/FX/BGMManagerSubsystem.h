@@ -52,7 +52,7 @@ class LETHE_API UBGMManagerSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, meta = (ToolTip = "PlayImmediately가 true라면, Transition 규칙을 무시하고 즉시 Transition을 시작합니다."))
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "PlayImmediately가 true라면, Transition 규칙을 무시하고 즉시 Transition을 시작합니다. 단, 이미 Transition 중이라면 해당 Transition이 종료될 때까지 대기한 후 시작합니다."))
 	void RequestPlayBGM(const EStageType StageType, const FName TrackType, const bool bPlayImmediately = false);
 
 private:
@@ -83,6 +83,7 @@ private:
 	EStageType PendingStageType = EStageType::None;
 	FName PendingTrackType;
 
-	FTimerHandle TransitionTimerHandle;
+	FTimerHandle TransitionStartTimerHandle;
+	FTimerHandle TransitionFinishTimerHandle;
 	EBGMPlaybackState PlaybackState = EBGMPlaybackState::Stopped;
 };

@@ -42,10 +42,7 @@ void UActorSelectorComponent::HighlightActorByMouse(AActor* Actor, const bool bT
 			{
 				AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredActor.GetObject()));
 				AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredActor.GetObject()));
-				if (LastActor != CurrentActor)
-				{
-					OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);
-				}
+				OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);
 			}
 		}
 	}

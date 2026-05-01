@@ -369,17 +369,27 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 
 void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* CurrentActor) const
 {
-	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid() && CurrentActor)
+	if (CurrentActor)
 	{
-		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
+		if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
 		{
-			FPreviewContext PreviewContext;
-			PreviewContext.CurrentTargetActors.Emplace(CurrentActor);
-			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
-			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
-			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-			ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
+			// 카드를 선택한 경우 들어오는 분기입니다.
+			if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
+			{
+				FPreviewContext PreviewContext;
+				PreviewContext.CurrentTargetActors.Emplace(CurrentActor);
+				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
+				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
+				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
+				ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
+			}
 		}
+	}
+	else
+	{
+		// 빈 타일에 마우스를 올린 경우 들어오는 분기입니다.
+		PreviewCoordinatorComponent->StopAllPreview();
+		ArrowRenderer->DeactivateArrow();
 	}
 }
 

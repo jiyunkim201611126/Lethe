@@ -140,6 +140,107 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 	return Distance;
 }
 
+ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
+{
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TargetTile || !TileManagerSubsystem)
+	{
+		return nullptr;
+	}
+
+	// TargetTile을 공격할 수 있는 위치의 타일을 모두 가져옵니다.
+	TArray<ATile*> AttackableTiles;
+	if (const AEnemyCharacterBase* EnemyCharacter = GetPawn<AEnemyCharacterBase>())
+	{
+		const FBFSRange& AbilityRange = EnemyCharacter->GetAbilityRange();
+
+		TSet<FCubeCoord> OutCubeCoord;
+		TileManagerSubsystem->TileBFS(TargetTile->GetCubeCoord(), AbilityRange.Distance, AbilityRange.BFSType, OutCubeCoord,
+			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				return true;
+			},
+			[&TileManagerSubsystem, TargetTile, AbilityRange, &AttackableTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			{
+				if (TileData)
+				{
+					if (ATile* CandidateTile = TileData->TileActor.Get())
+					{
+						const int32 FloorGap = TileManagerSubsystem->GetTileFloor(TargetTile) - TileManagerSubsystem->GetTileFloor(CandidateTile);
+						if (FMath::Abs(FloorGap) <= AbilityRange.FloorGap)
+						{
+							AttackableTiles.Emplace(CandidateTile);
+						}
+					}
+				}
+				return true;
+			});
+	}
+
+	// 공격 가능한 타일이 아무것도 없다면 nullptr를 반환합니다.
+	if (AttackableTiles.IsEmpty())
+	{
+		return nullptr;
+	}
+	
+	// TargetTile의 주변 타일을 가져옵니다.
+	TArray<ATile*> OutAroundTiles;
+	TileManagerSubsystem->GetAroundTiles(TargetTile, 5, OutAroundTiles);
+	
+	// Enemy가 서있는 타일만 필터링합니다.
+	OutAroundTiles = OutAroundTiles.FilterByPredicate([this, TileManagerSubsystem](const ATile* Tile)
+	{
+		if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
+		{
+			// ControlledPawn은 제외합니다.
+			return ActorOnTile->IsA<AEnemyCharacterBase>() && ActorOnTile != GetPawn();
+		}
+		return false;
+	});
+
+	// 다른 적들과의 타일 좌표상 거리에 따라 점수를 매깁니다.
+	const auto CalculateDistanceFromOtherEnemiesScore = [&OutAroundTiles](const ATile* CandidateTile)
+	{
+		int32 DistanceSumFromOtherEnemies = 0;
+		for (const ATile* EnemyTile : OutAroundTiles)
+		{
+			if (!EnemyTile)
+			{
+				continue;
+			}
+			
+			// 멀수록 더 높은 점수를 갖습니다.
+			DistanceSumFromOtherEnemies += FCubeCoord::Distance(CandidateTile->GetCubeCoord(), EnemyTile->GetCubeCoord());
+		}
+		return DistanceSumFromOtherEnemies;
+	};
+
+	// 해당 컨트롤러의 전술 상태에 따라 점수를 매깁니다.(미구현)
+	const auto CalculateTacticalScore = [](const ATile* CandidateTile)
+	{
+		return 0;
+	};
+
+	ATile* BestTile = nullptr;
+	int32 BestScore = MIN_int32;
+	for (ATile* AttackableTile : AttackableTiles)
+	{
+		if (!AttackableTile)
+		{
+			continue;
+		}
+
+		const int32 Score = CalculateDistanceFromOtherEnemiesScore(AttackableTile) + CalculateTacticalScore(AttackableTile);
+		if (Score > BestScore)
+		{
+			BestScore = Score;
+			BestTile = AttackableTile;
+		}
+	}
+
+	return BestTile;
+}
+
 ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth)
 {
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())

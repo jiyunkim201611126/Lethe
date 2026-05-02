@@ -27,6 +27,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "가장 가까운 플레이어 캐릭터를 찾아 그 타일들을 반환합니다. 거리가 같다면 여러 타일을 반환합니다."))
 	int32 FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutNearestTiles);
+	
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile을 공격할 수 있는 타일 중에서 가장 공격하기 좋은 타일을 반환합니다."))
+	ATile* GetBestAttackableTile(const ATile* TargetTile);
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "정해진 범위 내에 랜덤한, 위에 아무것도 없는 타일을 반환합니다."))
 	ATile* GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth);

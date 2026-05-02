@@ -351,6 +351,30 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	return !OutPathTiles.IsEmpty();
 }
 
+void UTileManagerSubsystem::GetAroundTiles(const ATile* CenterTile, const int32 Range, TArray<ATile*>& OutTiles) const
+{
+	OutTiles.Reset();
+
+	const FCubeCoord& CenterCoord = CenterTile->GetCubeCoord();
+
+	for (int32 LocalQ = -Range; LocalQ <= Range; ++LocalQ)
+	{
+		const int32 MinLocalR = FMath::Max(-Range, -LocalQ - Range);
+		const int32 MaxLocalR = FMath::Min(Range, -LocalQ + Range);
+
+		for (int32 LocalR = MinLocalR; LocalR <= MaxLocalR; ++LocalR)
+		{
+			const int32 LocalS = -LocalQ - LocalR;
+
+			const FCubeCoord TileCoord(CenterCoord.Q + LocalQ, CenterCoord.R + LocalR, CenterCoord.S + LocalS);
+			if (ATile* Tile = GetTile(TileCoord))
+			{
+				OutTiles.Emplace(Tile);
+			}
+		}
+	}
+}
+
 bool UTileManagerSubsystem::CanPlayerMoveToTile(const ATile* Tile) const
 {
 	if (Tile == nullptr)

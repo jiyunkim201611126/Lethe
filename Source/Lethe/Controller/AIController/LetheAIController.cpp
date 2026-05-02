@@ -32,7 +32,7 @@ void ALetheAIController::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnAbilityActivated);
+		OnAbilityActivatedDelegateHandle = LetheGameState->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnAbilityActivated);
 	}
 }
 
@@ -40,7 +40,7 @@ void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnEnemyAbilityActivated.RemoveAll(this);
+		LetheGameState->OnEnemyAbilityActivated.Remove(OnAbilityActivatedDelegateHandle);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -112,7 +112,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 			{
 				return PlayerCharacterTileCoords.IsEmpty();
 			},
-			[&TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{
@@ -143,66 +143,83 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TargetTile || !TileManagerSubsystem)
+	const AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
+	if (!TargetTile || !TileManagerSubsystem || !ControlledEnemy)
 	{
 		return nullptr;
 	}
 
 	// TargetTile을 공격할 수 있는 위치의 타일을 모두 가져옵니다.
 	TArray<ATile*> AttackableTiles;
-	if (const AEnemyCharacterBase* EnemyCharacter = GetPawn<AEnemyCharacterBase>())
-	{
-		const FBFSRange& AbilityRange = EnemyCharacter->GetAbilityRange();
+	const FBFSRange& AbilityRange = ControlledEnemy->GetAbilityRange();
 
-		TSet<FCubeCoord> OutCubeCoord;
-		TileManagerSubsystem->TileBFS(TargetTile->GetCubeCoord(), AbilityRange.Distance, AbilityRange.BFSType, OutCubeCoord,
-			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+	TSet<FCubeCoord> OutCubeCoord;
+	TileManagerSubsystem->TileBFS(TargetTile->GetCubeCoord(), AbilityRange.Distance, AbilityRange.BFSType, OutCubeCoord,
+		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+		{
+			return true;
+		},
+		[TileManagerSubsystem, TargetTile, &AbilityRange, &AttackableTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+		{
+			if (TileData)
 			{
-				return true;
-			},
-			[&TileManagerSubsystem, TargetTile, AbilityRange, &AttackableTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
-			{
-				if (TileData)
+				if (ATile* CandidateTile = TileData->TileActor.Get())
 				{
-					if (ATile* CandidateTile = TileData->TileActor.Get())
+					if (CandidateTile != TargetTile)
 					{
 						const int32 FloorGap = TileManagerSubsystem->GetTileFloor(TargetTile) - TileManagerSubsystem->GetTileFloor(CandidateTile);
-						if (FMath::Abs(FloorGap) <= AbilityRange.FloorGap)
+						if (FMath::Abs(FloorGap) <= AbilityRange.FloorGap && TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
 						{
 							AttackableTiles.Emplace(CandidateTile);
 						}
 					}
 				}
-				return true;
-			});
-	}
+			}
+			return true;
+		});
 
 	// 공격 가능한 타일이 아무것도 없다면 nullptr를 반환합니다.
 	if (AttackableTiles.IsEmpty())
 	{
 		return nullptr;
 	}
+
+	const auto CalculateDistanceScore = [TileManagerSubsystem, ControlledEnemy](const ATile* CandidateTile)
+	{
+		if (const ATile* ControlledCharacterTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
+		{
+			const int32 Distance = TileManagerSubsystem->GetTileDistance(ControlledCharacterTile, CandidateTile, EBFSType::Connection);
+			if (Distance <= ControlledEnemy->GetMoveDistance())
+			{
+				// 이번 턴에 도달 가능한 경우 아주 높은 점수를 반환합니다.
+				return 10000;
+			}
+			// 이번 턴에 도달할 수 없는 경우 멀수록 더 크게 감점합니다.
+			return -Distance * 5;
+		}
+		return -10000;
+	};
 	
 	// TargetTile의 주변 타일을 가져옵니다.
 	TArray<ATile*> OutAroundTiles;
 	TileManagerSubsystem->GetAroundTiles(TargetTile, 5, OutAroundTiles);
-	
-	// Enemy가 서있는 타일만 필터링합니다.
-	OutAroundTiles = OutAroundTiles.FilterByPredicate([this, TileManagerSubsystem](const ATile* Tile)
-	{
-		if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
-		{
-			// ControlledPawn은 제외합니다.
-			return ActorOnTile->IsA<AEnemyCharacterBase>() && ActorOnTile != GetPawn();
-		}
-		return false;
-	});
 
 	// 다른 적들과의 타일 좌표상 거리에 따라 점수를 매깁니다.
-	const auto CalculateDistanceFromOtherEnemiesScore = [&OutAroundTiles](const ATile* CandidateTile)
+	const auto CalculateDistanceFromOtherEnemiesScore = [TileManagerSubsystem, OutAroundTiles, ControlledEnemy](const ATile* CandidateTile)
 	{
+		// Enemy가 서있는 타일만 필터링합니다.
+		TArray<ATile*> AroundEnemyTiles = OutAroundTiles.FilterByPredicate([TileManagerSubsystem, ControlledEnemy](const ATile* Tile)
+		{
+			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
+			{
+				// ControlledPawn은 제외합니다.
+				return ActorOnTile->IsA<AEnemyCharacterBase>() && ActorOnTile != ControlledEnemy;
+			}
+			return false;
+		});
+		
 		int32 DistanceSumFromOtherEnemies = 0;
-		for (const ATile* EnemyTile : OutAroundTiles)
+		for (const ATile* EnemyTile : AroundEnemyTiles)
 		{
 			if (!EnemyTile)
 			{
@@ -230,7 +247,10 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 			continue;
 		}
 
-		const int32 Score = CalculateDistanceFromOtherEnemiesScore(AttackableTile) + CalculateTacticalScore(AttackableTile);
+		const int32 DistanceScore = CalculateDistanceScore(AttackableTile);
+		const int32 FromOtherEnemiesScore = CalculateDistanceFromOtherEnemiesScore(AttackableTile);
+
+		const int32 Score = DistanceScore + FromOtherEnemiesScore;
 		if (Score > BestScore)
 		{
 			BestScore = Score;
@@ -255,7 +275,7 @@ ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const in
 				// 우선 범위 내 타일을 모두 탐색합니다.
 				return true;
 			},
-			[&TileManagerSubsystem](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			[TileManagerSubsystem](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
 				// EnemyAI가 이동 가능한 타일만 선택합니다.
 				if (TileData && TileData->TileActor.IsValid())

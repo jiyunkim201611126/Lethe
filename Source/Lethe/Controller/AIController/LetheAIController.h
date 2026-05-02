@@ -72,4 +72,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
 	bool bIsCombating = false;
+
+private:
+	FDelegateHandle OnAbilityActivatedDelegateHandle;
 };

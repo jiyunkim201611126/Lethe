@@ -2,6 +2,7 @@
 
 #include "LetheGameState.h"
 
+#include "AbilityResolverComponent.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 
 ALetheGameState::ALetheGameState()
@@ -21,6 +22,7 @@ void ALetheGameState::BeginPlay()
 	
 	AbilityResolverComponent->OnActivateEnemyAbility.BindUObject(this, &ThisClass::OnActivateEnemyAbility);
 	AbilityResolverComponent->OnFinishActivationQueue.BindUObject(this, &ThisClass::OnFinishActivationQueue);
+	AbilityResolverComponent->OnResolveUseCard.BindUObject(this, &ThisClass::OnResolveUseCard);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -189,6 +191,11 @@ void ALetheGameState::EnqueuePlayerAbilityActivationData(const FAbilityActivatio
 	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(ActivationData, bStartImmediately);
 }
 
+void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
+{
+	OnCardUseResolved.Execute(HandIndex, bSuccess);
+}
+
 void ALetheGameState::StartActivatePlayerMoveAbilities() const
 {
 	AbilityResolverComponent->StartActivatePlayerAbility();
@@ -257,4 +264,14 @@ UAbilityResolverComponent* ALetheGameState::GetAbilityResolverComponent() const
 bool ALetheGameState::IsResolvingPlayerAbility() const
 {
 	return AbilityResolverComponent->IsResolvingPlayerAbility();
+}
+
+TArray<AActor*> ALetheGameState::GetPlayerCharacters()
+{
+	TArray<AActor*> TempPlayerCharacters;
+	for (const auto& PlayerCharacter : PlayerCharacters)
+	{
+		TempPlayerCharacters.Emplace(Cast<AActor>(PlayerCharacter.GetObject()));
+	}
+	return TempPlayerCharacters;
 }

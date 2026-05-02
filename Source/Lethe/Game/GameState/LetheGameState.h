@@ -3,17 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilityResolverComponent.h"
 #include "GameFramework/GameStateBase.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Data/PhaseData.h"
 #include "LetheGameState.generated.h"
 
-class ICombatInterface;
+enum class ETeamSide : uint8;
 class AEnemyCharacterBase;
 class ATile;
+class ICombatInterface;
+class UAbilityResolverComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
+DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityActivated, AActor* /* Instigator */);
 
 UCLASS()
@@ -69,6 +72,9 @@ public:
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsResolvingPlayerAbility() const;
 
+	UFUNCTION(BlueprintCallable)
+	TArray<AActor*> GetPlayerCharacters();
+
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
@@ -83,9 +89,12 @@ private:
 
 	bool ShouldGoCombatPhase() const;
 
+	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
+
 public:
 	FOnChangePhaseState OnChangePhaseState;
 	FOnPlayerMoveResolved OnPlayerMoveResolved;
+	FOnCardUseResolved OnCardUseResolved;
 	FOnEnemyAbilityActivated OnEnemyAbilityActivated;
 
 protected:

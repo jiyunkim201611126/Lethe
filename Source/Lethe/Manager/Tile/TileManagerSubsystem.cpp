@@ -81,7 +81,7 @@ int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile
 		{
 			return FoundDepth == INDEX_NONE;
 		},
-		[&TargetCoord, &FoundDepth](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+		[&TargetCoord, &FoundDepth](const FCubeCoord& CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 		{
 			if (CurrentCoord == TargetCoord)
 			{
@@ -166,7 +166,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 				continue;
 			}
 
-			// 타일 위에 무언가 있고, 이를 무시하지 않을 예정이라면 스킵합니다.
+			// 타일 위에 무언가 있다면 매개변수 설정 여부에 따라 스킵합니다.
 			if (!bIgnoreActor && NextCoord != TargetCoord && GetActorOnTile(GetTile(NextCoord)))
 			{
 				continue;
@@ -182,7 +182,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 			}
 			else if (*ExistingDepth == NextDepth)
 			{
-				// 이미 같은 최단 거리로 도달 가능한 경우에는, 최단 경로 복원을 위해 부모를 추가로 기록합니다.
+				// 최단 거리로 도달하는 경우라면 부모로 추가합니다.
 				TArray<FCubeCoord>& Parents = OutSearchData.ParentCoordMap.FindOrAdd(NextCoord);
 				if (!Parents.Contains(CurrentCoord))
 				{
@@ -306,13 +306,21 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	TArray<TSet<FCubeCoord>> PrioritizedCoordsByDistance;
 	PrioritizedCoordsByDistance.SetNum(MaxPriorityDistance + 1);
 
-	// TargetTile -> StartTile 방향으로 부모를 따라가며 최단 경로를 생성합니다.
+	// TargetTile -> StartTile 방향으로 부모를 따라가며, StartTile 기준 Distance별 후보를 모읍니다.
 	TSet<FCubeCoord> CurrentCoords;
 	CurrentCoords.Emplace(TargetTile->GetCubeCoord());
 
-	// 현재 Distance에 있는 좌표 집합에서 부모들을 모아 Distance - 1 좌표 집합을 생성합니다.
+	// CurrentCoords는 현재 Distance에 있는 좌표 집합입니다.
 	for (int32 Distance = SearchData.ShortestDistanceToTarget; Distance > 0; --Distance)
 	{
+		if (Distance <= MaxPriorityDistance)
+		{
+			for (const FCubeCoord& Coord : CurrentCoords)
+			{
+				PrioritizedCoordsByDistance[Distance].Emplace(Coord);
+			}
+		}
+
 		TSet<FCubeCoord> NextCoords;
 		for (const FCubeCoord& Coord : CurrentCoords)
 		{
@@ -325,18 +333,10 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 			}
 		}
 
-		// 이번 턴 후보 거리 안에 있으면 저장합니다.
-		const int32 ParentDistance = Distance - 1;
-		if (ParentDistance >= 1 && ParentDistance <= MaxPriorityDistance)
-		{
-			PrioritizedCoordsByDistance[ParentDistance] = NextCoords;
-		}
-
-		// 방금 찾은 부모 집합을 기준으로 다시 부모를 찾습니다.
 		CurrentCoords = MoveTemp(NextCoords);
 	}
 
-	// 만들어진 좌표 집합 가장 먼 이동 후보부터 넣어 우선순위로 정렬합니다.
+	// 먼 거리가 앞으로 오도록 정렬해서 집어넣습니다.
 	for (int32 Distance = MaxPriorityDistance; Distance >= 1; --Distance)
 	{
 		for (const FCubeCoord& Coord : PrioritizedCoordsByDistance[Distance])

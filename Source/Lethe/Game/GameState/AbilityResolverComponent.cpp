@@ -105,7 +105,7 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationData를 정리합니다.
 	for (const FAbilityActivationData& WaitingCardData : PlayerAbilityActivationData)
 	{
-		OnCardUseResolved.ExecuteIfBound(WaitingCardData.Index, false);
+		OnResolveUseCard.ExecuteIfBound(WaitingCardData.Index, false);
 	}
 	PlayerAbilityActivationData.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
@@ -356,7 +356,7 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 				const bool bIsMovementAbility = PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationData[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 				if (!bIsMovementAbility)
 				{
-					OnCardUseResolved.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
 				}
 				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
 			}

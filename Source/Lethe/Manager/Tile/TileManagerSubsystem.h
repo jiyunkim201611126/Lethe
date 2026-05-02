@@ -78,14 +78,14 @@ public:
 private:
 	struct FShortestPathSearchData
 	{
-		/** StartTile로부터 각 좌표까지의 최단 거리(최초 도달 Depth)를 기록한 Map입니다. */
+		/** 각 좌표들에 대한 StartTile로부터의 최소 거리를 기록한 TMap입니다. */
 		TMap<FCubeCoord, int32> DistanceMap;
-		/** Key 좌표에 최단 거리로 도달할 수 있는 직전 좌표들을 Value로 기록한 Map입니다. */
+		/** Key 좌표까지 최단 거리로 도달한다고 가정했을 때, 그 직전 좌표들입니다. 경로가 여러 개 나올 수 있으므로 Value는 배열입니다. */
 		TMap<FCubeCoord, TArray<FCubeCoord>> ParentCoordMap;
 		int32 ShortestDistanceToTarget = INDEX_NONE;
 	};
 
-	/** StartTile에서 TargetTile까지의 최단 경로를 생성하기 위한 데이터를 생성하는 함수입니다. */
+	/** StartTile에서 TargetTile까지의 최단 거리와 부모 DAG를 생성합니다. */
 	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const;
 	const FStageData* GetStageData(const EStageType StageType) const;
 	

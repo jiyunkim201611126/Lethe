@@ -9,6 +9,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
+#include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
@@ -293,17 +294,8 @@ void ALethePlayerController::BeginPlay()
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		OnPhaseStateChangedHandle = LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		
-		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
-		{
-			AbilityResolverComponent->OnCardUseResolved.BindWeakLambda(this,
-				[this](const int32 HandIndex, const bool bSuccess)
-				{
-					OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
-				});
-		}
-		
 		LetheGameState->OnPlayerMoveResolved.BindUObject(this, &ThisClass::OnPlayerMovedResolved);
+		LetheGameState->OnCardUseResolved.BindUObject(this, &ThisClass::OnCardUseResolved);
 	}
 }
 
@@ -314,13 +306,8 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
-		
-		if (UAbilityResolverComponent* AbilityResolverComponent = LetheGameState->GetAbilityResolverComponent())
-		{
-			AbilityResolverComponent->OnCardUseResolved.Unbind();
-		}
-
 		LetheGameState->OnPlayerMoveResolved.Unbind();
+		LetheGameState->OnCardUseResolved.Unbind();
 	}
 	Super::EndPlay(EndPlayReason);
 }
@@ -416,6 +403,11 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerA
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
+}
+
+void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const
+{
+	OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
 }
 
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const

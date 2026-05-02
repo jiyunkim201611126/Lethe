@@ -29,7 +29,7 @@ enum class ETryAbilityActivationResult : uint8
 	FailedNoneTargetTileToMove,
 };
 
-DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_DELEGATE_TwoParams(FOnResolveUseCard, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
 DECLARE_DELEGATE(FOnFinishActivationQueue);
 
@@ -78,7 +78,7 @@ private:
 	void OnAbilityEnded(const FAbilityEndedData& AbilityEndedData);
 
 public:
-	FOnUseCardResolved OnCardUseResolved;
+	FOnResolveUseCard OnResolveUseCard;
 	FOnActivateEnemyAbility OnActivateEnemyAbility;
 	FOnFinishActivationQueue OnFinishActivationQueue;
 

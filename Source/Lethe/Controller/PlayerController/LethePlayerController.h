@@ -71,6 +71,8 @@ private:
 	void OnOtherTileDetected(AActor* LastActor, AActor* CurrentActor) const;
 
 	void OnUpdatePreviewData(const FPreviewData& PreviewData) const;
+	
+	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
 
 public:
 	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;

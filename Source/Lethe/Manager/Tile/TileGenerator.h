@@ -1,3 +1,5 @@
+// Copyright JETBLU, Inc. All Rights Reserved.
+
 #pragma once
 
 #include "CoreMinimal.h"

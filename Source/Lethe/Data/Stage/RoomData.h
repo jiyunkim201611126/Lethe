@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright JETBLU, Inc. All Rights Reserved.
+
+#pragma once
 
 #include "CoreMinimal.h"
 #include "CubeCoord.h"
@@ -10,7 +12,7 @@ struct FRoomData
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 RoomSize;
+	int32 RoomSize = 0;
 	
 	UPROPERTY()
 	FCubeCoord CenterCoords;

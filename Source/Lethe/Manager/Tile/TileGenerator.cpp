@@ -282,13 +282,13 @@ namespace TileGeneratorInternal
 	    	
 	    	TileBFS(TileDataMap, Elem.Key, 999, EBFSType::Connection, CurrentCoords,
 	    		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-	    	{
-	    		return true;
-	    	},
-	    	[](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
-	    	{
-	    		return true;
-	    	});
+	    		{
+	    			return true;
+	    		},
+	    		[](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+	    		{
+	    			return true;
+	    		});
 
 	    	FCubeCoord TempCoord = FCubeCoord(0, 0, 0);
 	    	
@@ -314,7 +314,7 @@ namespace TileGeneratorInternal
 	    		if (Closest)
 	    		{
 	    			FRoomData RoomData;
-	    			RoomData.CenterCoords = *Closest;
+	    			RoomData.CenterCoord = *Closest;
 	    			RoomData.RoomSize = CurrentCoords.Num();
 	    			RoomDataMap.Emplace(RoomId, RoomData);
 	    		}
@@ -332,7 +332,7 @@ namespace TileGeneratorInternal
 		{
 			TSet<FCubeCoord> BoundCoords;
 			
-			TileBFS(TileDataMap, Elem.Value.CenterCoords, 999, EBFSType::Connection, BoundCoords,
+			TileBFS(TileDataMap, Elem.Value.CenterCoord, 999, EBFSType::Connection, BoundCoords,
 			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
 				return true;
@@ -343,7 +343,7 @@ namespace TileGeneratorInternal
 				for (int32 i = 0; i < 6; i++)
 				{
 					const FCubeCoord NextCoord = CurrentCoord + FCubeCoord::GetDirection(i);
-					FTileData* NextTileData = TileDataMap.Find(NextCoord);
+					const FTileData* NextTileData = TileDataMap.Find(NextCoord);
 	
 					if (NextTileData && FMath::Abs(CurrentTileData->Floor - NextTileData->Floor) <= 1 && CurrentTileData->RoomId != NextTileData->RoomId)
 					{
@@ -401,8 +401,22 @@ namespace TileGeneratorInternal
 				if (SelectCount / 6)
 				{
 					SelectCount -= 6;
-					TileDataMap.FindChecked(Pair.Key).Connections[Pair.Value] = true;
-					TileDataMap.FindChecked(Pair.Key + FCubeCoord::GetDirection(Pair.Value)).Connections[(Pair.Value + 3) % 6] = true; //양방향 연결
+
+					const FCubeCoord FromCoord = Pair.Key;
+					const FCubeCoord ToCoord = Pair.Key + FCubeCoord::GetDirection(Pair.Value);
+
+					FTileData& FromTileData = TileDataMap.FindChecked(FromCoord);
+					FTileData& ToTileData = TileDataMap.FindChecked(ToCoord);
+
+					// 두 타일을 연결합니다.
+					FromTileData.Connections[Pair.Value] = true;
+					ToTileData.Connections[(Pair.Value + 3) % 6] = true;
+
+					// 서로 반대편 타일을 입구 타일로 기록합니다.
+					FRoomData& FromRoomData = RoomDataMap.FindChecked(FromTileData.RoomId);
+					FRoomData& ToRoomData = RoomDataMap.FindChecked(ToTileData.RoomId);
+					FromRoomData.VisibleEntranceCoords.AddUnique(ToCoord);
+					ToRoomData.VisibleEntranceCoords.AddUnique(FromCoord);
 				}
 
 				SelectCount = SelectCount + StageInitData->AverageConnectionPerSixWays;
@@ -413,6 +427,8 @@ namespace TileGeneratorInternal
 	//타일 생성
 	void MakeTileActor(UWorld* World, TMap<FCubeCoord, FTileData>& TileDataMap, TMap<int32, FRoomData>& RoomDataMap, const FStageData* StageData)
 	{
+		TMap<FCubeCoord, TArray<TWeakObjectPtr<ATile>>> TilesByCoord;
+		
 		for (auto& Pair : TileDataMap)
 		{
 			FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
@@ -425,6 +441,11 @@ namespace TileGeneratorInternal
 				WorldPosition.Z += 40.f;
 				
 				ATile* TileActor = World->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
+				TilesByCoord.FindOrAdd(Pair.Key).Emplace(TileActor);
+				if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
+				{
+					RoomData->RoomTiles.Emplace(TileActor);
+				}
 		
 				//타일의 중심 메쉬 결정을 위한 코드
 				TArray<UStaticMesh*> TileMeshes;
@@ -489,11 +510,6 @@ namespace TileGeneratorInternal
 						TileData->TileActor = TileActor;
 					}
 
-					if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
-					{
-						RoomData->RoomTiles.Emplace(TileActor);
-					}
-
 					// 꼭대기 타일이 아닌 모든 타일에게 꼭대기 타일을 할당합니다.
 					for (ATile* NonTopTile : NonTopTiles)
 					{
@@ -508,6 +524,21 @@ namespace TileGeneratorInternal
 				}
 				
 				TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomId, UVOffsetType);
+			}
+		}
+
+		// 입구 타일을 실제로 추가합니다.
+		for (auto& Pair : RoomDataMap)
+		{
+			FRoomData& RoomData = Pair.Value;
+			RoomData.VisibleEntranceTiles.Reset();
+			
+			for (const FCubeCoord& EntranceCoord : RoomData.VisibleEntranceCoords)
+			{
+				if (const auto* Tiles = TilesByCoord.Find(EntranceCoord))
+				{
+					RoomData.VisibleEntranceTiles.Append(*Tiles);
+				}
 			}
 		}
 	}

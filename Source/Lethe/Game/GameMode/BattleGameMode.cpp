@@ -59,7 +59,7 @@ FVector ABattleGameMode::GetStartLocation() const
 	
 	if (const FRoomData* StartRoomData = RoomManagerSubsystem->GetRoomData(StartRoomId))
 	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTile(StartRoomData->CenterCoords))
+		if (const ATile* Tile = TileManagerSubsystem->GetTile(StartRoomData->CenterCoord))
 		{
 			return Tile->GetActorLocation();
 		}
@@ -84,7 +84,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 	// StartRoom의 CenterCoords를 시작으로 주변 총 CharacterNumber 개수만큼의 타일을 가져옵니다.
 	TSet<FCubeCoord> OutCoords;
 	const bool bCanSelectOtherRoom = StartRoomData->RoomSize < CharacterNumber;
-	TileManagerSubsystem->TileBFS(StartRoomData->CenterCoords, 10, EBFSType::Connection, OutCoords,
+	TileManagerSubsystem->TileBFS(StartRoomData->CenterCoord, 10, EBFSType::Connection, OutCoords,
 		[&OutCoords, CharacterNumber](const FTileData* CurrentTileData, const FTileData* NextTileData)
 		{
 			return OutCoords.Num() < CharacterNumber;

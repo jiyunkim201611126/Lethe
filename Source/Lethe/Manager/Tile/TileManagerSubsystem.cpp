@@ -428,11 +428,22 @@ bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 		return false;
 	}
 
+	const ATile* OldTile = nullptr;
+	if (const auto* OldTileWeakPtr = ActorToTileMap.Find(InActor))
+	{
+		OldTile = OldTileWeakPtr->Get();
+	}
+
 	UnmapByTile(InTile);
 	UnmapByActor(InActor);
 	
 	TileToActorMap.Emplace(InTile, InActor);
 	ActorToTileMap.Emplace(InActor, InTile);
+
+	if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
+	{
+		RoomManagerSubsystem->NotifyActorTileChanged(InActor, OldTile, InTile);
+	}
 
 	return true;
 }

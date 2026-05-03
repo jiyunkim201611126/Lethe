@@ -28,6 +28,8 @@ void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoo
 	}
 
 	TextRender->SetVisibility(bIsTopTile);
+
+	SetActorHiddenInGame(true);
 }
 
 void ATile::SetTopTile(ATile* InTile)
@@ -104,6 +106,29 @@ void ATile::UnhighlightActorByAbility_Implementation()
 		OutlineColorByCard = 0;
 		MainTile->SetRenderCustomDepth(false);
 	}
+}
+
+void ATile::SetTileVisionState(const ETileVisionState VisionState)
+{
+	if (TileVisionState == VisionState)
+	{
+		return;
+	}
+	TileVisionState = VisionState;
+	
+	switch (TileVisionState)
+	{
+	case ETileVisionState::Visible:
+		SetActorHiddenInGame(false);
+		break;
+	default:
+		break;
+	}
+}
+
+ETileVisionState ATile::GetTileVisionState() const
+{
+	return TileVisionState;
 }
 
 FCubeCoord ATile::GetCubeCoord() const

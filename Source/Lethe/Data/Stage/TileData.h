@@ -54,14 +54,17 @@ struct FTileData
 	GENERATED_BODY()
 
 	/** 층 수, 기본은 1층 */
+	UPROPERTY()
 	int32 Floor = 1;
 
 	/** true면 Connected와 VerticalConnected 중 하나인 상태입니다. */
 	TStaticArray<bool, 6> Connections = {true, true, true, true, true, true};
 	
 	/** ID값은 일단 넣었지만, Room이라는 구조체가 필요한지 잘 모르겠어서 생성시점 외에 사용되진 않음 */
+	UPROPERTY()
 	int32 RoomId = 0;
 	
 	/** 타일 생성 시 동적으로 할당되는 포인터입니다. */
+	UPROPERTY()
 	TWeakObjectPtr<ATile> TileActor;
 };

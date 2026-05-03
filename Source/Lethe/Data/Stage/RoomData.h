@@ -8,16 +8,6 @@
 
 class ATile;
 
-enum class ERoomVisionState : uint8
-{
-	/** 아직 방문하지 않은 Room으로, 렌더링 자체가 꺼진 상태입니다. */
-	Hidden,
-	/** 현재 방문 중인 Room으로, Room 내 모든 Tile, 그리고 연결된 Room의 입구 타일까지 볼 수 있는 상태입니다. */
-	Visible,
-	/** 한 번 방문했던 Room으로, 타일 형태는 볼 수 있으나 그 위 적은 볼 수 없는 상태입니다. */
-	Explored
-};
-
 USTRUCT()
 struct FRoomData
 {
@@ -27,10 +17,21 @@ struct FRoomData
 	int32 RoomSize = 0;
 	
 	UPROPERTY()
-	FCubeCoord CenterCoords;
+	FCubeCoord CenterCoord;
 
 	/** 타일 생성 시 동적으로 할당되는 포인터 배열입니다. */
+	UPROPERTY()
 	TArray<TWeakObjectPtr<ATile>> RoomTiles;
 
-	ERoomVisionState Visibility = ERoomVisionState::Hidden;
+	/** 해당 Room에 소속되지 않는, 바깥 입구 타일의 좌표입니다. */
+	UPROPERTY()
+	TArray<FCubeCoord> VisibleEntranceCoords;
+
+	/** 해당 Room에 소속되지 않는, 시야 확보 시 사용되는 바깥 입구 타일입니다. */
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ATile>> VisibleEntranceTiles;
+
+	/** 현재 Room 내부에 있는 플레이어 캐릭터 수입니다. */
+	UPROPERTY()
+	int32 PlayerCharacterCount = 0;
 };

@@ -2,14 +2,10 @@
 
 #include "TileManagerSubsystem.h"
 
+#include "RoomManagerSubsystem.h"
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
-
-void UTileManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
 
 void UTileManagerSubsystem::Deinitialize()
 {
@@ -29,7 +25,10 @@ void UTileManagerSubsystem::MakeNewTileMap()
 			if (FTileGenerator::GenerateTileMap(GetWorld(), StageData, StageInitData, GenerationResult))
 			{
 				TileDataMap = MoveTemp(GenerationResult.TileDataMap);
-				RoomDataMap = MoveTemp(GenerationResult.RoomDataMap);
+				if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
+				{
+					RoomManagerSubsystem->SetRoomData(MoveTemp(GenerationResult.RoomDataMap));
+				}
 			}
 		}
 	}

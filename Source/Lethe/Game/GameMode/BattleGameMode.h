@@ -19,12 +19,18 @@ class LETHE_API ABattleGameMode : public ALetheGameMode
 public:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 
+	int32 GetStartRoomId() const;
+	FVector GetStartLocation() const;
+
 private:
 	void OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitionDatas) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ALetheCharacterBase> TestEnemyClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 StartRoomId = 0;
 
 	/**
 	 * 기존 드럽게 Index가지고 계산하던 코드 버리고 그냥 5개 하드코딩으로 박았습니다.

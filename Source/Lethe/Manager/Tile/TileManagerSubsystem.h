@@ -6,7 +6,6 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "Lethe/Data/Stage/CubeCoord.h"
 #include "Lethe/Data/Stage/TileData.h"
-#include "Lethe/Data/Stage/RoomData.h"
 #include "TileManagerSubsystem.generated.h"
 
 enum class EStageType : uint8;
@@ -26,7 +25,6 @@ class LETHE_API UTileManagerSubsystem : public UWorldSubsystem
 
 public:
 	//~ Begin USubsystem Interface
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
 	
@@ -95,9 +93,6 @@ private:
 
 	UPROPERTY()
 	TMap<FCubeCoord, FTileData> TileDataMap;
-	
-	UPROPERTY()
-	TMap<int32, FRoomData> RoomDataMap;
 
 	/** 탐색을 위해 양방향으로 타일과 액터(캐릭터)를 매핑하는 Map입니다. */
 	TMap<TWeakObjectPtr<ATile>, TWeakObjectPtr<AActor>> TileToActorMap;

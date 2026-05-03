@@ -1,3 +1,7 @@
+// Copyright JETBLU, Inc. All Rights Reserved.
+
+#pragma once
+
 #include "Tile.h"
 
 ATile::ATile(const FObjectInitializer& ObjectInitializer)
@@ -9,17 +13,18 @@ ATile::ATile(const FObjectInitializer& ObjectInitializer)
 	MainTile->SetupAttachment(Root);
 }
 
-void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<ETileConnectionState>& UVOffsetType)
+void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType)
 {
 	TextRender = FindComponentByClass<UTextRenderComponent>();
 	SetTileMesh(Meshes, UVOffsetType);
 
 	CubeCoord = InCubeCoord;
+	RoomId = InRoomId;
 
 	const bool bIsTopTile = IsTopTile();
 	if (bIsTopTile)
 	{
-		TextRender->SetText(FText::Format(FText::FromString(TEXT("[{0}, {1}, {2}]\nRoom : {3}")), CubeCoord.Q, CubeCoord.R, CubeCoord.S, RoomID));
+		TextRender->SetText(FText::Format(FText::FromString(TEXT("[{0}, {1}, {2}]\nRoom : {3}")), CubeCoord.Q, CubeCoord.R, CubeCoord.S, InRoomId));
 	}
 
 	TextRender->SetVisibility(bIsTopTile);
@@ -119,6 +124,11 @@ void ATile::SubtractOccupiedCount()
 int32 ATile::GetOccupiedCount() const
 {
 	return OccupiedCount;
+}
+
+int32 ATile::GetRoomId() const
+{
+	return RoomId;
 }
 
 bool ATile::IsTopTile() const

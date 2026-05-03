@@ -26,7 +26,7 @@ class LETHE_API ATile : public AActor, public IHighlightInterface
 public:
 	ATile(const FObjectInitializer& ObjectInitializer);
 	
-	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 RoomID, const TArray<ETileConnectionState>& UVOffsetType);
+	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType);
 	void SetTopTile(ATile* InTile);
 	ATile* GetTopTile();
 
@@ -38,6 +38,7 @@ public:
 	//~ End of IHighlightInterface
 	
 	FCubeCoord GetCubeCoord() const;
+	int32 GetRoomId() const;
 
 	void AddOccupiedCount();
 	void SubtractOccupiedCount();
@@ -62,6 +63,7 @@ protected:
 
 private:
 	FCubeCoord CubeCoord;
+	int32 RoomId = INDEX_NONE;
 
 	/** TopTile 변수의 값이 nullptr이면, 해당 객체가 가장 윗단에 위치한 TopTile입니다. */
 	TWeakObjectPtr<ATile> TopTile;

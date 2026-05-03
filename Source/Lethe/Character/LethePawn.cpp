@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Game/GameMode/BattleGameMode.h"
 
 ALethePawn::ALethePawn()
 {
@@ -54,6 +55,16 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	EnhancedInputComponent->BindAction(LeftMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::LeftMouseButtonClicked);
 	EnhancedInputComponent->BindAction(RightMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::RightMouseButtonClicked);
 	EnhancedInputComponent->BindAction(SpaceAction, ETriggerEvent::Completed, this, &ThisClass::SpaceKeyPressed);
+}
+
+void ALethePawn::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (const ABattleGameMode* BattleGameMode = GetWorld()->GetAuthGameMode<ABattleGameMode>())
+	{
+		SetActorLocation(BattleGameMode->GetStartLocation());
+	}
 }
 
 void ALethePawn::Move(const FInputActionValue& InputActionValue)

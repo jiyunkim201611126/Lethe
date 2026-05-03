@@ -34,6 +34,10 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	//~ End of APawn Interface
+	
+	//~ Begin AActor Interface
+	virtual void BeginPlay() override;
+	//~ End of AActor Interface
 
 private:
 	void Move(const FInputActionValue& InputActionValue);

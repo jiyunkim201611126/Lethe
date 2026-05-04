@@ -22,7 +22,7 @@ public:
 	virtual int32 GetMaxMoveDistance() const = 0;
 	
 	UFUNCTION(BlueprintCallable)
-	virtual void SetLocationOnTile(FVector InTileLocation) = 0;
+	virtual void MoveToTile(UPARAM(ref)TArray<FVector>& TileLocations, const bool bTeleport = false) = 0;
 	
 	virtual void OnDamageTaken() = 0;
 	virtual void Die() = 0;

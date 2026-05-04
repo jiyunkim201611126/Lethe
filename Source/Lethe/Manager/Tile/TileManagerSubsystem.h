@@ -45,8 +45,7 @@ public:
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray, const bool bIgnoreActor) const;
 
 	/**
-	 * StartTile에서 TargetTile까지의 최단 경로들 중, MoveDistance 이내에서 도달 가능한 타일들을 우선순위대로 Out 인자로 뱉어주는 함수입니다.
-	 * 기존 FindShortestPath의 프레임드랍 유발 가능성을 제거하기 위해 구현한 함수로, MoveDistance를 매개변수로 받아 최소한의 경로 복원을 수행합니다.
+	 * TargetTile로 도달 가능한 최단 경로 중 대표 경로를 하나만 반환합니다.
 	 */
 	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const;
 

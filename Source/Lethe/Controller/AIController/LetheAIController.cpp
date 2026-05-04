@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
@@ -297,9 +298,9 @@ ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const in
 	return nullptr;
 }
 
-void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
+void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 {
-	if (!TargetTile)
+	if (PathTiles.IsEmpty())
 	{
 		return;
 	}
@@ -320,7 +321,10 @@ void ALetheAIController::ActivateMoveAbility(ATile* TargetTile)
 			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
-			MoveAbilityActivationData.TargetTile.Emplace(TargetTile);
+			for (ATile* PathTile : PathTiles)
+			{
+				MoveAbilityActivationData.TargetTiles.Emplace(PathTile);
+			}
 			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
 			
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
@@ -386,7 +390,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.TargetTile.Emplace(TargetTile);
+			ActivationData.TargetTiles.Emplace(TargetTile);
 			ActivationData.Payload.Instigator = ControlledEnemy;
 
 			CandidateAbilityData.Emplace(ActivationData);

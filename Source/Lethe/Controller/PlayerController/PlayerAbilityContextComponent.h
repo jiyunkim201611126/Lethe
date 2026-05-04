@@ -109,7 +109,7 @@ private:
 	bool TryEnqueueNextReservedMoveActivationData();
 	
 	/** 내부적으로 GetActionType을 호출해 어떤 방식으로 도달할 수 있는지 반환하며, Swap을 통해 도달할 수 있는 경우 Out 인자들이 채워집니다. */
-	EMoveActionType ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, ATile*& OutNextTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
+	EMoveActionType ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, TArray<TWeakObjectPtr<ATile>>& OutPathTiles, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
 
 	/** 해당 타일에 어떤 방식으로 도달할 수 있는지 반환하는 함수입니다. */
 	EMoveActionType GetActionType(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);

@@ -335,19 +335,63 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 		CurrentCoords = MoveTemp(NextCoords);
 	}
 
-	// 먼 거리가 앞으로 오도록 정렬해서 집어넣습니다.
+	// 가장 멀리 갈 수 있는 후보부터 검사합니다.
 	for (int32 Distance = MaxPriorityDistance; Distance >= 1; --Distance)
 	{
-		for (const FCubeCoord& Coord : PrioritizedCoordsByDistance[Distance])
+		// 해당 거리의 후보 좌표들을 순회합니다.
+		for (const FCubeCoord& CandidateCoord : PrioritizedCoordsByDistance[Distance])
 		{
-			if (ATile* Tile = GetTile(Coord))
+			bool bPathBuilt = true;
+			TArray<FCubeCoord> ReversedPath;
+			FCubeCoord CurrentCoord = CandidateCoord;
+
+			// 후보 좌표에서 StartTile에 도달할 때까지 부모를 따라갑니다.
+			while (CurrentCoord != StartTile->GetCubeCoord())
 			{
-				OutPathTiles.AddUnique(Tile);
+				ReversedPath.Emplace(CurrentCoord);
+
+				// 현재 좌표의 부모를 찾고, 없으면 경로 생성을 취소합니다.
+				const TArray<FCubeCoord>* Parents = SearchData.ParentCoordMap.Find(CurrentCoord);
+				if (!Parents || Parents->IsEmpty())
+				{
+					bPathBuilt = false;
+					break;
+				}
+				
+				// 부모가 여러 개일 순 있지만, 대표 경로 하나만 필요하므로 첫 번째 부모를 선택합니다.
+				CurrentCoord = (*Parents)[0];
+			}
+
+			// 이 후보에서 경로를 만들지 못 했다면 다음 후보를 봅니다.
+			if (!bPathBuilt)
+			{
+				continue;
+			}
+
+			// 역순으로 쌓인 좌표들을 다시 뒤집습니다.
+			OutPathTiles.Reset();
+			for (int32 Index = ReversedPath.Num() - 1; Index >= 0; --Index)
+			{
+				if (ATile* Tile = GetTile(ReversedPath[Index]))
+				{
+					OutPathTiles.Emplace(Tile);
+				}
+				else
+				{
+					OutPathTiles.Reset();
+					bPathBuilt = false;
+					break;
+				}
+			}
+
+			// 성공적으로 경로를 생성한 경우 true를 반환합니다.
+			if (bPathBuilt && !OutPathTiles.IsEmpty())
+			{
+				return true;
 			}
 		}
 	}
-
-	return !OutPathTiles.IsEmpty();
+	return false;
 }
 
 void UTileManagerSubsystem::GetAroundTiles(const ATile* CenterTile, const int32 Range, TArray<ATile*>& OutTiles) const

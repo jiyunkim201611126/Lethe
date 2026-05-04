@@ -110,8 +110,12 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			SpawnTransform.SetLocation(SpawnLocation);
 			if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 			{
+				TArray<FVector> SpawnLocationArray;
+				SpawnLocationArray.Emplace(SpawnLocation);
+				SpawnedCharacter->MoveToTile(SpawnLocationArray, true);
+				
 				TileManagerSubsystem->MapTileAndActor(TileActor, SpawnedCharacter);
-				SpawnedCharacter->SetLocationOnTile(SpawnLocation);
+				
 				SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
 				SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);
 				
@@ -136,13 +140,16 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			FVector SpawnLocation = Tile->GetActorLocation();
 			if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
 			{
-				SpawnedEnemy->SetLocationOnTile(SpawnLocation);
-				SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
-
+				TArray<FVector> SpawnLocationArray;
+				SpawnLocationArray.Emplace(SpawnLocation);
+				SpawnedEnemy->MoveToTile(SpawnLocationArray, true);
+				
 				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
-
-				LetheGameState->RegisterEnemy(SpawnedEnemy);
+				
+				SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
 				EnemyPriority += 100;
+				
+				LetheGameState->RegisterEnemy(SpawnedEnemy);
 			}
 		}
 	}

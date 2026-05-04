@@ -9,6 +9,16 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "AbilityActivationData.generated.h"
 
+UCLASS(BlueprintType)
+class LETHE_API UMoveAbilityPayload : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+	TArray<TObjectPtr<ATile>> PathTiles;
+};
+
 USTRUCT()
 struct FAbilityActivationData
 {
@@ -25,7 +35,7 @@ struct FAbilityActivationData
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<ATile>> TargetTile;
+	TArray<TWeakObjectPtr<ATile>> TargetTiles;
 
 	UPROPERTY()
 	FGameplayEventData Payload;

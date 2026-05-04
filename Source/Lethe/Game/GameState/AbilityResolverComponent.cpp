@@ -226,22 +226,31 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	const bool bIsMovementAbility = ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 	if (bIsMovementAbility)
 	{
-		if (ActivationData->TargetTile.IsEmpty() || !ActivationData->TargetTile[0].IsValid())
+		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
+		for (const auto& TargetTile : ActivationData->TargetTiles)
+		{
+			if (TargetTile.IsValid())
+			{
+				MovePayload->PathTiles.Emplace(TargetTile.Get());
+			}
+		}
+		
+		if (MovePayload->PathTiles.IsEmpty())
 		{
 			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
 		}
 		
-		ActivationData->Payload.OptionalObject = ActivationData->TargetTile[0].Get();
+		ActivationData->Payload.OptionalObject = MovePayload;
 	}
 	else
 	{
-		if (ActivationData->TargetTile.IsEmpty() || !ActivationData->TargetTile[0].IsValid())
+		if (ActivationData->TargetTiles.IsEmpty())
 		{
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 
 		TArray<TWeakObjectPtr<AActor>> TargetActors;
-		for (const auto& TargetTile : ActivationData->TargetTile)
+		for (const auto& TargetTile : ActivationData->TargetTiles)
 		{
 			if (TargetTile.IsValid())
 			{
@@ -260,7 +269,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			case ETeamSide::Enemy:
 				{
 					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
-					const FVector DummyActorLocation = ActivationData->TargetTile[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+					const FVector DummyActorLocation = ActivationData->TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
 					DummyActor->SetActorLocation(DummyActorLocation);
 					TargetActors.Emplace(DummyActor);
 				}
@@ -271,7 +280,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		}
 
 		ActorArrayData->SetActors(TargetActors);
-		ActivationData->Payload.OptionalObject = ActivationData->TargetTile[0].Get();
+		ActivationData->Payload.OptionalObject = ActivationData->TargetTiles[0].Get();
 		ActivationData->Payload.TargetData.Add(ActorArrayData);
 	}
 	

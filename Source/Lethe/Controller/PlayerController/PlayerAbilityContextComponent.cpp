@@ -194,9 +194,9 @@ bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
 			continue;
 		}
 
-		ATile* NextTile = nullptr;
+		TArray<TWeakObjectPtr<ATile>> PathTiles;
 		FPlayerCharacterReservedMove* OutSwapTargetReservedMove = nullptr;
-		EMoveActionType ReachType = ResolveActionType(&ReservedMove, NextTile, OutSwapTargetReservedMove);
+		EMoveActionType ReachType = ResolveActionType(&ReservedMove, PathTiles, OutSwapTargetReservedMove);
 
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		switch (ReachType)
@@ -250,7 +250,7 @@ bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
 			AbilityActivationData.Payload.OptionalObject2 = OutSwapTargetReservedMove->PlayerCharacter.Get();
 		}
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
-		AbilityActivationData.TargetTile.Emplace(NextTile);
+		AbilityActivationData.TargetTiles = MoveTemp(PathTiles);
 		LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData, false);
 		
 		bIsActivationDataAdded = true;
@@ -284,9 +284,9 @@ bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
 	return bIsActivationDataAdded;
 }
 
-EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, ATile*& OutNextTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
+EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, TArray<TWeakObjectPtr<ATile>>& OutPathTiles, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
 {
-	OutNextTile = nullptr;
+	OutPathTiles.Reset();
 	OutSwapTargetReservedMove = nullptr;
 
 	if (!SourceReservedMove || !SourceReservedMove->IsValid() || SourceReservedMove->PathTiles.IsEmpty())
@@ -302,7 +302,13 @@ EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerC
 			const EMoveActionType ReachType = GetActionType(SourceReservedMove, CandidateTile.Get(), OutSwapTargetReservedMove);
 			if (ReachType != EMoveActionType::CantReach)
 			{
-				OutNextTile = CandidateTile.Get();
+				for (int32 PathTileIndex = 0; PathTileIndex <= Index; ++PathTileIndex)
+				{
+					if (SourceReservedMove->PathTiles.IsValidIndex(PathTileIndex))
+					{
+						OutPathTiles.Emplace(SourceReservedMove->PathTiles[PathTileIndex]);
+					}
+				}
 				return ReachType;
 			}
 		}
@@ -567,7 +573,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 				AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 				AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-				AbilityActivationData.TargetTile.Emplace(TargetTile);
+				AbilityActivationData.TargetTiles.Emplace(TargetTile);
 				LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
 			}
 		}
@@ -626,7 +632,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 	AbilityActivationData.AbilityTag = CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
-	AbilityActivationData.TargetTile.Emplace(OutTileAndActor.Tile);
+	AbilityActivationData.TargetTiles.Emplace(OutTileAndActor.Tile);
 	LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
 	return true;
 }

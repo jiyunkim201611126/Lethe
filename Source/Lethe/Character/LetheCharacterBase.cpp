@@ -6,6 +6,7 @@
 #include "LethePawn.h"
 #include "Component/GASManagerComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
@@ -31,11 +32,24 @@ UAbilitySystemComponent* ALetheCharacterBase::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void ALetheCharacterBase::SetLocationOnTile(FVector InTileLocation)
+void ALetheCharacterBase::MoveToTile(TArray<FVector>& TileLocations, const bool bTeleport)
 {
 	// 캐릭터 절반 높이만큼 위로 올려줍니다.
-	InTileLocation.Z += GetDefaultHalfHeight();
-	SetActorLocation(InTileLocation);
+	const float ZOffset = GetDefaultHalfHeight();
+
+	if (bTeleport)
+	{
+		FVector& TileLocation = TileLocations.Last();
+		TileLocation.Z = TileLocation.Z + ZOffset;
+		SetActorLocation(TileLocation);
+		return;
+	}
+	
+	for (FVector& TileLocation : TileLocations)
+	{
+		TileLocation.Z += ZOffset;
+		MoveToLocations.Emplace(MoveTemp(TileLocation));
+	}
 }
 
 int32 ALetheCharacterBase::GetMoveDistance() const
@@ -87,6 +101,27 @@ void ALetheCharacterBase::BeginPlay()
 		if (const ALethePawn* LethePawn = Cast<ALethePawn>(PlayerController->GetPawn()))
 		{
 			OnCameraHeightChanged(LethePawn->GetAttributeWidgetSize());
+		}
+	}
+}
+
+void ALetheCharacterBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (!MoveToLocations.IsEmpty())
+	{
+		const float Speed = GetCharacterMovement()->MaxWalkSpeed;
+		const FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), MoveToLocations[0], DeltaSeconds, Speed);
+
+		if (FVector::DistSquared(GetActorLocation(), NewLocation) <= FMath::Square(MoveArriveTolerance))
+		{
+			SetActorLocation(MoveToLocations[0]);
+			MoveToLocations.RemoveAt(0);
+		}
+		else
+		{
+			SetActorLocation(NewLocation);
 		}
 	}
 }

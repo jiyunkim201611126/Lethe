@@ -30,7 +30,7 @@ public:
 	//~ End of IAbilitySystemInterface
 	
 	//~ Begin ICombatInterface
-	virtual void SetLocationOnTile(FVector InTileLocation) override;
+	virtual void MoveToTile(TArray<FVector>& TileLocations, const bool bTeleport) override;
 	virtual int32 GetMoveDistance() const override;
 	virtual int32 GetMaxMoveDistance() const override;
 	virtual void OnDamageTaken() override;
@@ -40,6 +40,7 @@ public:
 
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActor Interface
 
@@ -79,4 +80,7 @@ private:
 
 	UPROPERTY()
 	TArray<TObjectPtr<UWidgetComponent>> AttributeWidgetComponents;
+
+	TArray<FVector> MoveToLocations;
+	float MoveArriveTolerance = 5.f;
 };

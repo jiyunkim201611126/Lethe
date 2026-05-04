@@ -20,6 +20,7 @@ public:
 	void ProcessTelegraphPlan() const;
 	
 	//~ Begin ICombatInterface
+	virtual void UpdateHiddenByTile(const ATile* Tile) override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
 	//~ End of ICombatInterface

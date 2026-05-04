@@ -4,6 +4,7 @@
 
 #include "TileManagerSubsystem.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void URoomManagerSubsystem::Deinitialize()
@@ -18,9 +19,9 @@ void URoomManagerSubsystem::SetRoomData(TMap<int32, FRoomData>&& InRoomData)
 	RoomDataMap = MoveTemp(InRoomData);
 }
 
-void URoomManagerSubsystem::NotifyActorTileChanged(AActor* InActor, const ATile* OldTile, const ATile* NewTile)
+void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile)
 {
-	if (!InActor || !NewTile)
+	if (!NewTile)
 	{
 		// OldTile은 nullptr일 수 있습니다.
 		return;
@@ -29,10 +30,6 @@ void URoomManagerSubsystem::NotifyActorTileChanged(AActor* InActor, const ATile*
 	if (InActor->Implements<UPlayerCharacterInterface>())
 	{
 		UpdatePlayerRoomState(OldTile, NewTile);
-	}
-	else
-	{
-		ApplyActorVisibilityByTile(InActor, NewTile->GetTileVisionState());
 	}
 }
 
@@ -89,11 +86,14 @@ void URoomManagerSubsystem::ChangeTileVisionState(const int32 InRoomId, FRoomDat
 	{
 		if (RoomTile.IsValid())
 		{
+			RoomTile->SetTileVisionState(VisionState);
 			if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(RoomTile.Get()))
 			{
-				ApplyActorVisibilityByTile(ActorOnTile, VisionState);
+				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+				{
+					CombatInterface->UpdateHiddenByTile(RoomTile.Get());
+				}
 			}
-			RoomTile->SetTileVisionState(VisionState);
 		}
 	}
 
@@ -104,11 +104,14 @@ void URoomManagerSubsystem::ChangeTileVisionState(const int32 InRoomId, FRoomDat
 		{
 			if (EntranceTile.IsValid())
 			{
+				EntranceTile->SetTileVisionState(ETileVisionState::Visible);
 				if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
 				{
-					ApplyActorVisibilityByTile(ActorOnTile, ETileVisionState::Visible);
+					if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+					{
+						CombatInterface->UpdateHiddenByTile(EntranceTile.Get());
+					}
 				}
-				EntranceTile->SetTileVisionState(ETileVisionState::Visible);
 			}
 		}
 	}
@@ -132,30 +135,17 @@ void URoomManagerSubsystem::ChangeTileVisionState(const int32 InRoomId, FRoomDat
 				
 				if (EntranceTile.IsValid() && EntranceTile->GetRoomId() == InRoomId)
 				{
+					EntranceTile->SetTileVisionState(ETileVisionState::Explored);
 					if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
 					{
-						ApplyActorVisibilityByTile(ActorOnTile, ETileVisionState::Explored);
+						if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+						{
+							CombatInterface->UpdateHiddenByTile(EntranceTile.Get());
+						}
 					}
-					EntranceTile->SetTileVisionState(ETileVisionState::Explored);
 				}
 			}
 		}
-	}
-}
-
-void URoomManagerSubsystem::ApplyActorVisibilityByTile(AActor* Actor, const ETileVisionState VisionState) const
-{
-	switch (VisionState)
-	{
-	case ETileVisionState::Hidden:
-	case ETileVisionState::Explored:
-		Actor->SetActorHiddenInGame(true);
-		break;
-	case ETileVisionState::Visible:
-		Actor->SetActorHiddenInGame(false);
-		break;
-	default:
-		break;
 	}
 }
 

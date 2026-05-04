@@ -21,13 +21,12 @@ public:
 	
 	void SetRoomData(TMap<int32, FRoomData>&& InRoomData);
 
-	void NotifyActorTileChanged(AActor* InActor, const ATile* OldTile, const ATile* NewTile);
+	void NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile);
 	const FRoomData* GetRoomData(const int32 RoomId) const;
 
 private:
 	void UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile);
 	void ChangeTileVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const;
-	void ApplyActorVisibilityByTile(AActor* Actor, const ETileVisionState VisionState) const;
 
 	FRoomData* GetMutableRoomData(const int32 RoomId);
 

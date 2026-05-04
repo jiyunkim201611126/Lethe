@@ -30,7 +30,7 @@ public:
 	//~ End of IAbilitySystemInterface
 	
 	//~ Begin ICombatInterface
-	virtual void MoveToTile(TArray<FVector>& TileLocations, const bool bTeleport) override;
+	virtual void MoveToTile(TArray<ATile*>& PathTiles, const bool bTeleport) override;
 	virtual int32 GetMoveDistance() const override;
 	virtual int32 GetMaxMoveDistance() const override;
 	virtual void OnDamageTaken() override;
@@ -81,6 +81,8 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<UWidgetComponent>> AttributeWidgetComponents;
 
-	TArray<FVector> MoveToLocations;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ATile>> MovePath;
 	float MoveArriveTolerance = 5.f;
+	float HiddenTolerance = 30.f;
 };

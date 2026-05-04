@@ -3,6 +3,8 @@
 #include "AbilityResolverComponent.h"
 
 #include "AbilitySystemComponent.h"
+#include "Lethe/LetheLog.h"
+#include "Lethe/Util.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -199,6 +201,7 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& Activati
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	bIsHandlingAbilityActivation = true;
 	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Activate Result: %s", *LogHelper::EnumToString(Result));
 	bIsHandlingAbilityActivation = false;
 	if (Result == ETryAbilityActivationResult::FailedLogicError)
 	{
@@ -208,6 +211,7 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& Activati
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData)
 {
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *ActivationData->AbilityOwnerASC->GetAvatarActor()->GetFName().ToString());
 	if (!ActivationData)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
@@ -311,6 +315,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 
 void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
 {
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Ended");
 	// Ability를 성공적으로 발동해 EndAbility까지 호출됐을 때 콜백을 통해 이곳으로 들어옵니다.
 	// 턴제 게임인 프로젝트 특성상 Ability 발동 도중 Cancel되는 경우는 존재하지 않습니다.
 	if (CurrentActivationASC.IsValid())

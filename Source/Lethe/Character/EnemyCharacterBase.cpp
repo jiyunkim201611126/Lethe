@@ -72,3 +72,30 @@ const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
 {
 	return AbilityRange;
 }
+
+void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
+{
+	if (!Tile)
+	{
+		return;
+	}
+	
+	switch (Tile->GetTileVisionState())
+	{
+	case ETileVisionState::Hidden:
+	case ETileVisionState::Explored:
+		if (!IsHidden())
+		{
+			SetActorHiddenInGame(true);
+		}
+		break;
+	case ETileVisionState::Visible:
+		if (IsHidden())
+		{
+			SetActorHiddenInGame(false);
+		}
+		break;
+	default:
+		break;
+	}
+}

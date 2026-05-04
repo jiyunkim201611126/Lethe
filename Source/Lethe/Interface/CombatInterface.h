@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+class ATile;
+
 UINTERFACE(NotBlueprintable)
 class UCombatInterface : public UInterface
 {
@@ -22,7 +24,9 @@ public:
 	virtual int32 GetMaxMoveDistance() const = 0;
 	
 	UFUNCTION(BlueprintCallable)
-	virtual void MoveToTile(UPARAM(ref)TArray<FVector>& TileLocations, const bool bTeleport = false) = 0;
+	virtual void MoveToTile(UPARAM(ref)TArray<ATile*>& PathTiles, const bool bTeleport = false) = 0;
+
+	virtual void UpdateHiddenByTile(const ATile* Tile);
 	
 	virtual void OnDamageTaken() = 0;
 	virtual void Die() = 0;

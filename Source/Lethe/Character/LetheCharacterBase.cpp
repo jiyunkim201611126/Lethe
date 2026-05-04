@@ -32,23 +32,32 @@ UAbilitySystemComponent* ALetheCharacterBase::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void ALetheCharacterBase::MoveToTile(TArray<FVector>& TileLocations, const bool bTeleport)
+void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTeleport)
 {
 	// 캐릭터 절반 높이만큼 위로 올려줍니다.
 	const float ZOffset = GetDefaultHalfHeight();
 
 	if (bTeleport)
 	{
-		FVector& TileLocation = TileLocations.Last();
-		TileLocation.Z = TileLocation.Z + ZOffset;
-		SetActorLocation(TileLocation);
+		// TargetTile로 즉시 이동 후 Hidden도 갱신합니다.
+		if (!PathTiles.IsEmpty())
+		{
+			const ATile* TargetTile = PathTiles.Last();
+			FVector TargetTileLocation = TargetTile->GetActorLocation();
+			TargetTileLocation.Z = TargetTileLocation.Z + ZOffset;
+			SetActorLocation(TargetTileLocation);
+			UpdateHiddenByTile(TargetTile);
+		}
 		return;
 	}
-	
-	for (FVector& TileLocation : TileLocations)
+
+	// MovePath에 모두 집어넣습니다.
+	for (ATile* PathTile : PathTiles)
 	{
-		TileLocation.Z += ZOffset;
-		MoveToLocations.Emplace(MoveTemp(TileLocation));
+		if (PathTile)
+		{
+			MovePath.Emplace(PathTile);
+		}
 	}
 }
 
@@ -109,15 +118,39 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!MoveToLocations.IsEmpty())
+	if (!MovePath.IsEmpty())
 	{
-		const float Speed = GetCharacterMovement()->MaxWalkSpeed;
-		const FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), MoveToLocations[0], DeltaSeconds, Speed);
-
-		if (FVector::DistSquared(GetActorLocation(), NewLocation) <= FMath::Square(MoveArriveTolerance))
+		// MovePath에 경로가 순서대로 정렬되어 있으므로, 맨 앞에서부터 하나씩 꺼내 사용합니다.
+		const auto& CurrentTargetTile = MovePath[0];
+		if (!CurrentTargetTile.IsValid())
 		{
-			SetActorLocation(MoveToLocations[0]);
-			MoveToLocations.RemoveAt(0);
+			MovePath.RemoveAt(0);
+			return;
+		}
+
+		// 타일 속에 캐릭터가 파묻히지 않도록 Z축을 보정합니다.
+		const float ZOffset = GetDefaultHalfHeight();
+		FVector CurrentTargetLocation = CurrentTargetTile->GetActorLocation();
+		CurrentTargetLocation.Z += ZOffset;
+
+		// 이번 프레임 위치를 계산합니다.
+		const float Speed = GetCharacterMovement()->MaxWalkSpeed;
+		const FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), CurrentTargetLocation, DeltaSeconds, Speed);
+
+		// 현재 위치와 목표 위치간 차이가 얼마나 되는지 계산합니다.
+		const float DistanceSquaredToTarget = FVector::DistSquared(GetActorLocation(), CurrentTargetLocation);
+		
+		if (DistanceSquaredToTarget <= FMath::Square(HiddenTolerance))
+		{
+			// 목표 위치에 Hidden 갱신 임계값까지 가까워졌다면 Hidden를 갱신합니다.
+			UpdateHiddenByTile(CurrentTargetTile.Get());
+		}
+		
+		if (DistanceSquaredToTarget <= FMath::Square(MoveArriveTolerance))
+		{
+			// 목표 위치에 아주 가까워졌다면 목표 위치를 그대로 사용합니다.
+			SetActorLocation(CurrentTargetLocation);
+			MovePath.RemoveAt(0);
 		}
 		else
 		{

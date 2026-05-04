@@ -569,11 +569,32 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 					return;
 				}
 
+				const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(SelectedCharacter);
+				if (!StartTile)
+				{
+					return;
+				}
+
+				const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter);
+				if (!CombatInterface)
+				{
+					return;
+				}
+				
+				TArray<ATile*> OutPathTiles;
+				TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, CombatInterface->GetMoveDistance(), OutPathTiles, false);
+
 				FAbilityActivationData AbilityActivationData;
 				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 				AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 				AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-				AbilityActivationData.TargetTiles.Emplace(TargetTile);
+				for (ATile* PathTile : OutPathTiles)
+				{
+					if (PathTile)
+					{
+						AbilityActivationData.TargetTiles.Emplace(PathTile);
+					}
+				}
 				LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
 			}
 		}

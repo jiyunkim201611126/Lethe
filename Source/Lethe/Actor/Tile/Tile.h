@@ -18,6 +18,7 @@ enum class ETileConnectionState
 	VerticalConnected,
 };
 
+UENUM(BlueprintType)
 enum class ETileVisionState : uint8
 {
 	/** 아직 볼 수 없는 타일로, 렌더링 자체가 꺼진 상태입니다. */
@@ -48,6 +49,8 @@ public:
 	//~ End of IHighlightInterface
 
 	void SetTileVisionState(const ETileVisionState VisionState);
+
+	UFUNCTION(BlueprintPure)
 	ETileVisionState GetTileVisionState() const;
 	
 	FCubeCoord GetCubeCoord() const;
@@ -63,6 +66,7 @@ protected:
 
 private:
 	void SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileConnectionState>& UVOffsetType) const;
+	void SetTileTraceIgnore(const bool bIgnore) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere)

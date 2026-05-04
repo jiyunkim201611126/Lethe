@@ -30,6 +30,7 @@ void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoo
 	TextRender->SetVisibility(bIsTopTile);
 
 	SetActorHiddenInGame(true);
+	SetTileTraceIgnore(true);
 }
 
 void ATile::SetTopTile(ATile* InTile)
@@ -120,6 +121,7 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 	{
 	case ETileVisionState::Visible:
 		SetActorHiddenInGame(false);
+		SetTileTraceIgnore(false);
 		break;
 	default:
 		break;
@@ -191,6 +193,19 @@ void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileCo
 				MainTile->SetCustomPrimitiveDataFloat(Direction, UVOffset);
 				Component->SetCustomPrimitiveDataFloat(0, UVOffset);
 			}
+		}
+	}
+}
+
+void ATile::SetTileTraceIgnore(const bool bIgnore) const
+{
+	TArray<UStaticMeshComponent*> Components;
+	GetComponents<UStaticMeshComponent>(Components);
+	for (UStaticMeshComponent* Component : Components)
+	{
+		if (Component)
+		{
+			Component->SetCollisionResponseToChannel(ECC_Tile, bIgnore ? ECR_Ignore : ECR_Block);
 		}
 	}
 }

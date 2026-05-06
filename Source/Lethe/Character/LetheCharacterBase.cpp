@@ -118,13 +118,14 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!MovePath.IsEmpty())
+	// 경로에 최소 2개의 타일이 들어있어야 합니다.
+	if (MovePath.Num() >= 2)
 	{
-		// MovePath에 경로가 순서대로 정렬되어 있으므로, 맨 앞에서부터 하나씩 꺼내 사용합니다.
-		const auto& CurrentTargetTile = MovePath[0];
+		// MovePath에 경로가 순서대로 정렬되어 있으므로, 맨 앞에서부터 꺼내 사용합니다.
+		const auto& CurrentTargetTile = MovePath[1];
 		if (!CurrentTargetTile.IsValid())
 		{
-			MovePath.RemoveAt(0);
+			MovePath.Empty();
 			return;
 		}
 
@@ -148,15 +149,31 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 		
 		if (DistanceSquaredToTarget <= FMath::Square(MoveArriveTolerance))
 		{
+			OnMoveTileChanged(MovePath[0].Get(), CurrentTargetTile.Get());
+			
 			// 목표 위치에 아주 가까워졌다면 목표 위치를 그대로 사용합니다.
 			SetActorLocation(CurrentTargetLocation);
 			MovePath.RemoveAt(0);
+
+			// 경로에 1개만 남아있다면 목적지에 도착한 상태이므로, 내용물을 비웁니다.
+			if (MovePath.Num() == 1)
+			{
+				MovePath.Reset();
+			}
 		}
 		else
 		{
 			SetActorLocation(NewLocation);
 		}
 	}
+	else
+	{
+		MovePath.Reset();
+	}
+}
+
+void ALetheCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile)
+{
 }
 
 void ALetheCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

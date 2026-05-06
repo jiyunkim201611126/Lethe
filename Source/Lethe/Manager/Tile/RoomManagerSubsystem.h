@@ -22,11 +22,18 @@ public:
 	void SetRoomData(TMap<int32, FRoomData>&& InRoomData);
 
 	void NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile);
+
+	void RevealEnemyTile(ATile* InTile) const;
+	void UpdateEnemyMoveVision(ATile* PreviousTile, ATile* CurrentTile) const;
+	
 	const FRoomData* GetRoomData(const int32 RoomId) const;
 
 private:
 	void UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile);
 	void ChangeTileVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const;
+
+	// Tile 관련 함수지만, 시야 판정에 무게를 두는 함수기 때문에 RoomManager에서 구현합니다.
+	bool IsTileVisibleByPlayer(const ATile* InTile) const;
 
 	FRoomData* GetMutableRoomData(const int32 RoomId);
 

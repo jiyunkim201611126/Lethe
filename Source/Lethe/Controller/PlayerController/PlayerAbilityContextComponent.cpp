@@ -108,7 +108,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 		}
 
 		// 현재 경로를 아무도 지나지 않는 상태라면 이 경로를 선택합니다.
-		if (CurrentOccupiedCount == 0)
+		if (CurrentOccupiedCount <= 0)
 		{
 			SelectedPathIndex = PathIndex;
 			break;

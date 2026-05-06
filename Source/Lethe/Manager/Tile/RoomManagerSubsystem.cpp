@@ -33,6 +33,23 @@ void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const 
 	}
 }
 
+void URoomManagerSubsystem::RevealEnemyTile(ATile* InTile) const
+{
+	InTile->SetTileVisionState(ETileVisionState::Visible);
+}
+
+void URoomManagerSubsystem::UpdateEnemyMoveVision(ATile* PreviousTile, ATile* CurrentTile) const
+{
+	// 직전 타일이 플레이어에 의해 Visible이 된 상태가 아니라면 Explored로 변경합니다.
+	if (!IsTileVisibleByPlayer(PreviousTile) && PreviousTile->GetTileVisionState() == ETileVisionState::Visible)
+	{
+		PreviousTile->SetTileVisionState(ETileVisionState::Explored);
+	}
+
+	// 새로 밟게 된 타일은 Visible 상태로 변경합니다.
+	CurrentTile->SetTileVisionState(ETileVisionState::Visible);
+}
+
 void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile)
 {
 	int32 OldRoomId = INDEX_NONE;
@@ -147,6 +164,45 @@ void URoomManagerSubsystem::ChangeTileVisionState(const int32 InRoomId, FRoomDat
 			}
 		}
 	}
+}
+
+bool URoomManagerSubsystem::IsTileVisibleByPlayer(const ATile* InTile) const
+{
+	if (!InTile)
+	{
+		return false;
+	}
+
+	// 타일에 해당하는 RoomData를 가져옵니다.
+	const int32 CheckingRoomId = InTile->GetRoomId();
+	if (const FRoomData* RoomData = GetRoomData(CheckingRoomId))
+	{
+		// 해당 Room 안에 플레이어 캐릭터가 1명이라도 있다면 true를 반환합니다.
+		if (RoomData->PlayerCharacterCount > 0)
+		{
+			return true;
+		}
+	}
+
+	// 플레이어가 입장해있는 Room의 EntranceTile 중 InTile이 존재하는지 확인합니다.
+	for (const auto& Pair : RoomDataMap)
+	{
+		if (Pair.Key == CheckingRoomId)
+		{
+			continue;
+		}
+		if (Pair.Value.PlayerCharacterCount <= 0)
+		{
+			continue;
+		}
+		
+		if (Pair.Value.VisibleEntranceTiles.Contains(InTile))
+		{
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 FRoomData* URoomManagerSubsystem::GetMutableRoomData(const int32 RoomId)

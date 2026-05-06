@@ -32,7 +32,7 @@ public:
 	ATile* GetBestAttackableTile(const ATile* TargetTile);
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "정해진 범위 내에 랜덤한, 위에 아무것도 없는 타일을 반환합니다."))
-	ATile* GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth);
+	bool GetRandomMovePath(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutRandomMovePath);
 	
 	UFUNCTION(BlueprintCallable)
 	void ActivateMoveAbility(const TArray<ATile*>& PathTiles);
@@ -40,11 +40,13 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile로 이동하기 위한 최단 경로를 계산한 뒤, 그 모든 타일을 우선순위대로 정렬해 반환합니다."))
 	void GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles) const;
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, meta = (ToolTip = "공격 가능한 상황으로, Ability 선택 후 사용을 예고합니다."))
 	void SelectAndTelegraphRandomAbility(ATile* TargetTile) const;
 
 	UFUNCTION(BlueprintCallable)
 	void StartCombat();
+
+	bool IsCombating() const;
 
 protected:
 	//~ Begin AActor Interface

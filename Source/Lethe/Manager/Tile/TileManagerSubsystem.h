@@ -44,9 +44,7 @@ public:
 	 */
 	bool FindShortestPath(const ATile* StartTile, const ATile* TargetTile, TArray<TArray<ATile*>>& OutPathTilesArray, const bool bIgnoreActor) const;
 
-	/**
-	 * TargetTile로 도달 가능한 최단 경로 중 대표 경로를 하나만 반환합니다.
-	 */
+	/** TargetTile로 도달 가능한 최단 경로 중 대표 경로를 하나만 반환합니다. */
 	bool FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const;
 
 	/** CenterTile을 중심으로 Range 범위 안에 있는 모든 Tile을 OutTiles로 반환합니다. BFSRange를 무시하고 싶을 때 사용합니다. */

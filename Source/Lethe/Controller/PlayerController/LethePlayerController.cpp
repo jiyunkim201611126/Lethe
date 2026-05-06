@@ -135,8 +135,8 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 	case EPhaseState::PlayerTurnPhase:
 		{
 			// 이동 가능한 타일을 모두 가져옵니다.
-			TArray<ATile*> OutTiles;
-			if (!PlayerAbilityContextComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutTiles))
+			TArray<ATile*> OutMovableTiles;
+			if (!PlayerAbilityContextComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles))
 			{
 				ResetSelectedCharacter();
 				break;
@@ -145,12 +145,12 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			if (bIsSelectingCharacter)
 			{
 				// 이동 가능 범위를 하이라이팅합니다.
-				ActorSelector->HighlightActorsByAbility(OutTiles, SelectedCharacter.Get());
+				ActorSelector->HighlightActorsByAbility(OutMovableTiles, SelectedCharacter.Get());
 			}
 			else
 			{
 				// 이동을 요청합니다.
-				PlayerAbilityContextComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTiles, OutTileAndActor.Tile);
+				PlayerAbilityContextComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
 				ResetSelectedCharacter();
 			}
 		}

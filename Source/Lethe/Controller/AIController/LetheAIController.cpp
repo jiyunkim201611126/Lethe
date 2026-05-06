@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
@@ -13,6 +14,7 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALetheAIController::ALetheAIController()
@@ -262,14 +264,15 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 	return BestTile;
 }
 
-ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const int32 MaxDepth)
+bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutRandomMovePath)
 {
+	OutRandomMovePath.Reset();
 	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		if (const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
 			TSet<FCubeCoord> TilesInRange;
-			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
+			const FCubeCoord ThisTileCoord = StartTile->GetCubeCoord();
 			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, TilesInRange,
 			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
@@ -285,23 +288,28 @@ ATile* ALetheAIController::GetRandomMovableTile(const EBFSType BFSType, const in
 				}
 				return false;
 			});
-		
+			
 			if (!TilesInRange.IsEmpty())
 			{
-				// 범위 내 타일 중 랜덤하게 하나 반환합니다.
+				// 범위 내 타일 중 랜덤하게 하나 선택해 경로를 생성합니다.
 				TArray<FCubeCoord> TileArray = TilesInRange.Array();
 				const FCubeCoord& RandomCoord = TileArray[FMath::RandRange(0, TileArray.Num() - 1)];
-				return TileManagerSubsystem->GetTile(RandomCoord);
+				if (const ATile* TargetTile = TileManagerSubsystem->GetTile(RandomCoord))
+				{
+					GetPrioritizedMoveTiles(TargetTile, MaxDepth, OutRandomMovePath);
+					return true;
+				}
 			}
 		}
 	}
-	return nullptr;
+	return false;
 }
 
 void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 {
 	if (PathTiles.IsEmpty())
 	{
+		LETHE_LOG(LogAIController, Error, "PathTiles is empty");
 		return;
 	}
 	
@@ -340,16 +348,16 @@ void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const 
 	OutPathTiles.Reset();
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		if (const ATile* ThisTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
+		if (const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TileManagerSubsystem->FindPrioritizedPathTiles(ThisTile, TargetTile, MoveDistance, OutPathTiles, false);
+			TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, MoveDistance, OutPathTiles, false);
 		}
 	}
 }
 
 void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) const
 {
-	const AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
+	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledEnemy);
 	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 	if (ASC)
@@ -407,6 +415,14 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
 				ArrowRenderer->DrawSkillPreviewArrow(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
+
+				URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+				ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
+				if (RoomManagerSubsystem && CurrentTile)
+				{
+					RoomManagerSubsystem->RevealEnemyTile(CurrentTile);
+					ControlledEnemy->UpdateHiddenByTile(CurrentTile);
+				}
 			}
 		}
 	}
@@ -419,4 +435,9 @@ void ALetheAIController::StartCombat()
 		LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
 	}
 	bIsCombating = true;
+}
+
+bool ALetheAIController::IsCombating() const
+{
+	return bIsCombating;
 }

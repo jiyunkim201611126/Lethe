@@ -4,6 +4,7 @@
 
 #include "Lethe/Controller/AIController/LetheAIController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 
 void AEnemyCharacterBase::SetEnemyAbilityPriority(const int32 InPriority)
 {
@@ -68,15 +69,18 @@ void AEnemyCharacterBase::StartCombat() const
 	}
 }
 
-const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
-{
-	return AbilityRange;
-}
-
 void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
 {
-	if (!Tile)
+	const ALetheAIController* AIController = GetController<ALetheAIController>();
+	if (!AIController || !Tile)
 	{
+		return;
+	}
+
+	// 전투 중인 경우 밟은 Tile에 관계 없이 항상 적을 렌더링합니다.
+	if (AIController->IsCombating())
+	{
+		SetActorHiddenInGame(false);
 		return;
 	}
 	
@@ -98,4 +102,29 @@ void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
 	default:
 		break;
 	}
+}
+
+void AEnemyCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile)
+{
+	const ALetheAIController* AIController = GetController<ALetheAIController>();
+	if (!AIController || !PreviousTile || !CurrentTile)
+	{
+		return;
+	}
+	
+	// 전투 중이 아니라면 시야를 갱신할 필요가 없습니다.
+	if (!AIController->IsCombating())
+	{
+		return;
+	}
+	
+	if (const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
+	{
+		RoomManagerSubsystem->UpdateEnemyMoveVision(PreviousTile, CurrentTile);
+	}
+}
+
+const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
+{
+	return AbilityRange;
 }

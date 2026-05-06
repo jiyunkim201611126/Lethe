@@ -26,6 +26,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void MoveToTile(UPARAM(ref)TArray<ATile*>& PathTiles, const bool bTeleport = false) = 0;
 
+	/** Enemy만 재정의하는 함수로, Tile 상태에 따라 자신의 Hidden 상태를 갱신합니다. */
 	virtual void UpdateHiddenByTile(const ATile* Tile);
 	
 	virtual void OnDamageTaken() = 0;

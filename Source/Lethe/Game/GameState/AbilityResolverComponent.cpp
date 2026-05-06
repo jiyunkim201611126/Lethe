@@ -231,6 +231,13 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	if (bIsMovementAbility)
 	{
 		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
+
+		/** 모든 경로 생성 함수들은 StartTile을 제외하고 생성하므로, 여기서 직접 추가합니다. */
+		if (ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(AbilityOwnerASC->GetAvatarActor()))
+		{
+			MovePayload->PathTiles.Emplace(StartTile);
+		}
+		
 		for (const auto& TargetTile : ActivationData->TargetTiles)
 		{
 			if (TargetTile.IsValid())

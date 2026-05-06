@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "LethePawn.h"
 #include "Component/GASManagerComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -16,7 +17,20 @@ ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitial
 	: Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Tile, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Ignore);
 
+	GetMesh()->SetGenerateOverlapEvents(false);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 	GASManagerComponent = CreateDefaultSubobject<UGASManagerComponent>(TEXT("GASManagerComponent"));
 	AbilitySystemComponent = CreateDefaultSubobject<ULetheAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);

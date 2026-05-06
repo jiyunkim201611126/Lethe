@@ -2,16 +2,12 @@
 
 #include "PlayerCharacterBase.h"
 
-#include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 
 APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 	MarkerWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("MarkerWidgetComponent"));
 	MarkerWidgetComponent->SetupAttachment(RootComponent);
 }

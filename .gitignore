@@ -1,12 +1,20 @@
 # ignore all files in the directory
 .idea/
 .vs/
-Binaries/
 DerivedDataCache/
-InterMediate/
+Intermediate/
 Saved/*
 
 !Saved/SaveGames/
+
+Binaries/*
+!Binaries/Win64/
+Binaries/Win64/*
+
+!Binaries/Win64/LetheEditor.target
+!Binaries/Win64/UnrealEditor.modules
+!Binaries/Win64/UnrealEditor-Lethe.dll
+!Binaries/Win64/UnrealEditor-LetheEditor.dll
 
 *.vsconfig
 *.sln

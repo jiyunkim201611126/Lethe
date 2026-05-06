@@ -59,7 +59,7 @@ protected:
 	 * Enemy만 재정의하는 함수로, 이동 중 밟고 있는 타일이 가시적으로 갱신되면 호출합니다.
 	 * '가시적으로'라는 말은, 실제 게임 플레이 로직적으로는 큰 갱신이 없는 상황이란 뜻입니다.
 	 */
-	virtual void OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile);
+	virtual void OnMoveTileChanged(const ATile* PreviousTile, const ATile* CurrentTile);
 
 private:
 	void OnCameraHeightChanged(const float InWidgetSize) const;

@@ -417,7 +417,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 				ArrowRenderer->DrawSkillPreviewArrow(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
 
 				URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-				ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
+				const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
 				if (RoomManagerSubsystem && CurrentTile)
 				{
 					RoomManagerSubsystem->RevealEnemyTile(CurrentTile);

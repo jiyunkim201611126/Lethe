@@ -33,21 +33,26 @@ void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const 
 	}
 }
 
-void URoomManagerSubsystem::RevealEnemyTile(ATile* InTile) const
+void URoomManagerSubsystem::RevealEnemyTile(const ATile* InTile) const
 {
-	InTile->SetTileVisionState(ETileVisionState::Visible);
+	SetTileStackVisionState(InTile, ETileVisionState::Visible);
 }
 
-void URoomManagerSubsystem::UpdateEnemyMoveVision(ATile* PreviousTile, ATile* CurrentTile) const
+void URoomManagerSubsystem::UpdateEnemyMoveVision(const ATile* OldTile, const ATile* NewTile) const
 {
-	// 직전 타일이 플레이어에 의해 Visible이 된 상태가 아니라면 Explored로 변경합니다.
-	if (!IsTileVisibleByPlayer(PreviousTile) && PreviousTile->GetTileVisionState() == ETileVisionState::Visible)
+	if (!OldTile || !NewTile)
 	{
-		PreviousTile->SetTileVisionState(ETileVisionState::Explored);
+		return;
+	}
+	
+	// 직전 타일이 플레이어에 의해 Visible이 된 상태가 아니라면 Explored로 변경합니다.
+	if (!IsTileVisibleByPlayer(OldTile) && OldTile->GetTileVisionState() == ETileVisionState::Visible)
+	{
+		SetTileStackVisionState(OldTile, ETileVisionState::Explored);
 	}
 
 	// 새로 밟게 된 타일은 Visible 상태로 변경합니다.
-	CurrentTile->SetTileVisionState(ETileVisionState::Visible);
+	SetTileStackVisionState(NewTile, ETileVisionState::Visible);
 }
 
 void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile)
@@ -77,20 +82,40 @@ void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const AT
 		--OldRoomData->PlayerCharacterCount;
 		if (OldRoomData->PlayerCharacterCount <= 0)
 		{
-			ChangeTileVisionState(OldRoomId, OldRoomData, ETileVisionState::Explored);
+			SetRoomVisionState(OldRoomId, OldRoomData, ETileVisionState::Explored);
 		}
 	}
 	if (NewRoomData)
 	{
 		if (NewRoomData->PlayerCharacterCount <= 0)
 		{
-			ChangeTileVisionState(NewRoomId, NewRoomData, ETileVisionState::Visible);
+			SetRoomVisionState(NewRoomId, NewRoomData, ETileVisionState::Visible);
 		}
 		++NewRoomData->PlayerCharacterCount;
 	}
 }
 
-void URoomManagerSubsystem::ChangeTileVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const
+void URoomManagerSubsystem::SetTileStackVisionState(const ATile* InTile, const ETileVisionState VisionState) const
+{
+	if (!InTile)
+	{
+		return;
+	}
+	
+	if (const FRoomData* RoomData = GetRoomData(InTile->GetRoomId()))
+	{
+		const FCubeCoord TileCoord = InTile->GetCubeCoord();
+		for (const auto& RoomTile : RoomData->RoomTiles)
+		{
+			if (RoomTile.IsValid() && RoomTile->GetCubeCoord() == TileCoord)
+			{
+				RoomTile->SetTileVisionState(VisionState);
+			}
+		}
+	}
+}
+
+void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!RoomData || !TileManagerSubsystem)

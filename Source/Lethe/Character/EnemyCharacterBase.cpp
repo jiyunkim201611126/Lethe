@@ -104,10 +104,10 @@ void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
 	}
 }
 
-void AEnemyCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile)
+void AEnemyCharacterBase::OnMoveTileChanged(const ATile* OldTile, const ATile* NewTile)
 {
 	const ALetheAIController* AIController = GetController<ALetheAIController>();
-	if (!AIController || !PreviousTile || !CurrentTile)
+	if (!AIController || !OldTile || !NewTile)
 	{
 		return;
 	}
@@ -120,7 +120,7 @@ void AEnemyCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentT
 	
 	if (const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
 	{
-		RoomManagerSubsystem->UpdateEnemyMoveVision(PreviousTile, CurrentTile);
+		RoomManagerSubsystem->UpdateEnemyMoveVision(OldTile, NewTile);
 	}
 }
 

@@ -30,7 +30,7 @@ public:
 	const FBFSRange& GetAbilityRange() const;
 
 protected:
-	virtual void OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile) override;
+	virtual void OnMoveTileChanged(const ATile* OldTile, const ATile* NewTile) override;
 
 protected:
 	/** 캐릭터의 사정거리입니다. */

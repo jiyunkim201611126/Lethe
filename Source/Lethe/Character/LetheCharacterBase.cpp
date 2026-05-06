@@ -172,7 +172,7 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 	}
 }
 
-void ALetheCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile)
+void ALetheCharacterBase::OnMoveTileChanged(const ATile* PreviousTile, const ATile* CurrentTile)
 {
 }
 

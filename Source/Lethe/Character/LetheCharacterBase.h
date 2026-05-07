@@ -36,6 +36,7 @@ public:
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
 	virtual UAnimMontage* GetMoveAnimation() override;
+	virtual ETeamSide GetTeamSide() const override;
 	//~ End of ICombatInterface
 
 	//~ Begin AActor Interface
@@ -79,6 +80,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimMontage> MoveAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Team")
+	ETeamSide TeamSide;
 
 private:
 	int32 OutlineColorTransparent = CUSTOM_DEPTH_YELLOW_TRANSPARENT;

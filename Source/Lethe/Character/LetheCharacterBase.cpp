@@ -258,3 +258,8 @@ void ALetheCharacterBase::OnCameraHeightChanged(const float InWidgetSize) const
 		}
 	}
 }
+
+ETeamSide ALetheCharacterBase::GetTeamSide() const
+{
+	return TeamSide;
+}

@@ -24,7 +24,7 @@ struct FStageData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	EStageType StageType;
+	EStageType StageType = EStageType::None;
 
 	/** 타일 블루프린트 클래스 */
 	UPROPERTY(EditDefaultsOnly)

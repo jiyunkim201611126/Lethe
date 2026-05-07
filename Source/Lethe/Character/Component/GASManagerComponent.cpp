@@ -7,6 +7,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -20,7 +21,7 @@ UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectIniti
 
 void UGASManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (TeamSide == ETeamSide::Player)
+	if (GetTeamSide() == ETeamSide::Player)
 	{
 		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
@@ -57,7 +58,7 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 	{
 		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			switch (TeamSide)
+			switch (GetTeamSide())
 			{
 			case ETeamSide::Player:
 				{
@@ -144,7 +145,7 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const EPhaseState MyPhaseState = TeamSide == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
+	const EPhaseState MyPhaseState = GetTeamSide() == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
 	if (OldPhase == MyPhaseState)
 	{
 		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
@@ -179,4 +180,13 @@ void UGASManagerComponent::OnPlanPhaseStarted() const
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetMoveDistanceRecoveryAttribute()));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 	}
+}
+
+ETeamSide UGASManagerComponent::GetTeamSide() const
+{
+	if (const ICombatInterface* CombatInterface = GetOwner<ICombatInterface>())
+	{
+		return CombatInterface->GetTeamSide();
+	}
+	return ETeamSide::None;
 }

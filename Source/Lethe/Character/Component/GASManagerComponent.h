@@ -47,6 +47,8 @@ private:
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
 	void OnPlanPhaseStarted() const;
 
+	ETeamSide GetTeamSide() const;
+
 protected:
 	/** 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다. */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
@@ -62,9 +64,6 @@ protected:
 	 */
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Team")
-	ETeamSide TeamSide;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

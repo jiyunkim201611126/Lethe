@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
@@ -31,4 +32,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "GA_Move에 할당된 MoveAnimation을 사용하지 않는 상황, 혹은 할당이 안 되어 있는 상황에 사용합니다."))
 	virtual UAnimMontage* GetMoveAnimation() = 0;
+
+	virtual ETeamSide GetTeamSide() const;
 };

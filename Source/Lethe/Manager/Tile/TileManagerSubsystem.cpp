@@ -6,6 +6,7 @@
 #include "TileGenerator.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
+#include "Lethe/Interface/CombatInterface.h"
 
 void UTileManagerSubsystem::Deinitialize()
 {
@@ -165,10 +166,29 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 				continue;
 			}
 
-			// 타일 위에 무언가 있다면 매개변수 설정 여부에 따라 스킵합니다.
-			if (!bIgnoreActor && NextCoord != TargetCoord && GetActorOnTile(GetTile(NextCoord)))
+			/**
+			 * 타일 위에 무언가 있다면 매개변수 설정 여부와 액터 종류에 따라 진행합니다.
+			 * 비어 있는 중간 타일: 통과
+			 * 중간 타일에 같은 팀이 있음: 통과
+			 * 중간 타일에 다른 팀이 있음: 막힘
+			 * TargetTile에 뭐가 있음: 막힘
+			 */
+			if (!bIgnoreActor)
 			{
-				continue;
+				if (AActor* ActorOnNextTile = GetActorOnTile(GetTile(NextCoord)))
+				{
+					if (NextCoord == TargetCoord)
+					{
+						continue;
+					}
+
+					const ICombatInterface* NextCombatInterface = Cast<ICombatInterface>(ActorOnNextTile);
+					const ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(GetActorOnTile(StartTile));
+					if (!NextCombatInterface || !SourceCombatInterface || NextCombatInterface->GetTeamSide() != SourceCombatInterface->GetTeamSide())
+					{
+						continue;
+					}
+				}
 			}
 
 			const int32* ExistingDepth = OutSearchData.DistanceMap.Find(NextCoord);

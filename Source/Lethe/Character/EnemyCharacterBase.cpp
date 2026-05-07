@@ -2,6 +2,7 @@
 
 #include "EnemyCharacterBase.h"
 
+#include "Component/GASManagerComponent.h"
 #include "Lethe/Controller/AIController/LetheAIController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/Tile/RoomManagerSubsystem.h"

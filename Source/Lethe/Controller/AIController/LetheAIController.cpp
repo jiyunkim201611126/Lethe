@@ -104,7 +104,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 {
 	int32 Distance = INDEX_NONE;
 	OutNearestTiles.Reset();
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
@@ -145,7 +145,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 
 ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 {
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	const AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	if (!TargetTile || !TileManagerSubsystem || !ControlledEnemy)
 	{
@@ -267,7 +267,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutRandomMovePath)
 {
 	OutRandomMovePath.Reset();
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{

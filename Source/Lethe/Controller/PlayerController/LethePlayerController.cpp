@@ -248,7 +248,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				SelectedCardOwnerASC = OwnerASC;
 				
 				TArray<ATile*> OutTiles;
-				ActorSelector->TryGetTilesByDepth(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange());
+				ActorSelector->TryGetTilesByRange(OutTiles, CardOwner, LetheCardAbility->GetAbilityRange(), ETileRangeQueryType::Any);
 				ActorSelector->HighlightActorsByAbility(OutTiles, CardOwner);
 			}
 		}

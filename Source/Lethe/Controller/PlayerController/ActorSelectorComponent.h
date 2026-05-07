@@ -27,6 +27,12 @@ struct FTileAndActor
 	AActor* Actor = nullptr;
 };
 
+enum class ETileRangeQueryType : uint8
+{
+	Any,
+	PlayerMove,
+};
+
 DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, AActor*, AActor*);
 
 /**
@@ -46,7 +52,7 @@ public:
 	void UnhighlightActorsByAbility();
 	
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
-	bool TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const;
+	bool TryGetTilesByRange(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType) const;
 
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;

@@ -36,7 +36,7 @@ public:
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition) const;
 
 	UFUNCTION(BlueprintPure)
-	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType);
+	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType) const;
 	
 	/**
 	 * StartTile에서 TargetTile까지의 '모든 최단 경로'를 Out 인자로 뱉어주는 함수입니다.

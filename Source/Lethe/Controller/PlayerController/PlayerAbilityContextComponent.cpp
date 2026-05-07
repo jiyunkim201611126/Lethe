@@ -28,12 +28,12 @@ void UPlayerAbilityContextComponent::InitializeComponent()
 
 bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const
 {
-	OutTilesInRange.Reset();
 	if (!SelectedCharacter || !AbilitySystemComponent || !ActorSelector.IsValid())
 	{
 		return false;
 	}
 
+	OutTilesInRange.Reset();
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	TArray<FGameplayAbilitySpec*> AbilitySpecs;
 	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
@@ -45,7 +45,7 @@ bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacte
 			FBFSRange MoveRange;
 			MoveRange.BFSType = EBFSType::Connection;
 			MoveRange.Distance = Combat->GetMoveDistance();
-			ActorSelector->TryGetTilesByDepth(OutTilesInRange, SelectedCharacter, MoveRange);
+			ActorSelector->TryGetTilesByRange(OutTilesInRange, SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove);
 		}
 	}
 	return !OutTilesInRange.IsEmpty();
@@ -636,7 +636,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 
 	// Ability 사용 범위 내의 타일을 선택했는지 확인합니다.
 	TArray<ATile*> OutTiles;
-	ActorSelector->TryGetTilesByDepth(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange());
+	ActorSelector->TryGetTilesByRange(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange(), ETileRangeQueryType::Any);
 	if (!OutTiles.Contains(OutTileAndActor.Tile))
 	{
 		return false;

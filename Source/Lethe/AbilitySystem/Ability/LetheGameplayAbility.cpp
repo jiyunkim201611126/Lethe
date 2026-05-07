@@ -15,7 +15,7 @@ FBFSRange ULetheGameplayAbility::GetAbilityRange() const
 
 void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile* TargetTile)
 {
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		for (const FNoisePolicy& NoisePolicy : NoisePolicies)
 		{

@@ -5,6 +5,7 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/HighlightInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 UActorSelectorComponent::UActorSelectorComponent()
@@ -130,22 +131,42 @@ void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndA
 	}
 }
 
-bool UActorSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange) const
+bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType) const
 {
 	OutTiles.Reset();
-	
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))
 		{
 			TSet<FCubeCoord> SelectedCoords;
 			TileManagerSubsystem->TileBFS(Tile->GetCubeCoord(), InRange.Distance, InRange.BFSType, SelectedCoords,
-				[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+				[TileManagerSubsystem, QueryType](const FTileData* CurrentTileData, const FTileData* NextTileData)
 				{
+					if (QueryType == ETileRangeQueryType::PlayerMove)
+					{
+						// 플레이어 캐릭터가 아닌 액터가 서있다면 해당 타일은 이동 가능 경로에서 제외됩니다.
+						if (!NextTileData || !NextTileData->TileActor.IsValid())
+						{
+							return false;
+						}
+						
+						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TileActor.Get()))
+						{
+							return ActorOnNextTile->Implements<UPlayerCharacterInterface>();
+						}
+					}
 					return true;
 				},
-				[](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
+				[TileManagerSubsystem, QueryType](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
 				{
+					if (QueryType == ETileRangeQueryType::PlayerMove)
+					{
+						if (!TileData || !TileData->TileActor.IsValid())
+						{
+							return false;
+						}
+						return TileManagerSubsystem->CanPlayerMoveToTile(TileData->TileActor.Get());
+					}
 					return true;
 				});
 

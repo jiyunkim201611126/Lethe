@@ -53,7 +53,7 @@ const FStageData* UTileManagerSubsystem::GetStageData(const EStageType StageType
 	return nullptr;
 }
 
-int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType)
+int32 UTileManagerSubsystem::GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType) const
 {
 	if (!StartTile || !TargetTile)
 	{

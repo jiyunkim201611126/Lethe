@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "LetheCharacterBase.h"
 #include "Lethe/Data/Stage/TileData.h"
+#include "Lethe/Interface/TileVisionAffectedInterface.h"
 #include "EnemyCharacterBase.generated.h"
 
 UCLASS()
-class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase
+class LETHE_API AEnemyCharacterBase : public ALetheCharacterBase, public ITileVisionAffectedInterface
 {
 	GENERATED_BODY()
 

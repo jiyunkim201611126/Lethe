@@ -11,6 +11,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Interface/TileVisionAffectedInterface.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 
 ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -60,7 +61,10 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 			FVector TargetTileLocation = TargetTile->GetActorLocation();
 			TargetTileLocation.Z = TargetTileLocation.Z + ZOffset;
 			SetActorLocation(TargetTileLocation);
-			UpdateHiddenByTile(TargetTile);
+			if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(this))
+			{
+				TileVisionAffectedInterface->UpdateHiddenByTile(TargetTile);
+			}
 		}
 		return;
 	}
@@ -157,8 +161,11 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 		
 		if (DistanceSquaredToTarget <= FMath::Square(HiddenTolerance))
 		{
-			// 목표 위치에 Hidden 갱신 임계값까지 가까워졌다면 Hidden를 갱신합니다.
-			UpdateHiddenByTile(CurrentTargetTile.Get());
+			// 목표 위치에 Hidden 갱신 임계값까지 가까워졌다면 Hidden 상태를 갱신합니다.
+			if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(this))
+			{
+				TileVisionAffectedInterface->UpdateHiddenByTile(CurrentTargetTile.Get());
+			}
 		}
 		
 		if (DistanceSquaredToTarget <= FMath::Square(MoveArriveTolerance))

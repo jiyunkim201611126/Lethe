@@ -297,7 +297,7 @@ bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 M
 				if (const ATile* TargetTile = TileManagerSubsystem->GetTile(RandomCoord))
 				{
 					GetPrioritizedMoveTiles(TargetTile, MaxDepth, OutRandomMovePath);
-					return true;
+					return !OutRandomMovePath.IsEmpty();
 				}
 			}
 		}
@@ -414,7 +414,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			{
 				ArrowRenderer->DrawSkillPreviewArrow(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
 
-				URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+				const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
 				const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
 				if (RoomManagerSubsystem && CurrentTile)
 				{

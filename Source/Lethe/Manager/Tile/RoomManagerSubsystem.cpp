@@ -4,7 +4,7 @@
 
 #include "TileManagerSubsystem.h"
 #include "Lethe/Actor/Tile/Tile.h"
-#include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Interface/TileVisionAffectedInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void URoomManagerSubsystem::Deinitialize()
@@ -21,7 +21,7 @@ void URoomManagerSubsystem::SetRoomData(TMap<int32, FRoomData>&& InRoomData)
 
 void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile)
 {
-	if (!NewTile)
+	if (!InActor || !NewTile)
 	{
 		// OldTile은 nullptr일 수 있습니다.
 		return;
@@ -131,9 +131,9 @@ void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* 
 			RoomTile->SetTileVisionState(VisionState);
 			if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(RoomTile.Get()))
 			{
-				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+				if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(ActorOnTile))
 				{
-					CombatInterface->UpdateHiddenByTile(RoomTile.Get());
+					TileVisionAffectedInterface->UpdateHiddenByTile(RoomTile.Get());
 				}
 			}
 		}
@@ -149,9 +149,9 @@ void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* 
 				EntranceTile->SetTileVisionState(ETileVisionState::Visible);
 				if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
 				{
-					if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+					if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(ActorOnTile))
 					{
-						CombatInterface->UpdateHiddenByTile(EntranceTile.Get());
+						TileVisionAffectedInterface->UpdateHiddenByTile(EntranceTile.Get());
 					}
 				}
 			}
@@ -159,7 +159,7 @@ void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* 
 	}
 	else
 	{
-		// Room에서 빠져나간 경우, 해당 Room의 타일 중 다른 캐릭터가 방문 중인 상태인 Room의 EntranceTile은 다시 시야를 확보합니다.
+		// Room에서 빠져나간 경우, 해당 Room의 타일 중 다른 캐릭터가 방문 중인 상태인 Room의 EntranceTile은 다시 시야를 재확보합니다.
 		for (const auto& Pair : RoomDataMap)
 		{
 			if (Pair.Key == InRoomId)
@@ -177,12 +177,12 @@ void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* 
 				
 				if (EntranceTile.IsValid() && EntranceTile->GetRoomId() == InRoomId)
 				{
-					EntranceTile->SetTileVisionState(ETileVisionState::Explored);
+					EntranceTile->SetTileVisionState(ETileVisionState::Visible);
 					if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
 					{
-						if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnTile))
+						if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(ActorOnTile))
 						{
-							CombatInterface->UpdateHiddenByTile(EntranceTile.Get());
+							TileVisionAffectedInterface->UpdateHiddenByTile(EntranceTile.Get());
 						}
 					}
 				}

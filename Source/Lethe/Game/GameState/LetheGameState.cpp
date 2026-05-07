@@ -41,14 +41,14 @@ void ALetheGameState::RegisterPlayerCharacter(AActor* PlayerCharacter)
 
 void ALetheGameState::RegisterEnemy(AEnemyCharacterBase* Enemy)
 {
-	SpawnedEnemies.Emplace(Enemy);
+	SpawnedEnemies.Add(Enemy);
 }
 
 void ALetheGameState::RegisterCombatEnemy(AEnemyCharacterBase* Enemy)
 {
 	if (!CurrentCombatEnemies.Contains(Enemy))
 	{
-		CurrentCombatEnemies.Emplace(Enemy);
+		CurrentCombatEnemies.Add(Enemy);
 	}
 }
 
@@ -203,7 +203,7 @@ void ALetheGameState::StartActivatePlayerMoveAbilities() const
 
 void ALetheGameState::EnqueueEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
 {
-	ReservedEnemyAbilityActivationData.Emplace(ActivationData);
+	ReservedEnemyAbilityActivationData.Add(ActivationData);
 }
 
 void ALetheGameState::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const
@@ -271,7 +271,7 @@ TArray<AActor*> ALetheGameState::GetPlayerCharacters()
 	TArray<AActor*> TempPlayerCharacters;
 	for (const auto& PlayerCharacter : PlayerCharacters)
 	{
-		TempPlayerCharacters.Emplace(Cast<AActor>(PlayerCharacter.GetObject()));
+		TempPlayerCharacters.Add(Cast<AActor>(PlayerCharacter.GetObject()));
 	}
 	return TempPlayerCharacters;
 }

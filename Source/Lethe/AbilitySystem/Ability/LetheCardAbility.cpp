@@ -18,9 +18,8 @@
 
 ULetheCardAbility::ULetheCardAbility()
 {
-	FEffectApplyPolicy EffectApplyPolicy;
+	FEffectApplyPolicy& EffectApplyPolicy = EffectApplyPolicies.Emplace_GetRef();
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
-	EffectApplyPolicies.Emplace(EffectApplyPolicy);
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -30,10 +29,10 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 		// Ability Cost는 Ability가 소유자이므로, EffectSpec을 직접 만들어서 Preview Data를 추출합니다.
 		FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 		PreviewContextHandle.SetAbility(this);
-		FGameplayEffectSpecHandle CostEffectSpecHandle = SourceASC->MakeOutgoingSpec(CostGameplayEffectClass, 1.f, PreviewContextHandle);
+		const FGameplayEffectSpecHandle CostEffectSpecHandle = SourceASC->MakeOutgoingSpec(CostGameplayEffectClass, 1.f, PreviewContextHandle);
 		
 		TArray<FGameplayEffectSpecHandle> CostEffectSpecHandleArray;
-		CostEffectSpecHandleArray.Emplace(CostEffectSpecHandle);
+		CostEffectSpecHandleArray.Add(CostEffectSpecHandle);
 		
 		return TryGetGameplayEffectPreviewData(nullptr, CostGameplayEffectClass, CostEffectSpecHandleArray, OutCostPreviewData);
 	}
@@ -292,7 +291,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		{
 			if (const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor))
 			{
-				TargetASCs.Emplace(TargetAbilitySystemInterface->GetAbilitySystemComponent());
+				TargetASCs.Add(TargetAbilitySystemInterface->GetAbilitySystemComponent());
 			}
 		}
 	}
@@ -342,7 +341,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 			{
 				if (CachedTargetActor.IsValid())
 				{
-					TargetActors.Emplace(CachedTargetActor.Get());
+					TargetActors.Add(CachedTargetActor.Get());
 				}
 			}
 

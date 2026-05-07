@@ -34,7 +34,7 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 		CharacterTags.Reserve(PLAYER_CHARACTER_NUMBER);
 		for (const auto& EquippedDeck : DeckManagerSubsystem->GetEquippedDecks())
 		{
-			CharacterTags.Emplace(EquippedDeck.Key);
+			CharacterTags.Add(EquippedDeck.Key);
 		}
 
 		// 콜백을 붙여놓고 Data Asset 로드를 요청합니다.
@@ -111,7 +111,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 			{
 				TArray<ATile*> SpawnTileArray;
-				SpawnTileArray.Emplace(Tile);
+				SpawnTileArray.Add(Tile);
 				SpawnedCharacter->MoveToTile(SpawnTileArray, true);
 				
 				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedCharacter);
@@ -141,7 +141,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
 			{
 				TArray<ATile*> SpawnTileArray;
-				SpawnTileArray.Emplace(Tile);
+				SpawnTileArray.Add(Tile);
 				SpawnedEnemy->MoveToTile(SpawnTileArray, true);
 				
 				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);

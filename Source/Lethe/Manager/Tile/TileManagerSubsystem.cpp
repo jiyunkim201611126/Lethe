@@ -122,7 +122,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 	TQueue<TPair<FCubeCoord, int32>> NextCoordsQueue;
 
 	NextCoordsQueue.Enqueue({ StartCoord, 0 });
-	OutSearchData.DistanceMap.Emplace(StartCoord, 0);
+	OutSearchData.DistanceMap.Add(StartCoord, 0);
 
 	// BFS 탐색을 시작합니다.
 	while (!NextCoordsQueue.IsEmpty())
@@ -175,8 +175,8 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 			if (!ExistingDepth)
 			{
 				// 처음 도달한 좌표면 깊이를 기록하고 큐에 넣습니다.
-				OutSearchData.DistanceMap.Emplace(NextCoord, NextDepth);
-				OutSearchData.ParentCoordMap.FindOrAdd(NextCoord).Emplace(CurrentCoord);
+				OutSearchData.DistanceMap.Add(NextCoord, NextDepth);
+				OutSearchData.ParentCoordMap.FindOrAdd(NextCoord).Add(CurrentCoord);
 				NextCoordsQueue.Enqueue({ NextCoord, NextDepth });
 			}
 			else if (*ExistingDepth == NextDepth)
@@ -185,7 +185,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 				TArray<FCubeCoord>& Parents = OutSearchData.ParentCoordMap.FindOrAdd(NextCoord);
 				if (!Parents.Contains(CurrentCoord))
 				{
-					Parents.Emplace(CurrentCoord);
+					Parents.Add(CurrentCoord);
 				}
 			}
 			// 기존 기록보다 더 짧게 도달하는 경우는 알고리즘상 존재하지 않기 때문에 따로 처리하지 않습니다.
@@ -233,7 +233,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	 */
 	TFunction<void(const FCubeCoord&)> BuildAllShortestPaths = [&](const FCubeCoord& CurrentCoord)
 	{
-		CurrentReversedPath.Emplace(CurrentCoord);
+		CurrentReversedPath.Add(CurrentCoord);
 
 		if (CurrentCoord == StartCoord)
 		{
@@ -247,7 +247,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 				ATile* PathTile = CachedTile ? *CachedTile : GetTile(PathCoord);
 				if (!CachedTile)
 				{
-					TileCache.Emplace(PathCoord, PathTile);
+					TileCache.Add(PathCoord, PathTile);
 				}
 
 				if (!PathTile)
@@ -255,12 +255,12 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 					PathTiles.Reset();
 					break;
 				}
-				PathTiles.Emplace(PathTile);
+				PathTiles.Add(PathTile);
 			}
 
 			if (!PathTiles.IsEmpty())
 			{
-				OutPathTilesArray.Emplace(MoveTemp(PathTiles));
+				OutPathTilesArray.Add(MoveTemp(PathTiles));
 			}
 
 			CurrentReversedPath.Pop();
@@ -307,7 +307,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 
 	// TargetTile -> StartTile 방향으로 부모를 따라가며, StartTile 기준 Distance별 후보를 모읍니다.
 	TSet<FCubeCoord> CurrentCoords;
-	CurrentCoords.Emplace(TargetTile->GetCubeCoord());
+	CurrentCoords.Add(TargetTile->GetCubeCoord());
 
 	// CurrentCoords는 현재 Distance에 있는 좌표 집합입니다.
 	for (int32 Distance = SearchData.ShortestDistanceToTarget; Distance > 0; --Distance)
@@ -316,7 +316,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 		{
 			for (const FCubeCoord& Coord : CurrentCoords)
 			{
-				PrioritizedCoordsByDistance[Distance].Emplace(Coord);
+				PrioritizedCoordsByDistance[Distance].Add(Coord);
 			}
 		}
 
@@ -327,7 +327,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 			{
 				for (const FCubeCoord& ParentCoord : *Parents)
 				{
-					NextCoords.Emplace(ParentCoord);
+					NextCoords.Add(ParentCoord);
 				}
 			}
 		}
@@ -348,7 +348,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 			// 후보 좌표에서 StartTile에 도달할 때까지 부모를 따라갑니다.
 			while (CurrentCoord != StartTile->GetCubeCoord())
 			{
-				ReversedPath.Emplace(CurrentCoord);
+				ReversedPath.Add(CurrentCoord);
 
 				// 현재 좌표의 부모를 찾고, 없으면 경로 생성을 취소합니다.
 				const TArray<FCubeCoord>* Parents = SearchData.ParentCoordMap.Find(CurrentCoord);
@@ -374,7 +374,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 			{
 				if (ATile* Tile = GetTile(ReversedPath[Index]))
 				{
-					OutPathTiles.Emplace(Tile);
+					OutPathTiles.Add(Tile);
 				}
 				else
 				{
@@ -412,7 +412,7 @@ void UTileManagerSubsystem::GetAroundTiles(const ATile* CenterTile, const int32 
 			const FCubeCoord TileCoord(CenterCoord.Q + LocalQ, CenterCoord.R + LocalR, CenterCoord.S + LocalS);
 			if (ATile* Tile = GetTile(TileCoord))
 			{
-				OutTiles.Emplace(Tile);
+				OutTiles.Add(Tile);
 			}
 		}
 	}
@@ -481,8 +481,8 @@ bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 	UnmapByTile(InTile);
 	UnmapByActor(InActor);
 	
-	TileToActorMap.Emplace(InTile, InActor);
-	ActorToTileMap.Emplace(InActor, InTile);
+	TileToActorMap.Add(InTile, InActor);
+	ActorToTileMap.Add(InActor, InTile);
 
 	if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
 	{

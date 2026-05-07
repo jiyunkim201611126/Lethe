@@ -47,7 +47,7 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	{
 		if (TargetActor.IsValid() && TargetActor->Implements<UAbilitySystemInterface>())
 		{
-			TargetActors.Emplace(TargetActor.Get());
+			TargetActors.Add(TargetActor.Get());
 		}
 	}
 	

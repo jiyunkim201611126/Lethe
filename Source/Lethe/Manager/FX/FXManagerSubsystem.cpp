@@ -38,7 +38,7 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				{
 					continue;
 				}
-				SoundMap.Emplace(Row->SoundTag, Row->SoundAsset);
+				SoundMap.Add(Row->SoundTag, Row->SoundAsset);
 			}
 		}
 	}
@@ -57,7 +57,7 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				{
 					continue;
 				}
-				NiagaraMap.Emplace(Row->NiagaraTag, Row->NiagaraAsset);
+				NiagaraMap.Add(Row->NiagaraTag, Row->NiagaraAsset);
 			}
 		}
 	}
@@ -154,14 +154,14 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
 	{
 		// 로드 중인 에셋이 로드 완료 시점에 이 요청에 대해서도 함께 처리하기 위해 배열에 추가합니다.
-		ExistingRequest->PlayRequests.Emplace(NewPlayData);
+		ExistingRequest->PlayRequests.Add(NewPlayData);
 		return;
 	}
 
 	// 새로 로드를 시작해야 하는 경우 여기로 내려옵니다.
 	// 에셋 로드가 끝난 뒤 호출되는 델리게이트에 함수를 바인드합니다.
-	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Emplace(AssetPath);
-	NewRequest.PlayRequests.Emplace(NewPlayData);
+	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
+	NewRequest.PlayRequests.Add(NewPlayData);
 	
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
@@ -204,8 +204,8 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 	}
 
 	// 처음 요청된 태그인 경우 콜백 리스트를 생성합니다.
-	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Emplace(AssetPath);
-	NewRequest.GetterCallbacks.Emplace(OnLoadedCallback);
+	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
+	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
@@ -294,8 +294,8 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 	
 	// 새로 로드를 시작해야 하는 경우 여기로 내려옵니다.
 	// 에셋 로드가 완료되면 위에서 초기화한 정보들을 참조할 수 있도록 배열에 추가합니다.
-	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Emplace(AssetPath);
-	NewRequest.SpawnRequests.Emplace(NewPlayData);
+	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Add(AssetPath);
+	NewRequest.SpawnRequests.Add(NewPlayData);
 	
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
@@ -338,8 +338,8 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 	}
 
 	// 처음 요청된 태그인 경우 콜백 리스트를 생성합니다.
-	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Emplace(AssetPath);
-	NewRequest.GetterCallbacks.Emplace(OnLoadedCallback);
+	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Add(AssetPath);
+	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);

@@ -39,7 +39,7 @@ bool UEffectApplier_Damage::TryMakeSpecHandles(UAbilitySystemComponent* SourceAS
 			// 이 값은 GetSetByCallerMagnitude로 꺼내올 수 있습니다.
 			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, Pair.Key, ScaledDamage);
 
-			OutSpecHandles.Emplace(DamageSpecHandle);
+			OutSpecHandles.Add(DamageSpecHandle);
 		}
 	}
 	return !OutSpecHandles.IsEmpty();

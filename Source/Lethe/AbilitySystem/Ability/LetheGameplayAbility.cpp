@@ -49,7 +49,7 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 							{
 								if (AEnemyCharacterBase* Enemy = Cast<AEnemyCharacterBase>(ActorOnTile))
 								{
-									CombatStartingEnemies.Emplace(Enemy);
+									CombatStartingEnemies.Add(Enemy);
 									return true;
 								}
 							}

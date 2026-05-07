@@ -373,7 +373,7 @@ void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* Curr
 			if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 			{
 				FPreviewContext PreviewContext;
-				PreviewContext.CurrentTargetActors.Emplace(CurrentActor);
+				PreviewContext.CurrentTargetActors.Add(CurrentActor);
 				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);

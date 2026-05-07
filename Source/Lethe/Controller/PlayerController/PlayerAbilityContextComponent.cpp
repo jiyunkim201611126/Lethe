@@ -131,7 +131,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	for (ATile* Tile : OutPathTilesArray[SelectedPathIndex])
 	{
 		Tile->AddOccupiedCount();
-		CurrentReservedMove->PathTiles.Emplace(MakeWeakObjectPtr(Tile));
+		CurrentReservedMove->PathTiles.Add(MakeWeakObjectPtr(Tile));
 	}
 
 	// 모든 ReservedMove를 검사해서 MoveDistance가 있는 경우 대기 상태로 변경합니다.

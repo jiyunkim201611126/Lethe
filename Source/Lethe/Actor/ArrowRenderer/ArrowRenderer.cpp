@@ -194,7 +194,7 @@ void AArrowRenderer::EnsureMovePreviewSplineMeshCount(const int32 RequiredCount)
 			return;
 		}
 
-		MovePreviewSplineMeshComponents.Emplace(NewSplineMeshComponent);
+		MovePreviewSplineMeshComponents.Add(NewSplineMeshComponent);
 	}
 }
 

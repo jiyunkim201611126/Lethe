@@ -126,7 +126,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 							if (OutNearestTiles.IsEmpty() || Distance == Depth)
 							{
 								Distance = Depth;
-								OutNearestTiles.Emplace(TileData->TileActor.Get());
+								OutNearestTiles.Add(TileData->TileActor.Get());
 								return true;
 							}
 							if (!OutNearestTiles.IsEmpty() && Distance != Depth)
@@ -173,7 +173,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 						const int32 FloorGap = TileManagerSubsystem->GetTileFloor(TargetTile) - TileManagerSubsystem->GetTileFloor(CandidateTile);
 						if (FMath::Abs(FloorGap) <= AbilityRange.FloorGap && TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
 						{
-							AttackableTiles.Emplace(CandidateTile);
+							AttackableTiles.Add(CandidateTile);
 						}
 					}
 				}
@@ -331,7 +331,7 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
 			for (ATile* PathTile : PathTiles)
 			{
-				MoveAbilityActivationData.TargetTiles.Emplace(PathTile);
+				MoveAbilityActivationData.TargetTiles.Add(PathTile);
 			}
 			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
 			
@@ -393,15 +393,13 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 				}
 			}
 
-			FAbilityActivationData ActivationData;
+			FAbilityActivationData& ActivationData = CandidateAbilityData.Emplace_GetRef();
 			ActivationData.Index = ControlledEnemy->GetEnemyAbilityPriority();
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.TargetTiles.Emplace(TargetTile);
+			ActivationData.TargetTiles.Add(TargetTile);
 			ActivationData.Payload.Instigator = ControlledEnemy;
-
-			CandidateAbilityData.Emplace(ActivationData);
 		}
 
 		if (!CandidateAbilityData.IsEmpty())

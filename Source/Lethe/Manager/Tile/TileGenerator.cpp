@@ -29,7 +29,7 @@ namespace TileGeneratorInternal
 
 			for (int32 Q = QMin; Q <= QMax; ++Q)
 			{
-				OutCoordList.Emplace(CenterCoord + FCubeCoord(Q, R));
+				OutCoordList.Add(CenterCoord + FCubeCoord(Q, R));
 			}
 		}
 	}
@@ -72,12 +72,12 @@ namespace TileGeneratorInternal
 				continue;
 			}
 
-			Visited.Emplace(CurrentCoord);
+			Visited.Add(CurrentCoord);
 			CurrentTileData = TileDataMap.Find(CurrentCoord);
 
 			if (SelectCondition(CurrentCoord, CurrentTileData, CurrentDepth))
 			{
-				OutCoords.Emplace(CurrentCoord);
+				OutCoords.Add(CurrentCoord);
 			}
 
 			//뻗어 나갈 타일들에 대한 조건 검사
@@ -441,10 +441,10 @@ namespace TileGeneratorInternal
 				WorldPosition.Z += 40.f;
 				
 				ATile* TileActor = World->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
-				TilesByCoord.FindOrAdd(Pair.Key).Emplace(TileActor);
+				TilesByCoord.FindOrAdd(Pair.Key).Add(TileActor);
 				if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
 				{
-					RoomData->RoomTiles.Emplace(TileActor);
+					RoomData->RoomTiles.Add(TileActor);
 				}
 		
 				//타일의 중심 메쉬 결정을 위한 코드
@@ -458,7 +458,7 @@ namespace TileGeneratorInternal
 					MeshKey = static_cast<ETileMeshType>(static_cast<int32>(MeshKey) + 1);
 				}
 
-				TileMeshes.Emplace(StageData->TileMeshes[MeshKey].LoadSynchronous());
+				TileMeshes.Add(StageData->TileMeshes[MeshKey].LoadSynchronous());
 
 				int32 Index = 0;
 				TArray<ETileConnectionState> UVOffsetType; // UV Offset 기능을 위해서 추가
@@ -498,7 +498,7 @@ namespace TileGeneratorInternal
 						MeshKey = static_cast<ETileMeshType>(static_cast<int32>(MeshKey) + 1);
 					}
 
-					TileMeshes.Emplace(StageData->TileMeshes[MeshKey].LoadSynchronous());
+					TileMeshes.Add(StageData->TileMeshes[MeshKey].LoadSynchronous());
 					++Index;
 				}
 
@@ -520,7 +520,7 @@ namespace TileGeneratorInternal
 				}
 				else
 				{
-					NonTopTiles.Emplace(TileActor);
+					NonTopTiles.Add(TileActor);
 				}
 				
 				TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomId, UVOffsetType);

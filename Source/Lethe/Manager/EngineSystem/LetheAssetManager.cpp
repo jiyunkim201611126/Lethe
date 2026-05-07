@@ -46,7 +46,7 @@ void ULetheAssetManager::LoadPrimaryDataAssets(const TArray<FGameplayTag>& InGam
 		FPrimaryAssetId AssetId;
 		if (TryGetAssetId(GameplayTag, AssetId))
 		{
-			AssetsToLoad.Emplace(AssetId);
+			AssetsToLoad.Add(AssetId);
 		}
 		else
 		{
@@ -76,7 +76,7 @@ void ULetheAssetManager::OnPrimaryDataAssetsLoaded(const TArray<FPrimaryAssetId>
 	{
 		// 로드가 완료되면 해당 객체를 실제로 가져옵니다.
 		UPrimaryDataAsset* LoadedAsset = CastChecked<UPrimaryDataAsset>(GetPrimaryAssetObject(Id));
-		LoadedAssets.Emplace(LoadedAsset);
+		LoadedAssets.Add(LoadedAsset);
 	}
 
 	// 로드된 객체를 콜백으로 반환합니다.
@@ -202,9 +202,9 @@ void ULetheAssetManager::BuildCardDefinitionCache()
 			continue;
 		}
 		
-		TagToAssetId.Emplace(CardTag, AssetId);
-		CardIdToTag.Emplace(CardId, CardTag);
-		CardTagToId.Emplace(CardTag, CardId);
+		TagToAssetId.Add(CardTag, AssetId);
+		CardIdToTag.Add(CardId, CardTag);
+		CardTagToId.Add(CardTag, CardId);
 	}
 }
 
@@ -263,9 +263,9 @@ void ULetheAssetManager::BuildCharacterDefinitionCache()
 			continue;
 		}
 
-		TagToAssetId.Emplace(CharacterTag, AssetId);
-		CharacterIdToTag.Emplace(CharacterId, CharacterTag);
-		CharacterTagToId.Emplace(CharacterTag, CharacterId);
+		TagToAssetId.Add(CharacterTag, AssetId);
+		CharacterIdToTag.Add(CharacterId, CharacterTag);
+		CharacterTagToId.Add(CharacterTag, CharacterId);
 	}
 }
 

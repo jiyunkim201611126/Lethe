@@ -81,7 +81,7 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 			}
 			
 			IHighlightInterface::Execute_HighlightActorByAbility(Tile, OutlineColor);
-			CurrentHighlightedTilesByAbility.Emplace(Tile);
+			CurrentHighlightedTilesByAbility.Add(Tile);
 		}
 	}
 	
@@ -134,7 +134,7 @@ bool UActorSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const
 {
 	OutTiles.Reset();
 	
-	if (UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))
 		{
@@ -153,7 +153,7 @@ bool UActorSelectorComponent::TryGetTilesByDepth(TArray<ATile*>& OutTiles, const
 			{
 				if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
 				{
-					OutTiles.Emplace(SelectedTile);
+					OutTiles.Add(SelectedTile);
 				}
 			}
 		}

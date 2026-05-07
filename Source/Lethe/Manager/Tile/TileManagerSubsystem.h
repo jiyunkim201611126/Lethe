@@ -33,7 +33,7 @@ public:
 	void MakeNewTileMap();
 
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
-	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition);
+	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetTileDistance(const ATile* StartTile, const ATile* TargetTile, const EBFSType BFSType);
@@ -108,7 +108,7 @@ private:
  * @param SelectCondition 그 중 OutCoords에 Emplace하고 싶은 타일의 조건 작성
  */
 template <typename BFSConditionFunc, typename SelectConditionFunc>
-void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition)
+void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition) const
 {
 	TSet<FCubeCoord> Visited;
 	
@@ -119,7 +119,7 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 	
 	TQueue<TPair<FCubeCoord, int32>> Queue;
 	constexpr int32 StartDepth = 0;
-	FTileData* CurrentTileData = TileDataMap.Find(StartCoord);
+	const FTileData* CurrentTileData = TileDataMap.Find(StartCoord);
 	Queue.Enqueue({StartCoord, StartDepth});
 	
 	while (!Queue.IsEmpty())

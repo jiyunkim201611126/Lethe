@@ -70,7 +70,7 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 	{
 		if (PathTile)
 		{
-			MovePath.Emplace(PathTile);
+			MovePath.Add(PathTile);
 		}
 	}
 }
@@ -236,7 +236,7 @@ void ALetheCharacterBase::InitAbilityActorInfo() const
 	TArray<UUserWidget*> AttributeWidgets;
 	for (const UWidgetComponent* WidgetComponent : AttributeWidgetComponents)
 	{
-		AttributeWidgets.Emplace(WidgetComponent->GetWidget());
+		AttributeWidgets.Add(WidgetComponent->GetWidget());
 	}
 	GASManagerComponent->InitAbilityActorInfo(AttributeWidgets);
 }

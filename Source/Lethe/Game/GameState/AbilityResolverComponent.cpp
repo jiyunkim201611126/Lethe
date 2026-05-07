@@ -36,7 +36,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(const FAbilit
 			}
 		}
 	}
-	PlayerAbilityActivationData.Emplace(ActivationData);
+	PlayerAbilityActivationData.Add(ActivationData);
 
 	if (bStartImmediately && !IsResolvingPlayerAbility())
 	{
@@ -235,14 +235,14 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		/** 모든 경로 생성 함수들은 StartTile을 제외하고 생성하므로, 여기서 직접 추가합니다. */
 		if (ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(AbilityOwnerASC->GetAvatarActor()))
 		{
-			MovePayload->PathTiles.Emplace(StartTile);
+			MovePayload->PathTiles.Add(StartTile);
 		}
 		
 		for (const auto& TargetTile : ActivationData->TargetTiles)
 		{
 			if (TargetTile.IsValid())
 			{
-				MovePayload->PathTiles.Emplace(TargetTile.Get());
+				MovePayload->PathTiles.Add(TargetTile.Get());
 			}
 		}
 		
@@ -265,7 +265,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		{
 			if (TargetTile.IsValid())
 			{
-				TargetActors.Emplace(TileManagerSubsystem->GetActorOnTile(TargetTile.Get()));
+				TargetActors.Add(TileManagerSubsystem->GetActorOnTile(TargetTile.Get()));
 			}
 		}
 
@@ -282,7 +282,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
 					const FVector DummyActorLocation = ActivationData->TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
 					DummyActor->SetActorLocation(DummyActorLocation);
-					TargetActors.Emplace(DummyActor);
+					TargetActors.Add(DummyActor);
 				}
 				break;
 			default:

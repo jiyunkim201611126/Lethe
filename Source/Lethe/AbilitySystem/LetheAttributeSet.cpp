@@ -22,18 +22,18 @@ void ULetheAttributeSet::InitializeAttributeTagMap()
 	{
 		AttributesToTags.Reserve(12);
 
-		AttributesToTags.Emplace(GetHealthAttribute(), LetheGameplayTags.Attribute_Vital_Health);
-		AttributesToTags.Emplace(GetMaxHealthAttribute(), LetheGameplayTags.Attribute_Vital_MaxHealth);
-		AttributesToTags.Emplace(GetManaAttribute(), LetheGameplayTags.Attribute_Vital_Mana);
-		AttributesToTags.Emplace(GetMaxManaAttribute(), LetheGameplayTags.Attribute_Vital_MaxMana);
-		AttributesToTags.Emplace(GetCostAttribute(), LetheGameplayTags.Attribute_Vital_Cost);
-		AttributesToTags.Emplace(GetMaxCostAttribute(), LetheGameplayTags.Attribute_Vital_MaxCost);
-		AttributesToTags.Emplace(GetMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistance);
-		AttributesToTags.Emplace(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveDistance);
-		AttributesToTags.Emplace(GetManaRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_ManaRecovery);
-		AttributesToTags.Emplace(GetCostRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_CostRecovery);
-		AttributesToTags.Emplace(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery);
-		AttributesToTags.Emplace(GetIncomingDamageAttribute(), LetheGameplayTags.Attribute_Meta_IncomingDamage);
+		AttributesToTags.Add(GetHealthAttribute(), LetheGameplayTags.Attribute_Vital_Health);
+		AttributesToTags.Add(GetMaxHealthAttribute(), LetheGameplayTags.Attribute_Vital_MaxHealth);
+		AttributesToTags.Add(GetManaAttribute(), LetheGameplayTags.Attribute_Vital_Mana);
+		AttributesToTags.Add(GetMaxManaAttribute(), LetheGameplayTags.Attribute_Vital_MaxMana);
+		AttributesToTags.Add(GetCostAttribute(), LetheGameplayTags.Attribute_Vital_Cost);
+		AttributesToTags.Add(GetMaxCostAttribute(), LetheGameplayTags.Attribute_Vital_MaxCost);
+		AttributesToTags.Add(GetMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistance);
+		AttributesToTags.Add(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveDistance);
+		AttributesToTags.Add(GetManaRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_ManaRecovery);
+		AttributesToTags.Add(GetCostRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_CostRecovery);
+		AttributesToTags.Add(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery);
+		AttributesToTags.Add(GetIncomingDamageAttribute(), LetheGameplayTags.Attribute_Meta_IncomingDamage);
 	}
 }
 

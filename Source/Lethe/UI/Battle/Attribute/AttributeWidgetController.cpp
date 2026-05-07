@@ -20,10 +20,9 @@ void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControll
 	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
 	
-	FAbilitySystemReference AbilitySystemReference;
+	FAbilitySystemReference& AbilitySystemReference = AbilitySystemReferences.Emplace_GetRef();
 	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
 	AbilitySystemReference.AttributeSet = AttributeSet;
-	AbilitySystemReferences.Emplace(AbilitySystemReference);
 	
 	ALethePlayerController* LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
 	LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
@@ -80,7 +79,7 @@ void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeD
 {
 	if (const FGameplayTag* AttributeTag = ULetheAttributeSet::AttributesToTags.Find(AttributeData.Attribute))
 	{
-		CachedAttribute.Emplace(*AttributeTag, AttributeData.NewValue);
+		CachedAttribute.Add(*AttributeTag, AttributeData.NewValue);
 	}
 }
 
@@ -111,7 +110,7 @@ void UAttributeWidgetController::StartPreview(const FGameplayTag& CurrentTag, co
 	// Preview 여부를 AttributeWidget에게 알려줍니다.
 	if (bShouldPreview)
 	{
-		NowPreviewAttributes.Emplace(CurrentTag);
+		NowPreviewAttributes.Add(CurrentTag);
 		if (const FOnAttributeChanged* OnChanged = OnPreviewAttributeChangedMap.Find(CurrentTag))
 		{
 			FAttributeData Data;

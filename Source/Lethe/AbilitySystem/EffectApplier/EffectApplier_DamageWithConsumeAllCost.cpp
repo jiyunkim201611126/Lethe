@@ -86,7 +86,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview
 	for (int32 Index = 0; Index < CurrentCost; ++Index)
 	{
 		FGameplayEffectSpecHandle CostSpecHandle = SourceASC->MakeOutgoingSpec(CostEffectClass, 1.f, InContextHandle);
-		OutSpecHandles.Emplace(CostSpecHandle);
+		OutSpecHandles.Add(CostSpecHandle);
 	}
 	return !OutSpecHandles.IsEmpty();
 }

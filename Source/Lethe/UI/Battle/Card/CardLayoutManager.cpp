@@ -42,7 +42,7 @@ void UCardLayoutManager::AddCardToDeck(UCardWidget* CardWidget)
 		if (ULetheAbilitySystemComponent* LetheASC = CardWidget->GetOwnerASC())
 		{
 			FCharacterCards& CharacterCards = ASCToCards.FindOrAdd(LetheASC);
-			CharacterCards.Deck.Emplace(CardWidget);
+			CharacterCards.Deck.Add(CardWidget);
 		}
 	}
 }
@@ -78,7 +78,7 @@ bool UCardLayoutManager::TryDraw(ULetheAbilitySystemComponent* OwnerASC)
 		{
 			if (UCardWidget* DrawnCard = CharacterCards->Deck.Pop(EAllowShrinking::No))
 			{
-				CharacterCards->Hands.Emplace(DrawnCard);
+				CharacterCards->Hands.Add(DrawnCard);
 				DrawnCard->SetCardContainer(ECardContainer::Hand);
 				return true;
 			}
@@ -206,7 +206,7 @@ void UCardLayoutManager::MoveAllCards(const TArray<FAbilitySystemReference>& Abi
 
 				// 핸드의 마지막 장이면 DeckAndHand로, 아니라면 HandAndHand로 사이 공간을 띄워줍니다.
 				NextCardTranslation.X += HandIndex == CharacterCards->Hands.Num() - 1 ? PaddingDeckAndHand : PaddingHandAndHand;
-				CurrentHands.Emplace(CardInHand);
+				CurrentHands.Add(CardInHand);
 			}
 		}
 	}

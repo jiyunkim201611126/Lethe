@@ -3,6 +3,7 @@
 #include "LetheGameState.h"
 
 #include "AbilityResolverComponent.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 
 ALetheGameState::ALetheGameState()
@@ -228,6 +229,7 @@ void ALetheGameState::OnResolvePlayerMove(AActor* MovedCharacter) const
 
 void ALetheGameState::OnResolveEnemyPlanMove()
 {
+	LETHE_LOG(LogLetheGameState, Log, "On Enemy Plan Move Resolved");
 	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		const TWeakObjectPtr<AEnemyCharacterBase>& AbilityProcessedEnemy = SpawnedEnemies[CurrentEnemyAbilityProcessIndex];
@@ -237,7 +239,7 @@ void ALetheGameState::OnResolveEnemyPlanMove()
 		}
 	}
 
-	// Ability 사용 예고 직후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
+	// Plan 종료 후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
 	if (PlanTimerHandle.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(PlanTimerHandle);

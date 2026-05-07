@@ -8,3 +8,4 @@ DEFINE_LOG_CATEGORY(LogAttrbitueSet);
 DEFINE_LOG_CATEGORY(LogAbility);
 DEFINE_LOG_CATEGORY(LogAbilityResolver);
 DEFINE_LOG_CATEGORY(LogAIController);
+DEFINE_LOG_CATEGORY(LogLetheGameState);

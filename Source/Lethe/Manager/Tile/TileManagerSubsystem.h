@@ -61,7 +61,7 @@ public:
 	int32 GetTileFloor(const ATile* Tile) const;
 	
 	UFUNCTION(BlueprintCallable)
-	bool MapTileAndActor(ATile* InTile, AActor* InActor);
+	void MapTileAndActor(ATile* InTile, AActor* InActor);
 	void UnmapByTile(ATile* InTile);
 	void UnmapByActor(AActor* InActor);
 

@@ -485,11 +485,11 @@ int32 UTileManagerSubsystem::GetTileFloor(const ATile* Tile) const
 	return INDEX_NONE;
 }
 
-bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
+void UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 {
 	if (!InTile || !InActor)
 	{
-		return false;
+		return;
 	}
 
 	const ATile* OldTile = nullptr;
@@ -508,8 +508,6 @@ bool UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 	{
 		RoomManagerSubsystem->NotifyActorTileChanged(InActor, OldTile, InTile);
 	}
-
-	return true;
 }
 
 void UTileManagerSubsystem::UnmapByTile(ATile* InTile)

@@ -140,7 +140,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 		}
 
 		// TargetCoord를 찾은 뒤에는, 최단 거리보다 깊거나 같은 Distance의 타일은 더 확장할 필요가 없으므로 스킵합니다.
-		if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && CurrentDepth >= OutSearchData.ShortestDistanceToTarget)
+		if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && OutSearchData.ShortestDistanceToTarget <= CurrentDepth)
 		{
 			continue;
 		}
@@ -161,7 +161,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 
 			// TargetCoord를 찾은 뒤에는, 최단 거리보다 더 깊은 탐색은 필요 없으므로 스킵합니다.
 			const int32 NextDepth = CurrentDepth + 1;
-			if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && NextDepth > OutSearchData.ShortestDistanceToTarget)
+			if (OutSearchData.ShortestDistanceToTarget != INDEX_NONE && OutSearchData.ShortestDistanceToTarget < NextDepth)
 			{
 				continue;
 			}

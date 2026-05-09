@@ -181,7 +181,7 @@ void ATile::SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileCo
 		}
 		
 		const int32 Direction = FCString::Atoi(*TagString);
-		if (Direction >= 0 && Direction < 6)
+		if (0 <= Direction && Direction < 6)
 		{
 			// Meshes는 MainTile의 Mesh를 0번째 인덱스로 갖고 있으므로 1을 더한 인덱스로 가져옵니다.
 			Component->SetStaticMesh(Meshes[Direction + 1]);

@@ -254,7 +254,7 @@ bool UDeckEditingWidget::CanAddCardToEquippedDeck(const FDeckListObjects* Equipp
 			}
 		}
 
-		if (EqualCardCount >= MaxEqualCardCount)
+		if (MaxEqualCardCount <= EqualCardCount)
 		{
 			// 동일한 카드를 3장 초과 장착할 수 없습니다.
 			return false;

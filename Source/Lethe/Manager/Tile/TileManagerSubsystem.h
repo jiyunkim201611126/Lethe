@@ -144,7 +144,7 @@ void UTileManagerSubsystem::TileBFS(const FCubeCoord& StartCoord, const int32 Ma
 		}
 
 		//뻗어 나갈 타일들에 대한 조건 검사
-		if (CurrentDepth + 1 > MaxDepth)
+		if (MaxDepth < CurrentDepth + 1)
 		{
 			continue;
 		}

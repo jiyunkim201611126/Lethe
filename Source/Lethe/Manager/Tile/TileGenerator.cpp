@@ -81,7 +81,7 @@ namespace TileGeneratorInternal
 			}
 
 			//뻗어 나갈 타일들에 대한 조건 검사
-			if (CurrentDepth + 1 > MaxDepth)
+			if (MaxDepth < CurrentDepth + 1)
 			{
 				continue;
 			}
@@ -152,14 +152,14 @@ namespace TileGeneratorInternal
 		
 		for (FCubeCoord& Coord : CubeCoordList)
 		{
-			if (RoomId >= StageInitData->FloorIncrementTrialsCount)
+			if (StageInitData->FloorIncrementTrialsCount <= RoomId)
 			{
 				break;
 			}
 
 			FTileData* RootTileData = TileDataMap.Find(Coord);
 			
-			if (RootTileData->Floor >= StageInitData->MaxFloor)
+			if (StageInitData->MaxFloor <= RootTileData->Floor)
 			{
 				continue;
 			}
@@ -475,7 +475,7 @@ namespace TileGeneratorInternal
 					const FTileData* NeighborTileData = TileDataMap.Find(Pair.Key + Offset);
 					if (NeighborTileData && CurrentTileData && CurrentTileData->Connections[Index])
 					{
-						if (NeighborTileData->Floor > Pair.Value.Floor)
+						if (Pair.Value.Floor < NeighborTileData->Floor)
 						{
 							MeshKey = ETileMeshType::Side_Upper;
 							UVOffsetType[Direction] = ETileConnectionState::VerticalConnected;

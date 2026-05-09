@@ -254,7 +254,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		const int32 FromOtherEnemiesScore = CalculateDistanceFromOtherEnemiesScore(AttackableTile);
 
 		const int32 Score = DistanceScore + FromOtherEnemiesScore;
-		if (Score > BestScore)
+		if (BestScore < Score)
 		{
 			BestScore = Score;
 			BestTile = AttackableTile;

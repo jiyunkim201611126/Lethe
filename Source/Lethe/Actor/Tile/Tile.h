@@ -29,7 +29,7 @@ enum class ETileVisionState : uint8
 	Explored
 };
 
-UCLASS()
+UCLASS(meta = (PrioritizeCategories = "Vision"))
 class LETHE_API ATile : public AActor, public IHighlightInterface
 {
 	GENERATED_BODY()
@@ -79,7 +79,7 @@ protected:
 	TObjectPtr<UStaticMeshComponent> MainTile;
 
 	/** false면 타일 시야 로직을 적용하지 않습니다. */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Vision")
 	bool bUseTileVisionLogic = true;
 
 private:

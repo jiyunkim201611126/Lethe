@@ -26,7 +26,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(const FAbilit
 	const bool bIsMovementAbility = ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 	if (!bIsMovementAbility)
 	{
-		// Move Ability가 아닌 경우 들어오는 분기입니다.
+		// Movement Ability가 아닌 경우 들어오는 분기입니다.
 		for (const FAbilityActivationData& RegisteredActivationData : PlayerAbilityActivationData)
 		{
 			if (RegisteredActivationData.Index == ActivationData.Index)

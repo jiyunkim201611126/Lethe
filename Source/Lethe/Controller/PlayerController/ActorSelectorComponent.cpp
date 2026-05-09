@@ -4,8 +4,8 @@
 
 #include "Lethe/Lethe.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/HighlightInterface.h"
-#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 UActorSelectorComponent::UActorSelectorComponent()
@@ -144,7 +144,7 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 				{
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
-						// 플레이어 캐릭터가 아닌 액터가 서있다면 해당 타일은 이동 가능 경로에서 제외됩니다.
+						// 아군 캐릭터가 아닌 액터가 서있다면 해당 타일은 이동 가능 경로에서 제외됩니다.
 						if (!NextTileData || !NextTileData->TileActor.IsValid())
 						{
 							return false;
@@ -152,20 +152,35 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 						
 						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TileActor.Get()))
 						{
-							return ActorOnNextTile->Implements<UPlayerCharacterInterface>();
+							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
+							{
+								return CombatInterface->GetTeamSide() == ETeamSide::Player;
+							}
 						}
 					}
 					return true;
 				},
-				[TileManagerSubsystem, QueryType](const FCubeCoord CurrentCoord, const FTileData* TileData, int32 Depth)
+				[TileManagerSubsystem, QueryType](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
 				{
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
+						// 목적지 타일에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
 						if (!TileData || !TileData->TileActor.IsValid())
 						{
 							return false;
 						}
-						return TileManagerSubsystem->CanPlayerMoveToTile(TileData->TileActor.Get());
+
+						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+						{
+							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
+							{
+								if (CombatInterface->GetTeamSide() == ETeamSide::Player && Depth <= CombatInterface->GetMoveDistance())
+								{
+									return true;
+								}
+							}
+							return false;
+						}
 					}
 					return true;
 				});

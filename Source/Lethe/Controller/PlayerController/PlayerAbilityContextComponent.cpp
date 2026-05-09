@@ -548,18 +548,25 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 
 void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const
 {
-	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile)
+	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile || !LetheGameState)
 	{
 		return;
 	}
 
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
-		if (TilesInRange.Contains(TargetTile) && TileManagerSubsystem->CanPlayerMoveToTile(TargetTile))
+		const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(SelectedCharacter);
+		if (!StartTile)
 		{
-			// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
-			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+			return;
+		}
+		
+		if (TilesInRange.Contains(TargetTile))
+		{
+			if (TileManagerSubsystem->CanPlayerMoveToTile(TargetTile))
 			{
+				// 선택한 타일로 이동 가능한 경우 들어오는 분기입니다.
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 				TArray<FGameplayAbilitySpec*> AbilitySpecs;
 				const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
@@ -569,33 +576,77 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 					return;
 				}
 
-				const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(SelectedCharacter);
-				if (!StartTile)
+				const ICombatInterface* SelectedCombatInterface = Cast<ICombatInterface>(SelectedCharacter);
+				if (!SelectedCombatInterface)
+				{
+					return;
+				}
+			
+				TArray<ATile*> OutPathTiles;
+				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, SelectedCombatInterface->GetMoveDistance(), OutPathTiles, false))
+				{
+					FAbilityActivationData AbilityActivationData;
+					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					for (ATile* PathTile : OutPathTiles)
+					{
+						if (PathTile)
+						{
+							AbilityActivationData.TargetTiles.Emplace(PathTile);
+						}
+					}
+					LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
+				}
+			}
+			else
+			{
+				// 선택한 타일로 이동할 수 없는 경우, 스왑은 가능한지 확인합니다.
+				const AActor* SwapTargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile);
+				const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(SwapTargetActor);
+				if (!TargetCombatInterface)
 				{
 					return;
 				}
 
-				const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SelectedCharacter);
-				if (!CombatInterface)
+				// 선택된 캐릭터는 이미 TargetTile로 이동할 MoveDistance가 충분한 상태라는 게 검증됐기 때문에, TargetTile에 있는 캐릭터의 조건만 확인합니다.
+				if (TargetCombatInterface->GetTeamSide() != ETeamSide::Player)
+				{
+					return;
+				}
+				
+				const int32 TileDistance = TileManagerSubsystem->GetTileDistance(StartTile, TargetTile, EBFSType::Connection);
+				if (TargetCombatInterface->GetMoveDistance() < TileDistance)
+				{
+					return;
+				}
+				
+				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+				TArray<FGameplayAbilitySpec*> AbilitySpecs;
+				const FGameplayTagContainer SwapTagContainer = LetheGameplayTags.Ability_Swap.GetSingleTagContainer();
+				AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(SwapTagContainer, AbilitySpecs);
+				if (AbilitySpecs.IsEmpty())
 				{
 					return;
 				}
 				
 				TArray<ATile*> OutPathTiles;
-				TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, CombatInterface->GetMoveDistance(), OutPathTiles, false);
-
-				FAbilityActivationData AbilityActivationData;
-				AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-				AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-				AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
-				for (ATile* PathTile : OutPathTiles)
+				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, TargetCombatInterface->GetMoveDistance(), OutPathTiles, true))
 				{
-					if (PathTile)
+					FAbilityActivationData AbilityActivationData;
+					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Swap;
+					AbilityActivationData.Payload.OptionalObject2 = SwapTargetActor;
+					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					for (ATile* PathTile : OutPathTiles)
 					{
-						AbilityActivationData.TargetTiles.Emplace(PathTile);
+						if (PathTile)
+						{
+							AbilityActivationData.TargetTiles.Emplace(PathTile);
+						}
 					}
+					LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
 				}
-				LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
 			}
 		}
 	}

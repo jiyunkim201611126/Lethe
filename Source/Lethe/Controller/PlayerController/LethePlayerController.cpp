@@ -60,7 +60,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 {
 	if (SelectedCardAbility.IsValid())
 	{
-		// 선택된 카드가 있다면 얼리리턴합니다.
+		// 선택된 카드가 있다면 얼리리턴합니다. 카드 사용은 RequestUseCard를 통해 이루어집니다.
 		return;
 	}
 	

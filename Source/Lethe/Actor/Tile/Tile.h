@@ -78,6 +78,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> MainTile;
 
+	/** false면 타일 시야 로직을 적용하지 않습니다. */
+	UPROPERTY(EditDefaultsOnly)
+	bool bUseTileVisionLogic = true;
+
 private:
 	FCubeCoord CubeCoord;
 	int32 RoomId = INDEX_NONE;

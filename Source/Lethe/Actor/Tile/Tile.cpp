@@ -29,8 +29,15 @@ void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoo
 
 	TextRender->SetVisibility(bIsTopTile);
 
-	SetActorHiddenInGame(true);
-	SetTileTraceIgnore(true);
+	if (bUseTileVisionLogic)
+	{
+		SetActorHiddenInGame(true);
+		SetTileTraceIgnore(true);
+	}
+	else
+	{
+		TileVisionState = ETileVisionState::Visible;
+	}
 }
 
 void ATile::SetTopTile(ATile* InTile)
@@ -115,16 +122,19 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 	{
 		return;
 	}
-	TileVisionState = VisionState;
 	
-	switch (TileVisionState)
+	if (bUseTileVisionLogic)
 	{
-	case ETileVisionState::Visible:
-		SetActorHiddenInGame(false);
-		SetTileTraceIgnore(false);
-		break;
-	default:
-		break;
+		TileVisionState = VisionState;
+		switch (TileVisionState)
+		{
+		case ETileVisionState::Visible:
+			SetActorHiddenInGame(false);
+			SetTileTraceIgnore(false);
+			break;
+		default:
+			break;
+		}
 	}
 }
 

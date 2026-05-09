@@ -94,7 +94,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			return (bCanSelectOtherRoom ? true : TileData->RoomId == StartRoomId) && OutCoords.Num() < CharacterNumber;
 		});
 
-	TArray<FCubeCoord> SpawnCoords = OutCoords.Array();
+	TArray<FCubeCoord> PlayerSpawnCoords = OutCoords.Array();
 	for (int32 CharacterIndex = 0; CharacterIndex < CharacterNumber; ++CharacterIndex)
 	{
 		const UCharacterDefinitionData* CharacterDefinitionData = Cast<UCharacterDefinitionData>(CharacterDefinitionDatas[CharacterIndex]);
@@ -103,7 +103,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 			continue;
 		}
 
-		if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoords[CharacterIndex]))
+		if (ATile* Tile = TileManagerSubsystem->GetTile(PlayerSpawnCoords[CharacterIndex]))
 		{
 			FTransform SpawnTransform;
 			FVector SpawnLocation = Tile->GetActorLocation();
@@ -132,6 +132,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoord))
 		{
+			// 플레이어의 시작 위치와 겹칠 수 있으므로 이동 가능 여부를 검사합니다.
 			if (!TileManagerSubsystem->CanEnemyAIMoveToTile(Tile))
 			{
 				continue;
@@ -154,4 +155,45 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		}
 	}
 	LetheGameState->GoEnemyPlanningPhase();
+
+
+#if WITH_EDITOR
+	// 테스트용도로 작성된 구문으로, 플레이어 캐릭터 근처에 바로 적을 하나 스폰합니다.
+	if (bSpawnEnemyNearly)
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		FCubeCoord EnemySpawnCoord = PlayerSpawnCoords.Last();
+		int32 Direction = 0;
+		while (true)
+		{
+			ATile* Tile = TileManagerSubsystem->GetTile(EnemySpawnCoord);
+			if (!Tile || !TileManagerSubsystem->CanEnemyAIMoveToTile(Tile))
+			{
+				EnemySpawnCoord = EnemySpawnCoord + FCubeCoord::GetDirection(++Direction);
+				if (Direction == 18)
+				{
+					return;
+				}
+				continue;
+			}
+		
+			FVector SpawnLocation = Tile->GetActorLocation();
+			if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
+			{
+				TArray<ATile*> SpawnTileArray;
+				SpawnTileArray.Add(Tile);
+				SpawnedEnemy->MoveToTile(SpawnTileArray, true);
+			
+				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
+			
+				SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
+				EnemyPriority += 100;
+			
+				LetheGameState->RegisterEnemy(SpawnedEnemy);
+				return;
+			}
+		}
+	}
+#endif
 }

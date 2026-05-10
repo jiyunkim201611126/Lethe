@@ -7,6 +7,7 @@
 
 /**
  * 3차원 좌표를 표시하고, 직렬화를 지원하기 위해 만든 구조체
+ * Q, R, S의 합은 무조건 0
  */
 USTRUCT(BlueprintType)
 struct FCubeCoord
@@ -14,13 +15,15 @@ struct FCubeCoord
 	GENERATED_BODY()
 
 public:
-	//세 값의 합은 무조건 0
+	/** 우상단, 우측으로 향하면 +, 좌하단, 좌측으로 향하면 - */
 	UPROPERTY(EditAnywhere)
-	int32 Q; // 우상단으로 향하면 +, 좌하단으로 향하면 -
+	int32 Q;
+	/** 우하단, 좌하단으로 향하면 +, 우상단, 좌상단으로 향하면 - */ 
 	UPROPERTY(EditAnywhere) 
-	int32 R; // 하단으로 향하면 +, 상단으로 향하면 - 
+	int32 R;
+	/** 좌상단, 좌측으로 향하면 +, 우하단, 우측으로 향하면 - */
 	UPROPERTY(EditAnywhere)
-	int32 S; // 좌상단으로 향하면 +, 우하단으로 향하면 -
+	int32 S;
 
 	FCubeCoord() : Q(0), R(0), S(0) {}
 	

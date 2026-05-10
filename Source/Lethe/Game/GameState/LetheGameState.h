@@ -73,7 +73,7 @@ public:
 	bool IsResolvingPlayerAbility() const;
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AActor*> GetPlayerCharacters();
+	TArray<AActor*> GetPlayerCharacters() const;
 
 protected:
 	//~ Begin AActor Interface

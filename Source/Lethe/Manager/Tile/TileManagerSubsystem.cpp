@@ -4,6 +4,7 @@
 
 #include "RoomManagerSubsystem.h"
 #include "TileGenerator.h"
+#include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Interface/CombatInterface.h"
@@ -13,6 +14,8 @@ void UTileManagerSubsystem::Deinitialize()
 	Super::Deinitialize();
 
 	TileDataMap.Empty();
+	TileToActorMap.Empty();
+	ActorToTileMap.Empty();
 }
 
 void UTileManagerSubsystem::MakeNewTileMap(const EStageType StageType)
@@ -47,6 +50,23 @@ const FStageData* UTileManagerSubsystem::GetStageData(const EStageType StageType
 		{
 			if (StageData->StageType == StageType)
 			{
+				bool bHasPlayerSpawnRole = false;
+				bool bHasStageEndRole = false;
+				for (const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData : StageData->RoomAssignmentRules)
+				{
+					switch (RoomRoleAssignmentRuleData->RoomRole)
+					{
+					case ERoomRole::PlayerSpawn:
+						bHasPlayerSpawnRole = true;
+						break;
+					case ERoomRole::StageEnd:
+						bHasStageEndRole = true;
+						break;
+					default:
+						break;
+					}
+				}
+				checkf(bHasPlayerSpawnRole && bHasStageEndRole, TEXT("%s Stage가 PlayerSpawnRole 혹은 StageEndRole을 갖고 있지 않습니다."), *LogHelper::EnumToString(StageType));
 				return StageData;
 			}
 		}

@@ -144,7 +144,7 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 				{
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
-						// 아군 캐릭터가 아닌 액터가 서있다면 해당 타일은 이동 가능 경로에서 제외됩니다.
+						// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
 						if (!NextTileData || !NextTileData->TileActor.IsValid())
 						{
 							return false;
@@ -164,7 +164,7 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 				{
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
-						// 목적지 타일에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
+						// 목적지 좌표에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
 						if (!TileData || !TileData->TileActor.IsValid())
 						{
 							return false;

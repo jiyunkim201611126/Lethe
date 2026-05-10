@@ -276,12 +276,12 @@ bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 M
 			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, TilesInRange,
 			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
-				// 우선 범위 내 타일을 모두 탐색합니다.
+				// 우선 범위 내 좌표를 모두 탐색합니다.
 				return true;
 			},
 			[TileManagerSubsystem](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
-				// EnemyAI가 이동 가능한 타일만 선택합니다.
+				// EnemyAI가 이동 가능한 좌표만 선택합니다.
 				if (TileData && TileData->TileActor.IsValid())
 				{
 					return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TileActor.Get());

@@ -3,7 +3,10 @@
 #include "RoomManagerSubsystem.h"
 
 #include "TileManagerSubsystem.h"
+#include "Lethe/LetheLog.h"
+#include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Data/Stage/RoomRoleAssignmentRuleData.h"
 #include "Lethe/Interface/TileVisionAffectedInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
@@ -12,11 +15,13 @@ void URoomManagerSubsystem::Deinitialize()
 	Super::Deinitialize();
 
 	RoomDataMap.Empty();
+	RoleAssignedRoomIds.Empty();
 }
 
 void URoomManagerSubsystem::SetRoomData(TMap<int32, FRoomData>&& InRoomData)
 {
 	RoomDataMap = MoveTemp(InRoomData);
+	RoleAssignedRoomIds.Empty();
 }
 
 void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile)
@@ -228,6 +233,92 @@ bool URoomManagerSubsystem::IsTileVisibleByPlayer(const ATile* InTile) const
 	}
 	
 	return false;
+}
+
+bool URoomManagerSubsystem::TryAssignRoomRole(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<TArray<FRoomCoordSlot>>& OutCoordSlotArrays)
+{
+	OutCoordSlotArrays.Reset();
+	
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!RoomRoleAssignmentRuleData || !TileManagerSubsystem)
+	{
+		return false;
+	}
+	
+	for (const auto& Pair : RoomDataMap)
+	{
+		// 이미 Role이 부여된 Room은 스킵합니다.
+		if (RoleAssignedRoomIds.Contains(Pair.Key))
+		{
+			continue;
+		}
+
+		// 등차수열 합으로 Distance에 해당하는 정육각 타일 개수를 계산합니다.
+		const int32 Distance = RoomRoleAssignmentRuleData->RequiredSpaceRangeDistance;
+		const int32 RequiredCoordCount = 1 + 3 * Distance * (Distance + 1);
+
+		// RoomSize 자체가 해당 개수보다 적은 경우 스킵합니다.
+		if (Pair.Value.RoomSize < RequiredCoordCount)
+		{
+			continue;
+		}
+
+		// 후보가 될 수 있는 Room 내 모든 타일을 순회합니다.
+		for (const auto& RoomTile : Pair.Value.RoomTiles)
+		{
+			if (RoomTile.IsValid() && RoomTile->IsTopTile())
+			{
+				TSet<FCubeCoord> TempCoords;
+				TileManagerSubsystem->TileBFS(RoomTile->GetCubeCoord(), Distance, RoomRoleAssignmentRuleData->RequiredSpaceRangeBFSType, TempCoords,
+				[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+				{
+					// 같은 Room 내의 좌표만 순회합니다.
+					if (CurrentTileData && NextTileData)
+					{
+						return CurrentTileData->RoomId == NextTileData->RoomId;
+					}
+					return false;
+				},
+				[](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+				{
+					// 일단 모든 좌표를 선택합니다.
+					return true;
+				});
+
+				// 정육각 형태를 만족한 경우 들어가는 분기입니다.
+				if (RequiredCoordCount <= TempCoords.Num())
+				{
+					// CoordsSlots를 복사해서 가져온 후, 모든 좌표에 현재 중심 타일 좌표를 더해 월드 좌표로 변환합니다.
+					TArray<FRoomCoordSlot> CoordSlots = RoomRoleAssignmentRuleData->CoordSlots;
+					bool bValidCoordSlots = true;
+					
+					for (FRoomCoordSlot& CoordSlot : CoordSlots)
+					{
+						FCubeCoord WorldCoord = CoordSlot.SlotCoord + RoomTile->GetCubeCoord();
+						if (!TempCoords.Contains(WorldCoord))
+						{
+							LETHE_LOG(LogRoomManager, Error, "%s Room Role의 %s Slot Type의 좌표가 범위를 벗어난 상태로 작성되었습니다.", *LogHelper::EnumToString(RoomRoleAssignmentRuleData->RoomRole), *LogHelper::EnumToString(CoordSlot.SlotType))
+							bValidCoordSlots = false;
+							continue;
+						}
+						CoordSlot.SlotCoord = WorldCoord;
+					}
+
+					if (bValidCoordSlots)
+					{
+						OutCoordSlotArrays.Add(MoveTemp(CoordSlots));
+					}
+				}
+			}
+		}
+		
+		if (!OutCoordSlotArrays.IsEmpty())
+		{
+			RoleAssignedRoomIds.Add(Pair.Key);
+			break;
+		}
+	}
+	return !OutCoordSlotArrays.IsEmpty();
 }
 
 FRoomData* URoomManagerSubsystem::GetMutableRoomData(const int32 RoomId)

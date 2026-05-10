@@ -268,7 +268,7 @@ bool ALetheGameState::IsResolvingPlayerAbility() const
 	return AbilityResolverComponent->IsResolvingPlayerAbility();
 }
 
-TArray<AActor*> ALetheGameState::GetPlayerCharacters()
+TArray<AActor*> ALetheGameState::GetPlayerCharacters() const
 {
 	TArray<AActor*> TempPlayerCharacters;
 	for (const auto& PlayerCharacter : PlayerCharacters)

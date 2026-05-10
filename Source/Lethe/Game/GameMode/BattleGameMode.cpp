@@ -2,9 +2,9 @@
 
 #include "BattleGameMode.h"
 
-#include "Lethe/LetheLog.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
+#include "Lethe/Character/LethePawn.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/Stage/StageData.h"
@@ -17,6 +17,8 @@
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
+
+	Controller = NewPlayer;
 
 	/**
 	 * 현재는 Battle 레벨에 진입하면 DeckManagerSubsystem에 있는 Equipped Deck을 가져와 Key(CharacterTag)를 기준으로 캐릭터를 생성합니다.
@@ -45,10 +47,10 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
-void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitionDatas) const
+void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
 	ALetheGameState* LetheGameState = GetGameState<ALetheGameState>();
 	
 	if (!TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
@@ -56,125 +58,109 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		return;
 	}
 
-	if (const FStageData* StageData = TileManagerSubsystem->GetStageData(StageType))
+	const FStageData* StageData = TileManagerSubsystem->GetStageData(StageType);
+	if (!StageData)
 	{
+		return;
 	}
 
-	const int32 CharacterNumber = CharacterDefinitionDatas.Num();
-	const int32 RoomCount = RoomManagerSubsystem->GetRoomCount();
-	int32 CurrentStartRoomId = StartRoomId;
-
-	// StartRoomId부터 차례로 1씩 더해가며 Room을 순회하고, 구덩이가 아닌 지점을 찾습니다.
-	const FRoomData* StartRoomData = nullptr;
-	while (!StartRoomData || StartRoomData->VisibleEntranceCoords.IsEmpty())
-	{
-		StartRoomData = RoomManagerSubsystem->GetRoomData(CurrentStartRoomId);
-		++CurrentStartRoomId;
-		if (RoomCount <= CurrentStartRoomId)
-		{
-			if (CurrentStartRoomId == StartRoomId)
-			{
-				// 모든 Room을 한 바퀴 돌아버린 경우 들어오는 분기입니다.
-				LETHE_LOG(LogBattleGameMode, Error, "플레이어 캐릭터를 스폰할 수 있는 Room이 존재하지 않습니다.");
-				return;
-			}
-			CurrentStartRoomId = 0;
-		}
-	}
-	
-	// StartRoom의 CenterCoords를 시작으로 주변 총 CharacterNumber 개수만큼의 타일을 가져옵니다.
-	TSet<FCubeCoord> OutCoords;
-	const bool bCanSelectOtherRoom = StartRoomData->RoomSize < CharacterNumber;
-	TileManagerSubsystem->TileBFS(StartRoomData->CenterCoord, 10, EBFSType::Connection, OutCoords,
-		[&OutCoords, CharacterNumber](const FTileData* CurrentTileData, const FTileData* NextTileData)
-		{
-			return OutCoords.Num() < CharacterNumber;
-		},
-		[this, bCanSelectOtherRoom, &OutCoords, CharacterNumber](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-		{
-			return (bCanSelectOtherRoom ? true : TileData->RoomId == StartRoomId) && OutCoords.Num() < CharacterNumber;
-		});
-
-	TArray<FCubeCoord> PlayerSpawnCoords = OutCoords.Array();
-	for (int32 CharacterIndex = 0; CharacterIndex < CharacterNumber; ++CharacterIndex)
-	{
-		const UCharacterDefinitionData* CharacterDefinitionData = Cast<UCharacterDefinitionData>(CharacterDefinitionDatas[CharacterIndex]);
-		if (!CharacterDefinitionData)
-		{
-			continue;
-		}
-
-		if (ATile* Tile = TileManagerSubsystem->GetTile(PlayerSpawnCoords[CharacterIndex]))
-		{
-			FTransform SpawnTransform;
-			FVector SpawnLocation = Tile->GetActorLocation();
-			SpawnTransform.SetLocation(SpawnLocation);
-			if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinitionData->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
-			{
-				TArray<ATile*> SpawnTileArray;
-				SpawnTileArray.Add(Tile);
-				SpawnedCharacter->MoveToTile(SpawnTileArray, true);
-				
-				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedCharacter);
-				
-				SpawnedCharacter->SetPersonalColor(CharacterDefinitionData->PersonalColor);
-				SpawnedCharacter->SetPlayerOrderIndex(CharacterIndex);
-				
-				LetheGameState->RegisterPlayerCharacter(SpawnedCharacter);
-				SpawnedCharacter->FinishSpawning(SpawnTransform);
-			}
-		}
-	}
+	FCubeCoord LastPlayerCharacterSpawnedCoord;
 	
 	int32 EnemyPriority = 0;
-	for (const FCubeCoord& SpawnCoord : EnemySpawnCoords)
+	for (const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData : StageData->RoomAssignmentRules)
 	{
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (ATile* Tile = TileManagerSubsystem->GetTile(SpawnCoord))
+		TArray<TArray<FRoomCoordSlot>> OutCoordSlotArrays;
+		if (RoomManagerSubsystem->TryAssignRoomRole(RoomRoleAssignmentRuleData, OutCoordSlotArrays))
 		{
-			// 플레이어의 시작 위치와 겹칠 수 있으므로 이동 가능 여부를 검사합니다.
-			if (!TileManagerSubsystem->CanEnemyAIMoveToTile(Tile))
-			{
-				continue;
-			}
+			// Room 내에 선택할 수 있는 지점이 여러 군데 있다면, 그 중 하나를 랜덤하게 선택합니다.
+			const TArray<FRoomCoordSlot>& SelectedSlots = OutCoordSlotArrays[FMath::RandRange(0, OutCoordSlotArrays.Num() - 1)];
 			
-			FVector SpawnLocation = Tile->GetActorLocation();
-			if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParameters))
+			int32 PlayerCharacterIndex = 0;
+			for (const FRoomCoordSlot& Slot : SelectedSlots)
 			{
-				TArray<ATile*> SpawnTileArray;
-				SpawnTileArray.Add(Tile);
-				SpawnedEnemy->MoveToTile(SpawnTileArray, true);
+				ATile* Tile = TileManagerSubsystem->GetTile(Slot.SlotCoord);
+				if (!Tile)
+				{
+					continue;
+				}
 				
-				TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 				
-				SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
-				EnemyPriority += 100;
+				FTransform SpawnTransform;
+				FVector SpawnLocation = Tile->GetActorLocation();
+				SpawnTransform.SetLocation(SpawnLocation);
 				
-				LetheGameState->RegisterEnemy(SpawnedEnemy);
+				switch (Slot.SlotType)
+				{
+				case ERoomCoordSlotType::PlayerSpawn:
+					if (const UCharacterDefinitionData* CharacterDefinition = Cast<UCharacterDefinitionData>(CharacterDefinitions[PlayerCharacterIndex]))
+					{
+						if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinition->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+						{
+							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedCharacter);
+
+							SpawnedCharacter->SetPersonalColor(CharacterDefinition->PersonalColor);
+							SpawnedCharacter->SetPlayerOrderIndex(PlayerCharacterIndex);
+
+							LetheGameState->RegisterPlayerCharacter(SpawnedCharacter);
+							SpawnedCharacter->FinishSpawning(SpawnTransform);
+							
+							TArray<ATile*> SpawnTileArray;
+							SpawnTileArray.Add(Tile);
+							SpawnedCharacter->MoveToTile(SpawnTileArray, true);
+							
+							++PlayerCharacterIndex;
+							
+							LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
+						}
+					}
+					break;
+				case ERoomCoordSlotType::EnemySpawn:
+					if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParams))
+					{
+						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
+		
+						SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
+						EnemyPriority += 100;
+						
+						LetheGameState->RegisterEnemy(SpawnedEnemy);
+						
+						TArray<ATile*> SpawnTileArray;
+						SpawnTileArray.Add(Tile);
+						SpawnedEnemy->MoveToTile(SpawnTileArray, true);
+					}
+					break;
+				default:
+					if (Slot.SpawnActorClass)
+					{
+						if (AActor* SpawnedActor = GetWorld()->SpawnActor(Slot.SpawnActorClass, &SpawnTransform, SpawnParams))
+						{
+							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedActor);
+						}
+					}
+					break;
+				}
 			}
 		}
 	}
-	LetheGameState->GoEnemyPlanningPhase();
-
-
+	
 #if WITH_EDITOR
 	// 테스트용도로 작성된 구문으로, 플레이어 캐릭터 근처에 바로 적을 하나 스폰합니다.
 	if (bSpawnEnemyNearly)
 	{
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		FCubeCoord EnemySpawnCoord = PlayerSpawnCoords.Last();
 		int32 Direction = 0;
 		while (true)
 		{
-			ATile* Tile = TileManagerSubsystem->GetTile(EnemySpawnCoord);
+			ATile* Tile = TileManagerSubsystem->GetTile(LastPlayerCharacterSpawnedCoord);
 			if (!Tile || !TileManagerSubsystem->CanEnemyAIMoveToTile(Tile))
 			{
-				EnemySpawnCoord = EnemySpawnCoord + FCubeCoord::GetDirection(++Direction);
+				LastPlayerCharacterSpawnedCoord = LastPlayerCharacterSpawnedCoord + FCubeCoord::GetDirection(++Direction);
 				if (Direction == 18)
 				{
-					return;
+					break;
 				}
 				continue;
 			}
@@ -192,33 +178,19 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 				EnemyPriority += 100;
 			
 				LetheGameState->RegisterEnemy(SpawnedEnemy);
-				return;
+				break;
 			}
 		}
 	}
 #endif
-}
 
-int32 ABattleGameMode::GetStartRoomId() const
-{
-	return StartRoomId;
-}
-
-FVector ABattleGameMode::GetStartLocation() const
-{
-	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!RoomManagerSubsystem || !TileManagerSubsystem)
+	if (Controller.IsValid())
 	{
-		return FVector::ZeroVector;
-	}
-	
-	if (const FRoomData* StartRoomData = RoomManagerSubsystem->GetRoomData(StartRoomId))
-	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTile(StartRoomData->CenterCoord))
+		if (ALethePawn* LethePawn = Controller->GetPawn<ALethePawn>())
 		{
-			return Tile->GetActorLocation();
+			LethePawn->SetPawnStartLocation();
 		}
 	}
-	return FVector::ZeroVector;
+	
+	LetheGameState->GoEnemyPlanningPhase();
 }

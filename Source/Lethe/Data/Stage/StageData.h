@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RoomRoleAssignmentRuleData.h"
 #include "StageInitData.h"
 #include "StageData.generated.h"
 
@@ -38,5 +39,6 @@ struct FStageData : public FTableRowBase
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UStageInitData> StageInitData;
 	
-	
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TObjectPtr<URoomRoleAssignmentRuleData>> RoomAssignmentRules;
 };

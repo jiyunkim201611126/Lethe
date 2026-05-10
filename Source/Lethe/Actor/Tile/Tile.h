@@ -60,7 +60,6 @@ public:
 	void SubtractOccupiedCount();
 	int32 GetOccupiedCount() const;
 
-protected:
 	UFUNCTION(BlueprintPure)
 	bool IsTopTile() const;
 

@@ -8,6 +8,8 @@
 #include "RoomManagerSubsystem.generated.h"
 
 enum class ETileVisionState : uint8;
+class URoomRoleAssignmentRuleData;
+struct FRoomCoordSlot;
 
 UCLASS()
 class LETHE_API URoomManagerSubsystem : public UWorldSubsystem
@@ -25,6 +27,8 @@ public:
 
 	void RevealEnemyTile(const ATile* InTile) const;
 	void UpdateEnemyMoveVision(const ATile* OldTile, const ATile* NewTile) const;
+
+	bool TryAssignRoomRole(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<TArray<FRoomCoordSlot>>& OutCoordSlotArrays);
 	
 	const FRoomData* GetRoomData(const int32 RoomId) const;
 	int32 GetRoomCount() const;
@@ -42,4 +46,6 @@ private:
 private:
 	UPROPERTY()
 	TMap<int32, FRoomData> RoomDataMap;
+
+	TSet<int32> RoleAssignedRoomIds;
 };

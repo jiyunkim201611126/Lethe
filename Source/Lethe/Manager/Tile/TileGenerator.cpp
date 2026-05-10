@@ -174,7 +174,7 @@ namespace TileGeneratorInternal
 				{
 					return true;
 				},
-				[&](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+				[&](const FCubeCoord& CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 				{
 					if (CurrentTileData->RoomId != RootTileData->RoomId)
 					{
@@ -231,7 +231,7 @@ namespace TileGeneratorInternal
 				{
 					return true;
 				},
-				[&RoomId](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+				[&RoomId](const FCubeCoord& CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 				{
 					if (CurrentTileData->RoomId != RoomId) //이새끼가 문제임
 					{
@@ -285,7 +285,7 @@ namespace TileGeneratorInternal
 	    		{
 	    			return true;
 	    		},
-	    		[](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+	    		[](const FCubeCoord& CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 	    		{
 	    			return true;
 	    		});
@@ -337,7 +337,7 @@ namespace TileGeneratorInternal
 			{
 				return true;
 			},
-			[&TileDataMap](const FCubeCoord CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
+			[&TileDataMap](const FCubeCoord& CurrentCoord, const FTileData* CurrentTileData, const int32 CurrentDepth)
 			{
 				//6방향 검사해서 하나라도 다른 RoomId가 나오면, 테두리 타일로 검출
 				for (int32 i = 0; i < 6; i++)

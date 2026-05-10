@@ -2,10 +2,12 @@
 
 #include "BattleGameMode.h"
 
+#include "Lethe/LetheLog.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
+#include "Lethe/Data/Stage/StageData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
@@ -27,7 +29,7 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	if (TileManagerSubsystem && DeckManagerSubsystem)
 	{
 		// 타일부터 생성합니다.
-		TileManagerSubsystem->MakeNewTileMap();
+		TileManagerSubsystem->MakeNewTileMap(StageType);
 
 		// 전투에 참여할 캐릭터들의 CharacterTag를 가져옵니다.
 		TArray<FGameplayTag> CharacterTags;
@@ -43,44 +45,43 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
-int32 ABattleGameMode::GetStartRoomId() const
-{
-	return StartRoomId;
-}
-
-FVector ABattleGameMode::GetStartLocation() const
-{
-	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!RoomManagerSubsystem || !TileManagerSubsystem)
-	{
-		return FVector::ZeroVector;
-	}
-	
-	if (const FRoomData* StartRoomData = RoomManagerSubsystem->GetRoomData(StartRoomId))
-	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTile(StartRoomData->CenterCoord))
-		{
-			return Tile->GetActorLocation();
-		}
-	}
-	return FVector::ZeroVector;
-}
-
 void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitionDatas) const
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-	const FRoomData* StartRoomData = RoomManagerSubsystem->GetRoomData(StartRoomId);
 	ALetheGameState* LetheGameState = GetGameState<ALetheGameState>();
 	
-	if (!TileManagerSubsystem || !RoomManagerSubsystem || !StartRoomData || !LetheGameState)
+	if (!TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
 	{
 		return;
 	}
 
-	const int32 CharacterNumber = CharacterDefinitionDatas.Num();
+	if (const FStageData* StageData = TileManagerSubsystem->GetStageData(StageType))
+	{
+	}
 
+	const int32 CharacterNumber = CharacterDefinitionDatas.Num();
+	const int32 RoomCount = RoomManagerSubsystem->GetRoomCount();
+	int32 CurrentStartRoomId = StartRoomId;
+
+	// StartRoomId부터 차례로 1씩 더해가며 Room을 순회하고, 구덩이가 아닌 지점을 찾습니다.
+	const FRoomData* StartRoomData = nullptr;
+	while (!StartRoomData || StartRoomData->VisibleEntranceCoords.IsEmpty())
+	{
+		StartRoomData = RoomManagerSubsystem->GetRoomData(CurrentStartRoomId);
+		++CurrentStartRoomId;
+		if (RoomCount <= CurrentStartRoomId)
+		{
+			if (CurrentStartRoomId == StartRoomId)
+			{
+				// 모든 Room을 한 바퀴 돌아버린 경우 들어오는 분기입니다.
+				LETHE_LOG(LogBattleGameMode, Error, "플레이어 캐릭터를 스폰할 수 있는 Room이 존재하지 않습니다.");
+				return;
+			}
+			CurrentStartRoomId = 0;
+		}
+	}
+	
 	// StartRoom의 CenterCoords를 시작으로 주변 총 CharacterNumber 개수만큼의 타일을 가져옵니다.
 	TSet<FCubeCoord> OutCoords;
 	const bool bCanSelectOtherRoom = StartRoomData->RoomSize < CharacterNumber;
@@ -89,7 +90,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		{
 			return OutCoords.Num() < CharacterNumber;
 		},
-		[this, bCanSelectOtherRoom, &OutCoords, CharacterNumber](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+		[this, bCanSelectOtherRoom, &OutCoords, CharacterNumber](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 		{
 			return (bCanSelectOtherRoom ? true : TileData->RoomId == StartRoomId) && OutCoords.Num() < CharacterNumber;
 		});
@@ -196,4 +197,28 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		}
 	}
 #endif
+}
+
+int32 ABattleGameMode::GetStartRoomId() const
+{
+	return StartRoomId;
+}
+
+FVector ABattleGameMode::GetStartLocation() const
+{
+	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!RoomManagerSubsystem || !TileManagerSubsystem)
+	{
+		return FVector::ZeroVector;
+	}
+	
+	if (const FRoomData* StartRoomData = RoomManagerSubsystem->GetRoomData(StartRoomId))
+	{
+		if (const ATile* Tile = TileManagerSubsystem->GetTile(StartRoomData->CenterCoord))
+		{
+			return Tile->GetActorLocation();
+		}
+	}
+	return FVector::ZeroVector;
 }

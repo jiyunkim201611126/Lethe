@@ -26,31 +26,6 @@ void UPlayerAbilityContextComponent::InitializeComponent()
 	check(ActorSelector.IsValid());
 }
 
-bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const
-{
-	if (!SelectedCharacter || !AbilitySystemComponent || !ActorSelector.IsValid())
-	{
-		return false;
-	}
-
-	OutTilesInRange.Reset();
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
-	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
-	if (!AbilitySpecs.IsEmpty())
-	{
-		if (const ICombatInterface* Combat = Cast<ICombatInterface>(SelectedCharacter))
-		{
-			FBFSRange MoveRange;
-			MoveRange.BFSType = EBFSType::Connection;
-			MoveRange.Distance = Combat->GetMoveDistance();
-			ActorSelector->TryGetTilesByRange(OutTilesInRange, SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove);
-		}
-	}
-	return !OutTilesInRange.IsEmpty();
-}
-
 void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile)
 {
 	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile)
@@ -401,7 +376,7 @@ void UPlayerAbilityContextComponent::StartResolveMoves()
 	}
 }
 
-void UPlayerAbilityContextComponent::OnPlayerMoveResolved(AActor* MovedCharacter)
+void UPlayerAbilityContextComponent::OnPlayerReservedMoveResolved(AActor* MovedCharacter)
 {
 	FPlayerCharacterReservedMove* SourceReservedMove = ReservedMoves.FindByPredicate([MovedCharacter](const FPlayerCharacterReservedMove& InReservedMove)
 	{
@@ -544,6 +519,31 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 		}
 	}
 	return !OutMovePathLocations.IsEmpty();
+}
+
+bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const
+{
+	if (!SelectedCharacter || !AbilitySystemComponent || !ActorSelector.IsValid())
+	{
+		return false;
+	}
+
+	OutTilesInRange.Reset();
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	TArray<FGameplayAbilitySpec*> AbilitySpecs;
+	const FGameplayTagContainer MoveTagContainer = LetheGameplayTags.Ability_Move.GetSingleTagContainer();
+	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
+	if (!AbilitySpecs.IsEmpty())
+	{
+		if (const ICombatInterface* Combat = Cast<ICombatInterface>(SelectedCharacter))
+		{
+			FBFSRange MoveRange;
+			MoveRange.BFSType = EBFSType::Connection;
+			MoveRange.Distance = Combat->GetMoveDistance();
+			ActorSelector->TryGetTilesByRange(OutTilesInRange, SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove);
+		}
+	}
+	return !OutTilesInRange.IsEmpty();
 }
 
 void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const

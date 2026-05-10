@@ -9,3 +9,4 @@ DEFINE_LOG_CATEGORY(LogAbility);
 DEFINE_LOG_CATEGORY(LogAbilityResolver);
 DEFINE_LOG_CATEGORY(LogAIController);
 DEFINE_LOG_CATEGORY(LogLetheGameState);
+DEFINE_LOG_CATEGORY(LogBattleGameMode);

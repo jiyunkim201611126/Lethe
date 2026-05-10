@@ -69,8 +69,7 @@ public:
 	virtual void InitializeComponent() override;
 	//~ End of UActorComponent Interface
 
-	bool TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const;
-
+#pragma region Reserve Move API
 	/** PlayerMovePhase(비전투 페이즈)에 이동 예약을 시작합니다. */
 	void ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile);
 
@@ -80,26 +79,33 @@ public:
 	/** 예약된 이동 실행을 시작합니다. */
 	void StartResolveMoves();
 
-	/** 이동 완료 후 이벤트를 수신하는 함수입니다. */
-	void OnPlayerMoveResolved(AActor* MovedCharacter);
+	/** PlayerMovePhase의 이동 완료 후 이벤트를 수신하는 함수입니다. */
+	void OnPlayerReservedMoveResolved(AActor* MovedCharacter);
 
 	/** 이동 완료 후 예약 경로와 상태를 갱신하고 다음 이동을 큐에 추가합니다. */
 	void RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const;
 
-	/** 비전투 페이즈 진입/재진입 시 호출되는 함수로, MoveDistance가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
+	/** 비전투 페이즈 진입 시 호출되는 함수로, MoveDistance가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
 	void SetAllReservedMovesWaitingForQueue();
 	
 	void ResetReservedMoveData();
 
 	/** 이동 예약된 모든 타일들의 Location을 반환합니다. */
 	bool TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const;
+#pragma endregion Reserve Move API
+
+#pragma region Move API
+	bool TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const;
 	
 	/** 전투 페이즈 중 선택한 타일로 즉시 MoveAbility 사용을 요청합니다. */
 	void RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const;
-	
+#pragma endregion Move API
+
+#pragma region Card
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
+#pragma endregion Card
 
 private:
 	/**

@@ -239,3 +239,8 @@ const FRoomData* URoomManagerSubsystem::GetRoomData(const int32 RoomId) const
 {
 	return RoomDataMap.Find(RoomId);
 }
+
+int32 URoomManagerSubsystem::GetRoomCount() const
+{
+	return RoomDataMap.Num();
+}

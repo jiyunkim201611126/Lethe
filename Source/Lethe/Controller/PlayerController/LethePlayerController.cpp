@@ -204,7 +204,7 @@ void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 {
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
-		PlayerAbilityContextComponent->OnPlayerMoveResolved(MovedCharacter);
+		PlayerAbilityContextComponent->OnPlayerReservedMoveResolved(MovedCharacter);
 		RefreshMovePreview();
 	}
 }

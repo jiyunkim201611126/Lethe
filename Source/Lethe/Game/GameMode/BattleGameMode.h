@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LetheGameMode.h"
 #include "Lethe/Data/Stage/CubeCoord.h"
+#include "Lethe/Data/Stage/StageData.h"
 #include "BattleGameMode.generated.h"
 
 class ALetheCharacterBase;
@@ -50,4 +51,7 @@ protected:
 	/** 테스트를 위해 시작하자마자 전투에 즉시 돌입하기 편리하도록 선언된 변수입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	bool bSpawnEnemyNearly = false;
+	
+	UPROPERTY(EditDefaultsOnly)
+	EStageType StageType;
 };

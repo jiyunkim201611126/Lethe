@@ -15,10 +15,10 @@ void UTileManagerSubsystem::Deinitialize()
 	TileDataMap.Empty();
 }
 
-void UTileManagerSubsystem::MakeNewTileMap()
+void UTileManagerSubsystem::MakeNewTileMap(const EStageType StageType)
 {
 	// 절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
-	if (const FStageData* StageData = GetStageData(EStageType::Forest))
+	if (const FStageData* StageData = GetStageData(StageType))
 	{
 		if (const UStageInitData* StageInitData = StageData->StageInitData.LoadSynchronous())
 		{
@@ -361,6 +361,18 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 		// 해당 거리의 후보 좌표들을 순회합니다.
 		for (const FCubeCoord& CandidateCoord : PrioritizedCoordsByDistance[Distance])
 		{
+			ATile* CandidateTile = GetTile(CandidateCoord);
+			if (!CandidateTile)
+			{
+				continue;
+			}
+
+			// 타일 위에 무언가 있다면 이동할 수 없으므로, 다음 후보 타일을 검사합니다.
+			if (!bIgnoreActor && GetActorOnTile(CandidateTile))
+			{
+				continue;
+			}
+			
 			bool bPathBuilt = true;
 			TArray<FCubeCoord> ReversedPath;
 			FCubeCoord CurrentCoord = CandidateCoord;
@@ -407,6 +419,11 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 			// 성공적으로 경로를 생성한 경우 true를 반환합니다.
 			if (bPathBuilt && !OutPathTiles.IsEmpty())
 			{
+				if (!bIgnoreActor && GetActorOnTile(OutPathTiles.Last()))
+				{
+					OutPathTiles.Reset();
+					continue;
+				}
 				return true;
 			}
 		}

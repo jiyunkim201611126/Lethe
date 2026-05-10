@@ -37,4 +37,6 @@ struct FStageData : public FTableRowBase
 	/** 절차적 생성 알고리즘을 위한 데이터만 모아놓은 데이터 에셋입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UStageInitData> StageInitData;
+	
+	
 };

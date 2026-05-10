@@ -30,7 +30,7 @@ public:
 	
 	/** 타일 생성 시동 함수입니다. */
 	UFUNCTION(BlueprintCallable)
-	void MakeNewTileMap();
+	void MakeNewTileMap(const EStageType StageType);
 
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
 	void TileBFS(const FCubeCoord& StartCoord, const int32 MaxDepth, const EBFSType BFSType, TSet<FCubeCoord>& OutCoords, const BFSConditionFunc& BFSCondition, const SelectConditionFunc& SelectCondition) const;
@@ -69,6 +69,8 @@ public:
 	AActor* GetActorOnTile(const ATile* InTile) const;
 	UFUNCTION(BlueprintCallable)
 	ATile* GetTileUnderActor(const AActor* InActor) const;
+	
+	const FStageData* GetStageData(const EStageType StageType) const;
 
 private:
 	struct FShortestPathSearchData
@@ -82,7 +84,6 @@ private:
 
 	/** StartTile에서 TargetTile까지의 최단 거리와 부모 DAG를 생성합니다. */
 	bool BuildShortestPathSearchData(const ATile* StartTile, const ATile* TargetTile, FShortestPathSearchData& OutSearchData, const bool bIgnoreActor) const;
-	const FStageData* GetStageData(const EStageType StageType) const;
 	
 private:
 	UPROPERTY(Config)

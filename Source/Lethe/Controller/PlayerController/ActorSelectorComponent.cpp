@@ -160,7 +160,7 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 					}
 					return true;
 				},
-				[TileManagerSubsystem, QueryType](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+				[TileManagerSubsystem, QueryType](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 				{
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{

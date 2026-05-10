@@ -27,6 +27,7 @@ public:
 	void UpdateEnemyMoveVision(const ATile* OldTile, const ATile* NewTile) const;
 	
 	const FRoomData* GetRoomData(const int32 RoomId) const;
+	int32 GetRoomCount() const;
 
 private:
 	void UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile);

@@ -41,7 +41,7 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 					{
 						return true;
 					},
-					[TileManagerSubsystem, &CombatStartingEnemies](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+					[TileManagerSubsystem, &CombatStartingEnemies](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 					{
 						if (TileData && TileData->TileActor.IsValid())
 						{

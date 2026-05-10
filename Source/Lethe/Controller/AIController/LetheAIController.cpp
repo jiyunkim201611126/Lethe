@@ -115,7 +115,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 			{
 				return PlayerCharacterTileCoords.IsEmpty();
 			},
-			[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
 				if (TileData && TileData->TileActor.IsValid())
 				{
@@ -162,7 +162,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		{
 			return true;
 		},
-		[TileManagerSubsystem, TargetTile, &AbilityRange, &AttackableTiles](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+		[TileManagerSubsystem, TargetTile, &AbilityRange, &AttackableTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 		{
 			if (TileData)
 			{
@@ -279,7 +279,7 @@ bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 M
 				// 우선 범위 내 타일을 모두 탐색합니다.
 				return true;
 			},
-			[TileManagerSubsystem](const FCubeCoord CurrentCoord, const FTileData* TileData, const int32 Depth)
+			[TileManagerSubsystem](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
 				// EnemyAI가 이동 가능한 타일만 선택합니다.
 				if (TileData && TileData->TileActor.IsValid())

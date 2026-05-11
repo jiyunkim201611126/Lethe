@@ -1,6 +1,7 @@
 #include "LetheEditor.h"
 
 #include "Customization/BGMTransitionPointCustomization.h"
+#include "Customization/CubeCoordCustomization.h"
 #include "PropertyEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FLetheEditorModule"
@@ -11,6 +12,9 @@ void FLetheEditorModule::StartupModule()
 	PropertyEditorModule.RegisterCustomPropertyTypeLayout(
 		"BGMTransitionPoint",
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBGMTransitionPointCustomization::MakeInstance));
+	PropertyEditorModule.RegisterCustomPropertyTypeLayout(
+		"CubeCoord",
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCubeCoordCustomization::MakeInstance));
 	PropertyEditorModule.NotifyCustomizationModuleChanged();
 }
 
@@ -20,6 +24,7 @@ void FLetheEditorModule::ShutdownModule()
 	{
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("BGMTransitionPoint");
+		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("CubeCoord");
 		PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 }

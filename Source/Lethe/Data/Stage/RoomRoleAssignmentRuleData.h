@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -35,7 +35,7 @@ struct FRoomCoordSlot
 	 * DataAsset 상으로는 RequiredSpaceRange의 중심을 기준으로 하는 좌표입니다.
 	 * RoomManagerSubsystem이 구조체를 생성해 반환하는 경우라면, 월드 좌표입니다.
 	 */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (HexDirectionButtons))
 	FCubeCoord SlotCoord;
 
 	UPROPERTY(EditDefaultsOnly)

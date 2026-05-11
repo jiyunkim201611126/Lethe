@@ -1,4 +1,4 @@
-﻿using UnrealBuildTool;
+using UnrealBuildTool;
 
 public class LetheEditor : ModuleRules
 {
@@ -21,6 +21,7 @@ public class LetheEditor : ModuleRules
                 "Slate",
                 "SlateCore",
                 "PropertyEditor",
+                "UnrealEd",
                 
                 "Lethe"
             }

@@ -13,15 +13,32 @@
 void URoomManagerSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
+	
+	Clear();
+}
 
+void URoomManagerSubsystem::Clear()
+{
+	// 모든 타일을 Destroy하고, 캐싱된 데이터를 초기화합니다.
+	for (auto& Pair : RoomDataMap)
+	{
+		for (const auto& Tile : Pair.Value.RoomTiles)
+		{
+			if (Tile.IsValid())
+			{
+				Tile->Destroy();
+			}
+		}
+	}
+	
 	RoomDataMap.Empty();
 	RoleAssignedRoomIds.Empty();
 }
 
 void URoomManagerSubsystem::SetRoomData(TMap<int32, FRoomData>&& InRoomData)
 {
+	Clear();
 	RoomDataMap = MoveTemp(InRoomData);
-	RoleAssignedRoomIds.Empty();
 }
 
 void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile)

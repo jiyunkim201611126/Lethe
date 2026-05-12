@@ -55,6 +55,9 @@ public:
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
 
+	void SetIsFloorTransitioning(const bool bInIsFloorTransitioning);
+	void ResetForFloorTransition();
+
 	ULetheHUD* GetLetheHUD() const;
 
 protected:
@@ -111,5 +114,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
 
-	uint8 bIsReservedMovePreviewingMove : 1 = false;
+	uint8 bIsReservedMovePreviewingMode : 1 = false;
+
+	uint8 bIsFloorTransitioning : 1 = false;
 };

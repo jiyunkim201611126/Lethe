@@ -481,6 +481,7 @@ void UPlayerAbilityContextComponent::ResetReservedMoveData()
 		}
 	}
 	ReservedMoves.Reset();
+	SwapSourceToTarget.Reset();
 }
 
 bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const

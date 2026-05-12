@@ -13,6 +13,7 @@
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
+#include "Lethe/Manager/World/StageRuntimeSubsystem.h"
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {
@@ -47,13 +48,52 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
-void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const
+void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions)
+{
+	InitRoomRoles(CharacterDefinitions);
+	
+	if (Controller.IsValid())
+	{
+		if (ALethePawn* LethePawn = Controller->GetPawn<ALethePawn>())
+		{
+			LethePawn->SetPawnStartLocation();
+		}
+	}
+	
+	if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
+	{
+		LetheGameState->GoEnemyPlanningPhase();
+	}
+}
+
+void ABattleGameMode::OnFloorTransitionStarted() const
+{
+	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+	
+	TileManagerSubsystem->MakeNewTileMap(StageType);
+	InitRoomRoles();
+	
+	if (Controller.IsValid())
+	{
+		if (ALethePawn* LethePawn = Controller->GetPawn<ALethePawn>())
+		{
+			LethePawn->SetPawnStartLocation();
+		}
+	}
+}
+
+void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	UStageRuntimeSubsystem* StageRuntimeSubsystem = GetWorld()->GetSubsystem<UStageRuntimeSubsystem>();
 	ALetheGameState* LetheGameState = GetGameState<ALetheGameState>();
 	
-	if (!TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
+	if (!TileManagerSubsystem || !RoomManagerSubsystem || !StageRuntimeSubsystem || !LetheGameState)
 	{
 		return;
 	}
@@ -94,38 +134,60 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 				switch (Slot.SlotType)
 				{
 				case ERoomCoordSlotType::PlayerSpawn:
-					if (const UCharacterDefinitionData* CharacterDefinition = Cast<UCharacterDefinitionData>(CharacterDefinitions[PlayerCharacterIndex]))
+					if (!CharacterDefinitions.IsEmpty())
 					{
-						if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinition->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+						if (const UCharacterDefinitionData* CharacterDefinition = Cast<UCharacterDefinitionData>(CharacterDefinitions[PlayerCharacterIndex]))
 						{
-							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedCharacter);
+							if (APlayerCharacterBase* SpawnedCharacter = GetWorld()->SpawnActorDeferred<APlayerCharacterBase>(CharacterDefinition->CharacterClass, SpawnTransform, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
+							{
+								SpawnedCharacter->SetPersonalColor(CharacterDefinition->PersonalColor);
+								SpawnedCharacter->SetPlayerOrderIndex(PlayerCharacterIndex);
 
-							SpawnedCharacter->SetPersonalColor(CharacterDefinition->PersonalColor);
-							SpawnedCharacter->SetPlayerOrderIndex(PlayerCharacterIndex);
+								LetheGameState->RegisterPlayerCharacter(SpawnedCharacter);
+								SpawnedCharacter->FinishSpawning(SpawnTransform);
+								
+								TileManagerSubsystem->MapTileAndActor(Tile, SpawnedCharacter);
+								TArray<ATile*> SpawnTileArray;
+								SpawnTileArray.Add(Tile);
+								SpawnedCharacter->MoveToTile(SpawnTileArray, true);
+								
+								++PlayerCharacterIndex;
 
-							LetheGameState->RegisterPlayerCharacter(SpawnedCharacter);
-							SpawnedCharacter->FinishSpawning(SpawnTransform);
+								// 테스트 용도로 바로 옆에 몬스터를 스폰시키기 위해 위치를 기록합니다.
+								LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
+							}
+						}
+					}
+					else
+					{
+						TArray<AActor*> PlayerCharacters = LetheGameState->GetPlayerCharacters();
+						if (PlayerCharacters.IsValidIndex(PlayerCharacterIndex))
+						{
+							if (APlayerCharacterBase* PlayerCharacter = Cast<APlayerCharacterBase>(PlayerCharacters[PlayerCharacterIndex]))
+							{
+								TileManagerSubsystem->MapTileAndActor(Tile, PlayerCharacter);
+								TArray<ATile*> SpawnTileArray;
+								SpawnTileArray.Add(Tile);
+								PlayerCharacter->MoveToTile(SpawnTileArray, true);
 							
-							TArray<ATile*> SpawnTileArray;
-							SpawnTileArray.Add(Tile);
-							SpawnedCharacter->MoveToTile(SpawnTileArray, true);
+								++PlayerCharacterIndex;
 							
-							++PlayerCharacterIndex;
-							
-							LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
+								// 테스트 용도로 바로 옆에 몬스터를 스폰시키기 위해 위치를 기록합니다.
+								LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
+							}
 						}
 					}
 					break;
 				case ERoomCoordSlotType::EnemySpawn:
 					if (AEnemyCharacterBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(TestEnemyClass, SpawnLocation, Tile->GetActorRotation(), SpawnParams))
 					{
-						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
-		
 						SpawnedEnemy->SetEnemyAbilityPriority(EnemyPriority);
 						EnemyPriority += 100;
 						
 						LetheGameState->RegisterEnemy(SpawnedEnemy);
+						StageRuntimeSubsystem->RegisterFloorActor(SpawnedEnemy);
 						
+						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
 						TArray<ATile*> SpawnTileArray;
 						SpawnTileArray.Add(Tile);
 						SpawnedEnemy->MoveToTile(SpawnTileArray, true);
@@ -136,6 +198,7 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 					{
 						if (AActor* SpawnedActor = GetWorld()->SpawnActor(Slot.SpawnActorClass, &SpawnTransform, SpawnParams))
 						{
+							StageRuntimeSubsystem->RegisterFloorActor(SpawnedActor);
 							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedActor);
 						}
 					}
@@ -183,14 +246,9 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		}
 	}
 #endif
+}
 
-	if (Controller.IsValid())
-	{
-		if (ALethePawn* LethePawn = Controller->GetPawn<ALethePawn>())
-		{
-			LethePawn->SetPawnStartLocation();
-		}
-	}
-	
-	LetheGameState->GoEnemyPlanningPhase();
+AController* ABattleGameMode::GetController() const
+{
+	return Controller.Get();
 }

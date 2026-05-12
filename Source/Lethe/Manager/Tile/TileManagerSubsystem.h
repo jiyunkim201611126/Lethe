@@ -27,6 +27,8 @@ public:
 	//~ Begin USubsystem Interface
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
+
+	void Clear();
 	
 	/** 타일 생성 시동 함수입니다. */
 	UFUNCTION(BlueprintCallable)

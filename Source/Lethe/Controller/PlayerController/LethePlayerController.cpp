@@ -172,13 +172,13 @@ void ALethePlayerController::ResetSelectedCharacter()
 
 void ALethePlayerController::ToggleMovePreview()
 {
-	bIsReservedMovePreviewingMove = !bIsReservedMovePreviewingMove;
+	bIsReservedMovePreviewingMode = !bIsReservedMovePreviewingMode;
 	RefreshMovePreview();
 }
 
 void ALethePlayerController::RefreshMovePreview() const
 {
-	if (!bIsReservedMovePreviewingMove)
+	if (!bIsReservedMovePreviewingMode)
 	{
 		ArrowRenderer->DeactivateArrow();
 		return;
@@ -325,7 +325,7 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	case EPhaseState::DrawPhase:
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
 		PlayerAbilityContextComponent->ResetReservedMoveData();
-		if (bIsReservedMovePreviewingMove)
+		if (bIsReservedMovePreviewingMode)
 		{
 			ToggleMovePreview();
 		}
@@ -338,6 +338,11 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
+
+	if (bIsFloorTransitioning)
+	{
+		return;
+	}
 	
 	FTileAndActor OutTileAndActor;
 	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
@@ -413,6 +418,24 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
 {
 	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, CardTag, OutText);
+}
+
+void ALethePlayerController::SetIsFloorTransitioning(const bool bInIsFloorTransitioning)
+{
+	bIsFloorTransitioning = bInIsFloorTransitioning;
+}
+
+void ALethePlayerController::ResetForFloorTransition()
+{
+	SetCardSelected(false);
+	ResetSelectedCharacter();
+
+	PlayerAbilityContextComponent->ResetReservedMoveData();
+	ActorSelector->UnhighlightActorByMouse();
+	ActorSelector->UnhighlightActorsByAbility();
+	PreviewCoordinatorComponent->StopAllPreview();
+	ArrowRenderer->DeactivateArrow();
+	bIsReservedMovePreviewingMode = false;
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

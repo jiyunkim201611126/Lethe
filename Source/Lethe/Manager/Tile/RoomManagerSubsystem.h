@@ -20,6 +20,8 @@ public:
 	//~ Begin USubsystem Interface
 	virtual void Deinitialize() override;
 	//~ End of USubsystem Interface
+
+	void Clear();
 	
 	void SetRoomData(TMap<int32, FRoomData>&& InRoomData);
 

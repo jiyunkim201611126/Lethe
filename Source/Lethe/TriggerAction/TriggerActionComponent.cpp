@@ -1,8 +1,8 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "ActionSourceComponent.h"
+#include "TriggerActionComponent.h"
 
-void UActionSourceComponent::Action()
+void UTriggerActionComponent::Action()
 {
 	FTriggeredActionContext Context;
 	Context.InstigatorActor = GetOwner();

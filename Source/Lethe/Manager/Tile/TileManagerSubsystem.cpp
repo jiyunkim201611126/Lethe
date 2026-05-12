@@ -12,7 +12,12 @@
 void UTileManagerSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
+	
+	Clear();
+}
 
+void UTileManagerSubsystem::Clear()
+{
 	TileDataMap.Empty();
 	TileToActorMap.Empty();
 	ActorToTileMap.Empty();
@@ -20,6 +25,8 @@ void UTileManagerSubsystem::Deinitialize()
 
 void UTileManagerSubsystem::MakeNewTileMap(const EStageType StageType)
 {
+	Clear();
+	
 	// 절차적 생성 맵 생성을 시작하는 함수 (GameMode에서 블루프린트 호출)
 	if (const FStageData* StageData = GetStageData(StageType))
 	{

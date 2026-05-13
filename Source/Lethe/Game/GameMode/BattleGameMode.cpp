@@ -13,7 +13,6 @@
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-#include "Lethe/Manager/World/StageRuntimeSubsystem.h"
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {
@@ -90,10 +89,9 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 {
 	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-	UStageRuntimeSubsystem* StageRuntimeSubsystem = GetWorld()->GetSubsystem<UStageRuntimeSubsystem>();
 	ALetheGameState* LetheGameState = GetGameState<ALetheGameState>();
 	
-	if (!TileManagerSubsystem || !RoomManagerSubsystem || !StageRuntimeSubsystem || !LetheGameState)
+	if (!TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
 	{
 		return;
 	}
@@ -185,7 +183,6 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 						EnemyPriority += 100;
 						
 						LetheGameState->RegisterEnemy(SpawnedEnemy);
-						StageRuntimeSubsystem->RegisterFloorActor(SpawnedEnemy);
 						
 						TileManagerSubsystem->MapTileAndActor(Tile, SpawnedEnemy);
 						TArray<ATile*> SpawnTileArray;
@@ -198,7 +195,6 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 					{
 						if (AActor* SpawnedActor = GetWorld()->SpawnActor(Slot.SpawnActorClass, &SpawnTransform, SpawnParams))
 						{
-							StageRuntimeSubsystem->RegisterFloorActor(SpawnedActor);
 							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedActor);
 						}
 					}

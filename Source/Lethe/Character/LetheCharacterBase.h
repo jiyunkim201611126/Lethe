@@ -52,6 +52,9 @@ public:
 	virtual void HighlightActorByAbility_Implementation(const int32 InOutlineColor) override;
 	virtual void UnhighlightActorByAbility_Implementation() override;
 	//~ End of IHighlightInterface
+	
+	FGameplayTag GetCharacterTag();
+	int64 GetCharacterId() const;
 
 protected:
 	void InitAbilityActorInfo() const;
@@ -66,6 +69,20 @@ private:
 	void OnCameraHeightChanged(const float InWidgetSize) const;
 
 protected:
+	/**
+	 * 캐릭터 식별을 위해 사용하는 Id입니다.
+	 * uint64는 Blueprint 미러링을 지원하지 않기 때문에 캐릭터만 예외로 int64를 사용합니다. 이 같은 이유로 양수여야만 합니다.
+	 * ※!!  Id는 출시 이후 절대 변경되어선 안 됩니다  !!※
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LetheCharacter")
+	int64 CharacterId;
+	
+	/**
+	 * Id로 찾은 Tag가 런타임 중 동적으로 채워집니다.
+	 * Id는 출시 이후 절대 변경되지 않으나, CharacterTag는 필요에 따라 변경될 수 있기 때문에 이와 같은 방법을 사용합니다.
+	 */
+	FGameplayTag CharacterTag;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UGASManagerComponent> GASManagerComponent;
 

@@ -12,6 +12,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Interface/TileVisionAffectedInterface.h"
+#include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 
 ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -257,6 +258,21 @@ void ALetheCharacterBase::OnCameraHeightChanged(const float InWidgetSize) const
 			Widget->SetRenderScale(FVector2D(InWidgetSize));
 		}
 	}
+}
+
+FGameplayTag ALetheCharacterBase::GetCharacterTag()
+{
+	if (!CharacterTag.IsValid())
+	{
+		const ULetheAssetManager& LetheAssetManager = ULetheAssetManager::Get();
+		LetheAssetManager.TryGetCharacterTagById(CharacterId, CharacterTag);
+	}
+	return CharacterTag;
+}
+
+int64 ALetheCharacterBase::GetCharacterId() const
+{
+	return CharacterId;
 }
 
 ETeamSide ALetheCharacterBase::GetTeamSide() const

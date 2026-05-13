@@ -2,12 +2,11 @@
 
 #include "FloorTransitionAction.h"
 
-#include "Lethe/Manager/World/StageRuntimeSubsystem.h"
+#include "Lethe/Manager/World/BattleStateSaveSubsystem.h"
 
 void UFloorTransitionAction::Action(const FTriggeredActionContext& ActionContext)
 {
-	if (UStageRuntimeSubsystem* StageRuntimeSubsystem = GetWorld()->GetSubsystem<UStageRuntimeSubsystem>())
+	if (UBattleStateSaveSubsystem* BattleStateSaveSubsystem = GetWorld()->GetSubsystem<UBattleStateSaveSubsystem>())
 	{
-		StageRuntimeSubsystem->StartFloorTransition();
 	}
 }

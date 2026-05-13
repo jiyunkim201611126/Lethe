@@ -24,7 +24,7 @@ public:
 	bool IsDeckValid();
 
 	TMap<FGameplayTag, FSavedCharacterDeck> GetEquippedDecks();
-	TMap<FGameplayTag, FSavedCharacterDeck> GetUnequippedDecks(); 
+	TMap<FGameplayTag, FSavedCharacterDeck> GetUnequippedDecks();
 
 private:
 	UPROPERTY(Config)

@@ -91,7 +91,7 @@ public:
 	 * Vital Attributes
 	 */
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	UPROPERTY(BlueprintReadOnly, SaveGame, Category = "Vital Attributes")
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, Health);
 	
@@ -99,7 +99,7 @@ public:
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxHealth);
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	UPROPERTY(BlueprintReadOnly, SaveGame, Category = "Vital Attributes")
 	FGameplayAttributeData Mana;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, Mana);
 	
@@ -107,7 +107,7 @@ public:
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxMana);
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	UPROPERTY(BlueprintReadOnly, SaveGame, Category = "Vital Attributes")
 	FGameplayAttributeData Cost;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, Cost);
 	
@@ -115,7 +115,7 @@ public:
 	FGameplayAttributeData MaxCost;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxCost);
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	UPROPERTY(BlueprintReadOnly, SaveGame, Category = "Vital Attributes")
 	FGameplayAttributeData MoveDistance;
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveDistance);
 	

@@ -19,8 +19,6 @@ class LETHE_API IPlayerCharacterInterface
 	GENERATED_BODY()
 
 public:
-	virtual FGameplayTag GetCharacterTag() = 0;
-
 	virtual void SetPersonalColor(const FLinearColor& InColor);
 	virtual const FLinearColor& GetPersonalColor() const = 0;
 

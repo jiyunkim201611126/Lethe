@@ -32,7 +32,9 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	//~ End of USubsystem Interface
 	
-	void ChangeMap(const ELevelType TargetLevelType, const FString& StartTag);
+	void StartLevelTransition(const ELevelType TargetLevelType, const FString& InOptionString);
+
+	ELevelType GetCurrentLevelType() const;
 
 private:
 	void OnPostLoadLoadingMapWithWorld(UWorld* World);
@@ -49,7 +51,7 @@ private:
 	ELevelType NextLevelType = ELevelType::None;
 
 	TSoftObjectPtr<UWorld> NextLevel;
-	FString NextLevelStartTag;
+	FString OptionString;
 
 	UPROPERTY(Config)
 	FSoftObjectPath LevelDataPath;

@@ -19,18 +19,6 @@ void URoomManagerSubsystem::Deinitialize()
 
 void URoomManagerSubsystem::Clear()
 {
-	// 모든 타일을 Destroy하고, 캐싱된 데이터를 초기화합니다.
-	for (auto& Pair : RoomDataMap)
-	{
-		for (const auto& Tile : Pair.Value.RoomTiles)
-		{
-			if (Tile.IsValid())
-			{
-				Tile->Destroy();
-			}
-		}
-	}
-	
 	RoomDataMap.Empty();
 	RoleAssignedRoomIds.Empty();
 }

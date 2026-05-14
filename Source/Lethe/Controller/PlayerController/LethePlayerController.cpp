@@ -338,11 +338,6 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-
-	if (bIsFloorTransitioning)
-	{
-		return;
-	}
 	
 	FTileAndActor OutTileAndActor;
 	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
@@ -418,24 +413,6 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
 {
 	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, CardTag, OutText);
-}
-
-void ALethePlayerController::SetIsFloorTransitioning(const bool bInIsFloorTransitioning)
-{
-	bIsFloorTransitioning = bInIsFloorTransitioning;
-}
-
-void ALethePlayerController::ResetForFloorTransition()
-{
-	SetCardSelected(false);
-	ResetSelectedCharacter();
-
-	PlayerAbilityContextComponent->ResetReservedMoveData();
-	ActorSelector->UnhighlightActorByMouse();
-	ActorSelector->UnhighlightActorsByAbility();
-	PreviewCoordinatorComponent->StopAllPreview();
-	ArrowRenderer->DeactivateArrow();
-	bIsReservedMovePreviewingMode = false;
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

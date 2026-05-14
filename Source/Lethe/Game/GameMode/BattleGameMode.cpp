@@ -2,6 +2,7 @@
 
 #include "BattleGameMode.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Character/LethePawn.h"
@@ -13,6 +14,7 @@
 #include "Lethe/Manager/EngineSystem/LetheAssetManager.h"
 #include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
+#include "Lethe/Manager/World/BattleStateSaveSubsystem.h"
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {
@@ -47,9 +49,25 @@ void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
-void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions)
+void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const
 {
 	InitRoomRoles(CharacterDefinitions);
+
+	if (UGameplayStatics::HasOption(OptionsString, TEXT("FloorTransition")))
+	{
+		const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+		const UBattleStateSaveSubsystem* BattleStateSaveSubsystem = GetWorld()->GetSubsystem<UBattleStateSaveSubsystem>();
+
+		FBattleStateSaveContext Context;
+		for (AActor* PlayerCharacterActor : LetheGameState->GetPlayerCharacters())
+		{
+			if (APlayerCharacterBase* PlayerCharacter = Cast<APlayerCharacterBase>(PlayerCharacterActor))
+			{
+				Context.PlayerCharacters.Add(PlayerCharacter);
+			}
+		}
+		BattleStateSaveSubsystem->LoadBattleState(Context);
+	}
 	
 	if (Controller.IsValid())
 	{
@@ -62,26 +80,6 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 	if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
 	{
 		LetheGameState->GoEnemyPlanningPhase();
-	}
-}
-
-void ABattleGameMode::OnFloorTransitionStarted() const
-{
-	UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-	
-	TileManagerSubsystem->MakeNewTileMap(StageType);
-	InitRoomRoles();
-	
-	if (Controller.IsValid())
-	{
-		if (ALethePawn* LethePawn = Controller->GetPawn<ALethePawn>())
-		{
-			LethePawn->SetPawnStartLocation();
-		}
 	}
 }
 

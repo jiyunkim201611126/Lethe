@@ -5,17 +5,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
 
-void UBattleStateSaveSubsystem::SaveBattleState(const FBattleStateSaveContext& Context)
+void UBattleStateSaveSubsystem::SaveBattleState(const FBattleStateSaveContext& Context) const
 {
-	UBattleStateSaveGame* BattleStateSaveGameObject = CastChecked<UBattleStateSaveGame>(UGameplayStatics::CreateSaveGameObject(BattleStateSaveGameClass));
+	UBattleStateSaveGame* BattleStateSaveGameObject = CastChecked<UBattleStateSaveGame>(UGameplayStatics::CreateSaveGameObject(UBattleStateSaveGame::StaticClass()));
 
 	for (const APlayerCharacterBase* PlayerCharacter : Context.PlayerCharacters)
 	{
 		if (PlayerCharacter)
 		{
 			const int64 CharacterId = PlayerCharacter->GetCharacterId();
-			const int64 PlayerOrderIndex = PlayerCharacter->GetPlayerOrderIndex();
-			BattleStateSaveGameObject->SavePlayerCharacterAttributes(CharacterId, PlayerOrderIndex, PlayerCharacter->GetAbilitySystemComponent());
+			BattleStateSaveGameObject->SavePlayerCharacterAttributes(CharacterId, PlayerCharacter->GetAbilitySystemComponent());
 		}
 	}
 
@@ -25,7 +24,7 @@ void UBattleStateSaveSubsystem::SaveBattleState(const FBattleStateSaveContext& C
 	LoadBattleState(Context);
 }
 
-void UBattleStateSaveSubsystem::LoadBattleState(const FBattleStateSaveContext& Context)
+void UBattleStateSaveSubsystem::LoadBattleState(const FBattleStateSaveContext& Context) const
 {
 	if (UGameplayStatics::DoesSaveGameExist(SlotName, 0))
 	{

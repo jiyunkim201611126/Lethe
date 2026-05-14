@@ -5,10 +5,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Character/LetheCharacterBase.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
-#include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
@@ -49,9 +49,9 @@ UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 
 void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& AttributeWidgets)
 {
-	APawn* OwnerPawn = GetOwner<APawn>();
+	ALetheCharacterBase* OwnerCharacter = GetOwner<ALetheCharacterBase>();
 	
-	AbilitySystemComponent->InitAbilityActorInfo(OwnerPawn, OwnerPawn);
+	AbilitySystemComponent->InitAbilityActorInfo(OwnerCharacter, OwnerCharacter);
 
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
@@ -66,6 +66,18 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 					for (UUserWidget* AttributeWidget : AttributeWidgets)
 					{
 						CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
+					}
+
+					// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
+					const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
+					if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
+					{
+						const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
+						if (const FSavedCharacterDeck* CharacterDeck = EquippedDecks.Find(CharacterTag))
+						{
+							// Equipped Deck들을 실제 Ability로 부여합니다.
+							AddCharacterAbilities(CharacterDeck->Deck);
+						}
 					}
 				}
 				break;
@@ -83,22 +95,8 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 			}
 		}
 	}
+	
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
-
-	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-	if (IPlayerCharacterInterface* PlayerCharacter = Cast<IPlayerCharacterInterface>(OwnerPawn))
-	{
-		const FGameplayTag& CharacterTag = PlayerCharacter->GetCharacterTag();
-		if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
-		{
-			const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
-			if (const FSavedCharacterDeck* CharacterDeck = EquippedDecks.Find(CharacterTag))
-			{
-				// Equipped Deck들을 실제 Ability로 부여합니다.
-				AddCharacterAbilities(CharacterDeck->Deck);
-			}
-		}
-	}
 	
 	AddCharacterAbilities(StartAbilities);
 

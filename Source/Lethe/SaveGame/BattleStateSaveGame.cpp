@@ -6,7 +6,7 @@
 #include "AttributeSet.h"
 #include "UObject/UnrealType.h"
 
-void UBattleStateSaveGame::SavePlayerCharacterAttributes(const int64 CharacterId, const int32 PlayerOrderIndex, const UAbilitySystemComponent* AbilitySystemComponent)
+void UBattleStateSaveGame::SavePlayerCharacterAttributes(const int64 CharacterId, const UAbilitySystemComponent* AbilitySystemComponent)
 {
 	if (!AbilitySystemComponent)
 	{
@@ -24,7 +24,6 @@ void UBattleStateSaveGame::SavePlayerCharacterAttributes(const int64 CharacterId
 	}
 
 	CharacterState->CharacterId = CharacterId;
-	CharacterState->PlayerOrderIndex = PlayerOrderIndex;
 	CaptureSaveGameAttributes(AbilitySystemComponent, CharacterState->Attributes);
 }
 
@@ -103,7 +102,6 @@ void UBattleStateSaveGame::CaptureSaveGameAttributes(const UAbilitySystemCompone
 			SavedAttribute.AttributeSetName = AttributeSet->GetClass()->GetFName();
 			SavedAttribute.AttributeName = Property->GetFName();
 			SavedAttribute.BaseValue = AbilitySystemComponent->GetNumericAttributeBase(Attribute);
-			SavedAttribute.CurrentValue = AbilitySystemComponent->GetNumericAttribute(Attribute);
 
 			OutAttributes.Add(SavedAttribute);
 		}
@@ -120,7 +118,7 @@ bool UBattleStateSaveGame::ApplySaveGameAttributes(UAbilitySystemComponent* Abil
 	bool bAppliedAny = false;
 	for (const FSavedAttributeValue& SavedAttribute : Attributes)
 	{
-		UAttributeSet* AttributeSet = const_cast<UAttributeSet*>(FindAttributeSetByName(AbilitySystemComponent, SavedAttribute.AttributeSetName));
+		const UAttributeSet* AttributeSet = const_cast<UAttributeSet*>(FindAttributeSetByName(AbilitySystemComponent, SavedAttribute.AttributeSetName));
 		if (!AttributeSet)
 		{
 			continue;
@@ -134,14 +132,6 @@ bool UBattleStateSaveGame::ApplySaveGameAttributes(UAbilitySystemComponent* Abil
 
 		const FGameplayAttribute Attribute(Property);
 		AbilitySystemComponent->SetNumericAttributeBase(Attribute, SavedAttribute.BaseValue);
-
-		if (const FStructProperty* StructProperty = CastField<FStructProperty>(Property))
-		{
-			if (FGameplayAttributeData* AttributeData = StructProperty->ContainerPtrToValuePtr<FGameplayAttributeData>(AttributeSet))
-			{
-				AttributeData->SetCurrentValue(SavedAttribute.CurrentValue);
-			}
-		}
 
 		bAppliedAny = true;
 	}

@@ -22,9 +22,6 @@ struct FSavedAttributeValue
 
 	UPROPERTY()
 	float BaseValue = 0.f;
-
-	UPROPERTY()
-	float CurrentValue = 0.f;
 };
 
 USTRUCT(BlueprintType)
@@ -34,9 +31,6 @@ struct FSavedBattleCharacterState
 
 	UPROPERTY()
 	int64 CharacterId;
-
-	UPROPERTY()
-	int32 PlayerOrderIndex = INDEX_NONE;
 
 	UPROPERTY()
 	TArray<FSavedAttributeValue> Attributes;
@@ -51,7 +45,7 @@ class LETHE_API UBattleStateSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	void SavePlayerCharacterAttributes(const int64 CharacterId, const int32 PlayerOrderIndex, const UAbilitySystemComponent* AbilitySystemComponent);
+	void SavePlayerCharacterAttributes(const int64 CharacterId, const UAbilitySystemComponent* AbilitySystemComponent);
 
 	/** 해당 캐릭터에게 저장되어 있던 State를 적용합니다. */
 	bool ApplyPlayerCharacterAttributes(const int64 CharacterId, UAbilitySystemComponent* AbilitySystemComponent) const;

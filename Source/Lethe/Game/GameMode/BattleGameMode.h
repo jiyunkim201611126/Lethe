@@ -19,12 +19,10 @@ class LETHE_API ABattleGameMode : public ALetheGameMode
 public:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 
-	void OnFloorTransitionStarted() const;
-
 	AController* GetController() const;
 
 private:
-	void OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions);
+	void OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const;
 
 	void InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterDefinitions = {}) const;
 

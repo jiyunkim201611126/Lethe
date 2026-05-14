@@ -18,18 +18,15 @@ struct FBattleStateSaveContext
 	TArray<APlayerCharacterBase*> PlayerCharacters;
 };
 
-UCLASS(Config = Game)
+UCLASS()
 class LETHE_API UBattleStateSaveSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
 public:
-	void SaveBattleState(const FBattleStateSaveContext& Context);
-	void LoadBattleState(const FBattleStateSaveContext& Context);
+	void SaveBattleState(const FBattleStateSaveContext& Context) const;
+	void LoadBattleState(const FBattleStateSaveContext& Context) const;
 
 private:
-	UPROPERTY(Config)
-	TSubclassOf<UBattleStateSaveGame> BattleStateSaveGameClass;
-
 	const FString SlotName = TEXT("BattleStateSaveSlot");
 };

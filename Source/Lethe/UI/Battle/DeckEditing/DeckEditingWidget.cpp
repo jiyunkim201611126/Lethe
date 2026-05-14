@@ -304,6 +304,6 @@ void UDeckEditingWidget::OnGoToBattleButtonClicked()
 	// 레벨 이동을 시작합니다.
 	if (ULevelManagerSubsystem* LevelManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>())
 	{
-		LevelManagerSubsystem->ChangeMap(ELevelType::Battle, "FromDeckEditing");
+		LevelManagerSubsystem->StartLevelTransition(ELevelType::Battle, "FromDeckEditing");
 	}
 }

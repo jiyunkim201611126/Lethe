@@ -15,16 +15,11 @@ void ULevelManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-void ULevelManagerSubsystem::ChangeMap(const ELevelType TargetLevelType, const FString& StartTag)
+void ULevelManagerSubsystem::StartLevelTransition(const ELevelType TargetLevelType, const FString& InOptionString)
 {
-	if (CurrentLevelType == TargetLevelType)
-	{
-		return;
-	}
-
 	bIsTransitioning = true;
 	NextLevelType = TargetLevelType;
-	NextLevelStartTag = StartTag;
+	OptionString = InOptionString;
 	NextLevel = LevelData->GetLevelAssetByType(NextLevelType);
 
 	checkf(!NextLevel.IsNull(), TEXT("NextLevel을 찾을 수 없습니다."));
@@ -60,7 +55,7 @@ void ULevelManagerSubsystem::DelayedOpenLevel()
 	CurrentLevelType = NextLevelType;
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnPostLoadMapWithWorld);
-	UGameplayStatics::OpenLevelBySoftObjectPtr(this, NextLevel, true, NextLevelStartTag);
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, NextLevel, true, OptionString);
 }
 
 void ULevelManagerSubsystem::OnPostLoadMapWithWorld(UWorld* World)
@@ -72,4 +67,9 @@ void ULevelManagerSubsystem::OnPostLoadMapWithWorld(UWorld* World)
 	bIsTransitioning = false;
 
 	// TODO: 로딩 위젯 끄기
+}
+
+ELevelType ULevelManagerSubsystem::GetCurrentLevelType() const
+{
+	return CurrentLevelType;
 }

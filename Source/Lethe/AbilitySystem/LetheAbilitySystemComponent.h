@@ -9,6 +9,7 @@
 class UCardDefinitionData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
+struct FLoadedCardInfos;
 struct FSavedCard;
 
 DECLARE_DELEGATE_ThreeParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCardDefinitionData*, const UCharacterDefinitionData*);
@@ -28,7 +29,7 @@ public:
 	void AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards);
 
 private:
-	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<struct FLoadedCardInfo>& LoadedCards, bool bEquipped);
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, bool bEquipped);
 
 public:
 	FOnAbilityGivenSignature OnAbilityGivenDelegate;

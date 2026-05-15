@@ -20,6 +20,8 @@ class LETHE_API UCardDefinitionData : public UPrimaryDataAsset
 	
 public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
+
+	int32 GetWeight() const;
 	
 public:
 	/** ※!! Id는 출시 이후 절대 변경되어선 안 됩니다  !!※ */
@@ -40,4 +42,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FText CardNameText;
+
+	/** 카드의 무게로, 모든 카드의 무게 합산값이 캐릭터의 DeckCapacity 이하여야 합니다. */
+	UPROPERTY(EditDefaultsOnly)
+	int32 CardWeight = 2;
 };

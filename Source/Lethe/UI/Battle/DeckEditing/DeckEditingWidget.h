@@ -12,8 +12,10 @@ class UButton;
 class UCardViewData;
 class UDeckEditingCardListObject;
 class ULetheGameplayAbility;
+class ULetheTextBlock;
 class UTileView;
 struct FGameplayTag;
+struct FLoadedCardInfos;
 struct FSavedCharacterDeck;
 
 USTRUCT()
@@ -23,6 +25,11 @@ struct FDeckListObjects
 
 	UPROPERTY()
 	TArray<TObjectPtr<UDeckEditingCardListObject>> CardListObjects;
+
+	void Sort();
+
+	int32 GetEqualCardCount(const FGameplayTag& CardTag) const;
+	int32 GetTotalCardWeight() const;
 };
 
 UCLASS()
@@ -39,7 +46,7 @@ protected:
 private:
 	void StartLoadAllCards();
 	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, bool bEquipped);
-	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const TArray<struct FLoadedCardInfo>& LoadedCards, bool bEquipped);
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, bool bEquipped);
 	void CheckLoadedCount();
 
 	UFUNCTION()
@@ -54,11 +61,12 @@ private:
 	UFUNCTION()
 	void OnPreviousCharacterButtonClicked();
 
+	void OnEquippedCardClicked(UObject* InListObject);
+	void OnUnequippedCardClicked(UObject* InListObject);
+
 	void UpdateCardPage(const int32 NewCharacterIndex, const int32 NewPageIndex);
 
-	void OnItemClicked(UObject* InListObject);
-
-	bool CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, UDeckEditingCardListObject* InDeckObject) const;
+	bool CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, const FGameplayTag& CharacterTag, UDeckEditingCardListObject* InDeckObject) const;
 
 	UFUNCTION()
 	void OnGoToBattleButtonClicked();
@@ -72,6 +80,9 @@ protected:
 	 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Card")
 	TObjectPtr<UCardViewData> CardViewData;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	int32 MaxEqualCardCount = 3;
 
 	/** 직선 배치지만, ScaleBox 활용을 위해 내부 요소의 Size를 직접 설정할 수 있는 TileView를 사용합니다. */
 	UPROPERTY(meta = (BindWidget))
@@ -91,12 +102,18 @@ protected:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> PreviousCharacterButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheTextBlock> CapacityTextBlock;
 
 	/** 테스트용으로 선언된 버튼입니다. */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> GoToBattleButton;
 
 private:
+	FDelegateHandle EquippedCardClickedDelegateHandle;
+	FDelegateHandle UnequippedCardClickedDelegateHandle;
+	
 	/** 덱들을 순서대로 순회할 CharacterTags입니다. */
 	// TODO: 현재는 SaveGame을 통해 불러온 값을 기반으로 작동하지만, 나중엔 GameInstance에 캐싱한 '전투 참여 캐릭터'를 받아와 사용할 예정입니다.
 	TArray<FGameplayTag> CharacterTags;
@@ -115,4 +132,6 @@ private:
 
 	UPROPERTY()
 	TMap<FGameplayTag, FDeckListObjects> CharacterEquippedDeckListObjects;
+
+	TMap<FGameplayTag, int32> CharacterDeckCapacities;
 };

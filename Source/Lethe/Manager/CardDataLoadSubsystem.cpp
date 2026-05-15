@@ -17,9 +17,10 @@ void UCardDataLoadSubsystem::Deinitialize()
 
 void UCardDataLoadSubsystem::LoadCardData(const FGameplayTag& CharacterTag, const TArray<FSavedCard>& Cards, const bool bEquipped, const FOnAllCardDataLoaded& OnLoadedCallback)
 {
-	if (Cards.IsEmpty())
+	// Cards가 비어있더라도, CharacterTag가 유효하다면 CharacterDefinition을 로드해서 콜백을 호출해줍니다.
+	if (!CharacterTag.IsValid() && Cards.IsEmpty())
 	{
-		// 로드에 실패한 경우에도 콜백을 일단 호출해 완료 이벤트는 발생시켜줍니다.
+		// 로드할 DataAsset이 아무것도 없는 경우에도 콜백을 일단 호출해 완료 이벤트는 발생시켜줍니다.
 		OnLoadedCallback.ExecuteIfBound(CharacterTag, {}, bEquipped);
 		return;
 	}
@@ -99,23 +100,20 @@ void UCardDataLoadSubsystem::TryFinishCardDataLoad(const uint64 RequestId)
 
 	UCharacterDefinitionData* CharacterDefinition = Request->LoadedCharacterDefinitions.IsEmpty() ? nullptr : Request->LoadedCharacterDefinitions[0].Get();
 
-	TArray<FLoadedCardInfo> LoadedCardInfos;
+	FLoadedCardInfos LoadedCardInfos;
+	LoadedCardInfos.CharacterDefinition = CharacterDefinition;
 	for (const FSavedCard& SavedCard : Request->LoadRequestedCards)
 	{
-		FLoadedCardInfo Info;
-		Info.SavedCardInfo = SavedCard;
-		Info.CharacterDefinition = CharacterDefinition;
+		LoadedCardInfos.SavedCardInfos.Add(SavedCard);
 
-		for (const TObjectPtr<UCardDefinitionData>& CardDefinition : Request->LoadedCardDefinitions)
+		for (UCardDefinitionData* CardDefinition : Request->LoadedCardDefinitions)
 		{
 			if (CardDefinition && CardDefinition->CardId == SavedCard.CardId)
 			{
-				Info.CardDefinition = CardDefinition;
+				LoadedCardInfos.CardDefinitions.Add(CardDefinition);
 				break;
 			}
 		}
-
-		LoadedCardInfos.Emplace(Info);
 	}
 
 	const FGameplayTag CharacterTag = Request->CharacterTag;

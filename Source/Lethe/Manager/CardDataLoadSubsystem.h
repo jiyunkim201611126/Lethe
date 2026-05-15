@@ -13,21 +13,22 @@ class UCharacterDefinitionData;
 class UPrimaryDataAsset;
 struct FSavedCharacterDeck;
 
+/** CardDefinitions와 SavedCardInfos는 순서대로 추가되므로, 같은 인덱스라면 같은 카드를 표현합니다. */
 USTRUCT(BlueprintType)
-struct FLoadedCardInfo
+struct FLoadedCardInfos
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TObjectPtr<UCardDefinitionData> CardDefinition = nullptr;
-
-	UPROPERTY()
 	TObjectPtr<UCharacterDefinitionData> CharacterDefinition = nullptr;
 
-	FSavedCard SavedCardInfo;
+	UPROPERTY()
+	TArray<TObjectPtr<UCardDefinitionData>> CardDefinitions;
+
+	TArray<FSavedCard> SavedCardInfos;
 };
 
-DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const TArray<FLoadedCardInfo>& /* LoadedCards */, const bool /* bEquipped */);
+DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const FLoadedCardInfos& /* LoadedCardInfos */, const bool /* bEquipped */);
 
 USTRUCT()
 struct FPendingCardDataLoadRequest

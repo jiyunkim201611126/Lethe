@@ -19,4 +19,6 @@ public:
 	
 	UPROPERTY()
 	TObjectPtr<UTexture2D> CardTexture;
+
+	int32 Weight = 0;
 };

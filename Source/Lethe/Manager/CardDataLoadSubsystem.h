@@ -13,9 +13,19 @@ class UCharacterDefinitionData;
 class UPrimaryDataAsset;
 struct FSavedCharacterDeck;
 
-/** CardDefinitions와 SavedCardInfos는 순서대로 추가되므로, 같은 인덱스라면 같은 카드를 표현합니다. */
-USTRUCT(BlueprintType)
-struct FLoadedCardInfos
+USTRUCT()
+struct FCardInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	TObjectPtr<UCardDefinitionData> CardDefinition;
+
+	FSavedCard SavedCard;
+};
+
+USTRUCT()
+struct FLoadedCardInfo
 {
 	GENERATED_BODY()
 
@@ -23,12 +33,10 @@ struct FLoadedCardInfos
 	TObjectPtr<UCharacterDefinitionData> CharacterDefinition = nullptr;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UCardDefinitionData>> CardDefinitions;
-
-	TArray<FSavedCard> SavedCardInfos;
+	TArray<FCardInfo> LoadedCards;
 };
 
-DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const FLoadedCardInfos& /* LoadedCardInfos */, const bool /* bEquipped */);
+DECLARE_DELEGATE_ThreeParams(FOnAllCardDataLoaded, const FGameplayTag& /* CharacterTag */, const FLoadedCardInfo& /* LoadedCardInfo */, const bool /* bEquipped */);
 
 USTRUCT()
 struct FPendingCardDataLoadRequest
@@ -77,7 +85,7 @@ public:
 	void ChangeCharacterDecksKeyToLoad(const TMap<uint64, FSavedCharacterDeck>& InDecks, TMap<FGameplayTag, FSavedCharacterDeck>& OutDecks) const;
 
 private:
-	void OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedDefinitions);
+	void OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions);
 	void OnCharacterDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions);
 	void TryFinishCardDataLoad(const uint64 RequestId);
 	

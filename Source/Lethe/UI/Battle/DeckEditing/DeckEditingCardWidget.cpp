@@ -9,7 +9,7 @@ void UDeckEditingCardWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	if (const UDeckEditingCardListObject* DeckEditingCardListObject = Cast<UDeckEditingCardListObject>(ListItemObject))
 	{
-		CardBorderImage->SetColorAndOpacity(*DeckEditingCardListObject->CardTypeColor);
+		CardBorderImage->SetColorAndOpacity(DeckEditingCardListObject->CardTypeColor);
 		CardImage->SetBrushFromTexture(DeckEditingCardListObject->CardTexture);
 	}
 }

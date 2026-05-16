@@ -38,21 +38,20 @@ void ULetheAbilitySystemComponent::AddCharacterAbilities(const TArray<FSavedCard
 	}
 }
 
-void ULetheAbilitySystemComponent::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, bool bEquipped)
+void ULetheAbilitySystemComponent::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfo, bool bEquipped)
 {
-	for (int32 CardIndex = 0; CardIndex < LoadedCardInfos.CardDefinitions.Num(); ++CardIndex)
+	for (const FCardInfo& CardInfo : LoadedCardInfo.LoadedCards)
 	{
-		if (LoadedCardInfos.CardDefinitions.IsValidIndex(CardIndex) && LoadedCardInfos.SavedCardInfos.IsValidIndex(CardIndex))
+		if (CardInfo.CardDefinition)
 		{
-			UCardDefinitionData* CardDefinition = LoadedCardInfos.CardDefinitions[CardIndex];
-			if (CardDefinition && CardDefinition->AbilityClass)
+			if (CardInfo.CardDefinition && CardInfo.CardDefinition->AbilityClass)
 			{
 				// Ability 부여 시 SourceObject에 CardDefinitionData를 넣어줍니다.
-				FGameplayAbilitySpec Spec(CardDefinition->AbilityClass, LoadedCardInfos.SavedCardInfos[CardIndex].CardLevel, INDEX_NONE, CardDefinition);
+				FGameplayAbilitySpec Spec(CardInfo.CardDefinition->AbilityClass, CardInfo.SavedCard.CardLevel, INDEX_NONE, CardInfo.CardDefinition);
 				GiveAbility(Spec);
 
 				// 카드 위젯이 생성될 수 있도록 콜백을 호출합니다.
-				OnAbilityGivenDelegate.ExecuteIfBound(this, CardDefinition, LoadedCardInfos.CharacterDefinition);
+				OnAbilityGivenDelegate.ExecuteIfBound(this, LoadedCardInfo.CharacterDefinition, CardInfo.CardDefinition, CardInfo.SavedCard);
 			}
 		}
 	}

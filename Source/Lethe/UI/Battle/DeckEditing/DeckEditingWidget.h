@@ -15,7 +15,7 @@ class ULetheGameplayAbility;
 class ULetheTextBlock;
 class UTileView;
 struct FGameplayTag;
-struct FLoadedCardInfos;
+struct FLoadedCardInfo;
 struct FSavedCharacterDeck;
 
 USTRUCT()
@@ -46,7 +46,7 @@ protected:
 private:
 	void StartLoadAllCards();
 	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, bool bEquipped);
-	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, bool bEquipped);
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, bool bEquipped);
 	void CheckLoadedCount();
 
 	UFUNCTION()

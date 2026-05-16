@@ -2,12 +2,7 @@
 
 #include "CardViewData.h"
 
-FVector2D UCardViewData::GetCardSize() const
+FLinearColor UCardViewData::GetCardTypeColor(const FGameplayTag& InCardTypeTag) const
 {
-	return CardSize;
-}
-
-FLinearColor* UCardViewData::FindCardTypeColor(const FGameplayTag& InCardTypeTag)
-{
-	return CardTypeColors.Find(InCardTypeTag);
+	return CardTypeColors.FindRef(InCardTypeTag);
 }

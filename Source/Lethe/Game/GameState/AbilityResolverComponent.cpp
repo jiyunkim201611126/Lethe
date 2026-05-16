@@ -211,7 +211,7 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& Activati
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData)
 {
-	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *ActivationData->AbilityOwnerASC->GetAvatarActor()->GetFName().ToString());
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *ActivationData->AbilityOwnerASC->GetAvatarActor()->GetName());
 	if (!ActivationData)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;

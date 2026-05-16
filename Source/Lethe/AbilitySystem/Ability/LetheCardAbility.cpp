@@ -491,6 +491,12 @@ FText ULetheCardAbility::GetRangeDescription() const
 	return FLetheTextManager::GetText(EStringTableType::CardDescription, RangeDescriptionKey, AbilityRange.Distance);
 }
 
+FText ULetheCardAbility::GetWeightDescription(const int32 Weight) const
+{
+	const FString WeightDescriptionKey = TEXT("Weight");
+	return FLetheTextManager::GetText(EStringTableType::CardDescription, WeightDescriptionKey, Weight);
+}
+
 void ULetheCardAbility::PostInitProperties()
 {
 	Super::PostInitProperties();

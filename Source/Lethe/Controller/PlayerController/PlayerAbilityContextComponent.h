@@ -13,6 +13,7 @@ class ATile;
 class UActorSelectorComponent;
 class UAbilitySystemComponent;
 class ULetheAbilitySystemComponent;
+struct FSavedCard;
 
 enum class EReservedMoveState : uint8
 {
@@ -104,7 +105,7 @@ public:
 #pragma region Card
 	bool RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 #pragma endregion Card
 
 private:

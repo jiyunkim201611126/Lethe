@@ -42,10 +42,10 @@ void UCardWidget::SetSize(const FVector2D& InSize) const
 void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 {
 	OwnerASC = InitParams.OwnerASC;
-	CardTag = InitParams.CardDefinition->CardTag;
+	SavedCard = InitParams.SavedCard;
 	CardImage->SetBrushFromTexture(InitParams.CardDefinition->CardTexture);
 	CardNameText = InitParams.CardDefinition->CardNameText;
-	CardFrontsideBorderImage->SetColorAndOpacity(*InitParams.CardViewData->FindCardTypeColor(InitParams.CardDefinition->CardTypeTag));
+	CardFrontsideBorderImage->SetColorAndOpacity(InitParams.CardViewData->GetCardTypeColor(InitParams.CardDefinition->CardTypeTag));
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->PersonalColor));
 }
 
@@ -144,7 +144,12 @@ void UCardWidget::TurnOffHighlightOutline() const
 
 FGameplayTag UCardWidget::GetCardTag() const
 {
-	return CardTag;
+	return SavedCard.CardTag;
+}
+
+const FSavedCard& UCardWidget::GetSavedCard() const
+{
+	return SavedCard;
 }
 
 ECardContainer UCardWidget::GetCurrentCardContainer() const

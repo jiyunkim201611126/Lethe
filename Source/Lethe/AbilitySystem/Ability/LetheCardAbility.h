@@ -54,7 +54,7 @@ public:
 	ULetheCardAbility();
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
+	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -95,6 +95,9 @@ protected:
 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetRangeDescription() const;
+
+	UFUNCTION(BlueprintPure, Category = "Effect")
+	FText GetWeightDescription(const int32 Weight) const;
 
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;

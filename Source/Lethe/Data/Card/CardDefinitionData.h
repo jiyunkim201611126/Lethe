@@ -21,7 +21,7 @@ class LETHE_API UCardDefinitionData : public UPrimaryDataAsset
 public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 
-	int32 GetWeight() const;
+	int32 GetWeight(const int32 InLevel) const;
 	
 public:
 	/** ※!! Id는 출시 이후 절대 변경되어선 안 됩니다  !!※ */

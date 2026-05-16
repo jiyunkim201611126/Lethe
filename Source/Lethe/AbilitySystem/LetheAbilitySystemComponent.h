@@ -9,10 +9,10 @@
 class UCardDefinitionData;
 class UCharacterDefinitionData;
 class ULetheGameplayAbility;
-struct FLoadedCardInfos;
+struct FLoadedCardInfo;
 struct FSavedCard;
 
-DECLARE_DELEGATE_ThreeParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCardDefinitionData*, const UCharacterDefinitionData*);
+DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCharacterDefinitionData*, const UCardDefinitionData*, const FSavedCard&);
 
 UCLASS()
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
@@ -29,7 +29,7 @@ public:
 	void AddCharacterAbilities(const TArray<FSavedCard>& InSavedCards);
 
 private:
-	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, bool bEquipped);
+	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfo, bool bEquipped);
 
 public:
 	FOnAbilityGivenSignature OnAbilityGivenDelegate;

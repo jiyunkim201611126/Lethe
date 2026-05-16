@@ -22,6 +22,7 @@ class UPlayerAbilityContextComponent;
 class UPreviewCoordinatorComponent;
 struct FGameplayAbilityActorInfo;
 struct FPreviewData;
+struct FSavedCard;
 
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
 DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
@@ -53,7 +54,7 @@ public:
 	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const;
 
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
 	ULetheHUD* GetLetheHUD() const;
 

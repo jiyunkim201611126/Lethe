@@ -15,7 +15,7 @@ class LETHE_API UDeckEditingCardListObject : public UObject
 public:
 	FSavedCard SavedCardInfo;
 	
-	FLinearColor* CardTypeColor;
+	FLinearColor CardTypeColor;
 	
 	UPROPERTY()
 	TObjectPtr<UTexture2D> CardTexture;

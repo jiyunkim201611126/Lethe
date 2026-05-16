@@ -13,11 +13,9 @@ class LETHE_API UCardViewData : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	FVector2D GetCardSize() const;
+	FLinearColor GetCardTypeColor(const FGameplayTag& InCardTypeTag) const;
 
-	FLinearColor* FindCardTypeColor(const FGameplayTag& InCardTypeTag);
-
-protected:
+public:
 	/** 4픽셀의 Outline을 포함한 수치입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
 	FVector2D CardSize = FVector2D(124.f, 172.f);

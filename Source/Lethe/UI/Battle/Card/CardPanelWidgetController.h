@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 #include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
@@ -17,6 +18,7 @@ class ULetheGameplayAbility;
 struct FGameplayEventData;
 struct FGameplayAbilitySpec;
 struct FGameplayAbilitySpecHandle;
+struct FSavedCard;
 
 /**
  * CardWidget을 생성해 초기화하는 시점에 필요한 데이터입니다.
@@ -29,15 +31,17 @@ struct FCardInitParams
 
 	UPROPERTY()
 	ULetheAbilitySystemComponent* OwnerASC = nullptr;
-	
+
 	UPROPERTY()
-	UCardViewData* CardViewData = nullptr;
+	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;
 
 	UPROPERTY()
 	const UCardDefinitionData* CardDefinition = nullptr;
 
+	FSavedCard SavedCard;
+	
 	UPROPERTY()
-	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;
+	UCardViewData* CardViewData = nullptr;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
@@ -69,10 +73,10 @@ public:
 	bool RequestTurnEnd() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
 
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const;
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCharacterDefinitionData* CharacterDefinitionData) const;
+	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
 	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;

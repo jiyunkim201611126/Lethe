@@ -119,7 +119,7 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 	}
 }
 
-void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfos& LoadedCardInfos, const bool bEquipped)
+void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, const bool bEquipped)
 {
 	++LoadCompletedCount;
 	
@@ -141,15 +141,9 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 			DeckCapacity += CharacterDefinitionData->GetDeckCapacity(1);
 		}
 		
-		for (int32 CardIndex = 0; CardIndex < LoadedCardInfos.CardDefinitions.Num(); ++CardIndex)
+		for (const FCardInfo& CardInfo : LoadedCardInfos.LoadedCards)
 		{
-			if (!LoadedCardInfos.CardDefinitions.IsValidIndex(CardIndex) || !LoadedCardInfos.SavedCardInfos.IsValidIndex(CardIndex))
-			{
-				continue;
-			}
-
-			const UCardDefinitionData* CardDefinition = LoadedCardInfos.CardDefinitions[CardIndex];
-			if (!CardDefinition)
+			if (!CardInfo.CardDefinition)
 			{
 				continue;
 			}
@@ -158,10 +152,10 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 			if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
 			{
 				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
-				CardListObject->SavedCardInfo = LoadedCardInfos.SavedCardInfos[CardIndex];
-				CardListObject->CardTypeColor = CardViewData->FindCardTypeColor(CardDefinition->CardTypeTag);
-				CardListObject->CardTexture = CardDefinition->CardTexture;
-				CardListObject->Weight = CardDefinition->GetWeight();
+				CardListObject->SavedCardInfo = CardInfo.SavedCard;
+				CardListObject->CardTypeColor = CardViewData->GetCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
+				CardListObject->CardTexture = CardInfo.CardDefinition->CardTexture;
+				CardListObject->Weight = CardInfo.CardDefinition->GetWeight(CardInfo.SavedCard.CardLevel);
 
 				// 일단 캐싱해둔 후 유저의 조작에 맞춰 TileView에 추가/제거하면서 업데이트합니다.
 				DeckListObjects->CardListObjects.Emplace(CardListObject);

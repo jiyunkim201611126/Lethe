@@ -410,9 +410,9 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 	OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
 }
 
-void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
+void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
-	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, CardTag, OutText);
+	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

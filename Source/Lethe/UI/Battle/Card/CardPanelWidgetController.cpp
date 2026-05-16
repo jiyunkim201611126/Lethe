@@ -30,13 +30,14 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCardDefinitionData* CardDefinitionData, const UCharacterDefinitionData* CharacterDefinitionData) const
+void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const
 {
 	FCardInitParams InitParams;
 	InitParams.OwnerASC = OwnerASC;
-	InitParams.CardViewData = CardViewData;
-	InitParams.CardDefinition = CardDefinitionData;
 	InitParams.CharacterDefinitionData = CharacterDefinitionData;
+	InitParams.CardDefinition = CardDefinitionData;
+	InitParams.SavedCard = SavedCard;
+	InitParams.CardViewData = CardViewData;
 	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }
 
@@ -57,7 +58,7 @@ void UCardPanelWidgetController::BeginDestroy()
 
 FVector2D UCardPanelWidgetController::GetCardSize() const
 {
-	return CardViewData->GetCardSize();
+	return CardViewData->CardSize;
 }
 
 bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
@@ -109,11 +110,11 @@ void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* Ow
 	}
 }
 
-void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
+void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->GetCardDescriptionText(OwnerASC, CardTag, OutText);
+		LethePlayerController->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
 	}
 }
 

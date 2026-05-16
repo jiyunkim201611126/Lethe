@@ -41,11 +41,11 @@ void UCardDataLoadSubsystem::LoadCardData(const FGameplayTag& CharacterTag, cons
 		CardTags.Emplace(SavedCard.CardTag);
 	}
 
-	const FOnPrimaryDataAssetsLoaded OnDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedDefinitions)
+	const FOnPrimaryDataAssetsLoaded OnCardDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
 	{
-		OnCardDefinitionsLoadedForRequest(RequestId, LoadedDefinitions);
+		OnCardDefinitionsLoadedForRequest(RequestId, LoadedCardDefinitions);
 	});
-	ULetheAssetManager::Get().LoadPrimaryDataAssets(CardTags, OnDefinitionsLoaded);
+	ULetheAssetManager::Get().LoadPrimaryDataAssets(CardTags, OnCardDefinitionsLoaded);
 
 	const FOnPrimaryDataAssetsLoaded OnCharacterDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
 	{
@@ -54,7 +54,7 @@ void UCardDataLoadSubsystem::LoadCardData(const FGameplayTag& CharacterTag, cons
 	ULetheAssetManager::Get().LoadPrimaryDataAssets({ CharacterTag }, OnCharacterDefinitionsLoaded);
 }
 
-void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedDefinitions)
+void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
 {
 	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
 	if (!Request)
@@ -62,8 +62,8 @@ void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 Requ
 		return;
 	}
 
-	Request->LoadedCardDefinitions.Reset(LoadedDefinitions.Num());
-	for (UPrimaryDataAsset* LoadedDefinition : LoadedDefinitions)
+	Request->LoadedCardDefinitions.Reset(LoadedCardDefinitions.Num());
+	for (UPrimaryDataAsset* LoadedDefinition : LoadedCardDefinitions)
 	{
 		Request->LoadedCardDefinitions.Emplace(CastChecked<UCardDefinitionData>(LoadedDefinition));
 	}
@@ -100,17 +100,20 @@ void UCardDataLoadSubsystem::TryFinishCardDataLoad(const uint64 RequestId)
 
 	UCharacterDefinitionData* CharacterDefinition = Request->LoadedCharacterDefinitions.IsEmpty() ? nullptr : Request->LoadedCharacterDefinitions[0].Get();
 
-	FLoadedCardInfos LoadedCardInfos;
-	LoadedCardInfos.CharacterDefinition = CharacterDefinition;
+	FLoadedCardInfo LoadedCardInfo;
+	LoadedCardInfo.CharacterDefinition = CharacterDefinition;
+
+	// SavedCard와 동일한 CardId를 가진 CardDefinition을 한 구조체로 묶습니다.
 	for (const FSavedCard& SavedCard : Request->LoadRequestedCards)
 	{
-		LoadedCardInfos.SavedCardInfos.Add(SavedCard);
+		FCardInfo& CardInfo = LoadedCardInfo.LoadedCards.Emplace_GetRef();
+		CardInfo.SavedCard = SavedCard;
 
 		for (UCardDefinitionData* CardDefinition : Request->LoadedCardDefinitions)
 		{
 			if (CardDefinition && CardDefinition->CardId == SavedCard.CardId)
 			{
-				LoadedCardInfos.CardDefinitions.Add(CardDefinition);
+				CardInfo.CardDefinition = CardDefinition;
 				break;
 			}
 		}
@@ -122,7 +125,7 @@ void UCardDataLoadSubsystem::TryFinishCardDataLoad(const uint64 RequestId)
 	
 	PendingCardDataLoadRequests.Remove(RequestId);
 
-	OnLoadedCallback.ExecuteIfBound(CharacterTag, LoadedCardInfos, bEquipped);
+	OnLoadedCallback.ExecuteIfBound(CharacterTag, LoadedCardInfo, bEquipped);
 }
 
 void UCardDataLoadSubsystem::ChangeCharacterDecksKeyToSave(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, TMap<uint64, FSavedCharacterDeck>& OutDecks) const

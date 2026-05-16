@@ -20,7 +20,7 @@ void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 		CardFrontsideBorderImage->SetColorAndOpacity(ViewDetailData.CardFrontsideBorderColor);
 
 		FText OutDescriptionText;
-		CardPanelWidgetController->GetCardDescriptionText(InCardWidget->GetOwnerASC(), InCardWidget->GetCardTag(), OutDescriptionText);
+		CardPanelWidgetController->GetCardDescriptionText(InCardWidget->GetOwnerASC(), InCardWidget->GetSavedCard(), OutDescriptionText);
 
 		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 

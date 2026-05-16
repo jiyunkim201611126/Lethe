@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/TimelineComponent.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
@@ -94,6 +95,7 @@ public:
 	void MouseHovered(const bool bInHovered);
 
 	FGameplayTag GetCardTag() const;
+	const FSavedCard& GetSavedCard() const;
 
 	ECardContainer GetCurrentCardContainer() const;
 
@@ -157,7 +159,7 @@ protected:
 
 private:
 	FText CardNameText;
-	FGameplayTag CardTag;
+	FSavedCard SavedCard;
 	
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 

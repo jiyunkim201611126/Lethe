@@ -5,7 +5,9 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/Interface/CombatInterface.h"
 
 UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost()
 {
@@ -22,13 +24,14 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemC
 			const float PrevCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
 			ApplyCost(SourceASC);
 			const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
-		
+			
 			// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
 			if (PrevCost == NewCost)
 			{
+				LETHE_LOG(LogAbility, Error, "%s를 사용했으나, 코스트가 소모되지 않았습니다.", *GetName());
 				break;
 			}
-		
+			
 			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
@@ -48,6 +51,15 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent*
 	if (!SourceASC)
 	{
 		return;
+	}
+
+	// Cost 개념은 플레이어 캐릭터에게만 존재합니다.
+	if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(SourceASC->GetAvatarActor()))
+	{
+		if (CombatInterface->GetTeamSide() != ETeamSide::Player)
+		{
+			return;
+		}
 	}
 
 	check(CostEffectClass);

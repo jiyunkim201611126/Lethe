@@ -309,7 +309,7 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 {
 	if (PathTiles.IsEmpty())
 	{
-		LETHE_LOG(LogAIController, Error, "PathTiles is empty");
+		LETHE_LOG(LogAIController, Error, "PathTiles가 비어있습니다.");
 		return;
 	}
 	

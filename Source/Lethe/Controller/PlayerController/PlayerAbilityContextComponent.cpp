@@ -7,10 +7,12 @@
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Character/PlayerCharacterBase.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
+#include "Lethe/SaveGame/SavedCardTypes.h"
 
 UPlayerAbilityContextComponent::UPlayerAbilityContextComponent()
 {
@@ -710,7 +712,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	return true;
 }
 
-void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, FText& OutText) const
+void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
 	if (!OwnerASC)
 	{
@@ -728,9 +730,15 @@ void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilityS
 		}
 
 		const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability);
-		if (CardAbility && CardAbility->GetAssetTags().HasAllExact(CardTag.GetSingleTagContainer()))
+		const UCardDefinitionData* CardDefinitionData = Cast<UCardDefinitionData>(Spec->SourceObject);
+		if (!CardAbility || !CardDefinitionData)
 		{
-			OutText = CardAbility->GetCardDescription(OwnerASC, 1);
+			continue;
+		}
+		
+		if (CardDefinitionData->CardId == SavedCard.CardId)
+		{
+			OutText = CardAbility->GetCardDescription(OwnerASC, SavedCard.CardLevel, CardDefinitionData->GetWeight(SavedCard.CardLevel));
 			return;
 		}
 	}

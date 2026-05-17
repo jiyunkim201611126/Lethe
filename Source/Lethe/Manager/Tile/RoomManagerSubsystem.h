@@ -1,15 +1,22 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Lethe/Data/Stage/RoomRoleAssignmentRuleData.h"
 #include "Lethe/Data/Stage/RoomData.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "RoomManagerSubsystem.generated.h"
 
 enum class ETileVisionState : uint8;
-class URoomRoleAssignmentRuleData;
-struct FRoomCoordSlot;
+
+struct FRoomRolePlacementCandidate
+{
+	int32 RoomId = INDEX_NONE;
+	int32 RoomSize = 0;
+	FCubeCoord CenterCoord;
+	TArray<FRoomCoordSlot> CoordSlots;
+};
 
 UCLASS()
 class LETHE_API URoomManagerSubsystem : public UWorldSubsystem
@@ -30,7 +37,22 @@ public:
 	void RevealEnemyTile(const ATile* InTile) const;
 	void UpdateEnemyMoveVision(const ATile* OldTile, const ATile* NewTile) const;
 
-	bool TryAssignRoomRole(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<TArray<FRoomCoordSlot>>& OutCoordSlotArrays);
+	/**
+	 * RoomRoleAssignmentRule에 의해 특정 역할을 가진 Room이 될 수 있는 후보군을 수집하는 함수입니다.
+	 *
+	 * @param RoomRoleAssignmentRuleData 역할을 가진 Room이 될 수 있는 조건을 정의하는 Rule DataAsset입니다.
+	 * @param OutCandidates 역할 부여를 위한 Room 후보와 Slot 좌표가 할당될 배열입니다.
+	 * @return 성공적으로 수집했다면 true를 반환합니다.
+	 */
+	bool TryFindRoomRoleCandidates(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<FRoomRolePlacementCandidate>& OutCandidates) const;
+
+	/**
+	 * 아직 Role이 부여되지 않은 Room 중에서, StartRoomId 기준 거리순으로 오름차순 정렬된 RoomId들을 반환합니다.
+	 * 여기서 거리란, Tile을 기준으로 잡지 않고 Room 자체를 한 칸으로 생각합니다.
+	 */
+	bool TryGetDistantRoomIds(const int32 StartRoomId, TArray<int32>& OutRoomIds) const;
+
+	void MarkRoomRoleAssigned(const FRoomRolePlacementCandidate& Candidate);
 	
 	const FRoomData* GetRoomData(const int32 RoomId) const;
 	int32 GetRoomCount() const;

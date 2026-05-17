@@ -10,6 +10,9 @@
 class ALetheCharacterBase;
 class UCharacterDefinitionData;
 class UPrimaryDataAsset;
+class URoomRoleAssignmentRuleData;
+struct FRoomRolePlacementCandidate;
+struct FRoomRoleSelectionContext;
 
 UCLASS()
 class LETHE_API ABattleGameMode : public ALetheGameMode
@@ -25,6 +28,13 @@ private:
 	void OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataAsset*>& CharacterDefinitions) const;
 
 	void InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterDefinitions = {}) const;
+
+	/** 추가적인 조건을 요구하는 Role에 대해 처리합니다. */
+	const FRoomRolePlacementCandidate* SelectRoomRoleCandidate(const UObject* WorldContextObject, const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, const TArray<FRoomRolePlacementCandidate>& Candidates, const FRoomRoleSelectionContext& SelectionContext) const;
+
+	const FRoomRolePlacementCandidate* SelectLargestRoom(const TArray<FRoomRolePlacementCandidate>& Candidates) const;
+	const FRoomRolePlacementCandidate* SelectFarthestRoom(const UObject* WorldContextObject, const TArray<FRoomRolePlacementCandidate>& Candidates, const int32 StartRoomId) const;
+	const FRoomRolePlacementCandidate* SelectRandomRoom(const TArray<FRoomRolePlacementCandidate>& Candidates) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

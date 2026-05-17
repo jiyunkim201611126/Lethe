@@ -3,6 +3,7 @@
 #include "BattleGameMode.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Character/LethePawn.h"
@@ -15,6 +16,113 @@
 #include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/Manager/World/BattleStateSaveSubsystem.h"
+
+struct FRoomRoleSelectionContext
+{
+	TMap<ERoomRole, FRoomRolePlacementCandidate> AssignedCandidatesByRole;
+};
+
+const FRoomRolePlacementCandidate* ABattleGameMode::SelectRoomRoleCandidate(const UObject* WorldContextObject, const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, const TArray<FRoomRolePlacementCandidate>& Candidates, const FRoomRoleSelectionContext& SelectionContext) const
+{
+	if (!WorldContextObject || !RoomRoleAssignmentRuleData)
+	{
+		return nullptr;
+	}
+
+	switch (RoomRoleAssignmentRuleData->RoomRole)
+	{
+	case ERoomRole::PlayerSpawn:
+		return SelectLargestRoom(Candidates);
+	case ERoomRole::StageEnd:
+		if (const FRoomRolePlacementCandidate* Candidate = SelectionContext.AssignedCandidatesByRole.Find(ERoomRole::PlayerSpawn))
+		{
+			return SelectFarthestRoom(WorldContextObject, Candidates, Candidate->RoomId);
+		}
+		checkf(false, TEXT("StageEnd가 PlayerSpawn보다 먼저 생성 시도되었습니다. DT에서 순서를 바꿔주세요."))
+	default:
+		return SelectRandomRoom(Candidates);
+	}
+}
+
+const FRoomRolePlacementCandidate* ABattleGameMode::SelectLargestRoom(const TArray<FRoomRolePlacementCandidate>& Candidates) const
+{
+	if (Candidates.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	int32 LargestRoomSize = 0;
+	for (const FRoomRolePlacementCandidate& Candidate : Candidates)
+	{
+		LargestRoomSize = FMath::Max(LargestRoomSize, Candidate.RoomSize);
+	}
+
+	TArray<int32> CandidateIndexes;
+	for (int32 Index = 0; Index < Candidates.Num(); ++Index)
+	{
+		if (Candidates[Index].RoomSize == LargestRoomSize)
+		{
+			CandidateIndexes.Add(Index);
+		}
+	}
+
+	const int32 SelectedIndex = CandidateIndexes[FMath::RandRange(0, CandidateIndexes.Num() - 1)];
+	return &Candidates[SelectedIndex];
+}
+
+const FRoomRolePlacementCandidate* ABattleGameMode::SelectFarthestRoom(const UObject* WorldContextObject, const TArray<FRoomRolePlacementCandidate>& Candidates, const int32 StartRoomId) const
+{
+	if (!WorldContextObject || Candidates.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	const URoomManagerSubsystem* RoomManagerSubsystem = WorldContextObject->GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	if (!RoomManagerSubsystem)
+	{
+		return nullptr;
+	}
+
+	// Room 기준 거리 순으로 정렬된 RoomId 배열을 가져옵니다.
+	TArray<int32> OutRoomIds;
+	RoomManagerSubsystem->TryGetDistantRoomIds(StartRoomId, OutRoomIds);
+
+	// 먼 거리 순(역순)으로 순회합니다.
+	for (int32 Index = OutRoomIds.Num() - 1; Index >= 0; --Index)
+	{
+		const int32 RoomId = OutRoomIds[Index];
+
+		// 이번 RoomId에 해당하는 후보들을 모두 가져옵니다.
+		TArray<int32> CandidateIndices;
+		for (int32 CandidateIndex = 0; CandidateIndex < Candidates.Num(); ++CandidateIndex)
+		{
+			if (Candidates[CandidateIndex].RoomId == RoomId)
+			{
+				CandidateIndices.Add(CandidateIndex);
+			}
+		}
+
+		// 후보가 존재한다면 그 중 랜덤하게 하나 선택해 반환합니다.
+		if (!CandidateIndices.IsEmpty())
+		{
+			const int32 SelectedIndex = CandidateIndices[FMath::RandRange(0, CandidateIndices.Num() - 1)];
+			return &Candidates[SelectedIndex];
+		}
+	}
+	
+	return nullptr;
+}
+
+const FRoomRolePlacementCandidate* ABattleGameMode::SelectRandomRoom(const TArray<FRoomRolePlacementCandidate>& Candidates) const
+{
+	if (Candidates.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	const int32 SelectedIndex = FMath::RandRange(0, Candidates.Num() - 1);
+	return &Candidates[SelectedIndex];
+}
 
 void ABattleGameMode::RestartPlayer(AController* NewPlayer)
 {
@@ -101,16 +209,35 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 	}
 
 	FCubeCoord LastPlayerCharacterSpawnedCoord;
-	
 	int32 EnemyPriority = 0;
+	FRoomRoleSelectionContext RoomRoleSelectionContext;
+
+	// 스테이지의 모든 RoomAssignmentRule을 순회합니다.
 	for (const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData : StageData->RoomAssignmentRules)
 	{
-		TArray<TArray<FRoomCoordSlot>> OutCoordSlotArrays;
-		if (RoomManagerSubsystem->TryAssignRoomRole(RoomRoleAssignmentRuleData, OutCoordSlotArrays))
+		// Rule을 만족하는 모든 좌표를 가져옵니다.
+		TArray<FRoomRolePlacementCandidate> RoomRoleAssignmentCandidates;
+		if (RoomManagerSubsystem->TryFindRoomRoleCandidates(RoomRoleAssignmentRuleData, RoomRoleAssignmentCandidates))
 		{
-			// Room 내에 선택할 수 있는 지점이 여러 군데 있다면, 그 중 하나를 랜덤하게 선택합니다.
-			const TArray<FRoomCoordSlot>& SelectedSlots = OutCoordSlotArrays[FMath::RandRange(0, OutCoordSlotArrays.Num() - 1)];
+			ERoomRole CurrentRoomRole = RoomRoleAssignmentRuleData->RoomRole;
 			
+			// 좌표들 중에서 추가적인 조건을 만족하는 좌표를 하나 선택합니다.
+			const FRoomRolePlacementCandidate* SelectedCandidate = SelectRoomRoleCandidate(this, RoomRoleAssignmentRuleData, RoomRoleAssignmentCandidates, RoomRoleSelectionContext);
+			if (!SelectedCandidate)
+			{
+				if (CurrentRoomRole == ERoomRole::PlayerSpawn || CurrentRoomRole == ERoomRole::Boss || CurrentRoomRole == ERoomRole::StageEnd)
+				{
+					checkf(false, TEXT("필수 RoomRole이 정상적으로 부여되지 않았습니다. RoomRole: %s"), *LogHelper::EnumToString(CurrentRoomRole));
+				}
+				continue;
+			}
+
+			// 선택된 Room에게 Role이 Assign되었음을 기록합니다.
+			RoomManagerSubsystem->MarkRoomRoleAssigned(*SelectedCandidate);
+			RoomRoleSelectionContext.AssignedCandidatesByRole.Add(CurrentRoomRole, *SelectedCandidate);
+
+			const TArray<FRoomCoordSlot>& SelectedSlots = SelectedCandidate->CoordSlots;
+
 			int32 PlayerCharacterIndex = 0;
 			for (const FRoomCoordSlot& Slot : SelectedSlots)
 			{
@@ -149,25 +276,6 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 								
 								++PlayerCharacterIndex;
 
-								// 테스트 용도로 바로 옆에 몬스터를 스폰시키기 위해 위치를 기록합니다.
-								LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
-							}
-						}
-					}
-					else
-					{
-						TArray<AActor*> PlayerCharacters = LetheGameState->GetPlayerCharacters();
-						if (PlayerCharacters.IsValidIndex(PlayerCharacterIndex))
-						{
-							if (APlayerCharacterBase* PlayerCharacter = Cast<APlayerCharacterBase>(PlayerCharacters[PlayerCharacterIndex]))
-							{
-								TileManagerSubsystem->MapTileAndActor(Tile, PlayerCharacter);
-								TArray<ATile*> SpawnTileArray;
-								SpawnTileArray.Add(Tile);
-								PlayerCharacter->MoveToTile(SpawnTileArray, true);
-							
-								++PlayerCharacterIndex;
-							
 								// 테스트 용도로 바로 옆에 몬스터를 스폰시키기 위해 위치를 기록합니다.
 								LastPlayerCharacterSpawnedCoord = Slot.SlotCoord;
 							}

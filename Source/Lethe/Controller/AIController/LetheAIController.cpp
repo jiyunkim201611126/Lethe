@@ -111,33 +111,33 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 			const FCubeCoord ThisTileCoord = Tile->GetCubeCoord();
 			TSet<FCubeCoord> PlayerCharacterTileCoords;
 			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, PlayerCharacterTileCoords,
-			[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
-			{
-				return PlayerCharacterTileCoords.IsEmpty();
-			},
-			[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-			{
-				if (TileData && TileData->TileActor.IsValid())
+				[&PlayerCharacterTileCoords](const FTileData* CurrentTileData, const FTileData* NextTileData)
 				{
-					if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+					return PlayerCharacterTileCoords.IsEmpty();
+				},
+				[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+				{
+					if (TileData && TileData->TileActor.IsValid())
 					{
-						if (ActorOnTile->Implements<UPlayerCharacterInterface>())
+						if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
 						{
-							if (OutNearestTiles.IsEmpty() || Distance == Depth)
+							if (ActorOnTile->Implements<UPlayerCharacterInterface>())
 							{
-								Distance = Depth;
-								OutNearestTiles.Add(TileData->TileActor.Get());
-								return true;
-							}
-							if (!OutNearestTiles.IsEmpty() && Distance != Depth)
-							{
-								return false;
+								if (OutNearestTiles.IsEmpty() || Distance == Depth)
+								{
+									Distance = Depth;
+									OutNearestTiles.Add(TileData->TileActor.Get());
+									return true;
+								}
+								if (!OutNearestTiles.IsEmpty() && Distance != Depth)
+								{
+									return false;
+								}
 							}
 						}
 					}
-				}
-				return false;
-			});
+					return false;
+				});
 		}
 	}
 	return Distance;
@@ -274,20 +274,20 @@ bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 M
 			TSet<FCubeCoord> TilesInRange;
 			const FCubeCoord ThisTileCoord = StartTile->GetCubeCoord();
 			TileManagerSubsystem->TileBFS(ThisTileCoord, MaxDepth, BFSType, TilesInRange,
-			[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-			{
-				// 우선 범위 내 좌표를 모두 탐색합니다.
-				return true;
-			},
-			[TileManagerSubsystem](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-			{
-				// EnemyAI가 이동 가능한 좌표만 선택합니다.
-				if (TileData && TileData->TileActor.IsValid())
+				[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 				{
-					return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TileActor.Get());
-				}
-				return false;
-			});
+					// 우선 범위 내 좌표를 모두 탐색합니다.
+					return true;
+				},
+				[TileManagerSubsystem](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+				{
+					// EnemyAI가 이동 가능한 좌표만 선택합니다.
+					if (TileData && TileData->TileActor.IsValid())
+					{
+						return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TileActor.Get());
+					}
+					return false;
+				});
 			
 			if (!TilesInRange.IsEmpty())
 			{

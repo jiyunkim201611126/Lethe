@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "RoomManagerSubsystem.h"
 
@@ -240,9 +240,9 @@ bool URoomManagerSubsystem::IsTileVisibleByPlayer(const ATile* InTile) const
 	return false;
 }
 
-bool URoomManagerSubsystem::TryAssignRoomRole(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<TArray<FRoomCoordSlot>>& OutCoordSlotArrays)
+bool URoomManagerSubsystem::TryFindRoomRoleCandidates(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<FRoomRolePlacementCandidate>& OutCandidates) const
 {
-	OutCoordSlotArrays.Reset();
+	OutCandidates.Reset();
 	
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!RoomRoleAssignmentRuleData || !TileManagerSubsystem)
@@ -275,20 +275,20 @@ bool URoomManagerSubsystem::TryAssignRoomRole(const URoomRoleAssignmentRuleData*
 			{
 				TSet<FCubeCoord> TempCoords;
 				TileManagerSubsystem->TileBFS(RoomTile->GetCubeCoord(), Distance, RoomRoleAssignmentRuleData->RequiredSpaceRangeBFSType, TempCoords,
-				[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-				{
-					// 같은 Room 내의 좌표만 순회합니다.
-					if (CurrentTileData && NextTileData)
+					[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 					{
-						return CurrentTileData->RoomId == NextTileData->RoomId;
-					}
-					return false;
-				},
-				[](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-				{
-					// 일단 모든 좌표를 선택합니다.
-					return true;
-				});
+						// 같은 Room 내의 좌표만 순회합니다.
+						if (CurrentTileData && NextTileData)
+						{
+							return CurrentTileData->RoomId == NextTileData->RoomId;
+						}
+						return false;
+					},
+					[](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+					{
+						// 일단 모든 좌표를 선택합니다.
+						return true;
+					});
 
 				// 정육각 형태를 만족한 경우 들어가는 분기입니다.
 				if (RequiredCoordCount <= TempCoords.Num())
@@ -311,19 +311,73 @@ bool URoomManagerSubsystem::TryAssignRoomRole(const URoomRoleAssignmentRuleData*
 
 					if (bValidCoordSlots)
 					{
-						OutCoordSlotArrays.Add(MoveTemp(CoordSlots));
+						FRoomRolePlacementCandidate& Candidate = OutCandidates.AddDefaulted_GetRef();
+						Candidate.RoomId = Pair.Key;
+						Candidate.RoomSize = Pair.Value.RoomSize;
+						Candidate.CenterCoord = Pair.Value.CenterCoord;
+						Candidate.CoordSlots = MoveTemp(CoordSlots);
 					}
 				}
 			}
 		}
-		
-		if (!OutCoordSlotArrays.IsEmpty())
+	}
+	return !OutCandidates.IsEmpty();
+}
+
+bool URoomManagerSubsystem::TryGetDistantRoomIds(const int32 StartRoomId, TArray<int32>& OutRoomIds) const
+{
+	OutRoomIds.Reset();
+	OutRoomIds.Reserve(GetRoomCount() - 1);
+
+	TSet<int32> VisitedRoomIds;
+	TQueue<int32> Queue;
+	VisitedRoomIds.Add(StartRoomId);
+	Queue.Enqueue(StartRoomId);
+
+	// 입구 타일을 통해서 Room이라는 영역을 기준으로 몇 칸 떨어진 Room인지를 파악, 이를 BFS로 순회하며 기록합니다.
+	while (!Queue.IsEmpty())
+	{
+		int32 CurrentRoomId = INDEX_NONE;
+		Queue.Dequeue(CurrentRoomId);
+
+		const FRoomData* CurrentRoomData = GetRoomData(CurrentRoomId);
+		if (!CurrentRoomData)
 		{
-			RoleAssignedRoomIds.Add(Pair.Key);
-			break;
+			continue;
+		}
+		
+		for (const auto& EntranceTile : CurrentRoomData->VisibleEntranceTiles)
+		{
+			if (!EntranceTile.IsValid())
+			{
+				continue;
+			}
+			
+			const int32 NextRoomId = EntranceTile->GetRoomId();
+			if (!VisitedRoomIds.Contains(NextRoomId))
+			{
+				// 아직 방문하지 않은 Room이라면 이를 기록하고, 다음 방문을 위해 Queue에 추가합니다.
+				VisitedRoomIds.Add(NextRoomId);
+				Queue.Enqueue(NextRoomId);
+
+				if (!RoleAssignedRoomIds.Contains(NextRoomId))
+				{
+					// Role이 부여되지 않은 Room의 Id만 추가합니다.
+					OutRoomIds.Add(NextRoomId);
+				}
+			}
 		}
 	}
-	return !OutCoordSlotArrays.IsEmpty();
+
+	return !OutRoomIds.IsEmpty();
+}
+
+void URoomManagerSubsystem::MarkRoomRoleAssigned(const FRoomRolePlacementCandidate& Candidate)
+{
+	if (Candidate.RoomId != INDEX_NONE)
+	{
+		RoleAssignedRoomIds.Add(Candidate.RoomId);
+	}
 }
 
 FRoomData* URoomManagerSubsystem::GetMutableRoomData(const int32 RoomId)

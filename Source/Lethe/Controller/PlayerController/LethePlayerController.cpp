@@ -397,9 +397,9 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
 {
-	if (!PlayerAbilityContextComponent->RequestUseCard(OwnerASC, CardTag, InHandIndex))
+	if (!PlayerAbilityContextComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}

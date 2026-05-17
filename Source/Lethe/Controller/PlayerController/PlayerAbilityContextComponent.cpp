@@ -655,7 +655,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const
+bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
 {
 	if (!ActorSelector.IsValid() || !OwnerASC)
 	{
@@ -672,17 +672,25 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 
 	// CardTag에 해당하는 AbilitySpec을 모두 가져옵니다.
 	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
+	const FGameplayTagContainer CardTagContainer = SavedCard.CardTag.GetSingleTagContainer();
 	OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
 	if (AbilitySpecs.IsEmpty())
 	{
 		return false;
 	}
+
+	// 동일한 레벨의 AbilitySpec을 선택합니다.
+	FGameplayAbilitySpec* SelectedSpec;
+	for (FGameplayAbilitySpec* AbilitySpec : AbilitySpecs)
+	{
+		if (AbilitySpec->Level == SavedCard.CardLevel)
+		{
+			SelectedSpec = AbilitySpec;
+			break;
+		}
+	}
 	
-	// TODO: 중복 카드가 있다면 AbilitySpec이 여러 개 나오므로, 추후 CardLevel로 알맞은 Ability인지 확인하는 과정이 필요할 수 있습니다.
-	// TODO: 현재는 첫 번째 거로 사용합니다.
-	
-	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
+	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(SelectedSpec->Ability);
 	if (!CardAbility)
 	{
 		return false;
@@ -705,7 +713,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	FAbilityActivationData AbilityActivationData;
 	AbilityActivationData.Index = InHandIndex;
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-	AbilityActivationData.AbilityTag = CardTag;
+	AbilityActivationData.AbilityTag = SavedCard.CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
 	AbilityActivationData.TargetTiles.Emplace(OutTileAndActor.Tile);
 	LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);

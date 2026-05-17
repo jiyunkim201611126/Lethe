@@ -102,11 +102,11 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 	return false;
 }
 
-void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, const int32 InHandIndex) const
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->RequestUseCard(OwnerASC, CardTag, InHandIndex);
+		LethePlayerController->RequestUseCard(OwnerASC, SavedCard, InHandIndex);
 	}
 }
 

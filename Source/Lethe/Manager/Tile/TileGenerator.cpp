@@ -298,26 +298,24 @@ namespace TileGeneratorInternal
 	    		TileDataMap[Coord].RoomId = RoomId;
 	    	}
 
+	    	int32 AverageQ = FMath::RoundToInt(static_cast<float>(TempCoord.Q) / CurrentCoords.Num());
+	    	int32 AverageR = FMath::RoundToInt(static_cast<float>(TempCoord.R) / CurrentCoords.Num());
+	    	int32 AverageS = FMath::RoundToInt(static_cast<float>(TempCoord.S) / CurrentCoords.Num());
+
+	    	TempCoord = FCubeCoord(AverageQ, AverageR, AverageS);
+
+	    	//최소값 탐색
+	    	const FCubeCoord* Closest = Algo::MinElementBy(CurrentCoords, [&](const FCubeCoord& Coord)
+			{
+				return FCubeCoord::Distance(Coord, TempCoord);
+			});
+
+	    	if (Closest)
 	    	{
-	    		int32 AverageQ = FMath::RoundToInt(static_cast<float>(TempCoord.Q) / CurrentCoords.Num());
-	    		int32 AverageR = FMath::RoundToInt(static_cast<float>(TempCoord.R) / CurrentCoords.Num());
-	    		int32 AverageS = FMath::RoundToInt(static_cast<float>(TempCoord.S) / CurrentCoords.Num());
-
-	    		TempCoord = FCubeCoord(AverageQ, AverageR, AverageS);
-
-	    		//최소값 탐색
-	    		const FCubeCoord* Closest = Algo::MinElementBy(CurrentCoords, [&](const FCubeCoord& Coord)
-				{
-					return FCubeCoord::Distance(Coord, TempCoord);
-				});
-
-	    		if (Closest)
-	    		{
-	    			FRoomData RoomData;
-	    			RoomData.CenterCoord = *Closest;
-	    			RoomData.RoomSize = CurrentCoords.Num();
-	    			RoomDataMap.Emplace(RoomId, RoomData);
-	    		}
+	    		FRoomData RoomData;
+	    		RoomData.CenterCoord = *Closest;
+	    		RoomData.RoomSize = CurrentCoords.Num();
+	    		RoomDataMap.Emplace(RoomId, RoomData);
 	    	}
 	    	
 	    	VisitedCoords.Append(CurrentCoords);

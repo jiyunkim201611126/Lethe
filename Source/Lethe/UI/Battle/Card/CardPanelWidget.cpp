@@ -310,7 +310,7 @@ bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
 			return false;
 		}
 		UseRequestedCards.Add(HandIndex, CurrentSelectedCard);
-		CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag(), HandIndex);
+		CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetSavedCard(), HandIndex);
 
 		// 성공 여부와 관계 없이 카드 선택을 취소합니다.
 		if (CurrentSelectedCard)

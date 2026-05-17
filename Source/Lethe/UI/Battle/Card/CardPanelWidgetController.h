@@ -71,7 +71,7 @@ public:
 	void GoPlayerTurnPhase() const;
 	void StartResolvePlayerMoves() const;
 	bool RequestTurnEnd() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag, int32 InHandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const;
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 

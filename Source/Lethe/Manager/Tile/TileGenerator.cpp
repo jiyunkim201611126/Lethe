@@ -425,32 +425,27 @@ namespace TileGeneratorInternal
 	//타일 생성
 	void MakeTileActor(UWorld* World, TMap<FCubeCoord, FTileData>& TileDataMap, TMap<int32, FRoomData>& RoomDataMap, const FStageData* StageData)
 	{
-		TMap<FCubeCoord, TArray<TWeakObjectPtr<ATile>>> TilesByCoord;
+		TMap<FCubeCoord, TWeakObjectPtr<ATile>> TopTileByCoord;
 		
 		for (auto& Pair : TileDataMap)
 		{
 			FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
 
 			TArray<ATile*> NonTopTiles;
-			NonTopTiles.Reserve(Pair.Value.Floor);
+			NonTopTiles.Reserve(Pair.Value.Floor - 1);
 			
 			for (int32 Floor = 1; Floor <= Pair.Value.Floor; Floor++)
 			{
 				WorldPosition.Z += 40.f;
 				
 				ATile* TileActor = World->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
-				TilesByCoord.FindOrAdd(Pair.Key).Add(TileActor);
-				if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
-				{
-					RoomData->RoomTiles.Add(TileActor);
-				}
 		
-				//타일의 중심 메쉬 결정을 위한 코드
+				// 타일의 중심 메쉬 결정을 위한 코드
 				TArray<UStaticMesh*> TileMeshes;
 				TileMeshes.Reserve(7);
 				ETileMeshType MeshKey = ETileMeshType::Main;
 				
-				//꼭대기 층이 아닌 모든 경우에, key + 1을 하여 해당 메쉬의 Under 버전으로 변경 
+				// 꼭대기 층이 아닌 모든 경우에, key + 1을 하여 해당 메쉬의 Under 버전으로 변경 
 				if (Floor < Pair.Value.Floor)
 				{
 					MeshKey = static_cast<ETileMeshType>(static_cast<int32>(MeshKey) + 1);
@@ -462,7 +457,7 @@ namespace TileGeneratorInternal
 				TArray<ETileConnectionState> UVOffsetType; // UV Offset 기능을 위해서 추가
 				UVOffsetType.Init(ETileConnectionState::Block, 6);
 				
-				//테두리 타일의 메쉬 결정을 위한 루프
+				// 테두리 타일의 메쉬 결정을 위한 루프
 				for (int32 Direction = 0; Direction < 6; ++Direction)
 				{
 					const FCubeCoord Offset = FCubeCoord::GetDirection(Direction);
@@ -500,12 +495,19 @@ namespace TileGeneratorInternal
 					++Index;
 				}
 
-				if (Floor == Pair.Value.Floor)
+				const bool bIsTopTile = Floor == Pair.Value.Floor;
+				if (bIsTopTile)
 				{
 					// 좌표에 해당하는 TileData에 꼭대기 타일만 할당합니다.
 					if (FTileData* TileData = TileDataMap.Find(Pair.Key))
 					{
 						TileData->TileActor = TileActor;
+					}
+
+					// RoomData에 꼭대기 타일만 할당합니다.
+					if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
+					{
+						RoomData->RoomTiles.Add(TileActor);
 					}
 
 					// 꼭대기 타일이 아닌 모든 타일에게 꼭대기 타일을 할당합니다.
@@ -515,13 +517,15 @@ namespace TileGeneratorInternal
 					}
 					
 					NonTopTiles.Empty();
+
+					TopTileByCoord.Emplace(Pair.Key, TileActor);
 				}
 				else
 				{
 					NonTopTiles.Add(TileActor);
 				}
 				
-				TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomId, UVOffsetType);
+				TileActor->Init(TileMeshes, Pair.Key, Pair.Value.RoomId, UVOffsetType, bIsTopTile);
 			}
 		}
 
@@ -533,9 +537,12 @@ namespace TileGeneratorInternal
 			
 			for (const FCubeCoord& EntranceCoord : RoomData.VisibleEntranceCoords)
 			{
-				if (const auto* Tiles = TilesByCoord.Find(EntranceCoord))
+				if (const auto* Tile = TopTileByCoord.Find(EntranceCoord))
 				{
-					RoomData.VisibleEntranceTiles.Append(*Tiles);
+					if (Tile && Tile->IsValid())
+					{
+						RoomData.VisibleEntranceTiles.Add(Tile->Get());
+					}
 				}
 			}
 		}

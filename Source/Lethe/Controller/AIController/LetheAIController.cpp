@@ -412,15 +412,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
-				ArrowRenderer->DrawSkillPreviewArrow(GetPawn(), TileManagerSubsystem->GetActorOnTile(TargetTile));
-
-				const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-				const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
-				if (RoomManagerSubsystem && CurrentTile)
-				{
-					RoomManagerSubsystem->RevealEnemyTile(CurrentTile);
-					ControlledEnemy->UpdateHiddenByTile(CurrentTile);
-				}
+				ArrowRenderer->DrawSkillPreviewArrow(ControlledEnemy, TileManagerSubsystem->GetActorOnTile(TargetTile));
 			}
 		}
 	}
@@ -428,11 +420,23 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 
 void ALetheAIController::StartCombat()
 {
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	if (!ControlledEnemy || !TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
 	{
-		LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
+		return;
 	}
+	
 	bIsCombating = true;
+	
+	if (ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
+	{
+		RoomManagerSubsystem->RevealEnemyTile(CurrentTile);
+		ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ControlledEnemy, CurrentTile);
+	}
+	LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
 }
 
 bool ALetheAIController::IsCombating() const

@@ -302,6 +302,10 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 						if (AActor* SpawnedActor = GetWorld()->SpawnActor(Slot.SpawnActorClass, &SpawnTransform, SpawnParams))
 						{
 							TileManagerSubsystem->MapTileAndActor(Tile, SpawnedActor);
+							if (SpawnedActor->Implements<UTileVisionAffectedInterface>())
+							{
+								ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(SpawnedActor, Tile);
+							}
 						}
 					}
 					break;

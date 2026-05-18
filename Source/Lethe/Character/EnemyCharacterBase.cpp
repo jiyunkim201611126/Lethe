@@ -70,7 +70,7 @@ void AEnemyCharacterBase::StartCombat() const
 	}
 }
 
-void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
+void AEnemyCharacterBase::UpdateHiddenByTile_Implementation(const ATile* Tile)
 {
 	const ALetheAIController* AIController = GetController<ALetheAIController>();
 	if (!AIController || !Tile)
@@ -105,7 +105,7 @@ void AEnemyCharacterBase::UpdateHiddenByTile(const ATile* Tile)
 	}
 }
 
-void AEnemyCharacterBase::OnMoveTileChanged(const ATile* OldTile, const ATile* NewTile)
+void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile) const
 {
 	const ALetheAIController* AIController = GetController<ALetheAIController>();
 	if (!AIController || !OldTile || !NewTile)

@@ -62,9 +62,10 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 			FVector TargetTileLocation = TargetTile->GetActorLocation();
 			TargetTileLocation.Z = TargetTileLocation.Z + ZOffset;
 			SetActorLocation(TargetTileLocation);
-			if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(this))
+			// Hidden 상태를 갱신합니다. PlayerCharacter는 구현되지 않았고, Enemy에서만 동작합니다.
+			if (Implements<UTileVisionAffectedInterface>())
 			{
-				TileVisionAffectedInterface->UpdateHiddenByTile(TargetTile);
+				ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(this, TargetTile);
 			}
 		}
 		return;
@@ -162,10 +163,10 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 		
 		if (DistanceSquaredToTarget <= FMath::Square(HiddenTolerance))
 		{
-			// 목표 위치에 Hidden 갱신 임계값까지 가까워졌다면 Hidden 상태를 갱신합니다.
-			if (ITileVisionAffectedInterface* TileVisionAffectedInterface = Cast<ITileVisionAffectedInterface>(this))
+			// 목표 위치에 Hidden 갱신 임계값까지 가까워졌다면 Hidden 상태를 갱신합니다. PlayerCharacter는 구현되지 않았고, Enemy에서만 동작합니다.
+			if (Implements<UTileVisionAffectedInterface>())
 			{
-				TileVisionAffectedInterface->UpdateHiddenByTile(CurrentTargetTile.Get());
+				ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(this, CurrentTargetTile.Get());
 			}
 		}
 		
@@ -194,7 +195,7 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 	}
 }
 
-void ALetheCharacterBase::OnMoveTileChanged(const ATile* PreviousTile, const ATile* CurrentTile)
+void ALetheCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile) const
 {
 }
 

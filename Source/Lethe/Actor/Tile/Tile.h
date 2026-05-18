@@ -36,8 +36,9 @@ class LETHE_API ATile : public AActor, public IHighlightInterface
 
 public:
 	ATile(const FObjectInitializer& ObjectInitializer);
-	
-	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType);
+
+	/** 초기화 단계에 호출되는 함수기 때문에, TopTile을 아직 할당받지 않아 bIsTopTile을 직접 받아 사용합니다. */
+	void Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType, const bool bIsTopTile);
 	void SetTopTile(ATile* InTile);
 	ATile* GetTopTile();
 

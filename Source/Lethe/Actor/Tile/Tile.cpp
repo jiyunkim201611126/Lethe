@@ -4,6 +4,8 @@
 
 #include "Tile.h"
 
+#include "Lethe/LetheLog.h"
+
 ATile::ATile(const FObjectInitializer& ObjectInitializer)
 {
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -13,7 +15,7 @@ ATile::ATile(const FObjectInitializer& ObjectInitializer)
 	MainTile->SetupAttachment(Root);
 }
 
-void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType)
+void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoord, const int32 InRoomId, const TArray<ETileConnectionState>& UVOffsetType, const bool bIsTopTile)
 {
 	TextRender = FindComponentByClass<UTextRenderComponent>();
 	SetTileMesh(Meshes, UVOffsetType);
@@ -21,22 +23,23 @@ void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoo
 	CubeCoord = InCubeCoord;
 	RoomId = InRoomId;
 
-	const bool bIsTopTile = IsTopTile();
+	TextRender->SetVisibility(bIsTopTile);
 	if (bIsTopTile)
 	{
 		TextRender->SetText(FText::Format(FText::FromString(TEXT("[{0}, {1}, {2}]\nRoom : {3}")), CubeCoord.Q, CubeCoord.R, CubeCoord.S, InRoomId));
 	}
-
-	TextRender->SetVisibility(bIsTopTile);
+	else
+	{
+		// 꼭대기 타일이 아닌 경우 무조건 표시합니다.
+		TileVisionState = ETileVisionState::Visible;
+		SetActorHiddenInGame(false);
+		return;
+	}
 
 	if (bUseTileVisionLogic)
 	{
 		SetActorHiddenInGame(true);
 		SetTileTraceIgnore(true);
-	}
-	else
-	{
-		TileVisionState = ETileVisionState::Visible;
 	}
 }
 
@@ -57,25 +60,21 @@ ATile* ATile::GetTopTile()
 
 void ATile::HighlightActorByMouse_Implementation()
 {
-	if (TopTile.IsValid())
-	{
-		Execute_HighlightActorByMouse(TopTile.Get());
-	}
-	else
+	if (IsTopTile())
 	{
 		// 이 타일이 꼭대기 타일인 경우 들어오는 분기입니다.
 		MainTile->SetRenderCustomDepth(true);
 		MainTile->SetCustomDepthStencilValue(OutlineColorByMouse);
 	}
+	else
+	{
+		Execute_HighlightActorByMouse(GetTopTile());
+	}
 }
 
 void ATile::UnhighlightActorByMouse_Implementation()
 {
-	if (TopTile.IsValid())
-	{
-		Execute_UnhighlightActorByMouse(TopTile.Get());
-	}
-	else
+	if (IsTopTile())
 	{
 		if (OutlineColorByCard != 0)
 		{
@@ -87,37 +86,47 @@ void ATile::UnhighlightActorByMouse_Implementation()
 			MainTile->SetRenderCustomDepth(false);
 		}
 	}
+	else
+	{
+		Execute_UnhighlightActorByMouse(GetTopTile());
+	}
 }
 
 void ATile::HighlightActorByAbility_Implementation(const int32 InOutlineColor)
 {
-	if (TopTile.IsValid())
-	{
-		Execute_HighlightActorByAbility(TopTile.Get(), InOutlineColor);
-	}
-	else
+	if (IsTopTile())
 	{
 		OutlineColorByCard = InOutlineColor;
 		MainTile->SetRenderCustomDepth(true);
 		MainTile->SetCustomDepthStencilValue(OutlineColorByCard);
 	}
+	else
+	{
+		Execute_HighlightActorByAbility(GetTopTile(), InOutlineColor);
+	}
 }
 
 void ATile::UnhighlightActorByAbility_Implementation()
 {
-	if (TopTile.IsValid())
-	{
-		Execute_UnhighlightActorByAbility(TopTile.Get());
-	}
-	else
+	if (IsTopTile())
 	{
 		OutlineColorByCard = 0;
 		MainTile->SetRenderCustomDepth(false);
+	}
+	else
+	{
+		Execute_UnhighlightActorByAbility(GetTopTile());
 	}
 }
 
 void ATile::SetTileVisionState(const ETileVisionState VisionState)
 {
+	if (!IsTopTile())
+	{
+		LETHE_LOG(LogTile, Error, "꼭대기 타일이 아닌 타일의 VisionState 변경이 시도되었습니다.");
+		return;
+	}
+	
 	if (TileVisionState == VisionState)
 	{
 		return;
@@ -130,7 +139,11 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 		{
 		case ETileVisionState::Visible:
 			SetActorHiddenInGame(false);
+			TextRender->SetVisibility(IsTopTile());
 			SetTileTraceIgnore(false);
+			break;
+		case ETileVisionState::Explored:
+			TextRender->SetVisibility(false);
 			break;
 		default:
 			break;

@@ -34,8 +34,8 @@ public:
 
 	void NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile);
 
-	void RevealEnemyTile(const ATile* InTile) const;
-	void UpdateEnemyMoveVision(const ATile* OldTile, const ATile* NewTile) const;
+	void RevealEnemyTile(ATile* InTile) const;
+	void UpdateEnemyMoveVision(ATile* OldTile, ATile* NewTile) const;
 
 	/**
 	 * RoomRoleAssignmentRule에 의해 특정 역할을 가진 Room이 될 수 있는 후보군을 수집하는 함수입니다.
@@ -60,7 +60,6 @@ public:
 private:
 	void UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile);
 	void SetRoomVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const;
-	void SetTileStackVisionState(const ATile* InTile, const ETileVisionState VisionState) const;
 
 	// Tile 관련 함수지만, 시야 판정에 무게를 두는 함수기 때문에 RoomManager에서 구현합니다.
 	bool IsTileVisibleByPlayer(const ATile* InTile) const;

@@ -21,7 +21,7 @@ public:
 	void ProcessTelegraphPlan() const;
 	
 	//~ Begin ICombatInterface
-	virtual void UpdateHiddenByTile(const ATile* Tile) override;
+	virtual void UpdateHiddenByTile_Implementation(const ATile* Tile) override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
 	//~ End of ICombatInterface
@@ -31,7 +31,7 @@ public:
 	const FBFSRange& GetAbilityRange() const;
 
 protected:
-	virtual void OnMoveTileChanged(const ATile* OldTile, const ATile* NewTile) override;
+	virtual void OnMoveTileChanged(ATile* OldTile, ATile* NewTile) const override;
 
 protected:
 	/** 캐릭터의 사정거리입니다. */

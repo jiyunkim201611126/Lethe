@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "LetheCharacterBase.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "PlayerCharacterBase.generated.h"
@@ -22,6 +21,9 @@ public:
 	virtual void SetPlayerOrderIndex(const int32 Index) override;
 	virtual int32 GetPlayerOrderIndex() const override;
 	//~ End of IPlayerCharacterInterface
+
+protected:
+	virtual void OnMoveTileChanged(ATile* OldTile, ATile* NewTile) override;
 
 protected:
 	UPROPERTY(VisibleAnywhere)

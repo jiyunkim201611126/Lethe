@@ -3,6 +3,7 @@
 #include "PlayerCharacterBase.h"
 
 #include "Components/WidgetComponent.h"
+#include "Lethe/Manager/Tile/RoomManagerSubsystem.h"
 
 APlayerCharacterBase::APlayerCharacterBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -29,4 +30,12 @@ void APlayerCharacterBase::SetPlayerOrderIndex(const int32 Index)
 int32 APlayerCharacterBase::GetPlayerOrderIndex() const
 {
 	return PlayerOrderIndex;
+}
+
+void APlayerCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile)
+{
+	if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
+	{
+		RoomManagerSubsystem->NotifyCharacterTileChanged(this, OldTile, NewTile);
+	}
 }

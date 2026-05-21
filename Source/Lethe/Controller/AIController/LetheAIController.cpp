@@ -117,16 +117,16 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 				},
 				[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 				{
-					if (TileData && TileData->TileActor.IsValid())
+					if (TileData && TileData->TopTile.IsValid())
 					{
-						if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+						if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
 						{
 							if (ActorOnTile->Implements<UPlayerCharacterInterface>())
 							{
 								if (OutNearestTiles.IsEmpty() || Distance == Depth)
 								{
 									Distance = Depth;
-									OutNearestTiles.Add(TileData->TileActor.Get());
+									OutNearestTiles.Add(TileData->TopTile.Get());
 									return true;
 								}
 								if (!OutNearestTiles.IsEmpty() && Distance != Depth)
@@ -166,7 +166,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		{
 			if (TileData)
 			{
-				if (ATile* CandidateTile = TileData->TileActor.Get())
+				if (ATile* CandidateTile = TileData->TopTile.Get())
 				{
 					if (CandidateTile != TargetTile)
 					{
@@ -282,9 +282,9 @@ bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 M
 				[TileManagerSubsystem](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 				{
 					// EnemyAI가 이동 가능한 좌표만 선택합니다.
-					if (TileData && TileData->TileActor.IsValid())
+					if (TileData && TileData->TopTile.IsValid())
 					{
-						return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TileActor.Get());
+						return TileManagerSubsystem->CanEnemyAIMoveToTile(TileData->TopTile.Get());
 					}
 					return false;
 				});
@@ -422,7 +422,7 @@ void ALetheAIController::StartCombat()
 {
 	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
+	URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
 	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!ControlledEnemy || !TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
 	{
@@ -431,7 +431,7 @@ void ALetheAIController::StartCombat()
 	
 	bIsCombating = true;
 	
-	if (ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
+	if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
 	{
 		RoomManagerSubsystem->RevealEnemyTile(CurrentTile);
 		ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ControlledEnemy, CurrentTile);

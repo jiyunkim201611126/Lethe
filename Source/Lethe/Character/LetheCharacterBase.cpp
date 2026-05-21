@@ -55,13 +55,16 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 
 	if (bTeleport)
 	{
-		// TargetTile로 즉시 이동 후 Hidden도 갱신합니다.
+		// TargetTile로 즉시 이동합니다.
 		if (!PathTiles.IsEmpty())
 		{
-			const ATile* TargetTile = PathTiles.Last();
+			ATile* TargetTile = PathTiles.Last();
 			FVector TargetTileLocation = TargetTile->GetActorLocation();
 			TargetTileLocation.Z = TargetTileLocation.Z + ZOffset;
 			SetActorLocation(TargetTileLocation);
+			
+			OnMoveTileChanged(nullptr, TargetTile);
+			
 			// Hidden 상태를 갱신합니다. PlayerCharacter는 구현되지 않았고, Enemy에서만 동작합니다.
 			if (Implements<UTileVisionAffectedInterface>())
 			{
@@ -195,7 +198,7 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 	}
 }
 
-void ALetheCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile) const
+void ALetheCharacterBase::OnMoveTileChanged(ATile* PreviousTile, ATile* CurrentTile)
 {
 }
 

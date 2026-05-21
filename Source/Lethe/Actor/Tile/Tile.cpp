@@ -4,8 +4,6 @@
 
 #include "Tile.h"
 
-#include "Lethe/LetheLog.h"
-
 ATile::ATile(const FObjectInitializer& ObjectInitializer)
 {
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -28,18 +26,10 @@ void ATile::Init(const TArray<UStaticMesh*>& Meshes, const FCubeCoord& InCubeCoo
 	{
 		TextRender->SetText(FText::Format(FText::FromString(TEXT("[{0}, {1}, {2}]\nRoom : {3}")), CubeCoord.Q, CubeCoord.R, CubeCoord.S, InRoomId));
 	}
-	else
-	{
-		// 꼭대기 타일이 아닌 경우 무조건 표시합니다.
-		TileVisionState = ETileVisionState::Visible;
-		SetActorHiddenInGame(false);
-		return;
-	}
 
 	if (bUseTileVisionLogic)
 	{
-		SetActorHiddenInGame(true);
-		SetTileTraceIgnore(true);
+		SetTileVisionState(ETileVisionState::Hidden);
 	}
 }
 
@@ -121,12 +111,6 @@ void ATile::UnhighlightActorByAbility_Implementation()
 
 void ATile::SetTileVisionState(const ETileVisionState VisionState)
 {
-	if (!IsTopTile())
-	{
-		LETHE_LOG(LogTile, Error, "꼭대기 타일이 아닌 타일의 VisionState 변경이 시도되었습니다.");
-		return;
-	}
-	
 	if (TileVisionState == VisionState)
 	{
 		return;
@@ -142,8 +126,15 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 			TextRender->SetVisibility(IsTopTile());
 			SetTileTraceIgnore(false);
 			break;
-		case ETileVisionState::Explored:
+		case ETileVisionState::Recognizable:
+			SetActorHiddenInGame(false);
 			TextRender->SetVisibility(false);
+			SetTileTraceIgnore(true);
+			break;
+		case ETileVisionState::Hidden:
+			SetActorHiddenInGame(true);
+			TextRender->SetVisibility(false);
+			SetTileTraceIgnore(true);
 			break;
 		default:
 			break;

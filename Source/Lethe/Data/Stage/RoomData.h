@@ -31,7 +31,5 @@ struct FRoomData
 	UPROPERTY()
 	TArray<TWeakObjectPtr<ATile>> VisibleEntranceTiles;
 
-	/** 현재 Room 내부에 있는 플레이어 캐릭터 수입니다. */
-	UPROPERTY()
-	int32 PlayerCharacterCount = 0;
+	uint8 bIsVisited : 1 = false;
 };

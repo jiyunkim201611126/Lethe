@@ -425,7 +425,7 @@ namespace TileGeneratorInternal
 	//타일 생성
 	void MakeTileActor(UWorld* World, TMap<FCubeCoord, FTileData>& TileDataMap, TMap<int32, FRoomData>& RoomDataMap, const FStageData* StageData)
 	{
-		TMap<FCubeCoord, TWeakObjectPtr<ATile>> TopTileByCoord;
+		TMap<FCubeCoord, TArray<TWeakObjectPtr<ATile>>> TilesByCoord;
 		
 		for (auto& Pair : TileDataMap)
 		{
@@ -439,6 +439,12 @@ namespace TileGeneratorInternal
 				WorldPosition.Z += 40.f;
 				
 				ATile* TileActor = World->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
+
+				TilesByCoord.FindOrAdd(Pair.Key).Add(TileActor);
+				if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
+				{
+					RoomData->RoomTiles.Add(TileActor);
+				}
 		
 				// 타일의 중심 메쉬 결정을 위한 코드
 				TArray<UStaticMesh*> TileMeshes;
@@ -501,24 +507,19 @@ namespace TileGeneratorInternal
 					// 좌표에 해당하는 TileData에 꼭대기 타일만 할당합니다.
 					if (FTileData* TileData = TileDataMap.Find(Pair.Key))
 					{
-						TileData->TileActor = TileActor;
-					}
+						TileData->TopTile = TileActor;
 
-					// RoomData에 꼭대기 타일만 할당합니다.
-					if (FRoomData* RoomData = RoomDataMap.Find(Pair.Value.RoomId))
-					{
-						RoomData->RoomTiles.Add(TileActor);
-					}
-
-					// 꼭대기 타일이 아닌 모든 타일에게 꼭대기 타일을 할당합니다.
-					for (ATile* NonTopTile : NonTopTiles)
-					{
-						NonTopTile->SetTopTile(TileActor);
-					}
+						TileData->UnderTiles.Reserve(NonTopTiles.Num());
+						
+						// 꼭대기 타일이 아닌 모든 타일에게 꼭대기 타일을 할당합니다.
+						for (ATile* NonTopTile : NonTopTiles)
+						{
+							NonTopTile->SetTopTile(TileActor);
+							TileData->UnderTiles.Add(NonTopTile);
+						}
 					
-					NonTopTiles.Empty();
-
-					TopTileByCoord.Emplace(Pair.Key, TileActor);
+						NonTopTiles.Empty();
+					}
 				}
 				else
 				{
@@ -537,12 +538,9 @@ namespace TileGeneratorInternal
 			
 			for (const FCubeCoord& EntranceCoord : RoomData.VisibleEntranceCoords)
 			{
-				if (const auto* Tile = TopTileByCoord.Find(EntranceCoord))
+				if (const auto* Tiles = TilesByCoord.Find(EntranceCoord))
 				{
-					if (Tile && Tile->IsValid())
-					{
-						RoomData.VisibleEntranceTiles.Add(Tile->Get());
-					}
+					RoomData.VisibleEntranceTiles.Append(*Tiles);
 				}
 			}
 		}

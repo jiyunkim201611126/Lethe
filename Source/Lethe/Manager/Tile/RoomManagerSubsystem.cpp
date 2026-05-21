@@ -6,6 +6,7 @@
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Data/Stage/RoomRoleAssignmentRuleData.h"
 #include "Lethe/Interface/TileVisionAffectedInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
@@ -19,205 +20,28 @@ void URoomManagerSubsystem::Deinitialize()
 
 void URoomManagerSubsystem::Clear()
 {
+	if (const UWorld* World = GetWorld())
+	{
+		for (auto& Pair : RoomRevealTimerHandles)
+		{
+			World->GetTimerManager().ClearTimer(Pair.Value);
+		}
+	}
+	
 	RoomDataMap.Empty();
 	RoleAssignedRoomIds.Empty();
+	PlayerToTile.Empty();
+	RecognizableCoords.Empty();
+	TemporarilyVisibleRoomIds.Empty();
+	RoomRevealTimerHandles.Empty();
+	EnemyVisibleCoords.Empty();
+	PreviousVisionStates.Empty();
 }
 
 void URoomManagerSubsystem::SetRoomData(TMap<int32, FRoomData>&& InRoomData)
 {
 	Clear();
 	RoomDataMap = MoveTemp(InRoomData);
-}
-
-void URoomManagerSubsystem::NotifyActorTileChanged(const AActor* InActor, const ATile* OldTile, const ATile* NewTile)
-{
-	if (!InActor || !NewTile)
-	{
-		// OldTile은 nullptr일 수 있습니다.
-		return;
-	}
-
-	if (InActor->Implements<UPlayerCharacterInterface>())
-	{
-		UpdatePlayerRoomState(OldTile, NewTile);
-	}
-}
-
-void URoomManagerSubsystem::RevealEnemyTile(ATile* InTile) const
-{
-	InTile->SetTileVisionState(ETileVisionState::Visible);
-}
-
-void URoomManagerSubsystem::UpdateEnemyMoveVision(ATile* OldTile, ATile* NewTile) const
-{
-	if (!OldTile || !NewTile)
-	{
-		return;
-	}
-	
-	// 직전 타일이 플레이어에 의해 Visible이 된 상태가 아니라면 Explored로 변경합니다.
-	if (!IsTileVisibleByPlayer(OldTile) && OldTile->GetTileVisionState() == ETileVisionState::Visible)
-	{
-		OldTile->SetTileVisionState(ETileVisionState::Explored);
-	}
-
-	// 새로 밟게 된 타일은 Visible 상태로 변경합니다.
-	NewTile->SetTileVisionState(ETileVisionState::Visible);
-}
-
-void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile)
-{
-	int32 OldRoomId = INDEX_NONE;
-	int32 NewRoomId = INDEX_NONE;
-	if (OldTile)
-	{
-		OldRoomId = OldTile->GetRoomId();
-	}
-	if (NewTile)
-	{
-		NewRoomId = NewTile->GetRoomId();
-	}
-
-	// 동일한 Room에서 움직인 경우 얼리리턴합니다.
-	if (OldRoomId == NewRoomId)
-	{
-		return;
-	}
-
-	// 다른 Room으로 이동한 경우 들어오는 분기입니다.
-	FRoomData* OldRoomData = GetMutableRoomData(OldRoomId);
-	FRoomData* NewRoomData = GetMutableRoomData(NewRoomId);
-	if (OldRoomData)
-	{
-		--OldRoomData->PlayerCharacterCount;
-		if (OldRoomData->PlayerCharacterCount <= 0)
-		{
-			SetRoomVisionState(OldRoomId, OldRoomData, ETileVisionState::Explored);
-		}
-	}
-	if (NewRoomData)
-	{
-		if (NewRoomData->PlayerCharacterCount <= 0)
-		{
-			SetRoomVisionState(NewRoomId, NewRoomData, ETileVisionState::Visible);
-		}
-		++NewRoomData->PlayerCharacterCount;
-	}
-}
-
-void URoomManagerSubsystem::SetRoomVisionState(const int32 InRoomId, FRoomData* RoomData, const ETileVisionState VisionState) const
-{
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!RoomData || !TileManagerSubsystem)
-	{
-		return;
-	}
-
-	// 해당 Room에 소속된 모든 타일의 TileVisionState를 변경합니다.
-	for (const auto& RoomTile : RoomData->RoomTiles)
-	{
-		if (RoomTile.IsValid())
-		{
-			RoomTile->SetTileVisionState(VisionState);
-			if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(RoomTile.Get()))
-			{
-				if (ActorOnTile->Implements<UTileVisionAffectedInterface>())
-				{
-					ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ActorOnTile, RoomTile.Get());
-				}
-			}
-		}
-	}
-
-	if (VisionState == ETileVisionState::Visible)
-	{
-		// 방문한 경우 입구 타일까지 방문 처리합니다.
-		for (const auto& EntranceTile : RoomData->VisibleEntranceTiles)
-		{
-			if (EntranceTile.IsValid())
-			{
-				EntranceTile->SetTileVisionState(ETileVisionState::Visible);
-				if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
-				{
-					if (ActorOnTile->Implements<UTileVisionAffectedInterface>())
-					{
-						ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ActorOnTile, EntranceTile.Get());
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		// Room에서 빠져나간 경우, 해당 Room의 타일 중 다른 캐릭터가 방문 중인 상태인 Room의 EntranceTile은 다시 시야를 재확보합니다.
-		for (const auto& Pair : RoomDataMap)
-		{
-			if (Pair.Key == InRoomId)
-			{
-				continue;
-			}
-
-			for (const auto& EntranceTile : Pair.Value.VisibleEntranceTiles)
-			{
-				// 현재 플레이어 캐릭터가 아무도 없는 Room이라면 시야를 재확보하지 않습니다.
-				if (Pair.Value.PlayerCharacterCount <= 0)
-				{
-					continue;
-				}
-				
-				if (EntranceTile.IsValid() && EntranceTile->GetRoomId() == InRoomId)
-				{
-					EntranceTile->SetTileVisionState(ETileVisionState::Visible);
-					if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(EntranceTile.Get()))
-					{
-						if (ActorOnTile->Implements<UTileVisionAffectedInterface>())
-						{
-							ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ActorOnTile, EntranceTile.Get());
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-bool URoomManagerSubsystem::IsTileVisibleByPlayer(const ATile* InTile) const
-{
-	if (!InTile)
-	{
-		return false;
-	}
-
-	// 타일에 해당하는 RoomData를 가져옵니다.
-	const int32 CheckingRoomId = InTile->GetRoomId();
-	if (const FRoomData* RoomData = GetRoomData(CheckingRoomId))
-	{
-		// 해당 Room 안에 플레이어 캐릭터가 1명이라도 있다면 true를 반환합니다.
-		if (RoomData->PlayerCharacterCount > 0)
-		{
-			return true;
-		}
-	}
-
-	// 플레이어가 입장해있는 Room의 EntranceTile 중 InTile이 존재하는지 확인합니다.
-	for (const auto& Pair : RoomDataMap)
-	{
-		if (Pair.Key == CheckingRoomId)
-		{
-			continue;
-		}
-		if (Pair.Value.PlayerCharacterCount <= 0)
-		{
-			continue;
-		}
-		
-		if (Pair.Value.VisibleEntranceTiles.Contains(InTile))
-		{
-			return true;
-		}
-	}
-	
-	return false;
 }
 
 bool URoomManagerSubsystem::TryFindRoomRoleCandidates(const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData, TArray<FRoomRolePlacementCandidate>& OutCandidates) const
@@ -358,6 +182,308 @@ void URoomManagerSubsystem::MarkRoomRoleAssigned(const FRoomRolePlacementCandida
 	{
 		RoleAssignedRoomIds.Add(Candidate.RoomId);
 	}
+}
+
+void URoomManagerSubsystem::NotifyCharacterTileChanged(AActor* InCharacter, const ATile* OldTile, ATile* NewTile)
+{
+	if (!InCharacter || !NewTile)
+	{
+		// OldTile은 nullptr일 수 있습니다.
+		return;
+	}
+
+	if (InCharacter->Implements<UPlayerCharacterInterface>())
+	{
+		PlayerToTile.Add(InCharacter, NewTile);
+		UpdatePlayerRoomState(OldTile, NewTile);
+		RefreshPlayerVision();
+	}
+	
+	if (InCharacter->IsA<AEnemyCharacterBase>())
+	{
+		if (OldTile)
+		{
+			EnemyVisibleCoords.Remove(OldTile->GetCubeCoord());
+		}
+		EnemyVisibleCoords.Add(NewTile->GetCubeCoord());
+		RecognizableCoords.Add(NewTile->GetCubeCoord());
+		ApplyVisionSnapshot();
+	}
+}
+
+void URoomManagerSubsystem::RevealEnemyTile(const ATile* InTile)
+{
+	if (!InTile)
+	{
+		return;
+	}
+	
+	EnemyVisibleCoords.Add(InTile->GetCubeCoord());
+	RecognizableCoords.Add(InTile->GetCubeCoord());
+	ApplyVisionSnapshot();
+}
+
+void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const ATile* NewTile)
+{
+	int32 OldRoomId = INDEX_NONE;
+	int32 NewRoomId = INDEX_NONE;
+	if (OldTile)
+	{
+		OldRoomId = OldTile->GetRoomId();
+	}
+	if (NewTile)
+	{
+		NewRoomId = NewTile->GetRoomId();
+	}
+
+	// 동일한 Room에서 움직인 경우 얼리리턴합니다.
+	if (OldRoomId == NewRoomId)
+	{
+		return;
+	}
+
+	// 다른 Room으로 이동한 경우 Vision에 대한 처리를 시작합니다.
+	if (FRoomData* NewRoomData = GetMutableRoomData(NewRoomId))
+	{
+		// 해당 Room에 대한 첫 입장 시에만 Visible로 변경합니다.
+		if (!NewRoomData->bIsVisited)
+		{
+			NewRoomData->bIsVisited = true;
+			TemporarilyVisibleRoomIds.Add(NewRoomId);
+
+			TSet<FCubeCoord> RoomCoords;
+			TSet<FCubeCoord> BorderCoords;
+			CollectRoomBorderCoords(*NewRoomData, RoomCoords, BorderCoords);
+			RecognizableCoords.Append(RoomCoords);
+			RecognizableCoords.Append(BorderCoords);
+
+			// 잠시 후 Recognizable로 변경합니다.
+			FTimerHandle& TimerHandle = RoomRevealTimerHandles.FindOrAdd(NewRoomId);
+			TWeakObjectPtr<URoomManagerSubsystem> WeakThis = MakeWeakObjectPtr(this);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle,
+				[WeakThis, NewRoomId]()
+				{
+					if (WeakThis.IsValid())
+					{
+						WeakThis->TemporarilyVisibleRoomIds.Remove(NewRoomId);
+						WeakThis->RoomRevealTimerHandles.Remove(NewRoomId);
+						WeakThis->ApplyVisionSnapshot();
+					}
+				}, 3.f, false);
+		}
+	}
+}
+
+void URoomManagerSubsystem::RefreshPlayerVision()
+{
+	for (auto It = PlayerToTile.CreateIterator(); It; ++It)
+	{
+		if (!It.Key().IsValid() || !It.Value().IsValid())
+		{
+			It.RemoveCurrent();
+		}
+	}
+	
+	TSet<FCubeCoord> PlayerVisibleCoords;
+	CollectPlayerVisibleCoords(PlayerVisibleCoords);
+	RecognizableCoords.Append(PlayerVisibleCoords);
+	ApplyVisionSnapshot(PlayerVisibleCoords);
+}
+
+void URoomManagerSubsystem::CollectPlayerVisibleCoords(TSet<FCubeCoord>& OutCoords) const
+{
+	OutCoords.Reset();
+
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	for (const auto& Pair : PlayerToTile)
+	{
+		if (!Pair.Key.IsValid() || !Pair.Value.IsValid())
+		{
+			continue;
+		}
+
+		const ATile* PlayerTile = Pair.Value.Get();
+		const int32 PlayerFloor = TileManagerSubsystem->GetTileFloor(PlayerTile);
+		if (PlayerFloor == INDEX_NONE)
+		{
+			continue;
+		}
+
+		TSet<FCubeCoord> VisibleCoordsFromTile;
+		TileManagerSubsystem->TileBFS(PlayerTile->GetCubeCoord(), 3, EBFSType::Through, VisibleCoordsFromTile,
+			[PlayerFloor](const FTileData* CurrentTileData, const FTileData* NextTileData)
+			{
+				if (!CurrentTileData || !NextTileData)
+				{
+					return false;
+				}
+
+				// 플레이어보다 높은 타일은 그 타일까지만 보이고, 그 너머로는 시야가 이어지지 않습니다.
+				return CurrentTileData->Floor <= PlayerFloor;
+			},
+			[](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+			{
+				return Depth <= 3;
+			});
+
+		OutCoords.Append(VisibleCoordsFromTile);
+	}
+}
+
+void URoomManagerSubsystem::CollectRoomCoords(const FRoomData& RoomData, TSet<FCubeCoord>& OutCoords) const
+{
+	for (const auto& RoomTile : RoomData.RoomTiles)
+	{
+		if (RoomTile.IsValid())
+		{
+			OutCoords.Add(RoomTile->GetCubeCoord());
+		}
+	}
+}
+
+void URoomManagerSubsystem::CollectRoomBorderCoords(const FRoomData& RoomData, TSet<FCubeCoord>& OutRoomCoords, TSet<FCubeCoord>& OutBorderCoords) const
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	CollectRoomCoords(RoomData, OutRoomCoords);
+
+	for (const FCubeCoord& RoomCoord : OutRoomCoords)
+	{
+		for (int32 Direction = 0; Direction < 6; ++Direction)
+		{
+			const FCubeCoord NeighborCoord = RoomCoord + FCubeCoord::GetDirection(Direction);
+			if (OutRoomCoords.Contains(NeighborCoord))
+			{
+				continue;
+			}
+
+			if (TileManagerSubsystem->GetTile(NeighborCoord))
+			{
+				OutBorderCoords.Add(NeighborCoord);
+			}
+		}
+	}
+}
+
+void URoomManagerSubsystem::ApplyVisionSnapshot()
+{
+	TSet<FCubeCoord> PlayerVisibleCoords;
+	CollectPlayerVisibleCoords(PlayerVisibleCoords);
+	ApplyVisionSnapshot(PlayerVisibleCoords);
+}
+
+void URoomManagerSubsystem::ApplyVisionSnapshot(const TSet<FCubeCoord>& PlayerVisibleCoords)
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	// 좌표에 해당하는 타일이 이번에 어떤 VisionState가 되어야 하는지 기록합니다.
+	TMap<FCubeCoord, ETileVisionState> DesiredVisionStates;
+
+	// Room 입장 직후 상태라면 해당 Room 타일들의 좌표를 가져와 Visible로 기록합니다.
+	for (const int32 RoomId : TemporarilyVisibleRoomIds)
+	{
+		if (const FRoomData* RoomData = GetRoomData(RoomId))
+		{
+			TSet<FCubeCoord> RoomCoords;
+			CollectRoomCoords(*RoomData, RoomCoords);
+			for (const FCubeCoord& Coord : RoomCoords)
+			{
+				DesiredVisionStates.Add(Coord, ETileVisionState::Visible);
+			}
+		}
+	}
+
+	// 플레이어 시야에 들어와있는 좌표를 가져와 Visible로 기록합니다.
+	for (const FCubeCoord& Coord : PlayerVisibleCoords)
+	{
+		DesiredVisionStates.Add(Coord, ETileVisionState::Visible);
+	}
+
+	// 전투 중인 적이 서있는 좌표를 가져와 Visible로 기록합니다.
+	for (const FCubeCoord& Coord : EnemyVisibleCoords)
+	{
+		DesiredVisionStates.Add(Coord, ETileVisionState::Visible);
+	}
+
+	// 인식 가능한 모든 좌표를 가져와, 아직 기록되지 않은 좌표에만 Recognizable로 기록합니다.
+	for (const FCubeCoord& Coord : RecognizableCoords)
+	{
+		if (!DesiredVisionStates.Contains(Coord))
+		{
+			DesiredVisionStates.Add(Coord, ETileVisionState::Recognizable);
+		}
+	}
+
+	for (const auto& Pair : DesiredVisionStates)
+	{
+		if (const ETileVisionState* PreviousVisionState = PreviousVisionStates.Find(Pair.Key))
+		{
+			if (*PreviousVisionState == Pair.Value)
+			{
+				// 해당 좌표의 타일에 Vision 변화가 없다면 스킵합니다.
+				continue;
+			}
+		}
+
+		// 좌표에 해당하는 모든 타일의 Vision을 업데이트합니다.
+		ATile* TopTile = TileManagerSubsystem->GetTile(Pair.Key);
+		if (!TopTile)
+		{
+			continue;
+		}
+		
+		if (auto* UnderTiles = TileManagerSubsystem->GetUnderTiles(Pair.Key))
+		{
+			for (auto& UnderTile : *UnderTiles)
+			{
+				if (UnderTile.IsValid())
+				{
+					UnderTile->SetTileVisionState(Pair.Value);
+				}
+			}
+		}
+
+		TopTile->SetTileVisionState(Pair.Value);
+		if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TopTile))
+		{
+			if (ActorOnTile->Implements<UTileVisionAffectedInterface>())
+			{
+				ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ActorOnTile, TopTile);
+			}
+		}
+	}
+
+	PreviousVisionStates = MoveTemp(DesiredVisionStates);
+}
+
+bool URoomManagerSubsystem::IsTileVisibleByPlayer(const ATile* InTile) const
+{
+	if (!InTile)
+	{
+		return false;
+	}
+
+	TSet<FCubeCoord> PlayerVisibleCoords;
+	CollectPlayerVisibleCoords(PlayerVisibleCoords);
+	if (PlayerVisibleCoords.Contains(InTile->GetCubeCoord()))
+	{
+		return true;
+	}
+
+	return TemporarilyVisibleRoomIds.Contains(InTile->GetRoomId());
 }
 
 FRoomData* URoomManagerSubsystem::GetMutableRoomData(const int32 RoomId)

@@ -508,12 +508,21 @@ ATile* UTileManagerSubsystem::GetTile(const FCubeCoord& InCubeCoord) const
 {
 	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
 	{
-		if (TileData->TileActor.IsValid())
+		if (TileData->TopTile.IsValid())
 		{
-			return TileData->TileActor.Get();
+			return TileData->TopTile.Get();
 		}
 	}
 
+	return nullptr;
+}
+
+const TArray<TWeakObjectPtr<ATile>>* UTileManagerSubsystem::GetUnderTiles(const FCubeCoord& InCubeCoord) const
+{
+	if (const FTileData* TileData = TileDataMap.Find(InCubeCoord))
+	{
+		return &TileData->UnderTiles;
+	}
 	return nullptr;
 }
 
@@ -536,22 +545,11 @@ void UTileManagerSubsystem::MapTileAndActor(ATile* InTile, AActor* InActor)
 		return;
 	}
 
-	const ATile* OldTile = nullptr;
-	if (const auto* OldTileWeakPtr = ActorToTileMap.Find(InActor))
-	{
-		OldTile = OldTileWeakPtr->Get();
-	}
-
 	UnmapByTile(InTile);
 	UnmapByActor(InActor);
 	
 	TileToActorMap.Add(InTile, InActor);
 	ActorToTileMap.Add(InActor, InTile);
-
-	if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
-	{
-		RoomManagerSubsystem->NotifyActorTileChanged(InActor, OldTile, InTile);
-	}
 }
 
 void UTileManagerSubsystem::UnmapByTile(ATile* InTile)

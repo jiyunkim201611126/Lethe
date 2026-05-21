@@ -43,9 +43,9 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 					},
 					[TileManagerSubsystem, &CombatStartingEnemies](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 					{
-						if (TileData && TileData->TileActor.IsValid())
+						if (TileData && TileData->TopTile.IsValid())
 						{
-							if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+							if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
 							{
 								if (AEnemyCharacterBase* Enemy = Cast<AEnemyCharacterBase>(ActorOnTile))
 								{

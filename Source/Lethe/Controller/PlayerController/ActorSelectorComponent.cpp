@@ -145,12 +145,12 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
 						// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
-						if (!NextTileData || !NextTileData->TileActor.IsValid())
+						if (!NextTileData || !NextTileData->TopTile.IsValid())
 						{
 							return false;
 						}
 						
-						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TileActor.Get()))
+						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TopTile.Get()))
 						{
 							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
 							{
@@ -165,12 +165,12 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 					if (QueryType == ETileRangeQueryType::PlayerMove)
 					{
 						// 목적지 좌표에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
-						if (!TileData || !TileData->TileActor.IsValid())
+						if (!TileData || !TileData->TopTile.IsValid())
 						{
 							return false;
 						}
 
-						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(TileData->TileActor.Get()))
+						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
 						{
 							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
 							{

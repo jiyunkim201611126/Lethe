@@ -88,7 +88,7 @@ void AEnemyCharacterBase::UpdateHiddenByTile_Implementation(const ATile* Tile)
 	switch (Tile->GetTileVisionState())
 	{
 	case ETileVisionState::Hidden:
-	case ETileVisionState::Explored:
+	case ETileVisionState::Recognizable:
 		if (!IsHidden())
 		{
 			SetActorHiddenInGame(true);
@@ -105,7 +105,7 @@ void AEnemyCharacterBase::UpdateHiddenByTile_Implementation(const ATile* Tile)
 	}
 }
 
-void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile) const
+void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile)
 {
 	const ALetheAIController* AIController = GetController<ALetheAIController>();
 	if (!AIController || !OldTile || !NewTile)
@@ -119,9 +119,9 @@ void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile) cons
 		return;
 	}
 	
-	if (const URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
+	if (URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>())
 	{
-		RoomManagerSubsystem->UpdateEnemyMoveVision(OldTile, NewTile);
+		RoomManagerSubsystem->NotifyCharacterTileChanged(this, OldTile, NewTile);
 	}
 }
 

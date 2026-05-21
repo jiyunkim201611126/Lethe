@@ -16,7 +16,7 @@ class UStageInitData;
 struct FStageData;
 
 /**
- * 타일 생성을 책임지는 월드 서브시스템
+ * 타일 생성 및 타일과 관련된 정보 조회를 담당하는 매니저 클래스입니다.
  */
 UCLASS(Config = Game)
 class LETHE_API UTileManagerSubsystem : public UWorldSubsystem
@@ -58,6 +58,7 @@ public:
 	bool CanEnemyAIMoveToTile(const ATile* Tile) const;
 	
 	ATile* GetTile(const FCubeCoord& InCubeCoord) const;
+	const TArray<TWeakObjectPtr<ATile>>* GetUnderTiles(const FCubeCoord& InCubeCoord) const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetTileFloor(const ATile* Tile) const;

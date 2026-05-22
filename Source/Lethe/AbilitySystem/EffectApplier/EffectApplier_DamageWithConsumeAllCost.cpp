@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 #include "Lethe/LetheLog.h"
-#include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Interface/CombatInterface.h"
 
 UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost()
@@ -16,14 +16,14 @@ UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost
 
 bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
-	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()));
+	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
 	if (!bPreview)
 	{
-		while (SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) >= 1.f)
+		while (SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) >= 1.f)
 		{
-			const float PrevCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+			const float PrevCost = SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute());
 			ApplyCost(SourceASC);
-			const float NewCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+			const float NewCost = SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute());
 			
 			// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
 			if (PrevCost == NewCost)
@@ -37,7 +37,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemC
 	}
 	else
 	{
-		const int32 StartCost = FMath::FloorToInt(SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()));
+		const int32 StartCost = FMath::FloorToInt(SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
 		for (int32 Index = 0; Index < StartCost; Index++)
 		{
 			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
@@ -78,7 +78,7 @@ int32 UEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbi
 		AllDamage += Pair.Value.GetValueAtLevel(InLevel);
 	}
 	// Preview와 흡사한 상황으로, 설명에 텍스트를 표시하기 위한 값을 가져가는 상황이기 때문에 Cost와 곱해서 반환합니다.
-	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute()) : 1.f);
+	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) : 1.f);
 }
 
 TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
@@ -93,7 +93,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview
 		return false;
 	}
 	
-	const int32 CurrentCost = SourceASC->GetNumericAttribute(ULetheAttributeSet::GetCostAttribute());
+	const int32 CurrentCost = SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute());
 	OutSpecHandles.Reserve(CurrentCost);
 	for (int32 Index = 0; Index < CurrentCost; ++Index)
 	{

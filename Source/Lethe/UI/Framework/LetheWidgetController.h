@@ -10,6 +10,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class ULetheAbilitySystemComponent;
 class ULetheAttributeSet;
+class UPlayerAttributeSet;
 
 /** Widget Controller의 멤버 변수 초기화를 간편화하는 구조체입니다. */
 USTRUCT()
@@ -18,20 +19,20 @@ struct FWidgetControllerParams
 	GENERATED_BODY()
 
 	FWidgetControllerParams() {}
-	FWidgetControllerParams(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
-	: PlayerController(PC), PlayerState(PS), AbilitySystemComponent(ASC), AttributeSet(AS) {}
+	FWidgetControllerParams(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
+	: PlayerController(PC), AbilitySystemComponent(ASC), AttributeSet(AS), PlayerAttributeSet(PAS) {}
 
 	UPROPERTY()
 	APlayerController* PlayerController = nullptr;
-
-	UPROPERTY()
-	APlayerState* PlayerState = nullptr;
 
 	UPROPERTY()
 	UAbilitySystemComponent* AbilitySystemComponent = nullptr;
 
 	UPROPERTY()
 	UAttributeSet* AttributeSet = nullptr;
+
+	UPROPERTY()
+	UAttributeSet* PlayerAttributeSet = nullptr;
 };
 
 /**
@@ -44,14 +45,17 @@ struct FAbilitySystemReference
 	GENERATED_BODY()
 
 	FAbilitySystemReference() {}
-	FAbilitySystemReference(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
-	: AbilitySystemComponent(ASC), AttributeSet(AS) {}
+	FAbilitySystemReference(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
+	: AbilitySystemComponent(ASC), AttributeSet(AS), PlayerAttributeSet(PAS) {}
 
 	UPROPERTY()
 	TObjectPtr<ULetheAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
 	TObjectPtr<ULetheAttributeSet> AttributeSet;
+
+	UPROPERTY()
+	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;
 };
 
 /**
@@ -67,22 +71,18 @@ class LETHE_API ULetheWidgetController : public UObject
 
 public:
 	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams);
-	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS);
+	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS);
 
 	/** 객체 생성 직후 View에 표시해야 한다면 아래 함수를 활용할 수 있습니다. */
 	UFUNCTION(BlueprintCallable)
 	virtual void BroadcastInitialValue();
 
 	APlayerController* GetPC();
-	APlayerState* GetPS();
 	const TArray<FAbilitySystemReference>& GetAbilitySystemReferences();
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<APlayerController> PlayerController;
-
-	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
-	TObjectPtr<APlayerState> PlayerState;
 
 	/** 해당 배열의 요소들은 PlayerOrderIndex 순서대로 정렬됩니다. */
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")

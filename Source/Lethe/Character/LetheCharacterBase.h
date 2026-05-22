@@ -57,7 +57,7 @@ public:
 	int64 GetCharacterId() const;
 
 protected:
-	void InitAbilityActorInfo() const;
+	virtual void InitAbilityActorInfo() const;
 
 	/**
 	 * Enemy만 재정의하는 함수로, 이동 중 밟고 있는 타일이 가시적으로 갱신되면 호출합니다.

@@ -5,20 +5,24 @@
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
 void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {
 	PlayerController = WidgetControllerParams.PlayerController;
-	PlayerState = WidgetControllerParams.PlayerState;
 
 	AbilitySystemReferences.SetNum(PLAYER_CHARACTER_NUMBER);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
+
+	// Enemy의 경우 PlayerAttributeSet이 nullptr이기 때문에 CastChecked 대신 Cast를 사용합니다.
+	UPlayerAttributeSet* PlayerAttributeSet = Cast<UPlayerAttributeSet>(WidgetControllerParams.PlayerAttributeSet);
 	
 	FAbilitySystemReference AbilitySystemReference;
 	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
 	AbilitySystemReference.AttributeSet = AttributeSet;
+	AbilitySystemReference.PlayerAttributeSet = PlayerAttributeSet;
 
 	const IPlayerCharacterInterface* PlayerCharacter = CastChecked<IPlayerCharacterInterface>(AbilitySystemComponent->GetAvatarActor());
 	const int32 OrderIndex = PlayerCharacter->GetPlayerOrderIndex();
@@ -28,7 +32,7 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	}
 }
 
-void ULetheWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
+void ULetheWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
 }
 
@@ -39,11 +43,6 @@ void ULetheWidgetController::BroadcastInitialValue()
 APlayerController* ULetheWidgetController::GetPC()
 {
 	return PlayerController;
-}
-
-APlayerState* ULetheWidgetController::GetPS()
-{
-	return PlayerState;
 }
 
 const TArray<FAbilitySystemReference>& ULetheWidgetController::GetAbilitySystemReferences()

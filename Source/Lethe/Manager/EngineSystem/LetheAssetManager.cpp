@@ -5,6 +5,7 @@
 #include "AbilitySystemGlobals.h"
 #include "Engine/DataAsset.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -24,7 +25,8 @@ void ULetheAssetManager::StartInitialLoading()
 	FLetheGameplayTags::InitializeNativeGameplayTags();
 
 	// GameplayTags 초기화 직후 Attribute와 Tag를 매핑합니다.
-	ULetheAttributeSet::InitializeAttributeTagMap();
+	ULetheAttributeSet::InitBaseAttributeTagMap();
+	UPlayerAttributeSet::InitializePlayerAttributeTagMap();
 
 	// 커스텀 Context를 사용하기 위해 반드시 호출해줘야 하는 함수입니다.
 	UAbilitySystemGlobals::Get().InitGlobalData();

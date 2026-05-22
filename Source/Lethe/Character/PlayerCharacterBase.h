@@ -7,6 +7,8 @@
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "PlayerCharacterBase.generated.h"
 
+class UPlayerAttributeSet;
+
 UCLASS()
 class LETHE_API APlayerCharacterBase : public ALetheCharacterBase, public IPlayerCharacterInterface
 {
@@ -23,11 +25,16 @@ public:
 	//~ End of IPlayerCharacterInterface
 
 protected:
+	virtual void InitAbilityActorInfo() const override;
+	
 	virtual void OnMoveTileChanged(ATile* OldTile, ATile* NewTile) override;
 
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> MarkerWidgetComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;
 
 private:
 	FLinearColor PersonalColor;

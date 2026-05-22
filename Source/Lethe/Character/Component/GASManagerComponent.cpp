@@ -4,12 +4,10 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/Character/LetheCharacterBase.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
-#include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 
@@ -42,6 +40,10 @@ void UGASManagerComponent::SetAttributeSet(UAttributeSet* InAttributeSet)
 	AttributeSet = InAttributeSet;
 }
 
+void UGASManagerComponent::SetPlayerAttributeSet(UPlayerAttributeSet* InPlayerAttributeSet)
+{
+}
+
 UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -50,51 +52,9 @@ UAbilitySystemComponent* UGASManagerComponent::GetAbilitySystemComponent() const
 void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& AttributeWidgets)
 {
 	ALetheCharacterBase* OwnerCharacter = GetOwner<ALetheCharacterBase>();
-	
 	AbilitySystemComponent->InitAbilityActorInfo(OwnerCharacter, OwnerCharacter);
 
-	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
-	{
-		if (ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-		{
-			switch (GetTeamSide())
-			{
-			case ETeamSide::Player:
-				{
-					ULetheWidgetController* WidgetController = LethePlayerController->InitPlayerUI(GetPawn<APawn>()->GetPlayerState(), AbilitySystemComponent, AttributeSet);
-					for (UUserWidget* AttributeWidget : AttributeWidgets)
-					{
-						CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
-					}
-
-					// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
-					const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();
-					if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
-					{
-						const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks = DeckManagerSubsystem->GetEquippedDecks();
-						if (const FSavedCharacterDeck* CharacterDeck = EquippedDecks.Find(CharacterTag))
-						{
-							// Equipped Deck들을 실제 Ability로 부여합니다.
-							AddCharacterAbilities(CharacterDeck->Deck);
-						}
-					}
-				}
-				break;
-			case ETeamSide::Enemy:
-				{
-					ULetheWidgetController* WidgetController = LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet);
-					for (UUserWidget* AttributeWidget : AttributeWidgets)
-					{
-						CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
-					}
-				}
-				break;
-			default:
-				break;
-			}
-		}
-	}
+	InitUI(AttributeWidgets);
 	
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 	
@@ -103,6 +63,28 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+	}
+}
+
+void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
+{
+	if (GetTeamSide() != ETeamSide::Enemy)
+	{
+		return;
+	}
+	
+	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+	ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController);
+	if (!LethePlayerController)
+	{
+		return;
+	}
+	
+	ULetheWidgetController* WidgetController = LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet);
+	for (UUserWidget* AttributeWidget : AttributeWidgets)
+	{
+		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
 	}
 }
 
@@ -163,21 +145,6 @@ void UGASManagerComponent::OnPlanPhaseStarted() const
 	 */
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_MoveConsumed, 0);
-	
-	if (!TurnStartRecovery)
-	{
-		return;
-	}
-
-	const FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
-	const FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(TurnStartRecovery, 1.f, ContextHandle);
-	if (SpecHandle.IsValid())
-	{
-		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetManaRecoveryAttribute()));
-		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetCostRecoveryAttribute()));
-		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetMoveDistanceRecoveryAttribute()));
-		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
-	}
 }
 
 ETeamSide UGASManagerComponent::GetTeamSide() const

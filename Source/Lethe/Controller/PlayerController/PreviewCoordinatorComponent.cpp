@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "AbilitySystemInterface.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -84,7 +85,13 @@ void UPreviewCoordinatorComponent::ConvertAttributeToTag(const TMap<FGameplayAtt
 {
 	for (const auto& Elem : InMap)
 	{
-		if (const FGameplayTag* AttributeTag = ULetheAttributeSet::AttributesToTags.Find(Elem.Key))
+		const FGameplayTag* AttributeTag = ULetheAttributeSet::BaseAttributesToTags.Find(Elem.Key);
+		if (!AttributeTag)
+		{
+			AttributeTag = UPlayerAttributeSet::PlayerAttributesToTags.Find(Elem.Key);
+		}
+		
+		if (AttributeTag)
 		{
 			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 			if (AttributeTag->MatchesTag(LetheGameplayTags.Attribute_Meta_IncomingDamage))

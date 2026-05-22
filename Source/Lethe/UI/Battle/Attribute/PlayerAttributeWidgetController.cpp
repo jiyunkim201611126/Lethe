@@ -6,18 +6,20 @@
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
+void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
-	Super::BindCallbacks(ASC, AS);
+	check(PAS);
+	Super::BindCallbacks(ASC, AS, PAS);
 	
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetMaxManaAttribute()).AddUObject(this, &ThisClass::OnManaChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetMaxCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMoveDistanceAttribute()).AddUObject(this, &ThisClass::OnMoveDistanceChanged);
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())

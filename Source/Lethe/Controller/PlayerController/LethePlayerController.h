@@ -38,7 +38,7 @@ class LETHE_API ALethePlayerController : public APlayerController
 public:
 	ALethePlayerController();
 
-	ULetheWidgetController* InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS);
+	ULetheWidgetController* InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 	void OnNumberKeyPressed(const int32 InNumber) const;

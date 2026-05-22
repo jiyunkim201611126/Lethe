@@ -13,6 +13,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
+class UPlayerAttributeSet;
 struct FSavedCard;
 
 UCLASS(NotBlueprintable)
@@ -27,9 +28,10 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActorComponent Interface
 
-	/** PlayerState가 아닌 Character가 ASC, AS를 직접 생성하기 때문에, 아래 함수로 넘겨받아 할당합니다. */
+	/** Character가 ASC, AS를 직접 생성하기 때문에, 아래 함수로 넘겨받아 할당합니다. */
 	void SetAbilitySystemComponent(UAbilitySystemComponent* InAbilitySystemComponent);
 	void SetAttributeSet(UAttributeSet* InAttributeSet);
+	virtual void SetPlayerAttributeSet(UPlayerAttributeSet* InPlayerAttributeSet);
 	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	
@@ -41,11 +43,13 @@ public:
 	void OnDied() const;
 
 protected:
+	virtual void InitUI(const TArray<UUserWidget*>& AttributeWidgets);
+	
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
+	virtual void OnPlanPhaseStarted() const;
 
 private:
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
-	void OnPlanPhaseStarted() const;
 
 	ETeamSide GetTeamSide() const;
 
@@ -53,10 +57,6 @@ protected:
 	/** 게임 시작 시 기본으로 적용되어 Attribute를 초기화하는 GameplayEffect입니다. */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
-
-	/** 턴 시작 시 Cost와 Mana를 회복하는 GameplayEffect입니다. */
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
-	TSubclassOf<UGameplayEffect> TurnStartRecovery;
 
 	/**
 	 * MoveAbility를 포함, 시작과 동시에 부여되는 Ability입니다.

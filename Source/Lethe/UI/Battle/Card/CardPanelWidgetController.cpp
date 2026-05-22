@@ -7,7 +7,7 @@
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 
-void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
+void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
 	// Ability가 부여되면 콜백을 받아 해당하는 Card를 생성할 수 있도록 바인드합니다.
 	ASC->OnAbilityGivenDelegate.BindUObject(this, &ThisClass::OnGiveAbility);

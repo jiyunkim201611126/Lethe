@@ -4,6 +4,7 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
+#include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Data/PreviewData.h"
@@ -12,24 +13,25 @@
 void UAttributeWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
 {
 	PlayerController = WidgetControllerParams.PlayerController;
-	PlayerState = WidgetControllerParams.PlayerState;
 
 	// 캐릭터와 1:1 대응되는 WidgetController이므로, 1개만 있으면 됩니다.
 	// 부모 클래스가 PlayerCharacter의 용도로도 사용될 수 있도록 Array로 선언했기 때문에 이처럼 구현합니다.
 	AbilitySystemReferences.Reserve(1);
 	ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(WidgetControllerParams.AbilitySystemComponent);
 	ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(WidgetControllerParams.AttributeSet);
+	UPlayerAttributeSet* PlayerAttributeSet = Cast<UPlayerAttributeSet>(WidgetControllerParams.PlayerAttributeSet);
 	
 	FAbilitySystemReference& AbilitySystemReference = AbilitySystemReferences.Emplace_GetRef();
 	AbilitySystemReference.AbilitySystemComponent = AbilitySystemComponent;
 	AbilitySystemReference.AttributeSet = AttributeSet;
+	AbilitySystemReference.PlayerAttributeSet = PlayerAttributeSet;
 	
 	ALethePlayerController* LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
 	LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 	LethePlayerController->OnPreviewDataUpdatedDelegate.AddUObject(this, &ThisClass::OnPreviewDataUpdated);
 }
 
-void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS)
+void UAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
@@ -77,7 +79,13 @@ void UAttributeWidgetController::OnCancelCardSelect()
 
 void UAttributeWidgetController::UpdateCachedAttribute(const FOnAttributeChangeData& AttributeData)
 {
-	if (const FGameplayTag* AttributeTag = ULetheAttributeSet::AttributesToTags.Find(AttributeData.Attribute))
+	const FGameplayTag* AttributeTag = ULetheAttributeSet::BaseAttributesToTags.Find(AttributeData.Attribute);
+	if (!AttributeTag)
+	{
+		AttributeTag = UPlayerAttributeSet::PlayerAttributesToTags.Find(AttributeData.Attribute);
+	}
+
+	if (AttributeTag)
 	{
 		CachedAttribute.Add(*AttributeTag, AttributeData.NewValue);
 	}

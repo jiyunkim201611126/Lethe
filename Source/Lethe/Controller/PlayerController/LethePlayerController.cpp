@@ -32,10 +32,10 @@ ALethePlayerController::ALethePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
-ULetheWidgetController* ALethePlayerController::InitPlayerUI(APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+ULetheWidgetController* ALethePlayerController::InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
-	LetheHUD->InitPlayerBattleUI(this, PS, ASC, AS);
-	return LetheHUD->CreatePlayerAttributeWidgetController(this, PS, ASC, AS);
+	LetheHUD->InitPlayerBattleUI(this, ASC, AS, PAS);
+	return LetheHUD->CreatePlayerAttributeWidgetController(this, ASC, AS, PAS);
 }
 
 ULetheWidgetController* ALethePlayerController::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS)

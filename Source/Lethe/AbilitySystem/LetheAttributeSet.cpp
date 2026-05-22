@@ -1,39 +1,27 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LetheAttributeSet.h"
-#include "Lethe/Manager/LetheGameplayTags.h"
 #include "GameplayEffectExtension.h"
-#include "GameFramework/Character.h"
-#include "AbilitySystemBlueprintLibrary.h"
 #include "LetheAbilitySystemLibrary.h"
 #include "Lethe/LetheLog.h"
 #include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
-TMap<FGameplayAttribute, FGameplayTag> ULetheAttributeSet::AttributesToTags;
+TMap<FGameplayAttribute, FGameplayTag> ULetheAttributeSet::BaseAttributesToTags;
 
-ULetheAttributeSet::ULetheAttributeSet()
-{
-}
-
-void ULetheAttributeSet::InitializeAttributeTagMap()
+void ULetheAttributeSet::InitBaseAttributeTagMap()
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (AttributesToTags.IsEmpty())
+	if (BaseAttributesToTags.IsEmpty())
 	{
-		AttributesToTags.Reserve(12);
+		BaseAttributesToTags.Reserve(6);
 
-		AttributesToTags.Add(GetHealthAttribute(), LetheGameplayTags.Attribute_Vital_Health);
-		AttributesToTags.Add(GetMaxHealthAttribute(), LetheGameplayTags.Attribute_Vital_MaxHealth);
-		AttributesToTags.Add(GetManaAttribute(), LetheGameplayTags.Attribute_Vital_Mana);
-		AttributesToTags.Add(GetMaxManaAttribute(), LetheGameplayTags.Attribute_Vital_MaxMana);
-		AttributesToTags.Add(GetCostAttribute(), LetheGameplayTags.Attribute_Vital_Cost);
-		AttributesToTags.Add(GetMaxCostAttribute(), LetheGameplayTags.Attribute_Vital_MaxCost);
-		AttributesToTags.Add(GetMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistance);
-		AttributesToTags.Add(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveDistance);
-		AttributesToTags.Add(GetManaRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_ManaRecovery);
-		AttributesToTags.Add(GetCostRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_CostRecovery);
-		AttributesToTags.Add(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery);
-		AttributesToTags.Add(GetIncomingDamageAttribute(), LetheGameplayTags.Attribute_Meta_IncomingDamage);
+		BaseAttributesToTags.Add(GetHealthAttribute(), LetheGameplayTags.Attribute_Vital_Health);
+		BaseAttributesToTags.Add(GetMaxHealthAttribute(), LetheGameplayTags.Attribute_Vital_MaxHealth);
+		BaseAttributesToTags.Add(GetMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistance);
+		BaseAttributesToTags.Add(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveDistance);
+		BaseAttributesToTags.Add(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery);
+		BaseAttributesToTags.Add(GetIncomingDamageAttribute(), LetheGameplayTags.Attribute_Meta_IncomingDamage);
 	}
 }
 
@@ -54,14 +42,6 @@ void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	{
 		ApplyIncomingDamage(Props, Data);
 	}
-	if (Data.EvaluatedData.Attribute == GetManaAttribute())
-	{
-		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
-	}
-	if (Data.EvaluatedData.Attribute == GetCostAttribute())
-	{
-		SetCost(FMath::Clamp(GetCost(), 0.f, GetMaxCost()));
-	}
 	if (Data.EvaluatedData.Attribute == GetMoveDistanceAttribute())
 	{
 		SetMoveDistance(FMath::Clamp(GetMoveDistance(), 0.f , GetMaxMoveDistance()));
@@ -71,37 +51,6 @@ void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 void ULetheAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
-}
-
-void ULetheAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& EffectProperties) const
-{
-	EffectProperties.EffectContextHandle = Data.EffectSpec.GetContext();
-	EffectProperties.SourceASC = EffectProperties.EffectContextHandle.GetOriginalInstigatorAbilitySystemComponent();
-
-	if (IsValid(EffectProperties.SourceASC) && EffectProperties.SourceASC->AbilityActorInfo.IsValid() && EffectProperties.SourceASC->AbilityActorInfo->AvatarActor.IsValid())
-	{
-		EffectProperties.SourceAvatarActor = EffectProperties.SourceASC->AbilityActorInfo->AvatarActor.Get();
-		EffectProperties.SourceController = EffectProperties.SourceASC->AbilityActorInfo->PlayerController.Get();
-		if (EffectProperties.SourceController == nullptr && EffectProperties.SourceAvatarActor != nullptr)
-		{
-			if (const APawn* Pawn = Cast<APawn>(EffectProperties.SourceAvatarActor))
-			{
-				EffectProperties.SourceController = Pawn->GetController();
-			}
-		}
-		if (EffectProperties.SourceController)
-		{
-			EffectProperties.SourceCharacter = Cast<ACharacter>(EffectProperties.SourceController->GetPawn());
-		}
-	}
-
-	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())
-	{
-		EffectProperties.TargetAvatarActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
-		EffectProperties.TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
-		EffectProperties.TargetCharacter = Cast<ACharacter>(EffectProperties.TargetAvatarActor);
-		EffectProperties.TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(EffectProperties.TargetAvatarActor);
-	}	
 }
 
 void ULetheAttributeSet::ApplyIncomingDamage(const FEffectProperties& Props, const FGameplayEffectModCallbackData& Data)

@@ -18,7 +18,7 @@ class LETHE_API UPlayerAttributeWidgetController : public UAttributeWidgetContro
 
 public:
 	//~ Begin ULetheWidgetController Interface
-	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS) override;
+	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS) override;
 	//~ End of ULetheWidgetController Interface
 
 protected:

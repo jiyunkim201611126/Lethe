@@ -14,7 +14,7 @@ struct FSavedCard;
 
 DECLARE_DELEGATE_FourParams(FOnAbilityGivenSignature, ULetheAbilitySystemComponent* /* this */, const UCharacterDefinitionData*, const UCardDefinitionData*, const FSavedCard&);
 
-UCLASS()
+UCLASS(NotBlueprintable)
 class LETHE_API ULetheAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()

@@ -48,4 +48,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
 	FGameplayAttributeData CostRecovery;
 	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, CostRecovery);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
+	FGameplayAttributeData VisionRange;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, VisionRange);
 };

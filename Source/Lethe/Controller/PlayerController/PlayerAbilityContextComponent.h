@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "PlayerAbilityContextComponent.generated.h"
 
@@ -20,13 +19,13 @@ enum class EReservedMoveState : uint8
 	/** ActivationData로 변경되어 큐에 들어가길 대기하는 상태입니다. */
 	WaitingForQueue,
 
-	/** 현재 캐릭터가 움직이는 상태임을 표시하며, 움직이고 난 후에도 잔여 MoveDistance가 있다면 계속 Moving으로 기록합니다. */
+	/** 현재 캐릭터가 움직이는 상태임을 표시하며, 움직이고 난 후에도 잔여 MoveRange가 있다면 계속 Moving으로 기록합니다. */
 	Moving,
 
 	/** 경로상에 다른 캐릭터가 막고 있어, 재시도를 기다리는 상태입니다. */
 	WaitingForUnblock,
 
-	/** 모든 MoveDistance를 소모했거나, 남은 경로가 없거나, 경로상의 캐릭터가 비켜주길 기다렸지만 아무도 움직이지 않았을 때 Finished 상태가 됩니다. */
+	/** 모든 MoveRange를 소모했거나, 남은 경로가 없거나, 경로상의 캐릭터가 비켜주길 기다렸지만 아무도 움직이지 않았을 때 Finished 상태가 됩니다. */
 	Finished
 };
 
@@ -86,7 +85,7 @@ public:
 	/** 이동 완료 후 예약 경로와 상태를 갱신하고 다음 이동을 큐에 추가합니다. */
 	void RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const;
 
-	/** 비전투 페이즈 진입 시 호출되는 함수로, MoveDistance가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
+	/** 비전투 페이즈 진입 시 호출되는 함수로, MoveRange가 회복되었기 때문에 모든 데이터를 WaitingForQueue 상태로 변경합니다. */
 	void SetAllReservedMovesWaitingForQueue();
 	
 	void ResetReservedMoveData();
@@ -121,7 +120,7 @@ private:
 	/** 해당 타일에 어떤 방식으로 도달할 수 있는지 반환하는 함수입니다. */
 	EMoveActionType GetActionType(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);
 
-	/**	예약 경로와 현재 MoveDistance만 기준으로 TargetTile에 도달 가능한지 확인합니다. */
+	/**	예약 경로와 현재 MoveRange만 기준으로 TargetTile에 도달 가능한지 확인합니다. */
 	bool CanReachReservedTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile) const;
 
 private:

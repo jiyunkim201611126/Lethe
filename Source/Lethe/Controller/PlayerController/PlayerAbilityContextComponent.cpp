@@ -111,12 +111,12 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 		CurrentReservedMove->PathTiles.Add(MakeWeakObjectPtr(Tile));
 	}
 
-	// 모든 ReservedMove를 검사해서 MoveDistance가 있는 경우 대기 상태로 변경합니다.
+	// 모든 ReservedMove를 검사해서 MoveRange가 있는 경우 대기 상태로 변경합니다.
 	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
 		if (const ICombatInterface* Combat = Cast<ICombatInterface>(ReservedMove.PlayerCharacter))
 		{
-			if (Combat->GetMoveDistance() > 0)
+			if (Combat->GetMoveRange() > 0)
 			{
 				ReservedMove.State = EReservedMoveState::WaitingForQueue;
 			}
@@ -273,7 +273,7 @@ EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerC
 
 	if (const ICombatInterface* Combat = Cast<ICombatInterface>(SourceReservedMove->PlayerCharacter))
 	{
-		for (int32 Index = Combat->GetMoveDistance() - 1; Index >= 0; --Index)
+		for (int32 Index = Combat->GetMoveRange() - 1; Index >= 0; --Index)
 		{
 			const auto& CandidateTile = SourceReservedMove->PathTiles.IsValidIndex(Index) ? SourceReservedMove->PathTiles[Index] : nullptr;
 			const EMoveActionType ReachType = GetActionType(SourceReservedMove, CandidateTile.Get(), OutSwapTargetReservedMove);
@@ -348,7 +348,7 @@ bool UPlayerAbilityContextComponent::CanReachReservedTile(const FPlayerCharacter
 		return false;
 	}
 
-	const int32 MaxIndex = FMath::Min(Combat->GetMoveDistance(), SourceReservedMove->PathTiles.Num()) - 1;
+	const int32 MaxIndex = FMath::Min(Combat->GetMoveRange(), SourceReservedMove->PathTiles.Num()) - 1;
 	for (int32 Index = 0; Index <= MaxIndex; ++Index)
 	{
 		if (SourceReservedMove->PathTiles[Index].Get() == TargetTile)
@@ -448,13 +448,13 @@ void UPlayerAbilityContextComponent::RefreshReservedMoveData(FPlayerCharacterRes
 			ReservedMove->PathTiles.RemoveAt(0, RemoveCount);
 		}
 
-		// MoveDistance가 남아있다면 Moving 상태로 남겨서 StartResolveMoves에서 재평가하도록 합니다.
+		// MoveRange가 남아있다면 Moving 상태로 남겨서 StartResolveMoves에서 재평가하도록 합니다.
 		if (const ICombatInterface* Combat = Cast<ICombatInterface>(ReservedMove->PlayerCharacter))
 		{
-			ReservedMove->State = Combat->GetMoveDistance() <= 0 ? EReservedMoveState::Finished : EReservedMoveState::Moving;
+			ReservedMove->State = Combat->GetMoveRange() <= 0 ? EReservedMoveState::Finished : EReservedMoveState::Moving;
 		}
 
-		// MoveDistance가 남아있더라도, 최종 목적지에 도달했다면 Finished로 변경합니다.
+		// MoveRange가 남아있더라도, 최종 목적지에 도달했다면 Finished로 변경합니다.
 		if (ReservedMove->PathTiles.IsEmpty())
 		{
 			ReservedMove->State = EReservedMoveState::Finished;
@@ -542,7 +542,7 @@ bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacte
 		{
 			FBFSRange MoveRange;
 			MoveRange.BFSType = EBFSType::Connection;
-			MoveRange.Distance = Combat->GetMoveDistance();
+			MoveRange.Distance = Combat->GetMoveRange();
 			ActorSelector->TryGetTilesByRange(OutTilesInRange, SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove);
 		}
 	}
@@ -586,7 +586,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 				}
 			
 				TArray<ATile*> OutPathTiles;
-				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, SelectedCombatInterface->GetMoveDistance(), OutPathTiles, false))
+				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, SelectedCombatInterface->GetMoveRange(), OutPathTiles, false))
 				{
 					FAbilityActivationData AbilityActivationData;
 					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
@@ -612,14 +612,14 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 					return;
 				}
 
-				// 선택된 캐릭터는 이미 TargetTile로 이동할 MoveDistance가 충분한 상태라는 게 검증됐기 때문에, TargetTile에 있는 캐릭터의 조건만 확인합니다.
+				// 선택된 캐릭터는 이미 TargetTile로 이동할 MoveRange가 충분한 상태라는 게 검증됐기 때문에, TargetTile에 있는 캐릭터의 조건만 확인합니다.
 				if (TargetCombatInterface->GetTeamSide() != ETeamSide::Player)
 				{
 					return;
 				}
 				
 				const int32 TileDistance = TileManagerSubsystem->GetTileDistance(StartTile, TargetTile, EBFSType::Connection);
-				if (TargetCombatInterface->GetMoveDistance() < TileDistance)
+				if (TargetCombatInterface->GetMoveRange() < TileDistance)
 				{
 					return;
 				}
@@ -634,7 +634,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 				}
 				
 				TArray<ATile*> OutPathTiles;
-				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, TargetCombatInterface->GetMoveDistance(), OutPathTiles, true))
+				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, TargetCombatInterface->GetMoveRange(), OutPathTiles, true))
 				{
 					FAbilityActivationData AbilityActivationData;
 					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;

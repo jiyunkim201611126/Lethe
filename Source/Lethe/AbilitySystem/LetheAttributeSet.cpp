@@ -18,9 +18,9 @@ void ULetheAttributeSet::InitBaseAttributeTagMap()
 
 		BaseAttributesToTags.Add(GetHealthAttribute(), LetheGameplayTags.Attribute_Vital_Health);
 		BaseAttributesToTags.Add(GetMaxHealthAttribute(), LetheGameplayTags.Attribute_Vital_MaxHealth);
-		BaseAttributesToTags.Add(GetMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistance);
-		BaseAttributesToTags.Add(GetMaxMoveDistanceAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveDistance);
-		BaseAttributesToTags.Add(GetMoveDistanceRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery);
+		BaseAttributesToTags.Add(GetMoveRangeAttribute(), LetheGameplayTags.Attribute_Vital_MoveRange);
+		BaseAttributesToTags.Add(GetMaxMoveRangeAttribute(), LetheGameplayTags.Attribute_Vital_MaxMoveRange);
+		BaseAttributesToTags.Add(GetMoveRangeRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_MoveRangeRecovery);
 		BaseAttributesToTags.Add(GetIncomingDamageAttribute(), LetheGameplayTags.Attribute_Meta_IncomingDamage);
 	}
 }
@@ -42,9 +42,9 @@ void ULetheAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	{
 		ApplyIncomingDamage(Props, Data);
 	}
-	if (Data.EvaluatedData.Attribute == GetMoveDistanceAttribute())
+	if (Data.EvaluatedData.Attribute == GetMoveRangeAttribute())
 	{
-		SetMoveDistance(FMath::Clamp(GetMoveDistance(), 0.f , GetMaxMoveDistance()));
+		SetMoveRange(FMath::Clamp(GetMoveRange(), 0.f , GetMaxMoveRange()));
 	}
 }
 

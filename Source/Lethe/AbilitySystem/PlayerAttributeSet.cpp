@@ -12,7 +12,7 @@ void UPlayerAttributeSet::InitializePlayerAttributeTagMap()
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	if (PlayerAttributesToTags.IsEmpty())
 	{
-		PlayerAttributesToTags.Reserve(6);
+		PlayerAttributesToTags.Reserve(7);
 
 		PlayerAttributesToTags.Add(GetManaAttribute(), LetheGameplayTags.Attribute_Vital_Mana);
 		PlayerAttributesToTags.Add(GetMaxManaAttribute(), LetheGameplayTags.Attribute_Vital_MaxMana);
@@ -20,6 +20,7 @@ void UPlayerAttributeSet::InitializePlayerAttributeTagMap()
 		PlayerAttributesToTags.Add(GetMaxCostAttribute(), LetheGameplayTags.Attribute_Vital_MaxCost);
 		PlayerAttributesToTags.Add(GetManaRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_ManaRecovery);
 		PlayerAttributesToTags.Add(GetCostRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_CostRecovery);
+		PlayerAttributesToTags.Add(GetCostRecoveryAttribute(), LetheGameplayTags.Attribute_Vital_VisionRange);
 	}
 }
 

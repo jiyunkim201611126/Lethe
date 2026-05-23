@@ -174,7 +174,7 @@ bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const
 						{
 							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
 							{
-								if (CombatInterface->GetTeamSide() == ETeamSide::Player && Depth <= CombatInterface->GetMoveDistance())
+								if (CombatInterface->GetTeamSide() == ETeamSide::Player && Depth <= CombatInterface->GetMoveRange())
 								{
 									return true;
 								}

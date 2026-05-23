@@ -84,14 +84,14 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 	}
 }
 
-int32 ALetheCharacterBase::GetMoveDistance() const
+int32 ALetheCharacterBase::GetMoveRange() const
 {
-	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMoveDistance()));
+	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMoveRange()));
 }
 
-int32 ALetheCharacterBase::GetMaxMoveDistance() const
+int32 ALetheCharacterBase::GetMaxMoveRange() const
 {
-	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMaxMoveDistance()));
+	return FMath::Max(0, FMath::FloorToInt(AttributeSet->GetMaxMoveRange()));
 }
 
 void ALetheCharacterBase::OnDamageTaken()

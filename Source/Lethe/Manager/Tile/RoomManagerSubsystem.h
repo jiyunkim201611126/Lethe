@@ -100,6 +100,7 @@ private:
 	/** 처음 방문해 일시적으로 볼 수 있는 RoomId입니다. */
 	TSet<int32> TemporarilyVisibleRoomIds;
 	TMap<int32, FTimerHandle> RoomRevealTimerHandles;
+	float RoomTemporarilyVisibleDuration = 3.f;
 
 	/** 전투에 참가해 현재 위치가 강제로 Visible 처리되는 적 좌표들입니다. */
 	TSet<FCubeCoord> EnemyVisibleCoords;

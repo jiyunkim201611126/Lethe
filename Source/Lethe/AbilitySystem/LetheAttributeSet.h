@@ -44,16 +44,16 @@ public:
 	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxHealth);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
-	FGameplayAttributeData MoveDistance;
-	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveDistance);
+	FGameplayAttributeData MoveRange;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveRange);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
-	FGameplayAttributeData MaxMoveDistance;
-	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxMoveDistance);
+	FGameplayAttributeData MaxMoveRange;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MaxMoveRange);
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Vital Attributes")
-	FGameplayAttributeData MoveDistanceRecovery;
-	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveDistanceRecovery);
+	FGameplayAttributeData MoveRangeRecovery;
+	ATTRIBUTE_ACCESSORS(ULetheAttributeSet, MoveRangeRecovery);
 
 	/**
 	 * Stat Attributes

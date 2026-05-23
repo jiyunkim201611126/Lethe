@@ -20,6 +20,16 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Attribute.Vital.Health"), FString(""));
 	GameplayTags.Attribute_Vital_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attribute.Vital.MaxHealth"), FString(""));
+	GameplayTags.Attribute_Vital_MoveRange = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MoveRange"), FString(""));
+	GameplayTags.Attribute_Vital_MaxMoveRange = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MaxMoveRange"), FString(""));
+	GameplayTags.Attribute_Vital_MoveRangeRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.MoveRangeRecovery"), FString(""));
+	
+	GameplayTags.Attribute_Meta_IncomingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Meta.IncomingDamage"), FString(""));
+	
 	GameplayTags.Attribute_Vital_Mana = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attribute.Vital.Mana"), FString(""));
 	GameplayTags.Attribute_Vital_MaxMana = UGameplayTagsManager::Get().AddNativeGameplayTag(
@@ -28,20 +38,12 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("Attribute.Vital.Cost"), FString(""));
 	GameplayTags.Attribute_Vital_MaxCost = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attribute.Vital.MaxCost"), FString(""));
-	GameplayTags.Attribute_Vital_MoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attribute.Vital.MoveDistance"), FString(""));
-	GameplayTags.Attribute_Vital_MaxMoveDistance = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attribute.Vital.MaxMoveDistance"), FString(""));
-	
 	GameplayTags.Attribute_Vital_ManaRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attribute.Vital.ManaRecovery"), FString(""));
 	GameplayTags.Attribute_Vital_CostRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Attribute.Vital.CostRecovery"), FString(""));
-	GameplayTags.Attribute_Vital_MoveDistanceRecovery = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attribute.Vital.MoveDistanceRecovery"), FString(""));
-	
-	GameplayTags.Attribute_Meta_IncomingDamage = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Attribute.Meta.IncomingDamage"), FString(""));
+	GameplayTags.Attribute_Vital_VisionRange = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Attribute.Vital.VisionRange"), FString(""));
 
 	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Damage"), FString(""));

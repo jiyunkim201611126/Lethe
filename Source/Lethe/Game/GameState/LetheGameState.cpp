@@ -148,10 +148,10 @@ void ALetheGameState::OnFinishActivationQueue()
 	{
 		for (const auto& PlayerCharacter : PlayerCharacters)
 		{
-			if (0 < PlayerCharacter->GetMoveDistance())
+			if (0 < PlayerCharacter->GetMoveRange())
 			{
 				// 잔여 행동력이 있다면 이번 입력에 턴 종료를 수행해선 안 됩니다.
-				// TODO: 잔여 행동력(MoveDistance)이 있다고 알림
+				// TODO: 잔여 행동력(MoveRange)이 있다고 알림
 				bShouldDeferEndPlayerMovePhase = false;
 				return;
 			}

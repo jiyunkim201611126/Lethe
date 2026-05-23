@@ -330,10 +330,10 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	return !OutPathTilesArray.IsEmpty();
 }
 
-bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const
+bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, const ATile* TargetTile, const int32 MoveRange, TArray<ATile*>& OutPathTiles, const bool bIgnoreActor) const
 {
 	OutPathTiles.Reset();
-	if (MoveDistance <= 0)
+	if (MoveRange <= 0)
 	{
 		return false;
 	}
@@ -345,7 +345,7 @@ bool UTileManagerSubsystem::FindPrioritizedPathTiles(const ATile* StartTile, con
 	}
 
 	// 이번 턴에 최대 이동 가능한 거리를 계산합니다.
-	const int32 MaxPriorityDistance = FMath::Min(MoveDistance, SearchData.ShortestDistanceToTarget);
+	const int32 MaxPriorityDistance = FMath::Min(MoveRange, SearchData.ShortestDistanceToTarget);
 
 	// 거리별 후보 좌표 저장 공간을 준비합니다.
 	// Index 1에는 '한 칸 이동 후보', Index 2에는 '두 칸 이동 후보' ...

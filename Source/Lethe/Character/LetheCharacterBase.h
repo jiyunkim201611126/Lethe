@@ -31,8 +31,8 @@ public:
 	
 	//~ Begin ICombatInterface
 	virtual void MoveToTile(TArray<ATile*>& PathTiles, const bool bTeleport) override;
-	virtual int32 GetMoveDistance() const override;
-	virtual int32 GetMaxMoveDistance() const override;
+	virtual int32 GetMoveRange() const override;
+	virtual int32 GetMaxMoveRange() const override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
 	virtual UAnimMontage* GetMoveAnimation() override;

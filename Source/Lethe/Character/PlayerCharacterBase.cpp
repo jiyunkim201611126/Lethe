@@ -35,6 +35,11 @@ int32 APlayerCharacterBase::GetPlayerOrderIndex() const
 	return PlayerOrderIndex;
 }
 
+int32 APlayerCharacterBase::GetVisionRange() const
+{
+	return FMath::Max(0, FMath::FloorToInt(PlayerAttributeSet->GetVisionRange()));
+}
+
 void APlayerCharacterBase::InitAbilityActorInfo() const
 {
 	GASManagerComponent->SetPlayerAttributeSet(PlayerAttributeSet);

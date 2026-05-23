@@ -22,6 +22,7 @@ public:
 	virtual const FLinearColor& GetPersonalColor() const override;
 	virtual void SetPlayerOrderIndex(const int32 Index) override;
 	virtual int32 GetPlayerOrderIndex() const override;
+	virtual int32 GetVisionRange() const override;
 	//~ End of IPlayerCharacterInterface
 
 protected:

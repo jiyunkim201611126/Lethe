@@ -24,4 +24,6 @@ public:
 
 	virtual void SetPlayerOrderIndex(const int32 Index) = 0;
 	virtual int32 GetPlayerOrderIndex() const = 0;
+	
+	virtual int32 GetVisionRange() const = 0;
 };

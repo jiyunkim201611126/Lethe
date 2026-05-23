@@ -269,7 +269,7 @@ void URoomManagerSubsystem::UpdatePlayerRoomState(const ATile* OldTile, const AT
 						WeakThis->RoomRevealTimerHandles.Remove(NewRoomId);
 						WeakThis->ApplyVisionSnapshot();
 					}
-				}, 3.f, false);
+				}, RoomTemporarilyVisibleDuration, false);
 		}
 	}
 }
@@ -307,6 +307,18 @@ void URoomManagerSubsystem::CollectPlayerVisibleCoords(TSet<FCubeCoord>& OutCoor
 			continue;
 		}
 
+		const IPlayerCharacterInterface* PlayerCharacterInterface = Cast<IPlayerCharacterInterface>(Pair.Key);
+		if (!PlayerCharacterInterface)
+		{
+			continue;
+		}
+
+		const int32 VisionRange = PlayerCharacterInterface->GetVisionRange();
+		if (VisionRange <= 0)
+		{
+			continue;
+		}
+
 		const ATile* PlayerTile = Pair.Value.Get();
 		const int32 PlayerFloor = TileManagerSubsystem->GetTileFloor(PlayerTile);
 		if (PlayerFloor == INDEX_NONE)
@@ -315,7 +327,7 @@ void URoomManagerSubsystem::CollectPlayerVisibleCoords(TSet<FCubeCoord>& OutCoor
 		}
 
 		TSet<FCubeCoord> VisibleCoordsFromTile;
-		TileManagerSubsystem->TileBFS(PlayerTile->GetCubeCoord(), 3, EBFSType::Through, VisibleCoordsFromTile,
+		TileManagerSubsystem->TileBFS(PlayerTile->GetCubeCoord(), VisionRange, EBFSType::Through, VisibleCoordsFromTile,
 			[PlayerFloor](const FTileData* CurrentTileData, const FTileData* NextTileData)
 			{
 				if (!CurrentTileData || !NextTileData)
@@ -326,9 +338,9 @@ void URoomManagerSubsystem::CollectPlayerVisibleCoords(TSet<FCubeCoord>& OutCoor
 				// 플레이어보다 높은 타일은 그 타일까지만 보이고, 그 너머로는 시야가 이어지지 않습니다.
 				return CurrentTileData->Floor <= PlayerFloor;
 			},
-			[](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+			[VisionRange](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 			{
-				return Depth <= 3;
+				return Depth <= VisionRange;
 			});
 
 		OutCoords.Append(VisibleCoordsFromTile);

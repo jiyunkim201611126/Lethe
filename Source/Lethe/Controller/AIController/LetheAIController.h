@@ -38,7 +38,7 @@ public:
 	void ActivateMoveAbility(const TArray<ATile*>& PathTiles);
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "TargetTile로 이동하기 위한 최단 경로를 계산한 뒤, 그 모든 타일을 우선순위대로 정렬해 반환합니다."))
-	void GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles) const;
+	void GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveRange, TArray<ATile*>& OutPathTiles) const;
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "공격 가능한 상황으로, Ability 선택 후 사용을 예고합니다."))
 	void SelectAndTelegraphRandomAbility(ATile* TargetTile) const;

@@ -70,7 +70,7 @@ void UPlayerGASManagerComponent::OnPlanPhaseStarted() const
 	{
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_ManaRecovery, AbilitySystemComponent->GetNumericAttribute(UPlayerAttributeSet::GetManaRecoveryAttribute()));
 		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_CostRecovery, AbilitySystemComponent->GetNumericAttribute(UPlayerAttributeSet::GetCostRecoveryAttribute()));
-		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_MoveDistanceRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetMoveDistanceRecoveryAttribute()));
+		SpecHandle.Data->SetSetByCallerMagnitude(LetheGameplayTags.Attribute_Vital_MoveRangeRecovery, AbilitySystemComponent->GetNumericAttribute(ULetheAttributeSet::GetMoveRangeRecoveryAttribute()));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 	}
 }

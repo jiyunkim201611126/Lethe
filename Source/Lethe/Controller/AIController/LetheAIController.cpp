@@ -192,7 +192,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		if (const ATile* ControlledCharacterTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
 		{
 			const int32 Distance = TileManagerSubsystem->GetTileDistance(ControlledCharacterTile, CandidateTile, EBFSType::Connection);
-			if (Distance <= ControlledEnemy->GetMoveDistance())
+			if (Distance <= ControlledEnemy->GetMoveRange())
 			{
 				// 이번 턴에 도달 가능한 경우 아주 높은 점수를 반환합니다.
 				return 10000;
@@ -343,14 +343,14 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 	}
 }
 
-void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveDistance, TArray<ATile*>& OutPathTiles) const
+void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const int32 MoveRange, TArray<ATile*>& OutPathTiles) const
 {
 	OutPathTiles.Reset();
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
 		{
-			TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, MoveDistance, OutPathTiles, false);
+			TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, MoveRange, OutPathTiles, false);
 		}
 	}
 }

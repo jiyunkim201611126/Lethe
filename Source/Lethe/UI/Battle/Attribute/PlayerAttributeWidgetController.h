@@ -32,7 +32,7 @@ private:
 	void OnCostChanged(const FOnAttributeChangeData& AttributeData);
 	void BroadcastCostChanged() const;
 	
-	void OnMoveDistanceChanged(const FOnAttributeChangeData& AttributeData);
+	void OnMoveRangeChanged(const FOnAttributeChangeData& AttributeData);
 	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase);
 	void BroadcastMarkerVisibilityChanged() const;
 
@@ -41,6 +41,6 @@ public:
 	FOnMarkerVisibilityChanged OnMarkerVisibilityChanged;
 	
 private:
-	uint8 bHasRemainingMoveDistance : 1 = false;
+	uint8 bHasRemainingMoveRange : 1 = false;
 	EPhaseState CurrentPhaseState = EPhaseState::None;
 };

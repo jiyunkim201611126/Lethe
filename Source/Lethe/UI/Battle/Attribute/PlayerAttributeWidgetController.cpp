@@ -21,7 +21,7 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 	ASC->GetGameplayAttributeValueChangeDelegate(PAS->GetMaxCostAttribute()).AddUObject(this, &ThisClass::OnCostChanged);
 
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMoveDistanceAttribute()).AddUObject(this, &ThisClass::OnMoveDistanceChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMoveRangeAttribute()).AddUObject(this, &ThisClass::OnMoveRangeChanged);
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
@@ -82,9 +82,9 @@ void UPlayerAttributeWidgetController::StopAllPreview()
 	StopPreview(LetheGameplayTags.Attribute_Vital_Cost, LetheGameplayTags.Attribute_Vital_MaxCost);
 }
 
-void UPlayerAttributeWidgetController::OnMoveDistanceChanged(const FOnAttributeChangeData& AttributeData)
+void UPlayerAttributeWidgetController::OnMoveRangeChanged(const FOnAttributeChangeData& AttributeData)
 {
-	bHasRemainingMoveDistance = 0 < AttributeData.NewValue;
+	bHasRemainingMoveRange = 0 < AttributeData.NewValue;
 	BroadcastMarkerVisibilityChanged();
 }
 
@@ -96,7 +96,7 @@ void UPlayerAttributeWidgetController::OnPhaseStateChanged(const EPhaseState Old
 
 void UPlayerAttributeWidgetController::BroadcastMarkerVisibilityChanged() const
 {
-	const bool bShouldShow = CurrentPhaseState == EPhaseState::PlayerMovePhase && bHasRemainingMoveDistance;
+	const bool bShouldShow = CurrentPhaseState == EPhaseState::PlayerMovePhase && bHasRemainingMoveRange;
 	const ESlateVisibility Visibility = bShouldShow ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
 	OnMarkerVisibilityChanged.Broadcast(Visibility);
 }

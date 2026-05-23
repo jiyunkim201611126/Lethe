@@ -24,11 +24,13 @@ void ULetheWidgetController::SetWidgetControllerParams(const FWidgetControllerPa
 	AbilitySystemReference.AttributeSet = AttributeSet;
 	AbilitySystemReference.PlayerAttributeSet = PlayerAttributeSet;
 
-	const IPlayerCharacterInterface* PlayerCharacter = CastChecked<IPlayerCharacterInterface>(AbilitySystemComponent->GetAvatarActor());
-	const int32 OrderIndex = PlayerCharacter->GetPlayerOrderIndex();
-	if (AbilitySystemReferences.IsValidIndex(OrderIndex))
+	if (const IPlayerCharacterInterface* PlayerCharacter = Cast<IPlayerCharacterInterface>(AbilitySystemComponent->GetAvatarActor()))
 	{
-		AbilitySystemReferences[OrderIndex] = AbilitySystemReference;
+		const int32 OrderIndex = PlayerCharacter->GetPlayerOrderIndex();
+		if (AbilitySystemReferences.IsValidIndex(OrderIndex))
+		{
+			AbilitySystemReferences[OrderIndex] = AbilitySystemReference;
+		}
 	}
 }
 

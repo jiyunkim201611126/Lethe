@@ -194,7 +194,7 @@ bool UTileManagerSubsystem::BuildShortestPathSearchData(const ATile* StartTile, 
 			}
 
 			/**
-			 * 타일 위에 무언가 있다면 매개변수 설정 여부와 액터 종류에 따라 진행합니다.
+			 * 타일 위에 무언가 있고, 매개변수 설정에 따라 무시하지 않기로 결정됐다면 액터 종류에 따라 진행합니다.
 			 * 비어 있는 중간 타일: 통과
 			 * 중간 타일에 같은 팀이 있음: 통과
 			 * 중간 타일에 다른 팀이 있음: 막힘
@@ -273,7 +273,7 @@ bool UTileManagerSubsystem::FindShortestPath(const ATile* StartTile, const ATile
 	TileCache.Reserve(SearchData.DistanceMap.Num());
 
 	/**
-	 * ParendCoordMap을 따라 TargetTile -> StartTile 방향으로 재귀 탐색하며 모든 최단 경로를 복원합니다.
+	 * ParentCoordMap을 따라 TargetTile -> StartTile 방향으로 재귀 탐색하며 모든 최단 경로를 복원합니다.
 	 * CurrentReversedPath는 현재 분기에서 [Target, ..., Start] 순서로 쌓이는 경로입니다.
 	 * StartCoord에 도달하면 StartTile을 제외하고 역순으로 읽어 [Start 다음 타일, ..., Target] 경로를 생성합니다.
 	 * 각 분기 탐색이 끝나면 Pop으로 현재 좌표를 제거해 다음 분기를 위한 경로 상태를 복구합니다.

@@ -41,35 +41,31 @@ void UCardDataLoadSubsystem::LoadCardData(const FGameplayTag& CharacterTag, cons
 		CardTags.Emplace(SavedCard.CardTag);
 	}
 
-	const FOnPrimaryDataAssetsLoaded OnCardDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
+	if (!CharacterTag.IsValid())
 	{
-		OnCardDefinitionsLoadedForRequest(RequestId, LoadedCardDefinitions);
-	});
-	ULetheAssetManager::Get().LoadPrimaryDataAssets(CardTags, OnCardDefinitionsLoaded);
-
-	const FOnPrimaryDataAssetsLoaded OnCharacterDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
+		Request.bCharacterDefinitionLoaded = true;
+	}
+	else
 	{
-		OnCharacterDefinitionsLoadedForRequest(RequestId, LoadedCharacterDefinitions);
-	});
-	ULetheAssetManager::Get().LoadPrimaryDataAssets({ CharacterTag }, OnCharacterDefinitionsLoaded);
-}
-
-void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
-{
-	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
-	if (!Request)
-	{
-		return;
+		const FOnPrimaryDataAssetsLoaded OnCharacterDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
+		{
+			OnCharacterDefinitionsLoadedForRequest(RequestId, LoadedCharacterDefinitions);
+		});
+		ULetheAssetManager::Get().LoadPrimaryDataAssets({ CharacterTag }, OnCharacterDefinitionsLoaded);
 	}
 
-	Request->LoadedCardDefinitions.Reset(LoadedCardDefinitions.Num());
-	for (UPrimaryDataAsset* LoadedDefinition : LoadedCardDefinitions)
+	if (CardTags.IsEmpty())
 	{
-		Request->LoadedCardDefinitions.Emplace(CastChecked<UCardDefinitionData>(LoadedDefinition));
+		Request.bCardDefinitionsLoaded = true;
 	}
-	Request->bCardDefinitionsLoaded = true;
-
-	TryFinishCardDataLoad(RequestId);
+	else
+	{
+		const FOnPrimaryDataAssetsLoaded OnCardDefinitionsLoaded = FOnPrimaryDataAssetsLoaded::CreateWeakLambda(this, [this, RequestId](const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
+		{
+			OnCardDefinitionsLoadedForRequest(RequestId, LoadedCardDefinitions);
+		});
+		ULetheAssetManager::Get().LoadPrimaryDataAssets(CardTags, OnCardDefinitionsLoaded);
+	}
 }
 
 void UCardDataLoadSubsystem::OnCharacterDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions)
@@ -86,6 +82,24 @@ void UCardDataLoadSubsystem::OnCharacterDefinitionsLoadedForRequest(const uint64
 		Request->LoadedCharacterDefinitions.Emplace(CastChecked<UCharacterDefinitionData>(LoadedCharacterDefinition));
 	}
 	Request->bCharacterDefinitionLoaded = true;
+
+	TryFinishCardDataLoad(RequestId);
+}
+
+void UCardDataLoadSubsystem::OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions)
+{
+	FPendingCardDataLoadRequest* Request = PendingCardDataLoadRequests.Find(RequestId);
+	if (!Request)
+	{
+		return;
+	}
+
+	Request->LoadedCardDefinitions.Reset(LoadedCardDefinitions.Num());
+	for (UPrimaryDataAsset* LoadedDefinition : LoadedCardDefinitions)
+	{
+		Request->LoadedCardDefinitions.Emplace(CastChecked<UCardDefinitionData>(LoadedDefinition));
+	}
+	Request->bCardDefinitionsLoaded = true;
 
 	TryFinishCardDataLoad(RequestId);
 }

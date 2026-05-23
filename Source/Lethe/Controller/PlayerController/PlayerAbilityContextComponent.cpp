@@ -66,7 +66,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 
 	// TargetTile을 향한 모든 가능 경로를 가져옵니다.
 	TArray<TArray<ATile*>> OutPathTilesArray;
-	TileManagerSubsystem->FindShortestPath(TileManagerSubsystem->GetTileUnderActor(SelectedCharacter), TargetTile, OutPathTilesArray, true);
+	TileManagerSubsystem->FindShortestPath(TileManagerSubsystem->GetTileUnderActor(SelectedCharacter), TargetTile, OutPathTilesArray, false);
 
 	int32 MinOccupiedCount = INT32_MAX;
 	int32 SelectedPathIndex = INDEX_NONE;

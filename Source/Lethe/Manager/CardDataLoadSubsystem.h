@@ -53,13 +53,13 @@ struct FPendingCardDataLoadRequest
 
 	/** 로드가 완료된 데이터입니다. */
 	UPROPERTY()
+	TArray<TObjectPtr<UCharacterDefinitionData>> LoadedCharacterDefinitions;
+	
+	UPROPERTY()
 	TArray<TObjectPtr<UCardDefinitionData>> LoadedCardDefinitions;
 
-	UPROPERTY()
-	TArray<TObjectPtr<UCharacterDefinitionData>> LoadedCharacterDefinitions;
-
-	uint8 bCardDefinitionsLoaded : 1 = false;
 	uint8 bCharacterDefinitionLoaded : 1 = false;
+	uint8 bCardDefinitionsLoaded : 1 = false;
 };
 
 /**
@@ -85,8 +85,8 @@ public:
 	void ChangeCharacterDecksKeyToLoad(const TMap<uint64, FSavedCharacterDeck>& InDecks, TMap<FGameplayTag, FSavedCharacterDeck>& OutDecks) const;
 
 private:
-	void OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions);
 	void OnCharacterDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCharacterDefinitions);
+	void OnCardDefinitionsLoadedForRequest(const uint64 RequestId, const TArray<UPrimaryDataAsset*>& LoadedCardDefinitions);
 	void TryFinishCardDataLoad(const uint64 RequestId);
 	
 	void FillCardTagInSavedCardStruct(FSavedCharacterDeck& OutDeck) const;

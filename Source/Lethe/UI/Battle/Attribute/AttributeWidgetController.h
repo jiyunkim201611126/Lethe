@@ -32,6 +32,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, const FAttributeData&);
  * AttributeWidget에 있는 ProgressBar와 Text의 특성상 CurrentValue와 MaxValue를 모두 요구합니다.
  * 때문에 예를 들어 Health만 Update되는 상황에도 MaxHealth를 함께 보내주어야 합니다.
  * 이로 인해 Attribute Value들을 캐싱해둘 필요가 있었고, 이를 직접 선언해 1:1로 대응하기엔 코드 양이 많아져 TMap을 활용했습니다.
+ * 
+ * Enemy와 연동되는 경우 PlayerAttributeSet이 nullptr이므로 주의합니다.
  */
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UAttributeWidgetController : public ULetheWidgetController

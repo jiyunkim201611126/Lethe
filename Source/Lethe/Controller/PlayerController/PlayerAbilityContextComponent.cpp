@@ -662,10 +662,10 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 		return false;
 	}
 
-	// 카드 사용 시엔 검출된 타일 위에 반드시 액터가 있어야 합니다.
+	// 카드 사용 시엔 반드시 타일이 검출되어야 합니다.
 	FTileAndActor OutTileAndActor;
 	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-	if (!OutTileAndActor.Tile || !OutTileAndActor.Actor)
+	if (!OutTileAndActor.Tile)
 	{
 		return false;
 	}

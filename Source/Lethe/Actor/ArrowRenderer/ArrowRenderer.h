@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -7,6 +7,10 @@
 #include "ArrowRenderer.generated.h"
 
 class APlayerCharacterBase;
+class UMaterialInstanceDynamic;
+class UMaterialInterface;
+class UStaticMesh;
+class UStaticMeshComponent;
 
 namespace ESplinePointType
 {
@@ -27,16 +31,19 @@ public:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
 	//~ End of AActor Interface
-
-	void InitializeMovePreviewSplineMeshes(int32 InitialMeshCount);
 	
-	void DrawSkillPreviewArrow(const AActor* SourceActor, const AActor* TargetActor, const bool bRenderArrowHead = true) const;
+	void DrawCardPreviewArrow(const AActor* SourceActor, const TArray<AActor*>& TargetActors);
 	void DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations);
 	void DeactivateArrow();
 
 private:
 	void SetAllSplinePointsType(const ESplinePointType::Type PointType) const;
+	void DeactivateCardPreviewArrow();
 	
+	void EnsureCardPreviewSplineMeshCount(int32 RequiredCount);
+	USplineMeshComponent* CreateCardPreviewSplineMeshComponent();
+	void EnsureCardPreviewArrowHeadCount(int32 RequiredCount);
+	UStaticMeshComponent* CreateCardPreviewArrowHeadComponent();
 	void EnsureMovePreviewSplineMeshCount(int32 RequiredCount);
 	USplineMeshComponent* CreateMovePreviewSplineMeshComponent();
 
@@ -44,17 +51,23 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<USplineComponent> Spline;
 
-	UPROPERTY(VisibleDefaultsOnly)
-	TObjectPtr<USplineMeshComponent> SkillPreviewSplineMeshComponent;
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Mesh")
+	TObjectPtr<UStaticMesh> ArrowBody;
 
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<USplineMeshComponent>> MovePreviewSplineMeshComponents;
-
-	UPROPERTY(VisibleDefaultsOnly)
-	TObjectPtr<UStaticMeshComponent> ArrowHead;
+	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Mesh")
+	TObjectPtr<UStaticMesh> ArrowHead;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
 	TObjectPtr<UMaterialInterface> ArrowBodyMaterial;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<USplineMeshComponent>> CardPreviewArrowBodies;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UStaticMeshComponent>> CardPreviewArrowHeads;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<USplineMeshComponent>> MovePreviewSplineMeshComponents;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Arrow | Material")
 	FName FlowSpeedParamName = TEXT("FlowSpeed");
@@ -66,7 +79,7 @@ protected:
 	float FlowSpeed = 1.f;
 
 	UPROPERTY(Transient)
-	TObjectPtr<UMaterialInstanceDynamic> ArrowBodyDynamicMaterialInstance;
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> CardPreviewDynamicMaterialInstances;
 
 	UPROPERTY(Transient)
 	TMap<TWeakObjectPtr<APlayerCharacterBase>, TObjectPtr<UMaterialInstanceDynamic>> MovePreviewDynamicMaterialInstances;

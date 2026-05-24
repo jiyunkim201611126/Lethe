@@ -265,7 +265,10 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		{
 			if (TargetTile.IsValid())
 			{
-				TargetActors.Add(TileManagerSubsystem->GetActorOnTile(TargetTile.Get()));
+				if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get()))
+				{
+					TargetActors.Add(ActorOnTile);
+				}
 			}
 		}
 

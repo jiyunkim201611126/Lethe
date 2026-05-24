@@ -22,6 +22,17 @@ ULetheCardAbility::ULetheCardAbility()
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
+void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<TWeakObjectPtr<ATile>>& OutTargetTiles) const
+{
+	if (!EffectTargetSelector)
+	{
+		OutTargetTiles.Add(CenterTile);
+		return;
+	}
+
+	EffectTargetSelector->Select(AvatarActor, CenterTile, OutTargetTiles);
+}
+
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
 {
 	if (CostGameplayEffectClass && SourceASC)
@@ -444,6 +455,21 @@ void ULetheCardAbility::ResetCachedValues()
 	CachedCenterTargetTile.Reset();
 }
 
+void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	{
+		if (EffectApplier)
+		{
+			EffectApplier->EndAbility();
+		}
+	}
+	
+	ResetCachedValues();
+	
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
 void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	// 프로젝트 특성상 한 번 발동된 Ability가 Cancel될 수는 없으나 일단 구현해두었습니다.
@@ -460,19 +486,34 @@ void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, c
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
-void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+bool ULetheCardAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	if (!ActorInfo || !ActorInfo->AvatarActor.IsValid())
 	{
-		if (EffectApplier)
-		{
-			EffectApplier->EndAbility();
-		}
+		return false;
+	}
+
+	// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
+	if (ActorInfo->AvatarActor->Implements<UPlayerCharacterInterface>())
+	{
+		return Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
+	}
+	return true;
+}
+
+bool ULetheCardAbility::CommitAbilityCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FGameplayTagContainer* OptionalRelevantTags)
+{
+	if (!ActorInfo || !ActorInfo->AvatarActor.IsValid())
+	{
+		return false;
 	}
 	
-	ResetCachedValues();
-	
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
+	if (ActorInfo->AvatarActor->Implements<UPlayerCharacterInterface>())
+	{
+		return Super::CommitAbilityCost(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
+	}
+	return true;
 }
 
 FText ULetheCardAbility::GetRangeDescription() const

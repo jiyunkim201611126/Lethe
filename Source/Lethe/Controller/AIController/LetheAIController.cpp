@@ -412,7 +412,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
-				ArrowRenderer->DrawSkillPreviewArrow(ControlledEnemy, TileManagerSubsystem->GetActorOnTile(TargetTile));
+				ArrowRenderer->DrawCardPreviewArrow(ControlledEnemy, { TileManagerSubsystem->GetActorOnTile(TargetTile) });
 			}
 		}
 	}

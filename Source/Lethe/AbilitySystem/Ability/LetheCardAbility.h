@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LetheGameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/AbilitySystem/TargetSelector/EffectTargetSelector.h"
 #include "LetheCardAbility.generated.h"
 
 USTRUCT(BlueprintType)
@@ -56,15 +57,20 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
+	void GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<TWeakObjectPtr<ATile>>& OutTargetTiles) const;
+
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	bool TryGetEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 	bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const;
-
-protected:
+	
 	//~ Begin UGameplayAbility Interface
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
+	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+	virtual bool CommitAbilityCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
+	
+protected:
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End of UGameplayAbility Interface
 
@@ -121,6 +127,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TArray<FEffectApplyPolicy> EffectApplyPolicies;
+
+	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
+	TObjectPtr<UEffectTargetSelector> EffectTargetSelector;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;

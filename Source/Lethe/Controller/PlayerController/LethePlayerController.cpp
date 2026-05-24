@@ -256,7 +256,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		// 마우스를 타일 위에 올려둔 채로 카드를 키보드로 선택한 경우에도 타일 하이라이팅 등이 정상 작동할 수 있도록 명시적으로 한 번 호출합니다.
 		FTileAndActor OutTileAndActor;
 		ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-		OnOtherTileDetected(nullptr, OutTileAndActor.Actor);
+		OnOtherTileDetected({ OutTileAndActor.Actor });
 		return true;
 	}
 	
@@ -347,7 +347,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		// 선택된 카드가 있거나 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
 		if (OutTileAndActor.Tile)
 		{
-			ActorSelector->HighlightActorByMouse(OutTileAndActor.Tile, false);
+			TArray<AActor*> HighlightActors;
+			HighlightActors.Add(OutTileAndActor.Tile);
+			ActorSelector->HighlightActorByMouse(HighlightActors, false);
 		}
 		return;
 	}
@@ -356,16 +358,18 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	{
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
 		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
-		ActorSelector->HighlightActorByMouse(OutTileAndActor.Actor, true);
+		TArray<AActor*> HighlightActors;
+		HighlightActors.Add(OutTileAndActor.Actor);
+		ActorSelector->HighlightActorByMouse(HighlightActors, true);
 		return;
 	}
 
 	ActorSelector->UnhighlightActorByMouse();
 }
 
-void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* CurrentActor) const
+void ALethePlayerController::OnOtherTileDetected(const TArray<AActor*>& CurrentActors) const
 {
-	if (CurrentActor)
+	if (!CurrentActors.IsEmpty())
 	{
 		if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
 		{
@@ -373,11 +377,11 @@ void ALethePlayerController::OnOtherTileDetected(AActor* LastActor, AActor* Curr
 			if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 			{
 				FPreviewContext PreviewContext;
-				PreviewContext.CurrentTargetActors.Add(CurrentActor);
+				PreviewContext.CurrentTargetActors.Append(CurrentActors);
 				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-				ArrowRenderer->DrawSkillPreviewArrow(SelectedCardOwnerActor, CurrentActor);
+				ArrowRenderer->DrawCardPreviewArrow(SelectedCardOwnerActor, CurrentActors);
 			}
 		}
 	}

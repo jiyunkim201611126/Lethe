@@ -13,19 +13,43 @@ UActorSelectorComponent::UActorSelectorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UActorSelectorComponent::HighlightActorByMouse(AActor* Actor, const bool bTransparent)
+void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actors, const bool bTransparent)
 {
-	LastMouseHoveredActor = CurrentMouseHoveredActor;
-	CurrentMouseHoveredActor = Actor;
-
-	if (LastMouseHoveredActor != CurrentMouseHoveredActor)
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
 	{
-		if (LastMouseHoveredActor)
+		return;
+	}
+	
+	LastMouseHoveredActors = CurrentMouseHoveredActors;
+	CurrentMouseHoveredActors.Reset();
+	for (AActor* Actor : Actors)
+	{
+		if (Actor && Actor->Implements<UHighlightInterface>())
 		{
-			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+			CurrentMouseHoveredActors.Add(Actor);
 		}
-		if (CurrentMouseHoveredActor)
+	}
+
+	if (LastMouseHoveredActors != CurrentMouseHoveredActors)
+	{
+		for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
 		{
+			if (LastMouseHoveredActor)
+			{
+				IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+			}
+		}
+
+		bool bIsTile = false;
+		TArray<AActor*> ActorsOnTile;
+		for (auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
+		{
+			if (!CurrentMouseHoveredActor)
+			{
+				continue;
+			}
+			
 			if (bTransparent)
 			{
 				IHighlightInterface::Execute_HighlightActorTransparentByMouse(CurrentMouseHoveredActor.GetObject());
@@ -34,33 +58,39 @@ void UActorSelectorComponent::HighlightActorByMouse(AActor* Actor, const bool bT
 			{
 				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
 			}
+
+			if (const ATile* Tile = Cast<ATile>(CurrentMouseHoveredActor.GetObject()))
+			{
+				bIsTile = true;
+				ActorsOnTile.Add(TileManagerSubsystem->GetActorOnTile(Tile));
+			}
 		}
 		
-		if (Actor && Actor->IsA<ATile>())
+		if (bIsTile)
 		{
-			// 새롭게 검출된 액터가 타일인 경우 들어오는 분기입니다.
-			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-			{
-				AActor* LastActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(LastMouseHoveredActor.GetObject()));
-				AActor* CurrentActor = TileManagerSubsystem->GetActorOnTile(Cast<ATile>(CurrentMouseHoveredActor.GetObject()));
-				OnDetectedOtherTile.ExecuteIfBound(LastActor, CurrentActor);
-			}
+			OnDetectedOtherTile.ExecuteIfBound(ActorsOnTile);
 		}
 	}
 }
 
 void UActorSelectorComponent::UnhighlightActorByMouse()
 {
-	if (LastMouseHoveredActor)
+	for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
-		LastMouseHoveredActor = nullptr;
+		if (LastMouseHoveredActor)
+		{
+			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+		}
 	}
-	if (CurrentMouseHoveredActor)
+	LastMouseHoveredActors.Reset();
+	for (const auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
 	{
-		IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
-		CurrentMouseHoveredActor = nullptr;
+		if (CurrentMouseHoveredActor)
+		{
+			IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
+		}
 	}
+	CurrentMouseHoveredActors.Reset();
 }
 
 void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner)

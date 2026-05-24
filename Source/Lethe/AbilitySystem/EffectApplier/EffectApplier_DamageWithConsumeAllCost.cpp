@@ -8,6 +8,7 @@
 #include "Lethe/LetheLog.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Interface/PlayerCharacterInterface.h"
 
 UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost()
 {
@@ -16,6 +17,12 @@ UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost
 
 bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
+	const AActor* SourceActor = SourceASC->GetAvatarActor();
+	if (!SourceActor || !SourceActor->Implements<UPlayerCharacterInterface>())
+	{
+		return false;
+	}
+	
 	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
 	if (!bPreview)
 	{

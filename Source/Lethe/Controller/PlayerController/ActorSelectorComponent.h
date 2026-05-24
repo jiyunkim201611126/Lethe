@@ -33,7 +33,7 @@ enum class ETileRangeQueryType : uint8
 	PlayerMove,
 };
 
-DECLARE_DELEGATE_TwoParams(FOnDetectedOtherTile, AActor*, AActor*);
+DECLARE_DELEGATE_OneParam(FOnDetectedOtherTile, const TArray<AActor*>&);
 
 /**
  * 타일, 캐릭터 선택과 하이라이팅을 담당하는 클래스입니다.
@@ -46,7 +46,11 @@ class LETHE_API UActorSelectorComponent : public UActorComponent
 public:
 	UActorSelectorComponent();
 
-	void HighlightActorByMouse(AActor* Actor, const bool bTransparent);
+	/**
+	 * 캐릭터 선택 중, 혹은 카드 선택 후 마우스로 하이라이팅합니다.
+	 * 매개변수로 들어오는 Actor는 캐릭터와 타일이 뒤섞이지 않으며, 반드시 한 종류의 액터만 들어옵니다.
+	 */
+	void HighlightActorByMouse(const TArray<AActor*>& Actors, const bool bTransparent);
 	void UnhighlightActorByMouse();
 	void HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner);
 	void UnhighlightActorsByAbility();
@@ -58,8 +62,8 @@ public:
 	FOnDetectedOtherTile OnDetectedOtherTile;
 
 private:
-	TScriptInterface<IHighlightInterface> LastMouseHoveredActor;
-	TScriptInterface<IHighlightInterface> CurrentMouseHoveredActor;
+	TArray<TScriptInterface<IHighlightInterface>> LastMouseHoveredActors;
+	TArray<TScriptInterface<IHighlightInterface>> CurrentMouseHoveredActors;
 
 	/**
 	 * 현재 하이라이팅된 타일과 캐릭터를 추적하는 변수입니다.

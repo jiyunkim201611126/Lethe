@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "EffectTargetSelector.generated.h"
+#include "EffectTargetTileSelector.generated.h"
 
 class ATile;
 
 UCLASS(Abstract, NotBlueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
-class LETHE_API UEffectTargetSelector : public UObject
+class LETHE_API UEffectTargetTileSelector : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	virtual void Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<TWeakObjectPtr<ATile>>& OutTiles);
+	virtual void Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<AActor*>& OutTiles);
 };

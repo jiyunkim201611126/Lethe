@@ -56,7 +56,8 @@ public:
 	void UnhighlightActorsByAbility();
 	
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
-	bool TryGetTilesByRange(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType) const;
+	bool TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
+	bool TryGetTilesByRangeFromActor(const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;

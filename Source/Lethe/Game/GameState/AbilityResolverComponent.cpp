@@ -20,7 +20,7 @@ void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
 	DummyActor = InDummyActor;
 }
 
-void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately)
+void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	const bool bIsMovementAbility = ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
@@ -36,7 +36,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(const FAbilit
 			}
 		}
 	}
-	PlayerAbilityActivationData.Add(ActivationData);
+	PlayerAbilityActivationData.Add(MoveTemp(ActivationData));
 
 	if (bStartImmediately && !IsResolvingPlayerAbility())
 	{

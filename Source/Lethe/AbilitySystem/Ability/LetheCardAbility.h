@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "LetheGameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
-#include "Lethe/AbilitySystem/TargetSelector/EffectTargetSelector.h"
+#include "Lethe/AbilitySystem/TargetSelector/EffectTargetTileSelector.h"
 #include "LetheCardAbility.generated.h"
 
 USTRUCT(BlueprintType)
@@ -26,7 +26,10 @@ struct FEffectApplyPolicy
 	 */
 	static constexpr int32 AllIndices = -1;
 
-	/** TargetActor에게 적용할 EffectApplier Index입니다. */
+	/**
+	 * EffectApplierTags에 해당하는 EffectApplier를 적용할 TargetActor의 Index 모음입니다.
+	 * CachedTargetActors를 기준으로 수행되며, -1은 캐싱된 모든 TargetActor에게 적용하겠다는 의미입니다.
+	 */
 	UPROPERTY(EditDefaultsOnly)
 	TArray<int32> TargetActorIndices = { AllIndices };
 };
@@ -57,7 +60,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
-	void GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<TWeakObjectPtr<ATile>>& OutTargetTiles) const;
+	/**
+	 * EffectTargetSelector를 통해 시전 시 적용 범위에 해당하는 타일을 가져옵니다.
+	 * ActorSelector와의 호환을 위해 Out 인자는 AActor 배열로 선언합니다.
+	 */
+	bool GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<AActor*>& OutTargetTiles) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -129,7 +136,7 @@ protected:
 	TArray<FEffectApplyPolicy> EffectApplyPolicies;
 
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
-	TObjectPtr<UEffectTargetSelector> EffectTargetSelector;
+	TObjectPtr<UEffectTargetTileSelector> EffectTargetSelector;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;

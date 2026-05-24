@@ -228,7 +228,7 @@ bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
 		}
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		AbilityActivationData.TargetTiles = MoveTemp(PathTiles);
-		LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData, false);
+		LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData), false);
 		
 		bIsActivationDataAdded = true;
 		break;
@@ -543,7 +543,7 @@ bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacte
 			FBFSRange MoveRange;
 			MoveRange.BFSType = EBFSType::Connection;
 			MoveRange.Distance = Combat->GetMoveRange();
-			ActorSelector->TryGetTilesByRange(OutTilesInRange, SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove);
+			ActorSelector->TryGetTilesByRangeFromActor(SelectedCharacter, MoveRange, ETileRangeQueryType::PlayerMove, OutTilesInRange);
 		}
 	}
 	return !OutTilesInRange.IsEmpty();
@@ -599,7 +599,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 							AbilityActivationData.TargetTiles.Emplace(PathTile);
 						}
 					}
-					LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
+					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
 				}
 			}
 			else
@@ -648,7 +648,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 							AbilityActivationData.TargetTiles.Emplace(PathTile);
 						}
 					}
-					LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
+					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
 				}
 			}
 		}
@@ -697,9 +697,9 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	}
 
 	// Ability 사용 범위 내의 타일을 선택했는지 확인합니다.
-	TArray<ATile*> OutTiles;
-	ActorSelector->TryGetTilesByRange(OutTiles, OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange(), ETileRangeQueryType::Any);
-	if (!OutTiles.Contains(OutTileAndActor.Tile))
+	TArray<ATile*> OutAbilityRangeTiles;
+	ActorSelector->TryGetTilesByRangeFromActor(OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange(), ETileRangeQueryType::Any, OutAbilityRangeTiles);
+	if (!OutAbilityRangeTiles.Contains(OutTileAndActor.Tile))
 	{
 		return false;
 	}
@@ -710,13 +710,23 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 		return false;
 	}
 
+	TArray<AActor*> OutTargetTiles;
+	if (!CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles))
+	{
+		return false;
+	}
+
 	FAbilityActivationData AbilityActivationData;
+	for (AActor* TargetTile : OutTargetTiles)
+	{
+		AbilityActivationData.TargetTiles.Add(CastChecked<ATile>(TargetTile));
+	}
+
 	AbilityActivationData.Index = InHandIndex;
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 	AbilityActivationData.AbilityTag = SavedCard.CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
-	AbilityActivationData.TargetTiles.Emplace(OutTileAndActor.Tile);
-	LetheGameState->EnqueuePlayerAbilityActivationData(AbilityActivationData);
+	LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
 	return true;
 }
 

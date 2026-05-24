@@ -31,25 +31,48 @@ void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actor
 		}
 	}
 
-	if (LastMouseHoveredActors != CurrentMouseHoveredActors)
+	bool bMayHaveDetectedOtherTile = false;
+
+	for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
 	{
-		for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
+		if (!LastMouseHoveredActor)
 		{
-			if (LastMouseHoveredActor)
+			continue;
+		}
+		
+		if (!CurrentMouseHoveredActors.Contains(LastMouseHoveredActor))
+		{
+			bMayHaveDetectedOtherTile = true;
+			
+			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+		}
+	}
+
+	bool bIsTile = false;
+	TArray<AActor*> ActorsOnTile;
+	for (auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
+	{
+		if (!CurrentMouseHoveredActor)
+		{
+			continue;
+		}
+		
+		if (const ATile* Tile = Cast<ATile>(CurrentMouseHoveredActor.GetObject()))
+		{
+			bIsTile = true;
+			if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
 			{
-				IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+				if (ActorOnTile->Implements<UCombatInterface>())
+				{
+					ActorsOnTile.Add(ActorOnTile);
+				}
 			}
 		}
-
-		bool bIsTile = false;
-		TArray<AActor*> ActorsOnTile;
-		for (auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
+		
+		if (!LastMouseHoveredActors.Contains(CurrentMouseHoveredActor))
 		{
-			if (!CurrentMouseHoveredActor)
-			{
-				continue;
-			}
-			
+			bMayHaveDetectedOtherTile = true;
+
 			if (bTransparent)
 			{
 				IHighlightInterface::Execute_HighlightActorTransparentByMouse(CurrentMouseHoveredActor.GetObject());
@@ -58,18 +81,12 @@ void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actor
 			{
 				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
 			}
-
-			if (const ATile* Tile = Cast<ATile>(CurrentMouseHoveredActor.GetObject()))
-			{
-				bIsTile = true;
-				ActorsOnTile.Add(TileManagerSubsystem->GetActorOnTile(Tile));
-			}
 		}
-		
-		if (bIsTile)
-		{
-			OnDetectedOtherTile.ExecuteIfBound(ActorsOnTile);
-		}
+	}
+	
+	if (bIsTile && bMayHaveDetectedOtherTile)
+	{
+		OnDetectedOtherTile.ExecuteIfBound(ActorsOnTile);
 	}
 }
 
@@ -161,69 +178,87 @@ void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndA
 	}
 }
 
-bool UActorSelectorComponent::TryGetTilesByRange(TArray<ATile*>& OutTiles, const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType) const
+bool UActorSelectorComponent::TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const
 {
 	OutTiles.Reset();
-	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!Tile || !TileManagerSubsystem)
 	{
-		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile))
+		return false;
+	}
+	
+	TSet<FCubeCoord> SelectedCoords;
+	TileManagerSubsystem->TileBFS(Tile->GetCubeCoord(), InRange.Distance, InRange.BFSType, SelectedCoords,
+		[TileManagerSubsystem, QueryType](const FTileData* CurrentTileData, const FTileData* NextTileData)
 		{
-			TSet<FCubeCoord> SelectedCoords;
-			TileManagerSubsystem->TileBFS(Tile->GetCubeCoord(), InRange.Distance, InRange.BFSType, SelectedCoords,
-				[TileManagerSubsystem, QueryType](const FTileData* CurrentTileData, const FTileData* NextTileData)
-				{
-					if (QueryType == ETileRangeQueryType::PlayerMove)
-					{
-						// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
-						if (!NextTileData || !NextTileData->TopTile.IsValid())
-						{
-							return false;
-						}
-						
-						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TopTile.Get()))
-						{
-							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
-							{
-								return CombatInterface->GetTeamSide() == ETeamSide::Player;
-							}
-						}
-					}
-					return true;
-				},
-				[TileManagerSubsystem, QueryType](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-				{
-					if (QueryType == ETileRangeQueryType::PlayerMove)
-					{
-						// 목적지 좌표에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
-						if (!TileData || !TileData->TopTile.IsValid())
-						{
-							return false;
-						}
-
-						if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
-						{
-							if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
-							{
-								if (CombatInterface->GetTeamSide() == ETeamSide::Player && Depth <= CombatInterface->GetMoveRange())
-								{
-									return true;
-								}
-							}
-							return false;
-						}
-					}
-					return true;
-				});
-
-			for (const FCubeCoord& SelectedCoord : SelectedCoords)
+			if (QueryType == ETileRangeQueryType::PlayerMove)
 			{
-				if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
+				// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
+				if (!NextTileData || !NextTileData->TopTile.IsValid())
 				{
-					OutTiles.Add(SelectedTile);
+					return false;
+				}
+				
+				if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TopTile.Get()))
+				{
+					if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
+					{
+						return CombatInterface->GetTeamSide() == ETeamSide::Player;
+					}
 				}
 			}
+			return true;
+		},
+		[TileManagerSubsystem, QueryType](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+		{
+			if (QueryType == ETileRangeQueryType::PlayerMove)
+			{
+				// 목적지 좌표에 아군 캐릭터가 서있다면, 해당 캐릭터와 스왑 가능 여부를 판별합니다.
+				if (!TileData || !TileData->TopTile.IsValid())
+				{
+					return false;
+				}
+
+				if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
+				{
+					if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
+					{
+						if (CombatInterface->GetTeamSide() == ETeamSide::Player && Depth <= CombatInterface->GetMoveRange())
+						{
+							return true;
+						}
+					}
+					return false;
+				}
+			}
+			return true;
+		});
+
+	for (const FCubeCoord& SelectedCoord : SelectedCoords)
+	{
+		if (ATile* SelectedTile = TileManagerSubsystem->GetTile(SelectedCoord))
+		{
+			OutTiles.Add(SelectedTile);
 		}
 	}
 
 	return !OutTiles.IsEmpty();
+}
+
+bool UActorSelectorComponent::TryGetTilesByRangeFromActor(const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return false;
+	}
+
+	const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile);
+	if (!Tile)
+	{
+		return false;
+	}
+
+	return TryGetTilesByRangeFromTile(Tile, InRange, QueryType, OutTiles);
 }

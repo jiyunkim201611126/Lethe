@@ -22,15 +22,17 @@ ULetheCardAbility::ULetheCardAbility()
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
-void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<TWeakObjectPtr<ATile>>& OutTargetTiles) const
+bool ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<AActor*>& OutTargetTiles) const
 {
 	if (!EffectTargetSelector)
 	{
 		OutTargetTiles.Add(CenterTile);
-		return;
+		return true;
 	}
 
 	EffectTargetSelector->Select(AvatarActor, CenterTile, OutTargetTiles);
+
+	return !OutTargetTiles.IsEmpty();
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const

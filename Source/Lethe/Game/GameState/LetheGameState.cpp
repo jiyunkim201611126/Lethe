@@ -187,9 +187,9 @@ EPhaseState ALetheGameState::GetPhaseState() const
 	return CurrentPhaseState;
 }
 
-void ALetheGameState::EnqueuePlayerAbilityActivationData(const FAbilityActivationData& ActivationData, const bool bStartImmediately) const
+void ALetheGameState::EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately) const
 {
-	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(ActivationData, bStartImmediately);
+	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(MoveTemp(ActivationData), bStartImmediately);
 }
 
 void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const

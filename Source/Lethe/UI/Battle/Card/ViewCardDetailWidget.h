@@ -7,10 +7,9 @@
 #include "ViewCardDetailWidget.generated.h"
 
 class UCardPanelWidgetController;
+class UCardWidget;
 class ULetheRichTextBlock;
 class UOverlay;
-class ULetheImage;
-class UCardWidget;
 
 UCLASS()
 class LETHE_API UViewCardDetailWidget : public ULetheUserWidget
@@ -33,13 +32,7 @@ protected:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UOverlay> CardOverlay;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<ULetheImage> CardImage;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<ULetheImage> CardFrontsideBorderImage;
+	TObjectPtr<UCardWidget> DetailCardWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheRichTextBlock> CardDescriptionTextBlock;

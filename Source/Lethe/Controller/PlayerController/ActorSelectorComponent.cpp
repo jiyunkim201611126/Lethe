@@ -256,7 +256,7 @@ bool UActorSelectorComponent::TryGetTilesByRangeFromTile(const ATile* Tile, cons
 	return !OutTiles.IsEmpty();
 }
 
-bool UActorSelectorComponent::TryGetTilesByRangeFromActor(const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const
+bool UActorSelectorComponent::TryGetTilesByRangeFromActor(const AActor* Actor, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -264,7 +264,7 @@ bool UActorSelectorComponent::TryGetTilesByRangeFromActor(const AActor* ActorOnT
 		return false;
 	}
 
-	const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(ActorOnTile);
+	const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(Actor);
 	if (!Tile)
 	{
 		return false;

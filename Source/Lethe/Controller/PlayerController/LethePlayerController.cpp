@@ -359,12 +359,21 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnCardUseSection)
 	{
 		// 선택된 카드가 있는 경우 들어오는 분기입니다.
-		if (OutTileAndActor.Tile)
+		const ATile* CurrentTile = OutTileAndActor.Tile;
+		const AActor* AvatarActor = SelectedCardOwnerASC->GetAvatarActor();
+		
+		if (CurrentTile && AvatarActor)
 		{
-			TArray<ATile*> OutTargetTiles;
-			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles);
-			ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
-			return;
+			TArray<ATile*> OutAbilityRangeTiles;
+			ActorSelector->TryGetTilesByRangeFromActor(AvatarActor, SelectedCardAbility->GetAbilityRange(), ETileRangeQueryType::Any, OutAbilityRangeTiles);
+			if (OutAbilityRangeTiles.Contains(OutTileAndActor.Tile))
+			{
+				// 마우스를 올린 타일이 선택한 카드의 사용 범위 내에 있는 경우에만 하이라이팅을 활성화합니다.
+				TArray<ATile*> OutTargetTiles;
+				SelectedCardAbility->GetTargetTiles(AvatarActor, OutTileAndActor.Tile, OutTargetTiles);
+				ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
+				return;
+			}
 		}
 	}
 

@@ -59,7 +59,7 @@ public:
 	
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	bool TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
-	bool TryGetTilesByRangeFromActor(const AActor* ActorOnTile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
+	bool TryGetTilesByRangeFromActor(const AActor* Actor, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 
 public:
 	FOnDetectedOtherTile OnDetectedOtherTile;

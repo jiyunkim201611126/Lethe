@@ -9,6 +9,7 @@
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardWidget.generated.h"
 
+class UInvalidationBox;
 class ULetheAbilitySystemComponent;
 class ULetheImage;
 class USizeBox;
@@ -83,6 +84,7 @@ public:
 	void SetCardInfo(const FCardInitParams& InitParams);
 
 	void TryMakeViewDetailData(FViewDetailData& OutData) const;
+	void SetDetailView(const FViewDetailData& InData);
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 
@@ -132,15 +134,21 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<USizeBox> RootSizeBox;
-	
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<ULetheImage> CardBoard;
+	TObjectPtr<UInvalidationBox> FrontInvalidationBox;
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardImage;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardFrontsideBorderImage;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> TypeFrameImage;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> SortFrameImage;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheImage> CardBacksideBorderImage;

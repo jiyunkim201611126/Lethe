@@ -5,7 +5,6 @@
 #include "CardPanelWidgetController.h"
 #include "CardWidget.h"
 #include "Components/Overlay.h"
-#include "Lethe/UI/Core/LetheImage.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
 void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
@@ -14,10 +13,7 @@ void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 	{
 		FViewDetailData ViewDetailData;
 		InCardWidget->TryMakeViewDetailData(ViewDetailData);
-		
-		CardOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		CardImage->SetBrushResourceObject(ViewDetailData.CardImage);
-		CardFrontsideBorderImage->SetColorAndOpacity(ViewDetailData.CardFrontsideBorderColor);
+		DetailCardWidget->SetDetailView(ViewDetailData);
 
 		FText OutDescriptionText;
 		CardPanelWidgetController->GetCardDescriptionText(InCardWidget->GetOwnerASC(), InCardWidget->GetSavedCard(), OutDescriptionText);
@@ -31,7 +27,6 @@ void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 
 void UViewCardDetailWidget::EndViewDetail()
 {
-	CardOverlay->SetVisibility(ESlateVisibility::Collapsed);
 	SetVisibility(ESlateVisibility::Collapsed);
 }
 

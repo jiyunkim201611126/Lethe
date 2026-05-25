@@ -4,6 +4,7 @@
 
 #include "CardPanelWidgetController.h"
 #include "Animation/WidgetAnimation.h"
+#include "Components/InvalidationBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TimelineComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -43,9 +44,13 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 {
 	OwnerASC = InitParams.OwnerASC;
 	SavedCard = InitParams.SavedCard;
-	CardImage->SetBrushFromTexture(InitParams.CardDefinition->CardTexture);
 	CardNameText = InitParams.CardDefinition->CardNameText;
-	CardFrontsideBorderImage->SetColorAndOpacity(InitParams.CardViewData->GetCardTypeColor(InitParams.CardDefinition->CardTypeTag));
+	CardImage->SetBrushFromTexture(InitParams.CardDefinition->CardTexture);
+
+	const FLinearColor& CardTypeColor = InitParams.CardViewData->GetCardTypeColor(InitParams.CardDefinition->CardTypeTag);
+	CardFrontsideBorderImage->SetColorAndOpacity(CardTypeColor);
+	TypeFrameImage->SetColorAndOpacity(CardTypeColor);
+	
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->PersonalColor));
 }
 
@@ -54,6 +59,16 @@ void UCardWidget::TryMakeViewDetailData(FViewDetailData& OutData) const
 	OutData.CardNameText = CardNameText;
 	OutData.CardImage = CardImage->GetBrush().GetResourceObject();
 	OutData.CardFrontsideBorderColor = CardFrontsideBorderImage->GetColorAndOpacity();
+}
+
+void UCardWidget::SetDetailView(const FViewDetailData& InData)
+{
+	CardNameText = InData.CardNameText;
+	CardImage->SetBrushResourceObject(InData.CardImage);
+	CardFrontsideBorderImage->SetColorAndOpacity(InData.CardFrontsideBorderColor);
+	TypeFrameImage->SetColorAndOpacity(InData.CardFrontsideBorderColor);
+	PlayAnimation(ShowFrontAnimation, ShowFrontAnimation->GetEndTime());
+	FrontInvalidationBox->SetCanCache(false);
 }
 
 ULetheAbilitySystemComponent* UCardWidget::GetOwnerASC() const

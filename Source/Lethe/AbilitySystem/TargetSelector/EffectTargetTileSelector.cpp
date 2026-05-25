@@ -2,7 +2,6 @@
 
 #include "EffectTargetTileSelector.h"
 
-void UEffectTargetTileSelector::Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<AActor*>& OutTiles)
+void UEffectTargetTileSelector::Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<ATile*>& OutTiles)
 {
-	OutTiles.Empty();
 }

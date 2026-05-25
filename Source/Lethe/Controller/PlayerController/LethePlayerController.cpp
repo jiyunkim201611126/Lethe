@@ -256,9 +256,9 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		// 마우스를 타일 위에 올려둔 채로 카드를 키보드로 선택한 경우에도 타일 하이라이팅 등이 정상 작동할 수 있도록 명시적으로 한 번 호출합니다.
 		FTileAndActor OutTileAndActor;
 		ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-		TArray<AActor*> HighlightTiles;
-		SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, HighlightTiles);
-		ActorSelector->HighlightActorByMouse(HighlightTiles, false);
+		TArray<ATile*> OutTargetTiles;
+		SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles);
+		ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
 		return true;
 	}
 	
@@ -361,9 +361,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		// 선택된 카드가 있는 경우 들어오는 분기입니다.
 		if (OutTileAndActor.Tile)
 		{
-			TArray<AActor*> HighlightTiles;
-			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, HighlightTiles);
-			ActorSelector->HighlightActorByMouse(HighlightTiles, false);
+			TArray<ATile*> OutTargetTiles;
+			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles);
+			ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
 			return;
 		}
 	}

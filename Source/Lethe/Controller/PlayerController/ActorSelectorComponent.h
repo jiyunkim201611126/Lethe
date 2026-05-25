@@ -54,6 +54,8 @@ public:
 	void UnhighlightActorByMouse();
 	void HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner);
 	void UnhighlightActorsByAbility();
+
+	void HighlightTilesByMouse(const TArray<ATile*>& Tiles, const bool bTransparent);
 	
 	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
 	bool TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;

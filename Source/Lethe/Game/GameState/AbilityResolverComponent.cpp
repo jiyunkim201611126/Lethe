@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -232,7 +233,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	{
 		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
 
-		/** 모든 경로 생성 함수들은 StartTile을 제외하고 생성하므로, 여기서 직접 추가합니다. */
+		// 모든 경로 생성 함수들은 StartTile을 제외하고 생성하므로, 여기서 직접 추가합니다.
 		if (ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(AbilityOwnerASC->GetAvatarActor()))
 		{
 			MovePayload->PathTiles.Add(StartTile);
@@ -260,25 +261,34 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 
+		bool bIsValidCombatTarget = false;
 		TArray<TWeakObjectPtr<AActor>> TargetActors;
 		for (const auto& TargetTile : ActivationData->TargetTiles)
 		{
 			if (TargetTile.IsValid())
 			{
-				if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get()))
+				// EffectApplyPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+				AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
+
+				const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();
+				TargetActors.Add(bIsTargetCombat ? ActorOnTile : nullptr);
+				
+				if (bIsTargetCombat)
 				{
-					TargetActors.Add(ActorOnTile);
+					// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
+					bIsValidCombatTarget = true;
 				}
 			}
 		}
 
 		FGameplayAbilityTargetData_ActorArray* ActorArrayData = new FGameplayAbilityTargetData_ActorArray();
-		if (TargetActors.IsEmpty())
+		if (!bIsValidCombatTarget)
 		{
+			// 유효한 대상이 하나도 없는 경우 들어오는 분기입니다.
 			switch (CurrentActivationCharacterTeamSide)
 			{
 			case ETeamSide::Player:
-				// 플레이어는 Tile 위에 대상이 없는 상태로 여기까지 왔다면 로직 오류입니다.
+				// 플레이어는 유효한 대상이 없는 상태로 여기까지 왔다면 로직 오류입니다.
 				return ETryAbilityActivationResult::FailedLogicError;
 			case ETeamSide::Enemy:
 				{

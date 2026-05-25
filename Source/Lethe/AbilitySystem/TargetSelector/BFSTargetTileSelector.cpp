@@ -5,10 +5,9 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void UBFSTargetTileSelector::Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<AActor*>& OutTiles)
+void UBFSTargetTileSelector::Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<ATile*>& OutTiles)
 {
-	Super::Select(AvatarActor, CenterTile, OutTiles);
-	
+	OutTiles.Empty();
 	if (!AvatarActor || !CenterTile)
 	{
 		return;

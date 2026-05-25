@@ -13,7 +13,7 @@ class LETHE_API UBFSTargetTileSelector : public UEffectTargetTileSelector
 	GENERATED_BODY()
 
 public:
-	virtual void Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<AActor*>& OutTiles) override;
+	virtual void Select(const AActor* AvatarActor, const ATile* CenterTile, TArray<ATile*>& OutTiles) override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

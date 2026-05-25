@@ -60,11 +60,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
-	/**
-	 * EffectTargetSelector를 통해 시전 시 적용 범위에 해당하는 타일을 가져옵니다.
-	 * ActorSelector와의 호환을 위해 Out 인자는 AActor 배열로 선언합니다.
-	 */
-	bool GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<AActor*>& OutTargetTiles) const;
+	/** EffectTargetSelector를 통해 시전 시 적용 범위에 해당하는 타일을 가져옵니다. */
+	bool GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<ATile*>& OutTargetTiles) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -135,6 +132,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TArray<FEffectApplyPolicy> EffectApplyPolicies;
 
+	/**
+	 * TargetTile 지정을 수행하는 객체입니다.
+	 * 할당하지 않으면 자동으로 마우스 위치의 타일 하나만 TargetTile로 지정됩니다.
+	 */
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
 	TObjectPtr<UEffectTargetTileSelector> EffectTargetSelector;
 	

@@ -710,8 +710,34 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 		return false;
 	}
 
-	TArray<AActor*> OutTargetTiles;
+	TArray<ATile*> OutTargetTiles;
 	if (!CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles))
+	{
+		return false;
+	}
+
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return false;
+	}
+
+	// TargetTile 위에 유효한 대상이 있는지 확인합니다.
+	bool bContainsValidActor = false;
+	for (const ATile* TargetTile : OutTargetTiles)
+	{
+		if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile))
+		{
+			if (ActorOnTile->Implements<UCombatInterface>())
+			{
+				bContainsValidActor = true;
+				break;
+			}
+		}
+	}
+
+	// 유효한 대상이 없는 경우 false를 반환합니다.
+	if (!bContainsValidActor)
 	{
 		return false;
 	}

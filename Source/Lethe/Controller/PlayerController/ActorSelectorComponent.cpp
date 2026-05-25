@@ -133,13 +133,13 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 		}
 	}
 	
-	IHighlightInterface::Execute_HighlightActorByAbility(AbilityOwner, INDEX_NONE);
 	CurrentHighlightedCharacterByAbility = AbilityOwner;
+	IHighlightInterface::Execute_HighlightActorByAbility(CurrentHighlightedCharacterByAbility.GetObject(), INDEX_NONE);
 }
 
 void UActorSelectorComponent::UnhighlightActorsByAbility()
 {
-	for (TScriptInterface<IHighlightInterface> HighlightedTile : CurrentHighlightedTilesByAbility)
+	for (const auto& HighlightedTile : CurrentHighlightedTilesByAbility)
 	{
 		if (HighlightedTile)
 		{
@@ -155,8 +155,18 @@ void UActorSelectorComponent::UnhighlightActorsByAbility()
 	}
 }
 
+void UActorSelectorComponent::HighlightTilesByMouse(const TArray<ATile*>& Tiles, const bool bTransparent)
+{
+	TArray<AActor*> Actors;
+	Actors.Append(Tiles);
+	HighlightActorByMouse(Actors, bTransparent);
+}
+
 void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
 {
+	TileAndActor.Tile = nullptr;
+	TileAndActor.Actor = nullptr;
+	
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
 	{
 		FHitResult Hit;

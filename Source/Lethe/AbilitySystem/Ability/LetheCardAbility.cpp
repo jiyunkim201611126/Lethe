@@ -22,7 +22,7 @@ ULetheCardAbility::ULetheCardAbility()
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
-bool ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<AActor*>& OutTargetTiles) const
+bool ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<ATile*>& OutTargetTiles) const
 {
 	if (!EffectTargetSelector)
 	{

@@ -374,6 +374,10 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 				ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
 				return;
 			}
+
+			// 사용 범위를 벗어난 경우 프리뷰 및 Arrow를 비활성화합니다.
+			PreviewCoordinatorComponent->StopAllPreview();
+			ArrowRenderer->DeactivateArrow();
 		}
 	}
 

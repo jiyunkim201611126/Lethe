@@ -48,25 +48,23 @@ void UCardWidget::SetCardInfo(const FCardInitParams& InitParams)
 	CardImage->SetBrushFromTexture(InitParams.CardDefinition->CardTexture);
 
 	const FLinearColor& CardTypeColor = InitParams.CardViewData->GetCardTypeColor(InitParams.CardDefinition->CardTypeTag);
-	CardFrontsideBorderImage->SetColorAndOpacity(CardTypeColor);
 	TypeFrameImage->SetColorAndOpacity(CardTypeColor);
 	
 	CardBacksideBorderImage->SetColorAndOpacity(FLinearColor(InitParams.CharacterDefinitionData->PersonalColor));
 }
 
-void UCardWidget::TryMakeViewDetailData(FViewDetailData& OutData) const
+void UCardWidget::MakeViewDetailData(FViewDetailData& OutData) const
 {
 	OutData.CardNameText = CardNameText;
 	OutData.CardImage = CardImage->GetBrush().GetResourceObject();
-	OutData.CardFrontsideBorderColor = CardFrontsideBorderImage->GetColorAndOpacity();
+	OutData.CardTypeColor = TypeFrameImage->GetColorAndOpacity();
 }
 
-void UCardWidget::SetDetailView(const FViewDetailData& InData)
+void UCardWidget::SetViewDetail(const FViewDetailData& InData)
 {
 	CardNameText = InData.CardNameText;
 	CardImage->SetBrushResourceObject(InData.CardImage);
-	CardFrontsideBorderImage->SetColorAndOpacity(InData.CardFrontsideBorderColor);
-	TypeFrameImage->SetColorAndOpacity(InData.CardFrontsideBorderColor);
+	TypeFrameImage->SetColorAndOpacity(InData.CardTypeColor);
 	PlayAnimation(ShowFrontAnimation, ShowFrontAnimation->GetEndTime());
 	FrontInvalidationBox->SetCanCache(false);
 }

@@ -69,7 +69,7 @@ struct FViewDetailData
 	UPROPERTY()
 	UObject* CardImage = nullptr;
 
-	FLinearColor CardFrontsideBorderColor;
+	FLinearColor CardTypeColor;
 };
 
 DECLARE_DELEGATE_TwoParams(FOnCardMouseEventSignature, UCardWidget*, const ECardAction);
@@ -83,8 +83,8 @@ public:
 	void SetSize(const FVector2D& InSize) const;
 	void SetCardInfo(const FCardInitParams& InitParams);
 
-	void TryMakeViewDetailData(FViewDetailData& OutData) const;
-	void SetDetailView(const FViewDetailData& InData);
+	void MakeViewDetailData(FViewDetailData& OutData) const;
+	void SetViewDetail(const FViewDetailData& InData);
 
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
 

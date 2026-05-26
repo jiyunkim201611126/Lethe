@@ -12,8 +12,8 @@ void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 	if (InCardWidget)
 	{
 		FViewDetailData ViewDetailData;
-		InCardWidget->TryMakeViewDetailData(ViewDetailData);
-		DetailCardWidget->SetDetailView(ViewDetailData);
+		InCardWidget->MakeViewDetailData(ViewDetailData);
+		DetailCardWidget->SetViewDetail(ViewDetailData);
 
 		FText OutDescriptionText;
 		CardPanelWidgetController->GetCardDescriptionText(InCardWidget->GetOwnerASC(), InCardWidget->GetSavedCard(), OutDescriptionText);

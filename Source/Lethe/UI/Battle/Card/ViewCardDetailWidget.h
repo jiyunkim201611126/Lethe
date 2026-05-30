@@ -16,7 +16,7 @@ class LETHE_API UViewCardDetailWidget : public ULetheUserWidget
 {
 	GENERATED_BODY()
 
-public:
+public:/*
 	void StartViewDetail(const UCardWidget* InCardWidget);
 	void EndViewDetail();
 
@@ -29,10 +29,10 @@ protected:
 	//~ Begin ULetheUserWidget Interface
 	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
-
+*/
 protected:
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCardWidget> DetailCardWidget;
+	//UPROPERTY(meta = (BindWidget))
+	//TObjectPtr<UCardWidget> DetailCardWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheRichTextBlock> CardDescriptionTextBlock;

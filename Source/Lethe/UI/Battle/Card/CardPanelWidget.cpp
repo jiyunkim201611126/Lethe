@@ -5,7 +5,6 @@
 #include "ViewCardDetailWidget.h"
 #include "CardPanelWidgetController.h"
 #include "CardUseSectionWidget.h"
-#include "CardWidget.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Lethe/Lethe.h"
@@ -15,23 +14,23 @@ void UCardPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	UseRequestedCards.Reserve(MAX_HAND_COUNT);
+	//UseRequestedCards.Reserve(MAX_HAND_COUNT);
 	
-	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
-	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDownInCardUseSection);
-	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::OnMouseButtonUpInCardUseSection);
+	//TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	//CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDownInCardUseSection);
+	//CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::OnMouseButtonUpInCardUseSection);
 }
 
 void UCardPanelWidget::NativeDestruct()
 {
 	CardLayoutManager = nullptr;
-	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	//TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
 	CardUseSection->OnMouseButtonDown.Unbind();
 	CardUseSection->OnMouseButtonUp.Unbind();
 	
 	Super::NativeDestruct();
 }
-
+/*
 FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
@@ -434,3 +433,4 @@ void UCardPanelWidget::OnDrawPhaseStarted() const
 		UpdateAllCardTranslation();
 	}
 }
+*/

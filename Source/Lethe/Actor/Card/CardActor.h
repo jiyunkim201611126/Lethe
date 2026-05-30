@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CardActor.h"
 #include "GameplayTagContainer.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"

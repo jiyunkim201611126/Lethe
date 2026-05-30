@@ -2,7 +2,6 @@
 
 #include "CardLayoutManager.h"
 
-#include "CardWidget.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/Util.h"
@@ -11,7 +10,7 @@
 #include "Slate/WidgetTransform.h"
 
 void UCardLayoutManager::Initialize(const FVector2D& CardSize)
-{
+{/*
 	PaddingDeckAndHand += CardSize.X;
 	PaddingHandAndHand += CardSize.X;
 	FirstCardTranslation.X += CardSize.X / 2.f;
@@ -21,7 +20,7 @@ void UCardLayoutManager::Initialize(const FVector2D& CardSize)
 	GravesCardTranslation.X += CardSize.X / 2.f;
 	GravesCardTranslation.Y -= CardSize.Y / 2.f;
 	
-	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);
+	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);*/
 }
 
 void UCardLayoutManager::SetupCardSlot(UCanvasPanelSlot* CardSlot) const
@@ -31,10 +30,10 @@ void UCardLayoutManager::SetupCardSlot(UCanvasPanelSlot* CardSlot) const
 		CardSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
 		CardSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 		CardSlot->SetAutoSize(true);
-		CardSlot->SetZOrder(DeckZOrder);
+		//CardSlot->SetZOrder(DeckZOrder);
 	}
 }
-
+/*
 void UCardLayoutManager::AddCardToDeck(UCardWidget* CardWidget)
 {
 	if (CardWidget)
@@ -252,3 +251,4 @@ int32 UCardLayoutManager::FindCurrentHandIndex(UCardWidget* CardWidget) const
 {
 	return CurrentHands.Find(CardWidget);
 }
+*/

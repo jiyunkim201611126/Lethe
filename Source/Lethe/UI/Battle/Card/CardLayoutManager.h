@@ -12,6 +12,7 @@ class ULetheAbilitySystemComponent;
 struct FAbilitySystemReference;
 
 /** TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다. */
+/*
 USTRUCT(BlueprintType)
 struct FCharacterCards
 {
@@ -33,7 +34,7 @@ struct FCharacterCards
 	UPROPERTY()
 	TArray<TObjectPtr<UCardWidget>> Graves;
 };
-
+*/
 /**
  * Card 상태(Deck/Hand/Grave)와 레이아웃을 함께 담당하는 클래스입니다.
  * Add는 로직상의 추가를, Move는 카드를 View상에서 움직임을 의미합니다.
@@ -47,7 +48,7 @@ public:
 	void Initialize(const FVector2D& CardSize);
 	
 	void SetupCardSlot(UCanvasPanelSlot* CardSlot) const;
-	
+	/*
 	void AddCardToDeck(UCardWidget* CardWidget);
 	void ShuffleDeck();
 	UCardWidget* GetTopDeckCard(ULetheAbilitySystemComponent* OwnerASC) const;
@@ -60,6 +61,7 @@ public:
 	void RefillDeck();
 
 	/** 캐릭터 순서대로 순회할 필요가 있어 매개변수로 AbilitySystemReferences를 받아 순회하면서 ASCToCards에서 가져옵니다. */
+	/*
 	void MoveAllCards(const TArray<FAbilitySystemReference>& AbilitySystemReferences);
 	
 	bool AreAllDecksFull() const;
@@ -87,5 +89,5 @@ private:
 	FVector2D NextCardTranslation = FVector2D(80.f, -40.f);
 	FVector2D GravesCardTranslation = FVector2D(1760.f, -40.f);
 	float PaddingDeckAndHand = 25.f;
-	float PaddingHandAndHand = 10.f;
+	float PaddingHandAndHand = 10.f;*/
 };

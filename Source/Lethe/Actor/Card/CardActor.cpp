@@ -67,7 +67,7 @@ void ACardActor::Tick(const float DeltaSeconds)
 
 void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 {
-	OwnerASC = InitParams.OwnerASC;
+	//OwnerASC = InitParams.OwnerASC;
 	SavedCard = InitParams.SavedCard;
 
 	if (InitParams.CardDefinition)

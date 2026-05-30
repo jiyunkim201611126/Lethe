@@ -3,9 +3,10 @@
 #include "ViewCardDetailWidget.h"
 
 #include "CardPanelWidgetController.h"
+#include "CardWidget.h"
 #include "Components/Overlay.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
-/*
+
 void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 {
 	if (InCardWidget)
@@ -47,4 +48,3 @@ void UViewCardDetailWidget::WidgetControllerSet_Implementation()
 {
 	CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
 }
-*/

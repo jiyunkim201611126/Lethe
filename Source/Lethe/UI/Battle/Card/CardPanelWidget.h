@@ -25,16 +25,16 @@ class LETHE_API UCardPanelWidget : public ULetheUserWidget
 
 public:
 	//~ Begin ULetheUserWidget Interface
-	//virtual void WidgetControllerSet_Implementation() override;
+	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
 
 protected:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	//virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
-/*
+
 private:
 	void OnMouseEvent(UCardWidget* CardWidget, const ECardAction CardAction);
 	void OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction) const;
@@ -50,9 +50,8 @@ private:
 	
 	void OnHandHovered(UCardWidget* CardWidget, const bool bHovered) const;
 	void SelectCard(UCardWidget* CardWidget);
-
+	
 	/** 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다. */
-	/*
 	bool OnMouseButtonDownInCardUseSection() const;
 	bool OnMouseButtonUpInCardUseSection();
 	void CancelSelectedCard() const;
@@ -67,7 +66,6 @@ private:
 
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	void OnDrawPhaseStarted() const;
-	*/
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
@@ -95,12 +93,12 @@ private:
 	uint8 bControllerInitialized : 1 = false;
 
 	EPhaseState CurrentPhaseState = EPhaseState::None;
-/*
+
 	UPROPERTY()
 	TObjectPtr<UCardWidget> CurrentSelectedCard;
 	
 	UPROPERTY()
-	TMap<int32, TObjectPtr<UCardWidget>> UseRequestedCards;*/
+	TMap<int32, TObjectPtr<UCardWidget>> UseRequestedCards;
 
 	uint8 bRightMouseButtonPressed : 1 = false;
 };

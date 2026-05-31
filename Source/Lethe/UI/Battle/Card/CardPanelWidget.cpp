@@ -1,22 +1,19 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "CardPanelWidget.h"
 
-#include "ViewCardDetailWidget.h"
 #include "CardPanelWidgetController.h"
 #include "CardUseSectionWidget.h"
-#include "CardWidget.h"
+#include "ViewCardDetailWidget.h"
 #include "Components/Button.h"
-#include "Components/CanvasPanel.h"
-#include "Lethe/Lethe.h"
-#include "Lethe/UI/Framework/LetheWidgetController.h"
+#include "InputCoreTypes.h"
+#include "Lethe/Actor/Card/HandStage.h"
+#include "Lethe/UI/Core/LetheImage.h"
 
 void UCardPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	UseRequestedCards.Reserve(MAX_HAND_COUNT);
-	
 	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
 	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDownInCardUseSection);
 	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::OnMouseButtonUpInCardUseSection);
@@ -24,24 +21,32 @@ void UCardPanelWidget::NativeConstruct()
 
 void UCardPanelWidget::NativeDestruct()
 {
-	CardLayoutManager = nullptr;
-	TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
-	CardUseSection->OnMouseButtonDown.Unbind();
-	CardUseSection->OnMouseButtonUp.Unbind();
-	
-	Super::NativeDestruct();
-}
-
-FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	if (CardPanelWidgetController)
 	{
-		if (CurrentSelectedCard)
-		{
-			CancelSelectedCard();
-		}
+		CardPanelWidgetController->OnAbilityUpdatedDelegate.Unbind();
+		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.Unbind();
+		CardPanelWidgetController->OnPhaseStateChangedDelegate.RemoveAll(this);
+		CardPanelWidgetController->OnNumberKeyPressedDelegate.Unbind();
+		CardPanelWidgetController->OnCardSelectCanceledDelegate.Unbind();
+		CardPanelWidgetController->OnUseCardResolvedDelegate.Unbind();
 	}
-	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
+
+	if (TurnEndButton)
+	{
+		TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
+	}
+	if (CardUseSection)
+	{
+		CardUseSection->OnMouseButtonDown.Unbind();
+		CardUseSection->OnMouseButtonUp.Unbind();
+	}
+	if (HandStage)
+	{
+		HandStage->Destroy();
+		HandStage = nullptr;
+	}
+
+	Super::NativeDestruct();
 }
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()
@@ -50,387 +55,245 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	{
 		CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
 	}
-	
-	// 해당 함수는 캐릭터 수만큼, 최대 4번 호출되기 때문에 플래그로 1번만 아래 로직이 실행되도록 막아줍니다.
-	if (!bControllerInitialized && CardPanelWidgetController)
+
+	if (CardPanelWidgetController)
 	{
-		CardLayoutManager = NewObject<UCardLayoutManager>(this);
-		if (CardLayoutManager)
-		{			
-			// 아웃라인 구현을 위해 카드 사이즈를 4 높게 잡았으므로 그걸 뺀 수치를 사용합니다.
-			const FVector2D CardSize = CardPanelWidgetController->GetCardSize() - FVector2D(4.f);
-			CardLayoutManager->Initialize(CardSize);
-		}
-		
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
+		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeHandStage);
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
 		ViewCardDetail->SetWidgetController(WidgetController);
-		bControllerInitialized = true;
-	}
-}
 
-void UCardPanelWidget::OnMouseEvent(UCardWidget* CardWidget, const ECardAction CardAction)
-{	
-	switch (CurrentPhaseState)
-	{
-	case EPhaseState::DrawPhase:
-		OnMouseEventWhenDrawPhase(CardWidget, CardAction);
-		break;
-	case EPhaseState::PlayerTurnPhase:
-		OnMouseEventWhenPlayerTurnPhase(CardWidget, CardAction);
-		break;
-	default:
-		break;
-	}
-}
-
-void UCardPanelWidget::OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction) const
-{
-	switch (CardAction)
-	{
-	case ECardAction::DeckHovered:
-		OnDeckHovered(CardWidget, true);
-		break;
-	case ECardAction::DeckUnhovered:
-		OnDeckHovered(CardWidget, false);
-		break;
-	case ECardAction::Draw:
-		TryDraw(CardWidget ? CardWidget->GetOwnerASC() : nullptr);
-		break;
-	default:
-		break;
-	}
-}
-
-void UCardPanelWidget::OnMouseEventWhenPlayerTurnPhase(UCardWidget* CardWidget, const ECardAction CardAction)
-{
-	switch (CardAction)
-	{
-	case ECardAction::HandHovered:
-		OnHandHovered(CardWidget, true);
-		break;
-	case ECardAction::HandUnhovered:
-		OnHandHovered(CardWidget, false);
-		break;
-	case ECardAction::Selected:
-		SelectCard(CardWidget);
-		break;
-	case ECardAction::ViewDetail:
-		StartViewCardDetail(CardWidget);
-		break;
-	default:
-		break;
-	}
-}
-
-void UCardPanelWidget::OnKeyboardEvent(const int32 Number)
-{
-	switch (CurrentPhaseState)
-	{
-	case EPhaseState::DrawPhase:
-		OnKeyboardEventWhenDrawPhase(Number);
-		break;
-	case EPhaseState::PlayerTurnPhase:
-		OnKeyboardEventWhenPlayerTurnPhase(Number);
-		break;
-	default:
-		break;
-	}
-}
-
-void UCardPanelWidget::OnKeyboardEventWhenDrawPhase(const int32 Number) const
-{
-	if (!CardLayoutManager || !CardPanelWidgetController)
-	{
-		return;
-	}
-
-	const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-	if (AbilitySystemReferences.IsValidIndex(Number))
-	{
-		TryDraw(AbilitySystemReferences[Number].AbilitySystemComponent);
-	}
-}
-
-void UCardPanelWidget::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
-{
-	if (!CardLayoutManager)
-	{
-		return;
-	}
-
-	const TArray<TObjectPtr<UCardWidget>>& CurrentHands = CardLayoutManager->GetCurrentHands();
-	if (CurrentHands.IsValidIndex(Number))
-	{
-		UCardWidget* SelectedCard = CurrentHands[Number];
-		if (SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
+		if (HandStageClass && !HandStage)
 		{
-			SelectCard(SelectedCard);
-		}
-	}
-}
-
-void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams)
-{
-	if (UCardWidget* CreatedCard = CreateWidget<UCardWidget>(this, CardWidgetClass))
-	{		
-		if (UCanvasPanelSlot* CardSlot = RootCanvasPanel->AddChildToCanvas(CreatedCard))
-		{
-			CreatedCard->SetWidgetController(WidgetController);
-			CreatedCard->SetCardInfo(CardInitParams);
-			CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnMouseEvent);
-
-			if (CardLayoutManager)
+			const FVector StageLocation = FVector(0.f, 0.f, -3000.f);
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			HandStage = GetWorld()->SpawnActor<AHandStage>(HandStageClass, StageLocation, FRotator::ZeroRotator, SpawnParams);
+			if (HandStage)
 			{
-				CardLayoutManager->SetupCardSlot(CardSlot);
-				CardLayoutManager->AddCardToDeck(CreatedCard);
-				
-				if (CardLayoutManager->AreAllDecksFull())
-				{
-					CardLayoutManager->ShuffleDeck();
-					UpdateAllCardTranslation();
-				}
+				HandStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
+				HandStage->OnSelectCardRequested.BindUObject(this, &ThisClass::SetCardSelected);
+				HandStage->OnGoPlayerTurnPhaseRequested.BindUObject(this, &ThisClass::GoPlayerTurnPhase);
+				HandStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
+				HandStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
+				HandStage->OnTurnEndRequested.BindUObject(this, &ThisClass::RequestTurnEnd);
 			}
 		}
+
+		TryInitializeHandStage();
 	}
 }
 
-void UCardPanelWidget::UpdateAllCardTranslation() const
+void UCardPanelWidget::TryInitializeHandStage() const
 {
-	if (CardLayoutManager && CardPanelWidgetController)
+	if (HandStage && CardPanelWidgetController)
 	{
-		CardLayoutManager->MoveAllCards(CardPanelWidgetController->GetAbilitySystemReferences());
-	}
-}
-
-void UCardPanelWidget::OnDeckHovered(const UCardWidget* CardWidget, const bool bHovered) const
-{
-	if (!CardLayoutManager || !CardWidget)
-	{
-		return;
-	}
-
-	if (ULetheAbilitySystemComponent* OwnerASC = CardWidget->GetOwnerASC())
-	{
-		if (UCardWidget* DeckOnTopCard = CardLayoutManager->GetTopDeckCard(OwnerASC))
+		TArray<TObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
+		for (const FAbilitySystemReference& AbilitySystemReference : CardPanelWidgetController->GetAbilitySystemReferences())
 		{
-			DeckOnTopCard->MouseHovered(bHovered);
+			AbilitySystemComponents.Add(AbilitySystemReference.AbilitySystemComponent);
+		}
+
+		HandStage->Initialize(CardPanelWidgetController->GetCardSize(), AbilitySystemComponents);
+	}
+}
+
+FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (HandStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	{
+		HandStage->CancelSelectedCard();
+	}
+	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FVector2D TargetUV;
+	TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
+	if (HandStage && HandStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
+	{
+		return FReply::Handled().CaptureMouse(TakeWidget());
+	}
+	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FVector2D TargetUV;
+	TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
+	if (HandStage && HandStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
+	{
+		return FReply::Handled().ReleaseMouseCapture();
+	}
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+FReply UCardPanelWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FVector2D TargetUV;
+	if (HandStage)
+	{
+		const bool bIsMouseOnHandStage = TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
+		if (bIsMouseOnHandStage)
+		{
+			HandStage->HandleCapturedMouseMove(TargetUV);
+		}
+		else
+		{
+			HandStage->HandleCapturedMouseLeave();
 		}
 	}
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }
 
-void UCardPanelWidget::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
+void UCardPanelWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (!CardLayoutManager || !CardPanelWidgetController || !OwnerASC)
-	{
-		return;
-	}
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 
-	if (CardLayoutManager->TryDraw(OwnerASC))
+	FVector2D TargetUV;
+	if (HandStage && TryGetCapturedHandStageUV(InMouseEvent, TargetUV))
 	{
-		UpdateAllCardTranslation();
-	}
-
-	if (CardLayoutManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
-	{
-		// 8장 드로우를 마쳤으므로, 배틀 페이즈에 돌입합니다.
-		CardPanelWidgetController->GoPlayerTurnPhase();
-
-		// 마우스를 덱에 올려둔 채로 키보드로 드로우할 경우 DeckHovered가 남아있는 현상을 해결하기 위해 작성된 구문입니다.
-		const TArray<FAbilitySystemReference>& AbilitySystemReferences = CardPanelWidgetController->GetAbilitySystemReferences();
-		for (const FAbilitySystemReference& AbilitySystemReference : AbilitySystemReferences)
-		{
-			if (UCardWidget* DeckOnTopCard = CardLayoutManager->GetTopDeckCard(AbilitySystemReference.AbilitySystemComponent))
-			{
-				DeckOnTopCard->MouseHovered(false);
-			}
-		}
+		HandStage->HandleCapturedMouseMove(TargetUV);
 	}
 }
 
-void UCardPanelWidget::OnHandHovered(UCardWidget* CardWidget, const bool bHovered) const
+void UCardPanelWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-	CardWidget->MouseHovered(bHovered);
+	if (HandStage)
+	{
+		HandStage->HandleCapturedMouseLeave();
+	}
+
+	Super::NativeOnMouseLeave(InMouseEvent);
 }
 
-void UCardPanelWidget::SelectCard(UCardWidget* CardWidget)
+void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {
-	// 다른 카드가 선택되어 있었다면 선택을 취소합니다.
-	CancelSelectedCard();
-
-	// 이미 사용 대기 상태인 카드라면 선택하지 않고 얼리 리턴합니다.
-	const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CardWidget) : INDEX_NONE;
-	if (UseRequestedCards.Contains(HandIndex))
+	if (HandStage)
 	{
-		return;
+		HandStage->HandleCapturedMouseCaptureLost();
 	}
 
-	// 이미 사용했거나, 선택된 카드라면 얼리 리턴합니다.
-	if (CardWidget->GetCurrentCardContainer() == ECardContainer::Grave || CardWidget->GetCurrentCardContainer() == ECardContainer::Selected)
+	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
+}
+
+bool UCardPanelWidget::TryGetCapturedHandStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const
+{
+	if (!CapturedHandStage)
 	{
-		return;
+		return false;
 	}
-	
-	CurrentSelectedCard = CardWidget;
-	if (CurrentSelectedCard && CardPanelWidgetController)
+
+	const FGeometry& ImageGeometry = CapturedHandStage->GetCachedGeometry();
+	const FVector2D ImageSize = ImageGeometry.GetLocalSize();
+	if (ImageSize.X <= UE_SMALL_NUMBER || ImageSize.Y <= UE_SMALL_NUMBER)
 	{
-		if (CardPanelWidgetController->SetCardSelected(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
-		{
-			// SetCardSelected에서 선택이 취소됐을 가능성이 있으므로, (그 경우 false를 반환하긴 하지만) CurrentSelectedCard에 대한 null체크를 한 번 더 해줍니다.
-			if (CurrentSelectedCard)
-			{
-				CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
-				if (CardLayoutManager)
-				{
-					CardLayoutManager->OnCardSelected(CurrentSelectedCard);
-				}
-			}
-		}
+		return false;
+	}
+
+	const FVector2D LocalPosition = ImageGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+	OutUV = FVector2D(LocalPosition.X / ImageSize.X, LocalPosition.Y / ImageSize.Y);
+	return OutUV.X >= 0.f && OutUV.X <= 1.f && OutUV.Y >= 0.f && OutUV.Y <= 1.f;
+}
+
+void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams) const
+{
+	if (HandStage)
+	{
+		HandStage->CreateCard(CardInitParams);
+	}
+}
+
+void UCardPanelWidget::OnKeyboardEvent(const int32 Number) const
+{
+	if (HandStage)
+	{
+		HandStage->HandleKeyboardEvent(Number);
 	}
 }
 
 bool UCardPanelWidget::OnMouseButtonDownInCardUseSection() const
 {
-	return CurrentSelectedCard != nullptr;
+	return HandStage && HandStage->HandleMouseButtonDownInCardUseSection();
 }
 
-bool UCardPanelWidget::OnMouseButtonUpInCardUseSection()
+bool UCardPanelWidget::OnMouseButtonUpInCardUseSection() const
 {
-	if (CurrentSelectedCard && CardPanelWidgetController)
-	{
-		// 사용 준비 중인 카드가 있을 때만 들어오는 분기입니다.
-		const int32 HandIndex = CardLayoutManager ? CardLayoutManager->FindCurrentHandIndex(CurrentSelectedCard) : INDEX_NONE;
-		if (HandIndex == INDEX_NONE)
-		{
-			CancelSelectedCard();
-			return false;
-		}
-		UseRequestedCards.Add(HandIndex, CurrentSelectedCard);
-		CardPanelWidgetController->RequestUseCard(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetSavedCard(), HandIndex);
-
-		// 성공 여부와 관계 없이 카드 선택을 취소합니다.
-		if (CurrentSelectedCard)
-		{
-			CurrentSelectedCard->MouseHovered(false);
-			CurrentSelectedCard = nullptr;
-			
-			if (CardPanelWidgetController)
-			{
-				CardPanelWidgetController->SetCardSelected(false);
-			}
-		}
-		return true;
-	}
-	return false;
+	return HandStage && HandStage->HandleMouseButtonUpInCardUseSection();
 }
 
-void UCardPanelWidget::CancelSelectedCard() const
+void UCardPanelWidget::OnCancelSelectedCard() const
 {
-	if (CardPanelWidgetController && CurrentSelectedCard)
+	if (HandStage)
 	{
-		CardPanelWidgetController->SetCardSelected(false);
+		HandStage->HandleCancelSelectedCard();
 	}
 }
 
-void UCardPanelWidget::OnCancelSelectedCard()
+void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
 {
-	if (CurrentSelectedCard)
+	if (HandStage)
 	{
-		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
-		CurrentSelectedCard = nullptr;
-
-		UpdateAllCardTranslation();
+		HandStage->HandleResolveUseCard(HandIndex, bSuccess);
 	}
 }
 
-void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
+void UCardPanelWidget::StartViewCardDetail(const ACardActor* CardActor) const
 {
-	// 카드 사용 요청 성공 후, Ability 실제 사용 여부와 상관 없이 이 로직으로 들어옵니다.
-	// 해당 함수 호출 횟수는 반드시 카드 사용 요청 성공 횟수와 1:1 대응해야 합니다.
-	UCardWidget* CardWidget = UseRequestedCards.FindRef(HandIndex);
-	if (!CardWidget)
-	{
-		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다."));
-		return;
-	}
-	
-	if (bSuccess)
-	{
-		// 사용에 성공했으므로 카드 상태와 위치를 Grave로 갱신합니다.
-		if (CardLayoutManager)
-		{
-			CardLayoutManager->AddCardToGrave(CardWidget);
-		}
-	}
-	else
-	{
-		// 사용에 실패했으므로 Container 상태를 Selected에서 Hand로 되돌립니다.
-		CardWidget->SetCardContainer(ECardContainer::Hand, true);
-	}
-
-	// 성공 여부와 관계 없이 사용을 요청했던 카드는 사용 대기 상태를 해제합니다.
-	UseRequestedCards.Remove(HandIndex);
+	ViewCardDetail->StartViewDetail(CardActor);
 }
 
-void UCardPanelWidget::StartViewCardDetail(const UCardWidget* CardWidget) const
+bool UCardPanelWidget::SetCardSelected(const bool bCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
-	ViewCardDetail->StartViewDetail(CardWidget);
+	return CardPanelWidgetController && CardPanelWidgetController->SetCardSelected(bCardSelected, OwnerASC, CardTag);
+}
+
+void UCardPanelWidget::GoPlayerTurnPhase() const
+{
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->GoPlayerTurnPhase();
+	}
+}
+
+void UCardPanelWidget::StartResolvePlayerMoves() const
+{
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->StartResolvePlayerMoves();
+	}
+}
+
+bool UCardPanelWidget::RequestTurnEnd() const
+{
+	return CardPanelWidgetController && CardPanelWidgetController->RequestTurnEnd();
+}
+
+void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 HandIndex) const
+{
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->RequestUseCard(OwnerASC, SavedCard, HandIndex);
+	}
 }
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	switch (CurrentPhaseState)
+	if (HandStage)
 	{
-	case EPhaseState::PlayerMovePhase:
-		CardPanelWidgetController->StartResolvePlayerMoves();
-		break;
-	case EPhaseState::PlayerTurnPhase:
-		{
-			const bool bRequestResult = CardPanelWidgetController->RequestTurnEnd();
-			if (bRequestResult)
-			{
-				if (CardLayoutManager)
-				{
-					CardLayoutManager->AddAllHandsToGrave();
-				}
-				UpdateAllCardTranslation();
-			}
-		}
-		break;
-	default:
-		break;
+		HandStage->HandleTurnEndButtonClicked();
 	}
 }
 
-void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
-	CurrentPhaseState = NewState;
-
-	switch (CurrentPhaseState)
+	if (HandStage)
 	{
-	case EPhaseState::DrawPhase:
-		OnDrawPhaseStarted();
-		break;
-	default:
-		break;
-	}
-}
-
-void UCardPanelWidget::OnDrawPhaseStarted() const
-{
-	if (CardPanelWidgetController)
-	{
-		CardPanelWidgetController->SetCardSelected(false);
-	}
-	
-	if (CardLayoutManager && CardLayoutManager->AreAllDecksEmpty())
-	{
-		CardLayoutManager->RefillDeck();
-		CardLayoutManager->ShuffleDeck();
-		UpdateAllCardTranslation();
+		HandStage->HandlePhaseStateChanged(OldState, NewState);
 	}
 }

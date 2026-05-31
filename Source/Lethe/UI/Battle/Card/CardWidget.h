@@ -18,19 +18,6 @@ class ULetheImage;
 class USizeBox;
 struct FCardInitParams;
 
-USTRUCT()
-struct FViewDetailData
-{
-	GENERATED_BODY()
-
-	FText CardNameText;
-	
-	UPROPERTY()
-	UObject* CardImage = nullptr;
-
-	FLinearColor CardTypeColor;
-};
-
 DECLARE_DELEGATE_TwoParams(FOnCardMouseEventSignature, UCardWidget*, const ECardAction);
 
 UCLASS()

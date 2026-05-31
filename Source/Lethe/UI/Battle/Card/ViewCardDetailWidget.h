@@ -6,18 +6,20 @@
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "ViewCardDetailWidget.generated.h"
 
+class ACardActor;
 class UCardPanelWidgetController;
 class UCardWidget;
 class ULetheRichTextBlock;
 class UOverlay;
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API UViewCardDetailWidget : public ULetheUserWidget
 {
 	GENERATED_BODY()
 
 public:
 	void StartViewDetail(const UCardWidget* InCardWidget);
+	void StartViewDetail(const ACardActor* InCardActor);
 	void EndViewDetail();
 
 protected:

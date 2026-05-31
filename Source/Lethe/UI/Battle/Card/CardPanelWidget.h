@@ -1,24 +1,26 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CardLayoutManager.h"
 #include "Lethe/Data/PhaseData.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardPanelWidget.generated.h"
 
-enum class ECardAction : uint8;
+class ACardActor;
+class AHandStage;
 class UButton;
 class UCanvasPanel;
 class UCardPanelWidgetController;
 class UCardUseSectionWidget;
-class UCardWidget;
 class ULetheAbilitySystemComponent;
+class ULetheImage;
 class UViewCardDetailWidget;
+struct FGameplayTag;
 struct FCardInitParams;
+struct FSavedCard;
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API UCardPanelWidget : public ULetheUserWidget
 {
 	GENERATED_BODY()
@@ -33,44 +35,44 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
 private:
-	void OnMouseEvent(UCardWidget* CardWidget, const ECardAction CardAction);
-	void OnMouseEventWhenDrawPhase(const UCardWidget* CardWidget, const ECardAction CardAction) const;
-	void OnMouseEventWhenPlayerTurnPhase(UCardWidget* CardWidget, const ECardAction CardAction);
-	void OnKeyboardEvent(const int32 Number);
-	void OnKeyboardEventWhenDrawPhase(const int32 Number) const;
-	void OnKeyboardEventWhenPlayerTurnPhase(const int32 Number);
+	/**  */
+	void TryInitializeHandStage() const;
 	
-	void CreateCard(const FCardInitParams& CardInitParams);
-	void UpdateAllCardTranslation() const;
-	void OnDeckHovered(const UCardWidget* CardWidget, const bool bHovered) const;
-	void TryDraw(ULetheAbilitySystemComponent* OwnerASC) const;
+	/**
+	 * CapturedHandStage의 UV를 기준으로 현재 마우스 위치가 어디인지 계산합니다.
+	 * 반환값은 마우스가 CapturedHandStage 위 Hovered 상태 여부입니다.
+	 */
+	bool TryGetCapturedHandStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const;
+
+	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
-	void OnHandHovered(UCardWidget* CardWidget, const bool bHovered) const;
-	void SelectCard(UCardWidget* CardWidget);
-	
-	/** 카드 사용을 위해 입력을 소비했다면 true를, 그렇지 않다면 false를 반환합니다. */
+	void OnKeyboardEvent(int32 Number) const;
 	bool OnMouseButtonDownInCardUseSection() const;
-	bool OnMouseButtonUpInCardUseSection();
-	void CancelSelectedCard() const;
-	void OnCancelSelectedCard();
-
-	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
-
-	void StartViewCardDetail(const UCardWidget* CardWidget) const;
+	bool OnMouseButtonUpInCardUseSection() const;
+	void OnCancelSelectedCard() const;
+	void OnResolveUseCard(int32 HandIndex, bool bSuccess) const;
+	void StartViewCardDetail(const ACardActor* CardActor) const;
+	bool SetCardSelected(bool bCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
+	void GoPlayerTurnPhase() const;
+	void StartResolvePlayerMoves() const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 HandIndex) const;
+	bool RequestTurnEnd() const;
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
-	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
-	void OnDrawPhaseStarted() const;
-	
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	TSubclassOf<UUserWidget> CardWidgetClass;
+	void OnPhaseStateChanged(EPhaseState OldState, EPhaseState NewState) const;
 
+protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
 
@@ -83,22 +85,16 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<ULetheImage> CapturedHandStage;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AHandStage> HandStageClass;
+
 private:
 	UPROPERTY()
 	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
 
 	UPROPERTY()
-	TObjectPtr<UCardLayoutManager> CardLayoutManager;
-	
-	uint8 bControllerInitialized : 1 = false;
-
-	EPhaseState CurrentPhaseState = EPhaseState::None;
-
-	UPROPERTY()
-	TObjectPtr<UCardWidget> CurrentSelectedCard;
-	
-	UPROPERTY()
-	TMap<int32, TObjectPtr<UCardWidget>> UseRequestedCards;
-
-	uint8 bRightMouseButtonPressed : 1 = false;
+	TObjectPtr<AHandStage> HandStage;
 };

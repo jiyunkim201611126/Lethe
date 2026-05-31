@@ -8,6 +8,7 @@
 #include "Engine/Texture.h"
 #include "InputCoreTypes.h"
 #include "Kismet/KismetMaterialLibrary.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardViewData.h"
@@ -15,7 +16,7 @@
 ACardActor::ACardActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	CardRoot = CreateDefaultSubobject<USceneComponent>(TEXT("CardRoot"));
 	SetRootComponent(CardRoot);
 
@@ -29,6 +30,10 @@ ACardActor::ACardActor()
 	CardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CardFrontMesh"));
 	CardMesh->SetupAttachment(CardRoot);
 	CardMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	CardOutlineMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CardOutlineMesh"));
+	CardOutlineMesh->SetupAttachment(CardRoot);
+	CardOutlineMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ACardActor::BeginPlay()
@@ -67,7 +72,7 @@ void ACardActor::Tick(const float DeltaSeconds)
 
 void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 {
-	//OwnerASC = InitParams.OwnerASC;
+	OwnerASC = InitParams.OwnerASC;
 	SavedCard = InitParams.SavedCard;
 
 	if (InitParams.CardDefinition)
@@ -89,6 +94,13 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 	ApplyCardVisuals();
 }
 
+void ACardActor::MakeViewDetailData(FViewDetailData& OutData) const
+{
+	OutData.CardNameText = CardNameText;
+	OutData.CardImage = CardImage;
+	OutData.CardTypeColor = CardTypeColor;
+}
+
 void ACardActor::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation)
 {
 	if (CurrentCardContainer == InCardContainer)
@@ -107,7 +119,7 @@ void ACardActor::SetCardContainer(const ECardContainer InCardContainer, const bo
 		bMouseHovered = false;
 		if (!bShouldSkipAnimation)
 		{
-			StartBlockHandHoveredTimer();
+			StartBlockHandHoverTimer();
 		}
 		break;
 	case ECardContainer::Selected:
@@ -120,27 +132,6 @@ void ACardActor::SetCardContainer(const ECardContainer InCardContainer, const bo
 
 void ACardActor::HandleCardMouseEvent(const ECardMouseEvent InMouseEvent)
 {
-	switch (InMouseEvent)
-	{
-	case ECardMouseEvent::MouseButtonDown:
-		bMouseButtonDown = true;
-		break;
-	case ECardMouseEvent::LeftMouseButtonUp:
-	case ECardMouseEvent::RightMouseButtonUp:
-		if (!bMouseButtonDown)
-		{
-			return;
-		}
-		bMouseButtonDown = false;
-		break;
-	case ECardMouseEvent::MouseLeave:
-	case ECardMouseEvent::MouseCaptureLost:
-		bMouseButtonDown = false;
-		break;
-	default:
-		break;
-	}
-
 	OnCardMouseEventDelegate.ExecuteIfBound(this, GetCardActionForMouseEvent(InMouseEvent));
 }
 
@@ -217,7 +208,7 @@ void ACardActor::ApplyCardVisuals() const
 	{
 		return;
 	}
-	
+
 	CardMaterialInstance->SetTextureParameterValue(CardTextureParamName, Cast<UTexture>(CardImage));
 	CardMaterialInstance->SetVectorParameterValue(TypeFrameColorParamName, CardTypeColor);
 	CardMaterialInstance->SetVectorParameterValue(CharacterColorParamName, CharacterColor);
@@ -225,11 +216,12 @@ void ACardActor::ApplyCardVisuals() const
 
 void ACardActor::ToggleHighlightOutline(const bool bHighlightOn) const
 {
+	CardOutlineMesh->SetVisibility(!bHighlightOn);
 }
 
-void ACardActor::StartBlockHandHoveredTimer()
+void ACardActor::StartBlockHandHoverTimer()
 {
-	bBlockHandHovered = true;
+	bBlockHandHover = true;
 
 	FTimerHandle TimerHandle;
 	TWeakObjectPtr<ACardActor> WeakThis = this;
@@ -237,7 +229,7 @@ void ACardActor::StartBlockHandHoveredTimer()
 	{
 		if (WeakThis.IsValid())
 		{
-			WeakThis->bBlockHandHovered = false;
+			WeakThis->bBlockHandHover = false;
 		}
 	}, 0.5f, false);
 }
@@ -265,13 +257,13 @@ ECardAction ACardActor::GetCardActionWhenHandState(const ECardMouseEvent InMouse
 	switch (InMouseEvent)
 	{
 	case ECardMouseEvent::MouseEnter:
-		if (!bBlockHandHovered)
+		if (!bBlockHandHover)
 		{
 			return ECardAction::HandHovered;
 		}
 		break;
 	case ECardMouseEvent::MouseLeave:
-		if (!bBlockHandHovered)
+		if (!bBlockHandHover)
 		{
 			return ECardAction::HandUnhovered;
 		}
@@ -293,13 +285,13 @@ ECardAction ACardActor::GetCardActionWhenSelectedState(const ECardMouseEvent InM
 	switch (InMouseEvent)
 	{
 	case ECardMouseEvent::MouseEnter:
-		if (!bBlockHandHovered)
+		if (!bBlockHandHover)
 		{
 			return ECardAction::HandHovered;
 		}
 		break;
 	case ECardMouseEvent::MouseLeave:
-		if (!bBlockHandHovered)
+		if (!bBlockHandHover)
 		{
 			return ECardAction::HandUnhovered;
 		}
@@ -344,5 +336,9 @@ ECardContainer ACardActor::GetCurrentCardContainer() const
 
 ULetheAbilitySystemComponent* ACardActor::GetOwnerASC() const
 {
-	return OwnerASC.Get();
+	if (OwnerASC.IsValid())
+	{
+		return OwnerASC.Get();
+	}
+	return nullptr;
 }

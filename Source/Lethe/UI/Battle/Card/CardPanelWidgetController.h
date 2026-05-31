@@ -39,12 +39,13 @@ struct FCardInitParams
 	const UCardDefinitionData* CardDefinition = nullptr;
 
 	FSavedCard SavedCard;
-	
+
 	UPROPERTY()
 	UCardViewData* CardViewData = nullptr;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
+DECLARE_DELEGATE(FOnAbilitySystemReferencesUpdated);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
 DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCardSelectCanceled);
@@ -57,6 +58,7 @@ class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 
 public:
 	//~ Begin ULetheWidgetController Interface
+	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams) override;
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS) override;
 	//~ End of ULetheWidgetController Interface
 
@@ -65,7 +67,7 @@ public:
 	//~ End of UObject Interface
 
 	FVector2D GetCardSize() const;
-	
+
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoPlayerTurnPhase() const;
@@ -84,6 +86,7 @@ private:
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
+	FOnAbilitySystemReferencesUpdated OnAbilitySystemReferencesUpdatedDelegate;
 	FOnPhaseStateChanged OnPhaseStateChangedDelegate;
 	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 	FOnCardSelectCanceled OnCardSelectCanceledDelegate;
@@ -95,7 +98,7 @@ protected:
 
 private:
 	uint8 bInitialized : 1 = false;
-	
+
 	UPROPERTY()
 	TObjectPtr<ALethePlayerController> LethePlayerController;
 

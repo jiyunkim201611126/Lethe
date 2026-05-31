@@ -5,6 +5,7 @@
 #include "CardPanelWidgetController.h"
 #include "CardWidget.h"
 #include "Components/Overlay.h"
+#include "Lethe/Actor/Card/CardActor.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
 void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
@@ -20,6 +21,23 @@ void UViewCardDetailWidget::StartViewDetail(const UCardWidget* InCardWidget)
 
 		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 
+		CardDescriptionTextBlock->SetText(FinalText);
+	}
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
+{
+	if (InCardActor)
+	{
+		FViewDetailData ViewDetailData;
+		InCardActor->MakeViewDetailData(ViewDetailData);
+		DetailCardWidget->SetViewDetail(ViewDetailData);
+
+		FText OutDescriptionText;
+		CardPanelWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
+
+		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 		CardDescriptionTextBlock->SetText(FinalText);
 	}
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);

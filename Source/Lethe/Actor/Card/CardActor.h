@@ -19,6 +19,7 @@ class UMaterialInstanceDynamic;
 class USceneComponent;
 class UStaticMeshComponent;
 struct FCardInitParams;
+struct FViewDetailData;
 
 /**
  * Card가 현재 어디에 속해있는지 나타내는 Enum입니다.
@@ -62,10 +63,23 @@ enum class ECardAction : uint8
 	None,
 };
 
+USTRUCT()
+struct FViewDetailData
+{
+	GENERATED_BODY()
+
+	FText CardNameText;
+
+	UPROPERTY()
+	UObject* CardImage = nullptr;
+
+	FLinearColor CardTypeColor;
+};
+
 class ACardActor;
 DECLARE_DELEGATE_TwoParams(FOnCardActorMouseEventSignature, ACardActor*, const ECardAction);
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API ACardActor : public AActor
 {
 	GENERATED_BODY()
@@ -80,16 +94,17 @@ public:
 	//~ End of AActor Interface
 
 	void SetCardInfo(const FCardInitParams& InitParams);
+	void MakeViewDetailData(FViewDetailData& OutData) const;
 
 	void SetCardContainer(ECardContainer InCardContainer, bool bShouldSkipAnimation = false);
 
 	/** SceneCapture 화면 좌표에서 LineTrace로 검출한 카드에 대해 외부 입력 라우터가 호출하는 함수입니다. */
 	void HandleCardMouseEvent(ECardMouseEvent InMouseEvent);
-	
+
 	void SetTargetTransform(const FTransform& InTransform);
 	void MouseHovered(bool bInHovered);
 	ECardAction GetCardActionForMouseEvent(ECardMouseEvent InMouseEvent) const;
-	
+
 	FGameplayTag GetCardTag() const;
 	const FSavedCard& GetSavedCard() const;
 	ECardContainer GetCurrentCardContainer() const;
@@ -105,7 +120,9 @@ private:
 	void CreateDynamicMaterialInstances();
 	void ApplyCardVisuals() const;
 	void ToggleHighlightOutline(const bool bHighlightOn) const;
-	void StartBlockHandHoveredTimer();
+
+	/** 드로우 직후 HandHover가 안 되도록 잠깐 막아줍니다. */
+	void StartBlockHandHoverTimer();
 
 	ECardAction GetCardActionWhenDeckState(ECardMouseEvent InMouseEvent) const;
 	ECardAction GetCardActionWhenHandState(ECardMouseEvent InMouseEvent) const;
@@ -127,6 +144,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Card")
 	TObjectPtr<UStaticMeshComponent> CardMesh;
 
+	/**
+	 * Card의 경우 2D 이미지로 캡쳐되어 위젯으로 표시되기 때문에, 일반적인 Outline으로는 구현이 어렵습니다.
+	 * 따라서 CardMesh보다 약간 큰 메쉬를 원하는 색상으로 설정해 하이라이팅을 구현합니다.
+	 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Card")
+	TObjectPtr<UStaticMeshComponent> CardOutlineMesh;
+
 	UPROPERTY(EditAnywhere, Category = "Card | Animation")
 	TObjectPtr<UCurveFloat> MovementCurve;
 
@@ -144,7 +168,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Card | Material")
 	FName CharacterColorParamName = TEXT("CharacterColor");
-	
+
 private:
 	FText CardNameText;
 	FSavedCard SavedCard;
@@ -152,7 +176,7 @@ private:
 	FLinearColor CharacterColor = FLinearColor::White;
 
 	UPROPERTY()
-	TObjectPtr<UObject> CardImage;
+	TObjectPtr<UTexture2D> CardImage;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> CardMaterialInstance;
@@ -164,9 +188,8 @@ private:
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 
 	uint8 bShouldMove : 1 = false;
-	uint8 bBlockHandHovered : 1 = false;
+	uint8 bBlockHandHover : 1 = false;
 	uint8 bMouseHovered : 1 = false;
-	uint8 bMouseButtonDown : 1 = false;
 
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
 };

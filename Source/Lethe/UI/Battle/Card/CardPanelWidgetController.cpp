@@ -7,6 +7,14 @@
 #include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 
+void UCardPanelWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
+{
+	Super::SetWidgetControllerParams(WidgetControllerParams);
+
+	// AbilitySystemReferences가 갱신되었음을 알려줍니다.
+	OnAbilitySystemReferencesUpdatedDelegate.ExecuteIfBound();
+}
+
 void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
 	// Ability가 부여되면 콜백을 받아 해당하는 Card를 생성할 수 있도록 바인드합니다.
@@ -16,16 +24,16 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	if (!bInitialized)
 	{
 		LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
-		
+
 		LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
 		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
-		
+
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		check(LetheGameState.IsValid());
-		
+
 		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		
+
 		bInitialized = true;
 	}
 }

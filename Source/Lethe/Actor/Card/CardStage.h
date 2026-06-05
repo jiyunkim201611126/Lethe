@@ -7,8 +7,9 @@
 #include "GameFramework/Actor.h"
 #include "Lethe/Data/PhaseData.h"
 #include "Lethe/SaveGame/SavedCardTypes.h"
-#include "HandStage.generated.h"
+#include "CardStage.generated.h"
 
+class ADeckBoxes;
 enum class ECardAction : uint8;
 class ACardActor;
 class UCardLayoutManager;
@@ -25,12 +26,12 @@ DECLARE_DELEGATE_ThreeParams(FOnUseCardRequested, ULetheAbilitySystemComponent*,
 DECLARE_DELEGATE_RetVal(bool, FOnTurnEndRequested);
 
 UCLASS(Abstract)
-class LETHE_API AHandStage : public AActor
+class LETHE_API ACardStage : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AHandStage();
+	ACardStage();
 
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
@@ -41,10 +42,8 @@ public:
 
 	void CreateCard(const FCardInitParams& CardInitParams);
 
-	void HandleCapturedMouseMove(const FVector2D& TargetUV);
 	bool HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton);
 	bool HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton);
-	void HandleCapturedMouseLeave();
 	void HandleCapturedMouseCaptureLost();
 	bool HandleMouseButtonDownInCardUseSection() const;
 	bool HandleMouseButtonUpInCardUseSection();
@@ -61,16 +60,14 @@ private:
 	ACardActor* GetCardActorAtUV(const FVector2D& TargetUV) const;
 
 	void OnCardMouseEvent(ACardActor* CardActor, ECardAction CardAction);
-	void OnMouseEventWhenDrawPhase(const ACardActor* CardActor, ECardAction CardAction);
+	void OnMouseEventWhenDrawPhase(const ACardActor* CardActor, ECardAction CardAction) const;
 	void OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, ECardAction CardAction);
 	void OnKeyboardEventWhenDrawPhase(int32 Number);
 	void OnKeyboardEventWhenPlayerTurnPhase(int32 Number);
 
 	void UpdateAllCardLocations() const;
 
-	void OnDeckHovered(const ACardActor* CardActor, bool bHovered) const;
 	void TryDraw(ULetheAbilitySystemComponent* OwnerASC) const;
-	void OnHandHovered(ACardActor* CardActor, bool bHovered) const;
 	void SelectCard(ACardActor* CardActor);
 	void OnDrawPhaseStarted() const;
 
@@ -90,19 +87,24 @@ protected:
 	TObjectPtr<USceneCaptureComponent2D> CaptureComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	TSubclassOf<ADeckBoxes> DeckBoxesClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Card")
 	TSubclassOf<ACardActor> CardActorClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Card | Input")
 	float CardTraceDistance = 1000.f;
 
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UMaterial> OutlineMaterial;
-
 private:
 	UPROPERTY()
 	TObjectPtr<UCardLayoutManager> CardLayoutManager;
-
+	
 	uint8 bInitialized : 1 = false;
+
+	EPhaseState CurrentPhaseState = EPhaseState::None;
+
+	UPROPERTY()
+	TObjectPtr<ADeckBoxes> DeckBoxes;
 
 	UPROPERTY()
 	TArray<TObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
@@ -110,9 +112,6 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> SpawnedCards;
 
-	EPhaseState CurrentPhaseState = EPhaseState::None;
-
-	TWeakObjectPtr<ACardActor> HoveredCard;
 	TWeakObjectPtr<ACardActor> PressedCard;
 
 	UPROPERTY()

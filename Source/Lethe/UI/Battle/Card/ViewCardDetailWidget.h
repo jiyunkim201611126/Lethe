@@ -18,7 +18,6 @@ class LETHE_API UViewCardDetailWidget : public ULetheUserWidget
 	GENERATED_BODY()
 
 public:
-	void StartViewDetail(const UCardWidget* InCardWidget);
 	void StartViewDetail(const ACardActor* InCardActor);
 	void EndViewDetail();
 

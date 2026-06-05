@@ -8,7 +8,7 @@
 #include "CardPanelWidget.generated.h"
 
 class ACardActor;
-class AHandStage;
+class ACardStage;
 class UButton;
 class UCanvasPanel;
 class UCardPanelWidgetController;
@@ -37,21 +37,18 @@ protected:
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
 private:
 	/**  */
-	void TryInitializeHandStage() const;
+	void TryInitializeCardStage() const;
 	
 	/**
-	 * CapturedHandStage의 UV를 기준으로 현재 마우스 위치가 어디인지 계산합니다.
-	 * 반환값은 마우스가 CapturedHandStage 위 Hovered 상태 여부입니다.
+	 * CapturedCardStage의 UV를 기준으로 현재 마우스 위치가 어디인지 계산합니다.
+	 * 반환값은 마우스가 CapturedCardStage 위 Hovered 상태 여부입니다.
 	 */
-	bool TryGetCapturedHandStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const;
+	bool TryGetCapturedCardStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const;
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
@@ -86,15 +83,15 @@ protected:
 	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<ULetheImage> CapturedHandStage;
+	TObjectPtr<ULetheImage> CapturedCardStage;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AHandStage> HandStageClass;
+	TSubclassOf<ACardStage> CardStageClass;
 
 private:
 	UPROPERTY()
 	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
 
 	UPROPERTY()
-	TObjectPtr<AHandStage> HandStage;
+	TObjectPtr<ACardStage> CardStage;
 };

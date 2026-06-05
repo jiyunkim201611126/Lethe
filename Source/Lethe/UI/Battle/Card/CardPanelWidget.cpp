@@ -7,7 +7,7 @@
 #include "ViewCardDetailWidget.h"
 #include "Components/Button.h"
 #include "InputCoreTypes.h"
-#include "Lethe/Actor/Card/HandStage.h"
+#include "Lethe/Actor/Card/CardStage.h"
 #include "Lethe/UI/Core/LetheImage.h"
 
 void UCardPanelWidget::NativeConstruct()
@@ -40,10 +40,10 @@ void UCardPanelWidget::NativeDestruct()
 		CardUseSection->OnMouseButtonDown.Unbind();
 		CardUseSection->OnMouseButtonUp.Unbind();
 	}
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->Destroy();
-		HandStage = nullptr;
+		CardStage->Destroy();
+		CardStage = nullptr;
 	}
 
 	Super::NativeDestruct();
@@ -59,7 +59,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	if (CardPanelWidgetController)
 	{
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
-		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeHandStage);
+		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeCardStage);
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
@@ -67,30 +67,30 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 
 		ViewCardDetail->SetWidgetController(WidgetController);
 
-		if (HandStageClass && !HandStage)
+		if (CardStageClass && !CardStage)
 		{
 			const FVector StageLocation = FVector(0.f, 0.f, -3000.f);
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			HandStage = GetWorld()->SpawnActor<AHandStage>(HandStageClass, StageLocation, FRotator::ZeroRotator, SpawnParams);
-			if (HandStage)
+			CardStage = GetWorld()->SpawnActor<ACardStage>(CardStageClass, StageLocation, FRotator::ZeroRotator, SpawnParams);
+			if (CardStage)
 			{
-				HandStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
-				HandStage->OnSelectCardRequested.BindUObject(this, &ThisClass::SetCardSelected);
-				HandStage->OnGoPlayerTurnPhaseRequested.BindUObject(this, &ThisClass::GoPlayerTurnPhase);
-				HandStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
-				HandStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
-				HandStage->OnTurnEndRequested.BindUObject(this, &ThisClass::RequestTurnEnd);
+				CardStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
+				CardStage->OnSelectCardRequested.BindUObject(this, &ThisClass::SetCardSelected);
+				CardStage->OnGoPlayerTurnPhaseRequested.BindUObject(this, &ThisClass::GoPlayerTurnPhase);
+				CardStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
+				CardStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
+				CardStage->OnTurnEndRequested.BindUObject(this, &ThisClass::RequestTurnEnd);
 			}
 		}
 
-		TryInitializeHandStage();
+		TryInitializeCardStage();
 	}
 }
 
-void UCardPanelWidget::TryInitializeHandStage() const
+void UCardPanelWidget::TryInitializeCardStage() const
 {
-	if (HandStage && CardPanelWidgetController)
+	if (CardStage && CardPanelWidgetController)
 	{
 		TArray<TObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
 		for (const FAbilitySystemReference& AbilitySystemReference : CardPanelWidgetController->GetAbilitySystemReferences())
@@ -98,15 +98,15 @@ void UCardPanelWidget::TryInitializeHandStage() const
 			AbilitySystemComponents.Add(AbilitySystemReference.AbilitySystemComponent);
 		}
 
-		HandStage->Initialize(CardPanelWidgetController->GetCardSize(), AbilitySystemComponents);
+		CardStage->Initialize(CardPanelWidgetController->GetCardSize(), AbilitySystemComponents);
 	}
 }
 
 FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (HandStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	if (CardStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		HandStage->CancelSelectedCard();
+		CardStage->CancelSelectedCard();
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -114,8 +114,8 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FVector2D TargetUV;
-	TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
-	if (HandStage && HandStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
+	TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
+	if (CardStage && CardStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
 	{
 		return FReply::Handled().CaptureMouse(TakeWidget());
 	}
@@ -125,71 +125,32 @@ FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FVector2D TargetUV;
-	TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
-	if (HandStage && HandStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
+	TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
+	if (CardStage && CardStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
 	{
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
-FReply UCardPanelWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	FVector2D TargetUV;
-	if (HandStage)
-	{
-		const bool bIsMouseOnHandStage = TryGetCapturedHandStageUV(InMouseEvent, TargetUV);
-		if (bIsMouseOnHandStage)
-		{
-			HandStage->HandleCapturedMouseMove(TargetUV);
-		}
-		else
-		{
-			HandStage->HandleCapturedMouseLeave();
-		}
-	}
-	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-}
-
-void UCardPanelWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
-
-	FVector2D TargetUV;
-	if (HandStage && TryGetCapturedHandStageUV(InMouseEvent, TargetUV))
-	{
-		HandStage->HandleCapturedMouseMove(TargetUV);
-	}
-}
-
-void UCardPanelWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
-{
-	if (HandStage)
-	{
-		HandStage->HandleCapturedMouseLeave();
-	}
-
-	Super::NativeOnMouseLeave(InMouseEvent);
-}
-
 void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandleCapturedMouseCaptureLost();
+		CardStage->HandleCapturedMouseCaptureLost();
 	}
 
 	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
 
-bool UCardPanelWidget::TryGetCapturedHandStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const
+bool UCardPanelWidget::TryGetCapturedCardStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const
 {
-	if (!CapturedHandStage)
+	if (!CapturedCardStage)
 	{
 		return false;
 	}
 
-	const FGeometry& ImageGeometry = CapturedHandStage->GetCachedGeometry();
+	const FGeometry& ImageGeometry = CapturedCardStage->GetCachedGeometry();
 	const FVector2D ImageSize = ImageGeometry.GetLocalSize();
 	if (ImageSize.X <= UE_SMALL_NUMBER || ImageSize.Y <= UE_SMALL_NUMBER)
 	{
@@ -203,43 +164,43 @@ bool UCardPanelWidget::TryGetCapturedHandStageUV(const FPointerEvent& InMouseEve
 
 void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams) const
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->CreateCard(CardInitParams);
+		CardStage->CreateCard(CardInitParams);
 	}
 }
 
 void UCardPanelWidget::OnKeyboardEvent(const int32 Number) const
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandleKeyboardEvent(Number);
+		CardStage->HandleKeyboardEvent(Number);
 	}
 }
 
 bool UCardPanelWidget::OnMouseButtonDownInCardUseSection() const
 {
-	return HandStage && HandStage->HandleMouseButtonDownInCardUseSection();
+	return CardStage && CardStage->HandleMouseButtonDownInCardUseSection();
 }
 
 bool UCardPanelWidget::OnMouseButtonUpInCardUseSection() const
 {
-	return HandStage && HandStage->HandleMouseButtonUpInCardUseSection();
+	return CardStage && CardStage->HandleMouseButtonUpInCardUseSection();
 }
 
 void UCardPanelWidget::OnCancelSelectedCard() const
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandleCancelSelectedCard();
+		CardStage->HandleCancelSelectedCard();
 	}
 }
 
 void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandleResolveUseCard(HandIndex, bSuccess);
+		CardStage->HandleResolveUseCard(HandIndex, bSuccess);
 	}
 }
 
@@ -284,16 +245,16 @@ void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, co
 
 void UCardPanelWidget::OnTurnEndButtonClicked()
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandleTurnEndButtonClicked();
+		CardStage->HandleTurnEndButtonClicked();
 	}
 }
 
 void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
-	if (HandStage)
+	if (CardStage)
 	{
-		HandStage->HandlePhaseStateChanged(OldState, NewState);
+		CardStage->HandlePhaseStateChanged(OldState, NewState);
 	}
 }

@@ -1,9 +1,10 @@
 // Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "HandStage.h"
+#include "CardStage.h"
 
 #include "CardActor.h"
 #include "CardLayoutManager.h"
+#include "DeckBoxes.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
@@ -11,7 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
 
-AHandStage::AHandStage()
+ACardStage::ACardStage()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -29,15 +30,17 @@ AHandStage::AHandStage()
 	CaptureComponent->CaptureSource = SCS_SceneColorHDR;
 }
 
-void AHandStage::BeginPlay()
+void ACardStage::BeginPlay()
 {
 	Super::BeginPlay();
 
 	CardLayoutManager = NewObject<UCardLayoutManager>(this);
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
+
+	DeckBoxes = GetWorld()->SpawnActor<ADeckBoxes>(DeckBoxesClass);
 }
 
-void AHandStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	OnViewCardDetailRequested.Unbind();
 	OnSelectCardRequested.Unbind();
@@ -57,11 +60,12 @@ void AHandStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	SpawnedCards.Reset();
 
 	CardLayoutManager = nullptr;
+	DeckBoxes = nullptr;
 
 	Super::EndPlay(EndPlayReason);
 }
 
-void AHandStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents)
+void ACardStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents)
 {
 	AbilitySystemComponents = InAbilitySystemComponents;
 
@@ -79,7 +83,7 @@ void AHandStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<U
 	}
 }
 
-void AHandStage::CreateCard(const FCardInitParams& CardInitParams)
+void ACardStage::CreateCard(const FCardInitParams& CardInitParams)
 {
 	if (!CardLayoutManager || !CardActorClass)
 	{
@@ -108,29 +112,7 @@ void AHandStage::CreateCard(const FCardInitParams& CardInitParams)
 	}
 }
 
-void AHandStage::HandleCapturedMouseMove(const FVector2D& TargetUV)
-{
-	ACardActor* DetectedCard = GetCardActorAtUV(TargetUV);
-	if (HoveredCard.Get() == DetectedCard)
-	{
-		return;
-	}
-
-	// HoveredCard가 기존과 다른 경우, 기존 카드는 MouseLeave 이벤트를 넘겨줍니다.
-	if (HoveredCard.IsValid())
-	{
-		HoveredCard->HandleCardMouseEvent(ECardMouseEvent::MouseLeave);
-	}
-
-	// HoveredCard를 갱신하고 MouseEnter 이벤트를 넘겨줍니다.
-	HoveredCard = DetectedCard;
-	if (HoveredCard.IsValid())
-	{
-		HoveredCard->HandleCardMouseEvent(ECardMouseEvent::MouseEnter);
-	}
-}
-
-bool AHandStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton)
+bool ACardStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton)
 {
 	if (MouseButton != EKeys::LeftMouseButton && MouseButton != EKeys::RightMouseButton)
 	{
@@ -138,14 +120,13 @@ bool AHandStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const 
 	}
 
 	// MouseMove 처리 함수를 명시적으로 호출, HoveredCard를 갱신합니다.
-	HandleCapturedMouseMove(TargetUV);
-	PressedCard = HoveredCard;
+	PressedCard = GetCardActorAtUV(TargetUV);
 
 	// PressedCard가 유효하면 true를 반환합니다.
 	return PressedCard.IsValid();
 }
 
-bool AHandStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton)
+bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton)
 {
 	if (MouseButton != EKeys::LeftMouseButton && MouseButton != EKeys::RightMouseButton)
 	{
@@ -157,14 +138,12 @@ bool AHandStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FK
 		return false;
 	}
 
-	// MouseMove 처리 함수를 명시적으로 호출, HoveredCard를 갱신합니다.
-	HandleCapturedMouseMove(TargetUV);
-
+	const ACardActor* HoveredCard = GetCardActorAtUV(TargetUV);
 	ACardActor* ReleasedCard = PressedCard.Get();
 	PressedCard.Reset();
 
 	// 마우스를 누른 카드와 뗀 카드가 다르면 클릭으로 처리하지 않습니다.
-	if (ReleasedCard != HoveredCard.Get())
+	if (ReleasedCard != HoveredCard)
 	{
 		// 클릭으로 처리하진 않더라도 마우스 입력을 정상적으로 처리했으므로 true를 반환합니다.
 		return true;
@@ -174,16 +153,7 @@ bool AHandStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FK
 	return true;
 }
 
-void AHandStage::HandleCapturedMouseLeave()
-{
-	if (HoveredCard.IsValid())
-	{
-		HoveredCard->HandleCardMouseEvent(ECardMouseEvent::MouseLeave);
-		HoveredCard.Reset();
-	}
-}
-
-void AHandStage::HandleCapturedMouseCaptureLost()
+void ACardStage::HandleCapturedMouseCaptureLost()
 {
 	if (PressedCard.IsValid())
 	{
@@ -192,12 +162,12 @@ void AHandStage::HandleCapturedMouseCaptureLost()
 	}
 }
 
-bool AHandStage::HandleMouseButtonDownInCardUseSection() const
+bool ACardStage::HandleMouseButtonDownInCardUseSection() const
 {
 	return CurrentSelectedCard != nullptr;
 }
 
-bool AHandStage::HandleMouseButtonUpInCardUseSection()
+bool ACardStage::HandleMouseButtonUpInCardUseSection()
 {
 	if (!CurrentSelectedCard || !CardLayoutManager || !OnUseCardRequested.IsBound() || !OnSelectCardRequested.IsBound())
 	{
@@ -218,14 +188,13 @@ bool AHandStage::HandleMouseButtonUpInCardUseSection()
 	// 사용 요청이 완료되었으므로 카드 선택은 취소해둡니다.
 	if (CurrentSelectedCard)
 	{
-		CurrentSelectedCard->MouseHovered(false);
 		CurrentSelectedCard = nullptr;
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
 	}
 	return true;
 }
 
-void AHandStage::HandleKeyboardEvent(const int32 Number)
+void ACardStage::HandleKeyboardEvent(const int32 Number)
 {
 	switch (CurrentPhaseState)
 	{
@@ -240,7 +209,7 @@ void AHandStage::HandleKeyboardEvent(const int32 Number)
 	}
 }
 
-void AHandStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
 	CurrentPhaseState = NewState;
 
@@ -250,7 +219,7 @@ void AHandStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 	}
 }
 
-void AHandStage::HandleCancelSelectedCard()
+void ACardStage::HandleCancelSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{
@@ -260,7 +229,7 @@ void AHandStage::HandleCancelSelectedCard()
 	}
 }
 
-void AHandStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess)
+void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess)
 {
 	ACardActor* CardActor = UseRequestedCards.FindRef(HandIndex);
 	if (!CardActor)
@@ -283,7 +252,7 @@ void AHandStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 	UseRequestedCards.Remove(HandIndex);
 }
 
-void AHandStage::HandleTurnEndButtonClicked()
+void ACardStage::HandleTurnEndButtonClicked()
 {
 	switch (CurrentPhaseState)
 	{
@@ -305,7 +274,7 @@ void AHandStage::HandleTurnEndButtonClicked()
 	}
 }
 
-void AHandStage::CancelSelectedCard() const
+void ACardStage::CancelSelectedCard() const
 {
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
@@ -313,7 +282,7 @@ void AHandStage::CancelSelectedCard() const
 	}
 }
 
-ACardActor* AHandStage::GetCardActorAtUV(const FVector2D& TargetUV) const
+ACardActor* ACardStage::GetCardActorAtUV(const FVector2D& TargetUV) const
 {
 	if (!CaptureComponent || TargetUV.X < 0.f || TargetUV.X > 1.f || TargetUV.Y < 0.f || TargetUV.Y > 1.f)
 	{
@@ -336,7 +305,7 @@ ACardActor* AHandStage::GetCardActorAtUV(const FVector2D& TargetUV) const
 	return nullptr;
 }
 
-void AHandStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardAction)
+void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardAction)
 {
 	switch (CurrentPhaseState)
 	{
@@ -351,16 +320,10 @@ void AHandStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardA
 	}
 }
 
-void AHandStage::OnMouseEventWhenDrawPhase(const ACardActor* CardActor, const ECardAction CardAction)
+void ACardStage::OnMouseEventWhenDrawPhase(const ACardActor* CardActor, const ECardAction CardAction) const
 {
 	switch (CardAction)
 	{
-	case ECardAction::DeckHovered:
-		OnDeckHovered(CardActor, true);
-		break;
-	case ECardAction::DeckUnhovered:
-		OnDeckHovered(CardActor, false);
-		break;
 	case ECardAction::Draw:
 		TryDraw(CardActor->GetOwnerASC());
 		break;
@@ -369,16 +332,10 @@ void AHandStage::OnMouseEventWhenDrawPhase(const ACardActor* CardActor, const EC
 	}
 }
 
-void AHandStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction)
+void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction)
 {
 	switch (CardAction)
 	{
-	case ECardAction::HandHovered:
-		OnHandHovered(CardActor, true);
-		break;
-	case ECardAction::HandUnhovered:
-		OnHandHovered(CardActor, false);
-		break;
 	case ECardAction::Selected:
 		SelectCard(CardActor);
 		break;
@@ -390,7 +347,7 @@ void AHandStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const EC
 	}
 }
 
-void AHandStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
+void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 {
 	if (!CardLayoutManager)
 	{
@@ -403,7 +360,7 @@ void AHandStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 	}
 }
 
-void AHandStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
+void ACardStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 {
 	if (!CardLayoutManager)
 	{
@@ -421,7 +378,7 @@ void AHandStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 	}
 }
 
-void AHandStage::UpdateAllCardLocations() const
+void ACardStage::UpdateAllCardLocations() const
 {
 	if (CardLayoutManager)
 	{
@@ -429,23 +386,7 @@ void AHandStage::UpdateAllCardLocations() const
 	}
 }
 
-void AHandStage::OnDeckHovered(const ACardActor* CardActor, const bool bHovered) const
-{
-	if (!CardLayoutManager || !CardActor)
-	{
-		return;
-	}
-
-	if (ULetheAbilitySystemComponent* OwnerASC = CardActor->GetOwnerASC())
-	{
-		if (ACardActor* DeckOnTopCard = CardLayoutManager->GetTopCardFromDeck(OwnerASC))
-		{
-			DeckOnTopCard->MouseHovered(bHovered);
-		}
-	}
-}
-
-void AHandStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
+void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 {
 	if (!CardLayoutManager || !OwnerASC)
 	{
@@ -461,26 +402,10 @@ void AHandStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 	if (CardLayoutManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
 	{
 		OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
-
-		for (ULetheAbilitySystemComponent* AbilitySystemComponent : AbilitySystemComponents)
-		{
-			if (ACardActor* DeckOnTopCard = CardLayoutManager->GetTopCardFromDeck(AbilitySystemComponent))
-			{
-				DeckOnTopCard->MouseHovered(false);
-			}
-		}
 	}
 }
 
-void AHandStage::OnHandHovered(ACardActor* CardActor, const bool bHovered) const
-{
-	if (CardActor)
-	{
-		CardActor->MouseHovered(bHovered);
-	}
-}
-
-void AHandStage::SelectCard(ACardActor* CardActor)
+void ACardStage::SelectCard(ACardActor* CardActor)
 {
 	if (!CardActor || !CardLayoutManager)
 	{
@@ -510,7 +435,7 @@ void AHandStage::SelectCard(ACardActor* CardActor)
 	}
 }
 
-void AHandStage::OnDrawPhaseStarted() const
+void ACardStage::OnDrawPhaseStarted() const
 {
 	if (OnSelectCardRequested.IsBound())
 	{

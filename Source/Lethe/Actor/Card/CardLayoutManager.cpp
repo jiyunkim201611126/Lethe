@@ -120,7 +120,7 @@ void UCardLayoutManager::MoveCardToGraves(ACardActor* CardActor) const
 	{
 		FTransform ActorTransform = CardActor->GetActorTransform();
 		ActorTransform.SetLocation(LayoutTransform.TransformPosition(GravesCardLocation));
-		CardActor->SetTargetTransform(ActorTransform);
+		CardActor->SetActorTransform(ActorTransform);
 	}
 }
 
@@ -140,7 +140,8 @@ void UCardLayoutManager::MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySyste
 		{
 			FTransform ActorTransform = CardInDeck->GetActorTransform();
 			ActorTransform.SetLocation(LayoutTransform.TransformPosition(NextCardLocation));
-			CardInDeck->SetTargetTransform(ActorTransform);
+			ActorTransform.SetRotation(FRotator(0.f, 90.f, 0.f).Quaternion());
+			CardInDeck->SetActorTransform(ActorTransform);
 		}
 
 		NextCardLocation.X += PaddingDeckAndHand;
@@ -153,7 +154,7 @@ void UCardLayoutManager::MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySyste
 				{
 					FTransform ActorTransform = CardInHand->GetActorTransform();
 					ActorTransform.SetLocation(LayoutTransform.TransformPosition(NextCardLocation));
-					CardInHand->SetTargetTransform(ActorTransform);
+					CardInHand->SetActorTransform(ActorTransform);
 				}
 
 				// 핸드의 마지막 장이면 DeckAndHand로, 아니라면 HandAndHand로 사이 공간을 띄워줍니다.

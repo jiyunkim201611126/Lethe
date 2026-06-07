@@ -64,11 +64,6 @@ void UCardPanelWidgetController::BeginDestroy()
 	}
 }
 
-FVector2D UCardPanelWidgetController::GetCardSize() const
-{
-	return CardViewData->CardSize;
-}
-
 bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
 {
 	if (LethePlayerController)

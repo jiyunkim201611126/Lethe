@@ -16,9 +16,6 @@ public:
 	FLinearColor GetCardTypeColor(const FGameplayTag& InCardTypeTag) const;
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	FVector2D CardSize = FVector2D(120.f, 168.f);
-
 	/** Key는 CardTypeTag입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
 	TMap<FGameplayTag, FLinearColor> CardTypeColors;

@@ -98,7 +98,7 @@ void UCardPanelWidget::TryInitializeCardStage() const
 			AbilitySystemComponents.Add(AbilitySystemReference.AbilitySystemComponent);
 		}
 
-		CardStage->Initialize(CardPanelWidgetController->GetCardSize(), AbilitySystemComponents);
+		CardStage->Initialize(AbilitySystemComponents);
 	}
 }
 

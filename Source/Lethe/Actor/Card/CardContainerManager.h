@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "CardContainerManager.generated.h"
 
+class ADeckBoxes;
 class ACardActor;
 class ULetheAbilitySystemComponent;
 
@@ -42,7 +43,7 @@ class LETHE_API UCardContainerManager : public UObject
 	GENERATED_BODY()
 
 public:
-	void Initialize(const FVector2D& CardSize, const FTransform& InLayoutTransform = FTransform::Identity);
+	void Initialize(const TArray<TWeakObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents, ADeckBoxes* InDeckBoxes);
 
 	void AddCardToDeck(ACardActor* CardActor);
 	void ShuffleDeck();
@@ -54,30 +55,34 @@ public:
 
 	void RefillDeck();
 
-	/** 캐릭터 순서대로 순회할 필요가 있어 매개변수로 AbilitySystemComponents를 받아 ASCToCards에서 가져옵니다. */
-	void MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& AbilitySystemComponents);
+	void MoveAllCards();
 
 	bool AreAllDecksFull() const;
 	bool AreAllDecksEmpty() const;
 
 	const TArray<TObjectPtr<ACardActor>>& GetCurrentHands() const;
-	int32 GetCurrentHandsNum() const;
+	int32 GetCurrentHandCount() const;
 	int32 FindCurrentHandIndex(ACardActor* CardActor) const;
 
 private:
-	void MoveCardToGraves(ACardActor* CardActor) const;
+	void GetCurrentHandCounts(TArray<int32>& HandCounts);
 
 private:
-	UPROPERTY()
-	TMap<TObjectPtr<ULetheAbilitySystemComponent>, FCharacterCards> ASCToCards;
+	/** CardStage와 마찬가지로, 캐릭터 순서대로 접근하기 위해 AbilitySystemComponent 배열을 캐싱해둡니다. */
+	TArray<TWeakObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
+	TMap<TWeakObjectPtr<ULetheAbilitySystemComponent>, FCharacterCards> ASCToCards;
+
+	TWeakObjectPtr<ADeckBoxes> DeckBoxes;
 
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> CurrentHands;
 
-	FVector FirstCardLocation = FVector(80.f, -40.f, 0.f);
-	FVector NextCardLocation = FVector(80.f, -40.f, 0.f);
-	FVector GravesCardLocation = FVector(1760.f, -40.f, 0.f);
-	FTransform LayoutTransform;
-	float PaddingDeckAndHand = 25.f;
-	float PaddingHandAndHand = 10.f;
+	FVector DeckFirstCardLocation = FVector(-4.9f, 0.3f, -0.3f);
+	float DeckCardXOffset = 0.7f;
+
+	FVector HandFirstCardLocation = FVector(1.f, -2.80185f, -0.2657f);
+	float HandCardXOffset = 8.f;
+
+	FVector GravesFirstCardLocation = FVector(0.f, -6.7f, 3.48f);
+	FVector GravesCardOffset = FVector(0.f, -0.3f, 0.51962f);
 };

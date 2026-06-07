@@ -24,6 +24,7 @@ class LETHE_API ULetheHUD : public UObject
 	GENERATED_BODY()
 
 public:
+	/** AttributeWidget, CardActor 초기화를 위해 필요한 변수를 PlayerCharacter BeginPlay 타이밍마다 한 번씩 호출(최대 총 4번)합니다. */
 	void InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS);

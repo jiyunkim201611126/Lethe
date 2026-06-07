@@ -9,10 +9,10 @@
 #include "Lethe/SaveGame/SavedCardTypes.h"
 #include "CardStage.generated.h"
 
-class ADeckBoxes;
 enum class ECardAction : uint8;
 class ACardActor;
-class UCardLayoutManager;
+class UCardContainerManager;
+class ADeckBoxes;
 class ULetheAbilitySystemComponent;
 class USceneCaptureComponent2D;
 struct FKey;
@@ -38,7 +38,7 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~ End of AActor Interface
 
-	void Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents);
+	void Initialize(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents);
 
 	void CreateCard(const FCardInitParams& CardInitParams);
 
@@ -97,7 +97,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<UCardLayoutManager> CardLayoutManager;
+	TObjectPtr<UCardContainerManager> CardContainerManager;
 	
 	uint8 bInitialized : 1 = false;
 
@@ -106,8 +106,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<ADeckBoxes> DeckBoxes;
 
-	UPROPERTY()
-	TArray<TObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
+	/** 캐릭터 순서대로 접근, 혹은 순서에 맞춰 인덱스 기반으로 접근하기 위해 AbilitySystemComponent 배열을 캐싱해둡니다. */
+	TArray<TWeakObjectPtr<ULetheAbilitySystemComponent>> AbilitySystemComponents;
 
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> SpawnedCards;

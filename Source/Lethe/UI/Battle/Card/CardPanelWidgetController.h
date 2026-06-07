@@ -66,8 +66,6 @@ public:
 	virtual void BeginDestroy() override;
 	//~ End of UObject Interface
 
-	FVector2D GetCardSize() const;
-
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoPlayerTurnPhase() const;

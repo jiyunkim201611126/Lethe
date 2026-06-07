@@ -11,6 +11,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 
 ACardStage::ACardStage()
 {
@@ -68,16 +69,27 @@ void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ACardStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents)
+void ACardStage::Initialize(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents)
 {
-	AbilitySystemComponents = InAbilitySystemComponents;
-
-	if (bInitialized || !CardContainerManager)
+	if (!CardContainerManager || !DeckBoxes)
 	{
 		return;
 	}
 
-	CardContainerManager->Initialize(CardSize, GetActorTransform());
+	// 모든 캐릭터가 넘어올 때까지 계속해서 ASC를 캐싱, CardContainerManager에게 넘겨줍니다.
+	AbilitySystemComponents.Reset();
+	AbilitySystemComponents.Reserve(InAbilitySystemComponents.Num());
+	for (ULetheAbilitySystemComponent* ASC : InAbilitySystemComponents)
+	{
+		AbilitySystemComponents.Add(ASC);
+	}
+
+	CardContainerManager->Initialize(AbilitySystemComponents, DeckBoxes);
+
+	if (bInitialized)
+	{
+		return;
+	}
 	bInitialized = true;
 
 	if (CaptureComponent->TextureTarget)
@@ -228,7 +240,6 @@ void ACardStage::HandleCancelSelectedCard()
 	{
 		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
 		CurrentSelectedCard = nullptr;
-		UpdateAllCardLocations();
 	}
 }
 
@@ -246,6 +257,7 @@ void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 		{
 			CardContainerManager->AddCardToGrave(CardActor);
 		}
+		UpdateAllCardLocations();
 	}
 	else
 	{
@@ -359,7 +371,7 @@ void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 
 	if (AbilitySystemComponents.IsValidIndex(Number))
 	{
-		TryDraw(AbilitySystemComponents[Number]);
+		TryDraw(AbilitySystemComponents[Number].Get());
 	}
 }
 
@@ -373,19 +385,19 @@ void ACardStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 	const TArray<TObjectPtr<ACardActor>>& CurrentHands = CardContainerManager->GetCurrentHands();
 	if (CurrentHands.IsValidIndex(Number))
 	{
-		ACardActor* SelectedCard = CurrentHands[Number];
-		if (SelectedCard && SelectedCard->GetCurrentCardContainer() == ECardContainer::Hand)
+		ACardActor* SelectingCard = CurrentHands[Number];
+		if (SelectingCard && SelectingCard->GetCurrentCardContainer() == ECardContainer::Hand)
 		{
-			SelectCard(SelectedCard);
+			SelectCard(SelectingCard);
 		}
 	}
 }
 
 void ACardStage::UpdateAllCardLocations() const
 {
-	if (CardContainerManager)
+	if (CardContainerManager && DeckBoxes)
 	{
-		CardContainerManager->MoveAllCards(AbilitySystemComponents);
+		CardContainerManager->MoveAllCards();
 	}
 }
 
@@ -402,7 +414,7 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 	}
 
 	// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.
-	if (CardContainerManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
+	if (CardContainerManager->GetCurrentHandCount() >= MAX_HAND_COUNT)
 	{
 		OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
 	}

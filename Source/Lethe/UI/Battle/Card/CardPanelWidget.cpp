@@ -114,10 +114,12 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FVector2D TargetUV;
-	TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
-	if (CardStage && CardStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
+	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
 	{
-		return FReply::Handled().CaptureMouse(TakeWidget());
+		if (CardStage && CardStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
+		{
+			return FReply::Handled().CaptureMouse(TakeWidget());
+		}
 	}
 	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
@@ -125,10 +127,12 @@ FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FVector2D TargetUV;
-	TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
-	if (CardStage && CardStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
+	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
 	{
-		return FReply::Handled().ReleaseMouseCapture();
+		if (CardStage && CardStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
+		{
+			return FReply::Handled().ReleaseMouseCapture();
+		}
 	}
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }

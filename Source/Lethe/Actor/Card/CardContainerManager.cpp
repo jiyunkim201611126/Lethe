@@ -1,13 +1,13 @@
 // Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "CardLayoutManager.h"
+#include "CardContainerManager.h"
 
 #include "Lethe/Lethe.h"
 #include "Lethe/Util.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Actor/Card/CardActor.h"
 
-void UCardLayoutManager::Initialize(const FVector2D& CardSize, const FTransform& InLayoutTransform)
+void UCardContainerManager::Initialize(const FVector2D& CardSize, const FTransform& InLayoutTransform)
 {
 	LayoutTransform = InLayoutTransform;
 	PaddingDeckAndHand += CardSize.X;
@@ -22,7 +22,7 @@ void UCardLayoutManager::Initialize(const FVector2D& CardSize, const FTransform&
 	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);
 }
 
-void UCardLayoutManager::AddCardToDeck(ACardActor* CardActor)
+void UCardContainerManager::AddCardToDeck(ACardActor* CardActor)
 {
 	if (CardActor)
 	{
@@ -34,7 +34,7 @@ void UCardLayoutManager::AddCardToDeck(ACardActor* CardActor)
 	}
 }
 
-void UCardLayoutManager::ShuffleDeck()
+void UCardContainerManager::ShuffleDeck()
 {
 	for (auto& Cards : ASCToCards)
 	{
@@ -43,7 +43,7 @@ void UCardLayoutManager::ShuffleDeck()
 	}
 }
 
-ACardActor* UCardLayoutManager::GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const
+ACardActor* UCardContainerManager::GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const
 {
 	if (OwnerASC)
 	{
@@ -56,7 +56,7 @@ ACardActor* UCardLayoutManager::GetTopCardFromDeck(ULetheAbilitySystemComponent*
 	return nullptr;
 }
 
-bool UCardLayoutManager::TryDraw(ULetheAbilitySystemComponent* OwnerASC)
+bool UCardContainerManager::TryDraw(ULetheAbilitySystemComponent* OwnerASC)
 {
 	if (OwnerASC)
 	{
@@ -74,7 +74,7 @@ bool UCardLayoutManager::TryDraw(ULetheAbilitySystemComponent* OwnerASC)
 	return false;
 }
 
-void UCardLayoutManager::AddCardToGrave(ACardActor* CardActor)
+void UCardContainerManager::AddCardToGrave(ACardActor* CardActor)
 {
 	if (CardActor && CardActor->GetCurrentCardContainer() != ECardContainer::Grave)
 	{
@@ -90,7 +90,7 @@ void UCardLayoutManager::AddCardToGrave(ACardActor* CardActor)
 	}
 }
 
-void UCardLayoutManager::AddAllHandsToGrave()
+void UCardContainerManager::AddAllHandsToGrave()
 {
 	for (auto& Cards : ASCToCards)
 	{
@@ -102,7 +102,7 @@ void UCardLayoutManager::AddAllHandsToGrave()
 	}
 }
 
-void UCardLayoutManager::RefillDeck()
+void UCardContainerManager::RefillDeck()
 {
 	for (auto& Cards : ASCToCards)
 	{
@@ -114,7 +114,7 @@ void UCardLayoutManager::RefillDeck()
 	}
 }
 
-void UCardLayoutManager::MoveCardToGraves(ACardActor* CardActor) const
+void UCardContainerManager::MoveCardToGraves(ACardActor* CardActor) const
 {
 	if (CardActor)
 	{
@@ -124,7 +124,7 @@ void UCardLayoutManager::MoveCardToGraves(ACardActor* CardActor) const
 	}
 }
 
-void UCardLayoutManager::MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& AbilitySystemComponents)
+void UCardContainerManager::MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& AbilitySystemComponents)
 {
 	CurrentHands.Reset();
 
@@ -167,7 +167,7 @@ void UCardLayoutManager::MoveAllCards(const TArray<TObjectPtr<ULetheAbilitySyste
 	NextCardLocation = FirstCardLocation;
 }
 
-bool UCardLayoutManager::AreAllDecksFull() const
+bool UCardContainerManager::AreAllDecksFull() const
 {
 	for (const auto& Cards : ASCToCards)
 	{
@@ -179,7 +179,7 @@ bool UCardLayoutManager::AreAllDecksFull() const
 	return true;
 }
 
-bool UCardLayoutManager::AreAllDecksEmpty() const
+bool UCardContainerManager::AreAllDecksEmpty() const
 {
 	for (const auto& Cards : ASCToCards)
 	{
@@ -191,17 +191,17 @@ bool UCardLayoutManager::AreAllDecksEmpty() const
 	return true;
 }
 
-const TArray<TObjectPtr<ACardActor>>& UCardLayoutManager::GetCurrentHands() const
+const TArray<TObjectPtr<ACardActor>>& UCardContainerManager::GetCurrentHands() const
 {
 	return CurrentHands;
 }
 
-int32 UCardLayoutManager::GetCurrentHandsNum() const
+int32 UCardContainerManager::GetCurrentHandsNum() const
 {
 	return CurrentHands.Num();
 }
 
-int32 UCardLayoutManager::FindCurrentHandIndex(ACardActor* CardActor) const
+int32 UCardContainerManager::FindCurrentHandIndex(ACardActor* CardActor) const
 {
 	return CurrentHands.Find(CardActor);
 }

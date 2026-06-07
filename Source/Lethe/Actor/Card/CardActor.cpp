@@ -5,8 +5,6 @@
 #include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Engine/Texture.h"
-#include "InputCoreTypes.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
@@ -34,6 +32,7 @@ ACardActor::ACardActor()
 	CardOutlineMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CardOutlineMesh"));
 	CardOutlineMesh->SetupAttachment(CardRoot);
 	CardOutlineMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CardOutlineMesh->SetHiddenInGame(true);
 }
 
 void ACardActor::BeginPlay()

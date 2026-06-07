@@ -16,9 +16,8 @@ public:
 	FLinearColor GetCardTypeColor(const FGameplayTag& InCardTypeTag) const;
 
 public:
-	/** 4픽셀의 Outline을 포함한 수치입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
-	FVector2D CardSize = FVector2D(124.f, 172.f);
+	FVector2D CardSize = FVector2D(120.f, 168.f);
 
 	/** Key는 CardTypeTag입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Card")

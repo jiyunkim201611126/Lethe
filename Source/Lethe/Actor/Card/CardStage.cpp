@@ -3,7 +3,7 @@
 #include "CardStage.h"
 
 #include "CardActor.h"
-#include "CardLayoutManager.h"
+#include "CardContainerManager.h"
 #include "DeckBoxes.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/World.h"
@@ -34,10 +34,13 @@ void ACardStage::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CardLayoutManager = NewObject<UCardLayoutManager>(this);
+	CardContainerManager = NewObject<UCardContainerManager>(this);
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 
 	DeckBoxes = GetWorld()->SpawnActor<ADeckBoxes>(DeckBoxesClass);
+	DeckBoxes->SetActorTransform(GetActorTransform());
+
+	CaptureComponent->ShowOnlyActors.Add(DeckBoxes);
 }
 
 void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -59,7 +62,7 @@ void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 	SpawnedCards.Reset();
 
-	CardLayoutManager = nullptr;
+	CardContainerManager = nullptr;
 	DeckBoxes = nullptr;
 
 	Super::EndPlay(EndPlayReason);
@@ -69,12 +72,12 @@ void ACardStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<U
 {
 	AbilitySystemComponents = InAbilitySystemComponents;
 
-	if (bInitialized || !CardLayoutManager)
+	if (bInitialized || !CardContainerManager)
 	{
 		return;
 	}
 
-	CardLayoutManager->Initialize(CardSize, GetActorTransform());
+	CardContainerManager->Initialize(CardSize, GetActorTransform());
 	bInitialized = true;
 
 	if (CaptureComponent->TextureTarget)
@@ -85,7 +88,7 @@ void ACardStage::Initialize(const FVector2D& CardSize, const TArray<TObjectPtr<U
 
 void ACardStage::CreateCard(const FCardInitParams& CardInitParams)
 {
-	if (!CardLayoutManager || !CardActorClass)
+	if (!CardContainerManager || !CardActorClass)
 	{
 		return;
 	}
@@ -101,10 +104,10 @@ void ACardStage::CreateCard(const FCardInitParams& CardInitParams)
 		CreatedCard->OnCardMouseEventDelegate.BindUObject(this, &ThisClass::OnCardMouseEvent);
 		SpawnedCards.Add(CreatedCard);
 
-		CardLayoutManager->AddCardToDeck(CreatedCard);
-		if (CardLayoutManager->AreAllDecksFull())
+		CardContainerManager->AddCardToDeck(CreatedCard);
+		if (CardContainerManager->AreAllDecksFull())
 		{
-			CardLayoutManager->ShuffleDeck();
+			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
 		}
 
@@ -169,12 +172,12 @@ bool ACardStage::HandleMouseButtonDownInCardUseSection() const
 
 bool ACardStage::HandleMouseButtonUpInCardUseSection()
 {
-	if (!CurrentSelectedCard || !CardLayoutManager || !OnUseCardRequested.IsBound() || !OnSelectCardRequested.IsBound())
+	if (!CurrentSelectedCard || !CardContainerManager || !OnUseCardRequested.IsBound() || !OnSelectCardRequested.IsBound())
 	{
 		return false;
 	}
 
-	const int32 HandIndex = CardLayoutManager->FindCurrentHandIndex(CurrentSelectedCard);
+	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
 	if (HandIndex == INDEX_NONE)
 	{
 		CancelSelectedCard();
@@ -239,9 +242,9 @@ void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 
 	if (bSuccess)
 	{
-		if (CardLayoutManager)
+		if (CardContainerManager)
 		{
-			CardLayoutManager->AddCardToGrave(CardActor);
+			CardContainerManager->AddCardToGrave(CardActor);
 		}
 	}
 	else
@@ -262,9 +265,9 @@ void ACardStage::HandleTurnEndButtonClicked()
 	case EPhaseState::PlayerTurnPhase:
 		if (OnTurnEndRequested.IsBound() && OnTurnEndRequested.Execute())
 		{
-			if (CardLayoutManager)
+			if (CardContainerManager)
 			{
-				CardLayoutManager->AddAllHandsToGrave();
+				CardContainerManager->AddAllHandsToGrave();
 			}
 			UpdateAllCardLocations();
 		}
@@ -349,7 +352,7 @@ void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const EC
 
 void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 {
-	if (!CardLayoutManager)
+	if (!CardContainerManager)
 	{
 		return;
 	}
@@ -362,12 +365,12 @@ void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 
 void ACardStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 {
-	if (!CardLayoutManager)
+	if (!CardContainerManager)
 	{
 		return;
 	}
 
-	const TArray<TObjectPtr<ACardActor>>& CurrentHands = CardLayoutManager->GetCurrentHands();
+	const TArray<TObjectPtr<ACardActor>>& CurrentHands = CardContainerManager->GetCurrentHands();
 	if (CurrentHands.IsValidIndex(Number))
 	{
 		ACardActor* SelectedCard = CurrentHands[Number];
@@ -380,26 +383,26 @@ void ACardStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
 
 void ACardStage::UpdateAllCardLocations() const
 {
-	if (CardLayoutManager)
+	if (CardContainerManager)
 	{
-		CardLayoutManager->MoveAllCards(AbilitySystemComponents);
+		CardContainerManager->MoveAllCards(AbilitySystemComponents);
 	}
 }
 
 void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 {
-	if (!CardLayoutManager || !OwnerASC)
+	if (!CardContainerManager || !OwnerASC)
 	{
 		return;
 	}
 
-	if (CardLayoutManager->TryDraw(OwnerASC))
+	if (CardContainerManager->TryDraw(OwnerASC))
 	{
 		UpdateAllCardLocations();
 	}
 
 	// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.
-	if (CardLayoutManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
+	if (CardContainerManager->GetCurrentHandsNum() >= MAX_HAND_COUNT)
 	{
 		OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
 	}
@@ -407,14 +410,14 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 
 void ACardStage::SelectCard(ACardActor* CardActor)
 {
-	if (!CardActor || !CardLayoutManager)
+	if (!CardActor || !CardContainerManager)
 	{
 		return;
 	}
 
 	CancelSelectedCard();
 
-	const int32 HandIndex = CardLayoutManager->FindCurrentHandIndex(CardActor);
+	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CardActor);
 	if (UseRequestedCards.Contains(HandIndex))
 	{
 		return;
@@ -432,6 +435,10 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		{
 			CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
 		}
+		else
+		{
+			CancelSelectedCard();
+		}
 	}
 }
 
@@ -442,10 +449,10 @@ void ACardStage::OnDrawPhaseStarted() const
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
 	}
 
-	if (CardLayoutManager && CardLayoutManager->AreAllDecksEmpty())
+	if (CardContainerManager && CardContainerManager->AreAllDecksEmpty())
 	{
-		CardLayoutManager->RefillDeck();
-		CardLayoutManager->ShuffleDeck();
+		CardContainerManager->RefillDeck();
+		CardContainerManager->ShuffleDeck();
 		UpdateAllCardLocations();
 	}
 }

@@ -680,14 +680,19 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	}
 
 	// 동일한 레벨의 AbilitySpec을 선택합니다.
-	FGameplayAbilitySpec* SelectedSpec;
+	FGameplayAbilitySpec* SelectedSpec = nullptr;
 	for (FGameplayAbilitySpec* AbilitySpec : AbilitySpecs)
 	{
-		if (AbilitySpec->Level == SavedCard.CardLevel)
+		if (AbilitySpec && AbilitySpec->Level == SavedCard.CardLevel)
 		{
 			SelectedSpec = AbilitySpec;
 			break;
 		}
+	}
+
+	if (!SelectedSpec)
+	{
+		return false;
 	}
 	
 	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(SelectedSpec->Ability);

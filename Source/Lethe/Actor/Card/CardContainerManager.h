@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "CardLayoutManager.generated.h"
+#include "CardContainerManager.generated.h"
 
 class ACardActor;
 class ULetheAbilitySystemComponent;
@@ -37,7 +37,7 @@ struct FCharacterCards
  * Add는 로직상의 추가를, Move는 카드를 View상에서 움직임을 의미합니다.
  */
 UCLASS()
-class LETHE_API UCardLayoutManager : public UObject
+class LETHE_API UCardContainerManager : public UObject
 {
 	GENERATED_BODY()
 

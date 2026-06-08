@@ -77,12 +77,12 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> CurrentHands;
 
-	FVector DeckFirstCardLocation = FVector(-4.9f, 0.3f, -0.3f);
+	FVector DeckFirstCardLocation = FVector(-4.9f, 0.3f, 3.82f);
 	float DeckCardXOffset = 0.7f;
 
-	FVector HandFirstCardLocation = FVector(1.f, -2.80185f, -0.2657f);
+	FVector HandFirstCardLocation = FVector(1.f, -2.80185f, 3.8543f);
 	float HandCardXOffset = 8.f;
 
-	FVector GravesFirstCardLocation = FVector(0.f, -6.7f, 3.48f);
+	FVector GravesFirstCardLocation = FVector(0.f, -2.8f, 5.58038f);
 	FVector GravesCardOffset = FVector(0.f, -0.3f, 0.51962f);
 };

@@ -15,8 +15,8 @@ class UCardContainerManager;
 class ADeckBoxes;
 class ULetheAbilitySystemComponent;
 class USceneCaptureComponent2D;
-struct FKey;
 struct FCardInitParams;
+struct FKey;
 
 DECLARE_DELEGATE_OneParam(FOnViewCardDetailRequested, const ACardActor*);
 DECLARE_DELEGATE_RetVal_ThreeParams(bool, FOnSelectCardRequested, bool, ULetheAbilitySystemComponent*, const FGameplayTag&);
@@ -52,7 +52,7 @@ public:
 	void HandlePhaseStateChanged(EPhaseState OldState, EPhaseState NewState);
 	void HandleCancelSelectedCard();
 	void HandleResolveUseCard(int32 HandIndex, bool bSuccess);
-	void HandleTurnEndButtonClicked();
+	void HandleTurnEndButtonClicked() const;
 	void CancelSelectedCard() const;
 
 private:
@@ -91,6 +91,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Card")
 	TSubclassOf<ACardActor> CardActorClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	FGameplayTag DrawSoundTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Card")
+	FGameplayTag TurnEndSoundTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Card | Input")
 	float CardTraceDistance = 1000.f;

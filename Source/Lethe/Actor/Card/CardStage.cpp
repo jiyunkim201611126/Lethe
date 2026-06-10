@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Manager/FX/FXManagerSubsystem.h"
 
 ACardStage::ACardStage()
 {
@@ -267,7 +268,7 @@ void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 	UseRequestedCards.Remove(HandIndex);
 }
 
-void ACardStage::HandleTurnEndButtonClicked()
+void ACardStage::HandleTurnEndButtonClicked() const
 {
 	switch (CurrentPhaseState)
 	{
@@ -282,6 +283,11 @@ void ACardStage::HandleTurnEndButtonClicked()
 				CardContainerManager->AddAllHandsToGrave();
 			}
 			UpdateAllCardLocations();
+
+			if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+			{
+				FXManagerSubsystem->AsyncPlaySound2D(TurnEndSoundTag, 1.f, 1.f);
+			}
 		}
 		break;
 	default:
@@ -411,6 +417,11 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 	if (CardContainerManager->TryDraw(OwnerASC))
 	{
 		UpdateAllCardLocations();
+
+		if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+		{
+			FXManagerSubsystem->AsyncPlaySound2D(DrawSoundTag, 1.f, 1.f);
+		}
 	}
 
 	// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.

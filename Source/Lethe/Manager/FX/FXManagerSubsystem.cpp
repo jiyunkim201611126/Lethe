@@ -118,7 +118,6 @@ void UFXManagerSubsystem::Deinitialize()
 
 void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation, const float VolumeMultiplier, const float PitchMultiplier)
 {
-	FStreamableManager& StreamableManager = GetStreamableManager();
 	if (!SoundTag.IsValid())
 	{
 		ensureMsgf(false, TEXT("비동기 로드를 요청한 SoundTag가 유효하지 않습니다."));
@@ -141,14 +140,15 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 	
 	FScopeLock Lock(&PendingRequestsLock);
 	
-	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
-	
 	// 함수를 바인드하기 위한 변수를 선언 및 초기화합니다.
 	FSoundAsyncPlayData NewPlayData;
+	NewPlayData.bIs2D = false;
 	NewPlayData.Location = Location;
 	NewPlayData.Rotation = Rotation;
 	NewPlayData.VolumeMultiplier = VolumeMultiplier;
 	NewPlayData.PitchMultiplier = PitchMultiplier;
+	
+	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
 	
 	// 이미 로드 중인 경우 들어가는 분기입니다.
 	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
@@ -163,13 +163,57 @@ void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag,
 	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
 	NewRequest.PlayRequests.Add(NewPlayData);
 	
+	FStreamableManager& StreamableManager = GetStreamableManager();
+	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
+	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+}
+
+void UFXManagerSubsystem::AsyncPlaySound2D(const FGameplayTag& SoundTag, const float VolumeMultiplier, const float PitchMultiplier)
+{
+	if (!SoundTag.IsValid())
+	{
+		ensureMsgf(false, TEXT("비동기 로드를 요청한 SoundTag가 유효하지 않습니다."));
+		return;
+	}
+	
+	const TSoftObjectPtr<USoundBase> SoundToLoad = SoundMap.FindRef(SoundTag);
+	if (SoundToLoad.IsNull())
+	{
+		LETHE_LOG(LogFXManager, Warning, "SoundTag %s에 해당하는 사운드를 찾을 수 없습니다.", *SoundTag.ToString());
+		return;
+	}
+	
+	// 이미 에셋이 로드되어있는 경우 들어가는 분기입니다.
+	if (SoundToLoad.IsValid())
+	{
+		UGameplayStatics::PlaySound2D(this, SoundToLoad.Get(), VolumeMultiplier, PitchMultiplier);
+		return;
+	}
+	
+	FScopeLock Lock(&PendingRequestsLock);
+	
+	FSoundAsyncPlayData NewPlayData;
+	NewPlayData.bIs2D = true;
+	NewPlayData.VolumeMultiplier = VolumeMultiplier;
+	NewPlayData.PitchMultiplier = PitchMultiplier;
+	
+	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
+	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
+	{
+		ExistingRequest->PlayRequests.Add(NewPlayData);
+		return;
+	}
+
+	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
+	NewRequest.PlayRequests.Add(NewPlayData);
+	
+	FStreamableManager& StreamableManager = GetStreamableManager();
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 }
 
 void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback)
 {
-	FStreamableManager& StreamableManager = GetStreamableManager();
 	if (!SoundTag.IsValid())
 	{
 		ensureMsgf(false, TEXT("비동기 로드를 요청한 SoundTag가 유효하지 않습니다."));
@@ -184,9 +228,7 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 		OnLoadedCallback(nullptr);
 		return;
 	}
-
-	const FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
-
+	
 	// 이미 에셋이 로드되어있는 경우 즉시 콜백 함수를 호출합니다.
 	if (SoundToLoad.IsValid())
 	{
@@ -196,6 +238,8 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 	
 	FScopeLock Lock(&PendingRequestsLock);
 
+	const FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
+	
 	// 이미 로드 중인 경우 콜백 함수만 등록합니다.
 	if (PendingSoundLoadRequests.Contains(AssetPath))
 	{
@@ -207,6 +251,7 @@ void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFun
 	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
 	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	
+	FStreamableManager& StreamableManager = GetStreamableManager();
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 }
@@ -234,7 +279,14 @@ void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPa
 	{
 		for (const auto& PlayData : CompletedRequest.PlayRequests)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, LoadedSound, PlayData.Location, PlayData.Rotation, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);
+			if (PlayData.bIs2D)
+			{
+				UGameplayStatics::PlaySound2D(this, LoadedSound, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);
+			}
+			else
+			{
+				UGameplayStatics::PlaySoundAtLocation(this, LoadedSound, PlayData.Location, PlayData.Rotation, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);	
+			}
 		}
 		for (const auto& Callback : CompletedRequest.GetterCallbacks)
 		{
@@ -253,7 +305,6 @@ void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPa
 
 void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation, const FVector Scale, bool bAutoDestroy, bool bAutoActivate)
 {
-	FStreamableManager& StreamableManager = GetStreamableManager();
 	if (!NiagaraTag.IsValid())
 	{
 		ensureMsgf(false, TEXT("비동기 로드를 요청한 NiagaraTag가 유효하지 않습니다."));
@@ -276,14 +327,14 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 	
 	FScopeLock Lock(&PendingRequestsLock);
 	
-	FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
-	
 	FNiagaraAsyncSpawnData NewPlayData;
 	NewPlayData.Location = Location;
 	NewPlayData.Rotation = Rotation;
 	NewPlayData.Scale = Scale;
 	NewPlayData.bAutoDestroy = bAutoDestroy;
 	NewPlayData.bAutoActivate = bAutoActivate;
+	
+	FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
 	
 	// 이미 로드 중인 경우 들어가는 분기입니다.
 	if (FNiagaraAsyncLoadRequest* ExistingRequest = PendingNiagaraLoadRequests.Find(AssetPath))
@@ -297,13 +348,13 @@ void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& Niagar
 	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Add(AssetPath);
 	NewRequest.SpawnRequests.Add(NewPlayData);
 	
+	FStreamableManager& StreamableManager = GetStreamableManager();
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 }
 
 void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback)
 {
-	FStreamableManager& StreamableManager = GetStreamableManager();
 	if (!NiagaraTag.IsValid())
 	{
 		ensureMsgf(false, TEXT("비동기 로드를 요청한 NiagaraTag가 유효하지 않습니다."));
@@ -319,8 +370,6 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 		return;
 	}
 
-	const FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
-
 	// 이미 에셋이 로드되어 있는 경우 들어가는 분기입니다.
 	if (NiagaraToLoad.IsValid())
 	{
@@ -329,7 +378,9 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 	}
 	
 	FScopeLock Lock(&PendingRequestsLock);
-
+	
+	const FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
+	
 	// 이미 로드 중인 경우 콜백 함수만 등록하고 리턴합니다.
 	if (PendingNiagaraLoadRequests.Contains(AssetPath))
 	{
@@ -341,6 +392,7 @@ void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const 
 	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Add(AssetPath);
 	NewRequest.GetterCallbacks.Add(OnLoadedCallback);
 	
+	FStreamableManager& StreamableManager = GetStreamableManager();
 	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
 	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
 }

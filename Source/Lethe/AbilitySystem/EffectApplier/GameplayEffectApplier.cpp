@@ -26,7 +26,7 @@ bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplay
 
 	if (InContextHandle.IsValid())
 	{
-		return TryMakeSpecHandles(ASC, InContextHandle, OutSpecHandles);
+		return TryPrepareSpecHandles(ASC, InContextHandle, OutSpecHandles);
 	}
 	return false;
 }
@@ -46,7 +46,7 @@ TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetSourcePreviewEffectClass
 	return nullptr;
 }
 
-bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool UGameplayEffectApplier::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	return false;
 }

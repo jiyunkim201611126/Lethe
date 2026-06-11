@@ -4,7 +4,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "ActorSelectorComponent.h"
-#include "PlayerAbilityContextComponent.h"
+#include "PlayerAbilityRequestComponent.h"
 #include "PreviewCoordinatorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
@@ -23,7 +23,7 @@ ALethePlayerController::ALethePlayerController()
 	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
 	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
 
-	PlayerAbilityContextComponent = CreateDefaultSubobject<UPlayerAbilityContextComponent>("PlayerAbilityContextComponent");
+	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>("PlayerAbilityRequestComponent");
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -90,7 +90,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		// 선택했던 캐릭터가 서있던 타일을 선택한 경우(제자리 클릭) 들어오는 분기입니다.
 		if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 		{
-			PlayerAbilityContextComponent->RemoveReservedMove(SelectedCharacter.Get());
+			PlayerAbilityRequestComponent->RemoveReservedMove(SelectedCharacter.Get());
 			RefreshMovePreview();
 		}
 		ResetSelectedCharacter();
@@ -127,7 +127,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		if (!bIsSelectingCharacter)
 		{
 			// 이동 타일을 예약합니다.
-			PlayerAbilityContextComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
+			PlayerAbilityRequestComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
 			ResetSelectedCharacter();
 			RefreshMovePreview();
 		}
@@ -136,7 +136,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		{
 			// 이동 가능한 타일을 모두 가져옵니다.
 			TArray<ATile*> OutMovableTiles;
-			if (!PlayerAbilityContextComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles))
+			if (!PlayerAbilityRequestComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles))
 			{
 				ResetSelectedCharacter();
 				break;
@@ -150,7 +150,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			else
 			{
 				// 이동을 요청합니다.
-				PlayerAbilityContextComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
+				PlayerAbilityRequestComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
 				ResetSelectedCharacter();
 			}
 		}
@@ -185,7 +185,7 @@ void ALethePlayerController::RefreshMovePreview() const
 	}
 	
 	TMap<APlayerCharacterBase*, TArray<FVector>> MovePathLocations;
-	if (PlayerAbilityContextComponent->TryGetMovePathLocations(MovePathLocations))
+	if (PlayerAbilityRequestComponent->TryGetMovePathLocations(MovePathLocations))
 	{
 		ArrowRenderer->DrawMovePreviewArrow(MovePathLocations);
 	}
@@ -197,14 +197,14 @@ void ALethePlayerController::RefreshMovePreview() const
 
 void ALethePlayerController::StartResolvePlayerMoves() const
 {
-	PlayerAbilityContextComponent->StartResolveMoves();
+	PlayerAbilityRequestComponent->StartResolveMoves();
 }
 
 void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 {
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
-		PlayerAbilityContextComponent->OnPlayerReservedMoveResolved(MovedCharacter);
+		PlayerAbilityRequestComponent->OnPlayerReservedMoveResolved(MovedCharacter);
 		RefreshMovePreview();
 	}
 }
@@ -322,11 +322,11 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	{
 	case EPhaseState::EnemyPlanningPhase:
 		// 비전투 페이즈로 진입 시, 예약해뒀던 모든 이동이 큐에 들어갈 수 있도록 상태를 활성화합니다.
-		PlayerAbilityContextComponent->SetAllReservedMovesWaitingForQueue();
+		PlayerAbilityRequestComponent->SetAllReservedMovesWaitingForQueue();
 		break;
 	case EPhaseState::DrawPhase:
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
-		PlayerAbilityContextComponent->ResetReservedMoveData();
+		PlayerAbilityRequestComponent->ResetReservedMoveData();
 		if (bIsReservedMovePreviewingMode)
 		{
 			ToggleMovePreview();
@@ -430,7 +430,7 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
 {
-	if (!PlayerAbilityContextComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
@@ -443,7 +443,7 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
-	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
+	PlayerAbilityRequestComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

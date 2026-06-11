@@ -2,12 +2,12 @@
 
 #include "LetheAbilityTypes.h"
 
-void FLetheGameplayEffectContext::SetCueDataContext(const FCueDataContext& InCueDataContext)
+void FLetheGameplayEffectContext::SetCueDataPayload(const FCueDataPayload& InCueDataPayload)
 {
-	CueDataContext = InCueDataContext;
+	CueDataPayload = InCueDataPayload;
 }
 
-const FCueDataContext& FLetheGameplayEffectContext::GetCueDataContext() const
+const FCueDataPayload& FLetheGameplayEffectContext::GetCueDataPayload() const
 {
-	return CueDataContext;
+	return CueDataPayload;
 }

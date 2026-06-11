@@ -15,7 +15,7 @@ UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost
 	EffectApplierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("EffectApplier.Damage.WithConsumeAllCost")));
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
+bool UEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
 	const AActor* SourceActor = SourceASC->GetAvatarActor();
 	if (!SourceActor || !SourceActor->Implements<UPlayerCharacterInterface>())
@@ -39,7 +39,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemC
 				break;
 			}
 			
-			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
+			Super::TryPrepareSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
 	else
@@ -47,7 +47,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandles(UAbilitySystemC
 		const int32 StartCost = FMath::FloorToInt(SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
 		for (int32 Index = 0; Index < StartCost; Index++)
 		{
-			Super::TryMakeSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
+			Super::TryPrepareSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
 	return !OutSpecHandles.IsEmpty();
@@ -93,7 +93,7 @@ TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourceP
 	return CostEffectClass;
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	if (!SourceASC)
 	{

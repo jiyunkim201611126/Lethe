@@ -21,9 +21,18 @@ class LETHE_API UGameplayEffectApplier : public UObject
 	GENERATED_BODY()
 
 public:
+	/**
+	 * 외부에서 EffectApplier를 통해 실제로 Effect를 적용하고자 할 때 호출하는 함수입니다.
+	 * 내부적으로 TryMakeSpecHandlesWithContextHandle을 호출, Spec을 생성해서 최종적으로는 할당된 Effect들을 Source와 Target에게 모두 적용합니다. 
+	 */
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(ULetheEffectApplier::ApplyEffect, );
-	virtual bool TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
 
+	/**
+	 * Preview 용도의 Spec을 원하는 경우 마지막 bPreview 인자를 true로 하여 외부에서 호출합니다.
+	 * 실제 적용을 위해 호출하는 경우 TryMakeSpecHandlesWithContextHandle에 의해 호출되어, 구현체에 따라 Cost 소비 등의 준비 작업이 들어갈 수 있습니다.
+	 */
+	virtual bool TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
+	
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 	
@@ -34,7 +43,7 @@ public:
 	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
 	
 	/** Ability 자체 Cost 외, Effect 적용 시 Source에게 발생하는 Attribute 변화를 Preview로 표시할 때 사용하는 함수입니다. */
-	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
+	virtual bool TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 protected:
 	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility, FGameplayEffectContextHandle& OutHandle) const;

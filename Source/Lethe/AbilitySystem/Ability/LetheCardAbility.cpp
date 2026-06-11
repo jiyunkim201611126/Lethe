@@ -71,7 +71,7 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, PreviewContextHandle, SpecHandles))
+			if (EffectApplier->TryMakeSourcePreviewSpecHandles(SourceASC, PreviewContextHandle, SpecHandles))
 			{
 				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
@@ -113,7 +113,7 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 				PreviewContextHandle.SetAbility(this);
 				
 				TArray<FGameplayEffectSpecHandle> SpecHandles;
-				if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
+				if (EffectApplier->TryPrepareSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 				{
 					TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
 				}

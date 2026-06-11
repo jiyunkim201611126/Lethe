@@ -1,6 +1,6 @@
 // Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "PlayerAbilityContextComponent.h"
+#include "PlayerAbilityRequestComponent.h"
 
 #include "ActorSelectorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
@@ -14,13 +14,13 @@
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/SaveGame/SavedCardTypes.h"
 
-UPlayerAbilityContextComponent::UPlayerAbilityContextComponent()
+UPlayerAbilityRequestComponent::UPlayerAbilityRequestComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	bWantsInitializeComponent = true;
 }
 
-void UPlayerAbilityContextComponent::InitializeComponent()
+void UPlayerAbilityRequestComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 
@@ -28,7 +28,7 @@ void UPlayerAbilityContextComponent::InitializeComponent()
 	check(ActorSelector.IsValid());
 }
 
-void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile)
+void UPlayerAbilityRequestComponent::ReserveMove(AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const ATile* TargetTile)
 {
 	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile)
 	{
@@ -130,7 +130,7 @@ void UPlayerAbilityContextComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	}
 }
 
-void UPlayerAbilityContextComponent::RemoveReservedMove(const AActor* SelectedCharacter)
+void UPlayerAbilityRequestComponent::RemoveReservedMove(const AActor* SelectedCharacter)
 {
 	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
@@ -142,7 +142,7 @@ void UPlayerAbilityContextComponent::RemoveReservedMove(const AActor* SelectedCh
 	}
 }
 
-bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
+bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationData()
 {
 	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!LetheGameState)
@@ -261,7 +261,7 @@ bool UPlayerAbilityContextComponent::TryEnqueueNextReservedMoveActivationData()
 	return bIsActivationDataAdded;
 }
 
-EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, TArray<TWeakObjectPtr<ATile>>& OutPathTiles, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
+EMoveActionType UPlayerAbilityRequestComponent::ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, TArray<TWeakObjectPtr<ATile>>& OutPathTiles, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
 {
 	OutPathTiles.Reset();
 	OutSwapTargetReservedMove = nullptr;
@@ -293,7 +293,7 @@ EMoveActionType UPlayerAbilityContextComponent::ResolveActionType(const FPlayerC
 	return EMoveActionType::CantReach;
 }
 
-EMoveActionType UPlayerAbilityContextComponent::GetActionType(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
+EMoveActionType UPlayerAbilityRequestComponent::GetActionType(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove)
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!SourceReservedMove || !SourceReservedMove->IsValid() || !TargetTile || SourceReservedMove->PathTiles.IsEmpty() || !TileManagerSubsystem)
@@ -335,7 +335,7 @@ EMoveActionType UPlayerAbilityContextComponent::GetActionType(const FPlayerChara
 	return EMoveActionType::CantReach;
 }
 
-bool UPlayerAbilityContextComponent::CanReachReservedTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile) const
+bool UPlayerAbilityRequestComponent::CanReachReservedTile(const FPlayerCharacterReservedMove* SourceReservedMove, const ATile* TargetTile) const
 {
 	if (!SourceReservedMove || !SourceReservedMove->IsValid() || !TargetTile)
 	{
@@ -360,7 +360,7 @@ bool UPlayerAbilityContextComponent::CanReachReservedTile(const FPlayerCharacter
 	return false;
 }
 
-void UPlayerAbilityContextComponent::StartResolveMoves()
+void UPlayerAbilityRequestComponent::StartResolveMoves()
 {
 	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!LetheGameState || LetheGameState->IsResolvingPlayerAbility())
@@ -378,7 +378,7 @@ void UPlayerAbilityContextComponent::StartResolveMoves()
 	}
 }
 
-void UPlayerAbilityContextComponent::OnPlayerReservedMoveResolved(AActor* MovedCharacter)
+void UPlayerAbilityRequestComponent::OnPlayerReservedMoveResolved(AActor* MovedCharacter)
 {
 	FPlayerCharacterReservedMove* SourceReservedMove = ReservedMoves.FindByPredicate([MovedCharacter](const FPlayerCharacterReservedMove& InReservedMove)
 	{
@@ -413,7 +413,7 @@ void UPlayerAbilityContextComponent::OnPlayerReservedMoveResolved(AActor* MovedC
 	TryEnqueueNextReservedMoveActivationData();
 }
 
-void UPlayerAbilityContextComponent::RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const
+void UPlayerAbilityRequestComponent::RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -462,7 +462,7 @@ void UPlayerAbilityContextComponent::RefreshReservedMoveData(FPlayerCharacterRes
 	}
 }
 
-void UPlayerAbilityContextComponent::SetAllReservedMovesWaitingForQueue()
+void UPlayerAbilityRequestComponent::SetAllReservedMovesWaitingForQueue()
 {
 	for (FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
@@ -470,7 +470,7 @@ void UPlayerAbilityContextComponent::SetAllReservedMovesWaitingForQueue()
 	}
 }
 
-void UPlayerAbilityContextComponent::ResetReservedMoveData()
+void UPlayerAbilityRequestComponent::ResetReservedMoveData()
 {
 	for (const FPlayerCharacterReservedMove& ReservedMove : ReservedMoves)
 	{
@@ -486,7 +486,7 @@ void UPlayerAbilityContextComponent::ResetReservedMoveData()
 	SwapSourceToTarget.Reset();
 }
 
-bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const
+bool UPlayerAbilityRequestComponent::TryGetMovePathLocations(TMap<APlayerCharacterBase*, TArray<FVector>>& OutMovePathLocations) const
 {
 	OutMovePathLocations.Reset();
 
@@ -524,7 +524,7 @@ bool UPlayerAbilityContextComponent::TryGetMovePathLocations(TMap<APlayerCharact
 	return !OutMovePathLocations.IsEmpty();
 }
 
-bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const
+bool UPlayerAbilityRequestComponent::TryGetMovableTiles(AActor* SelectedCharacter, const UAbilitySystemComponent* AbilitySystemComponent, TArray<ATile*>& OutTilesInRange) const
 {
 	if (!SelectedCharacter || !AbilitySystemComponent || !ActorSelector.IsValid())
 	{
@@ -549,7 +549,7 @@ bool UPlayerAbilityContextComponent::TryGetMovableTiles(AActor* SelectedCharacte
 	return !OutTilesInRange.IsEmpty();
 }
 
-void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const
+void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter, UAbilitySystemComponent* AbilitySystemComponent, const TArray<ATile*>& TilesInRange, ATile* TargetTile) const
 {
 	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!SelectedCharacter || !AbilitySystemComponent || !TargetTile || !LetheGameState)
@@ -655,7 +655,7 @@ void UPlayerAbilityContextComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
+bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
 {
 	if (!ActorSelector.IsValid() || !OwnerASC)
 	{
@@ -761,7 +761,7 @@ bool UPlayerAbilityContextComponent::RequestUseCard(ULetheAbilitySystemComponent
 	return true;
 }
 
-void UPlayerAbilityContextComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
+void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
 	if (!OwnerASC)
 	{

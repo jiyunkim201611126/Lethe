@@ -18,7 +18,7 @@ class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
 class ULetheWidgetController;
-class UPlayerAbilityContextComponent;
+class UPlayerAbilityRequestComponent;
 class UPreviewCoordinatorComponent;
 struct FGameplayAbilityActorInfo;
 struct FPreviewData;
@@ -94,7 +94,7 @@ private:
 	TObjectPtr<UPreviewCoordinatorComponent> PreviewCoordinatorComponent;
 
 	UPROPERTY()
-	TObjectPtr<UPlayerAbilityContextComponent> PlayerAbilityContextComponent;
+	TObjectPtr<UPlayerAbilityRequestComponent> PlayerAbilityRequestComponent;
 
 	EPhaseState CurrentPhaseState = EPhaseState::None;
 	FDelegateHandle OnPhaseStateChangedHandle;

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "PlayerAbilityContextComponent.generated.h"
+#include "PlayerAbilityRequestComponent.generated.h"
 
 class AActor;
 class APlayerCharacterBase;
@@ -58,12 +58,12 @@ struct FPlayerCharacterReservedMove
 };
 
 UCLASS()
-class LETHE_API UPlayerAbilityContextComponent : public UActorComponent
+class LETHE_API UPlayerAbilityRequestComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UPlayerAbilityContextComponent();
+	UPlayerAbilityRequestComponent();
 
 	//~ Begin UActorComponent Interface
 	virtual void InitializeComponent() override;

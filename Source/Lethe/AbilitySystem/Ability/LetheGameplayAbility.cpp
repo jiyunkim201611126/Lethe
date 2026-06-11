@@ -67,10 +67,10 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 	}
 }
 
-void ULetheGameplayAbility::MakeEffectContextForCue(const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle)
+void ULetheGameplayAbility::MakeEffectContextForCue(const FCueDataPayload& CueDataPayload, FGameplayEffectContextHandle& OutHandle)
 {
 	OutHandle = MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo());
-	ULetheAbilitySystemLibrary::SetCueContextToEffectContext(CueDataContext, OutHandle);
+	ULetheAbilitySystemLibrary::SetCueContextToEffectContext(CueDataPayload, OutHandle);
 }
 
 #if WITH_EDITOR

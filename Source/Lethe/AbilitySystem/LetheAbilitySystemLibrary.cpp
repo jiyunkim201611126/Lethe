@@ -79,19 +79,19 @@ void ULetheAbilitySystemLibrary::ResolveDamageRules(const UAbilitySystemComponen
 	// 절대 Out 데이터 안에 IncomingDamage를 넣어선 안 됩니다.
 }
 
-void ULetheAbilitySystemLibrary::SetCueContextToEffectContext(const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle)
+void ULetheAbilitySystemLibrary::SetCueContextToEffectContext(const FCueDataPayload& CueDataContext, FGameplayEffectContextHandle& OutHandle)
 {
 	if (FLetheGameplayEffectContext* EffectContext = static_cast<FLetheGameplayEffectContext*>(OutHandle.Get()))
 	{
-		EffectContext->SetCueDataContext(CueDataContext);
+		EffectContext->SetCueDataPayload(CueDataContext);
 	}
 }
 
-bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextHandle& EffectContextHandle, FCueDataContext& OutCueDataContext)
+bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextHandle& EffectContextHandle, FCueDataPayload& OutCueDataContext)
 {
 	if (const FLetheGameplayEffectContext* EffectContext = static_cast<const FLetheGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		OutCueDataContext = EffectContext->GetCueDataContext();
+		OutCueDataContext = EffectContext->GetCueDataPayload();
 		return true;
 	}
 	return false;

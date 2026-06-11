@@ -6,7 +6,7 @@
 #include "LetheAbilityTypes.Generated.h"
 
 USTRUCT(BlueprintType)
-struct FCueDataContext
+struct FCueDataPayload
 {
 	GENERATED_BODY()
 
@@ -32,8 +32,8 @@ struct FLetheGameplayEffectContext : public FGameplayEffectContext
 	GENERATED_BODY()
 
 public:
-	void SetCueDataContext(const FCueDataContext& InCueDataContext);
-	const FCueDataContext& GetCueDataContext() const;
+	void SetCueDataPayload(const FCueDataPayload& InCueDataPayload);
+	const FCueDataPayload& GetCueDataPayload() const;
 
 	virtual UScriptStruct* GetScriptStruct() const override
 	{
@@ -53,7 +53,7 @@ public:
 
 protected:
 	UPROPERTY()
-	FCueDataContext CueDataContext;
+	FCueDataPayload CueDataPayload;
 };
 
 template<>

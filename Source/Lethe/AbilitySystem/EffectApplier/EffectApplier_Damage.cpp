@@ -12,8 +12,15 @@ UEffectApplier_Damage::UEffectApplier_Damage()
 
 void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
 {
+	FGameplayEffectContextHandle EffectContextHandle;
+	MakeEffectContextHandle(OwningAbility, EffectContextHandle);
+
+	TArray<TWeakObjectPtr<AActor>> TargetActors;
+	TargetActors.Add(TargetActor);
+	EffectContextHandle.AddActors(TargetActors);
+	
 	TArray<FGameplayEffectSpecHandle> OutSpecHandles;
-	if (TryMakeSpecHandlesWithContextHandle(OwningAbility, OutSpecHandles))
+	if (TryMakeSpecHandlesWithContextHandle(OwningAbility, EffectContextHandle, OutSpecHandles))
 	{
 		CauseDamage(OwningAbility, TargetActor, OutSpecHandles);
 	}
@@ -45,19 +52,11 @@ bool UEffectApplier_Damage::TryMakeSpecHandles(UAbilitySystemComponent* SourceAS
 	return !OutSpecHandles.IsEmpty();
 }
 
-void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs)
+void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs) const
 {
 	if (!TargetActor)
 	{
 		return;
-	}
-	
-	if (EffectContextHandle.IsValid())
-	{
-		// 대상을 관련 액터에 추가합니다.
-		TArray<TWeakObjectPtr<AActor>> TargetActors;
-		TargetActors.Add(TargetActor);
-		EffectContextHandle.AddActors(TargetActors);
 	}
 
 	for (auto& Spec : DamageSpecs)

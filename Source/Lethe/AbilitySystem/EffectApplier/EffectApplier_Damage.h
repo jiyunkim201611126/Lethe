@@ -22,7 +22,7 @@ public:
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
 	//~ End of UGameplayEffectApplier Interface
 	
-	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs);
+	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs) const;
 
 protected:
 	/** 데미지 타입과 그 값을 정의하는 변수입니다. */

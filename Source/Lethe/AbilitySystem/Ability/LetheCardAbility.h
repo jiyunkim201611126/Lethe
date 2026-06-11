@@ -95,13 +95,6 @@ protected:
 		}
 		return nullptr;
 	}
-	
-	/**
-	 * 매개변수로 들어온 GameplayEffectApplier 클래스가 갖고 있는 GameplayEffectContextHandle을 가져오는 함수입니다.
-	 * 반드시 Card가 소유하고 있는 GameplayEffectApplier를 사용해야 합니다.
-	 */ 
-	UFUNCTION(BlueprintPure, Category = "Effect")
-	FGameplayEffectContextHandle GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const;
 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetRangeDescription() const;

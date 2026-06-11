@@ -22,19 +22,13 @@ class LETHE_API UGameplayEffectApplier : public UObject
 
 public:
 	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) PURE_VIRTUAL(ULetheEffectApplier::ApplyEffect, );
-	virtual void CancelAbility();
-	virtual void EndAbility();
 	virtual bool TryMakeSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const PURE_VIRTUAL(ULetheEffectApplier::TryMakeSpecHandles, return false;);
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
-
-	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles);
-	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility);
 	
 	TSubclassOf<UGameplayEffect> GetEffectClass() const;
 	const FGameplayTag& GetEffectApplierTag() const;
-	FGameplayEffectContextHandle GetEffectContextHandle() const;
 
 	/** Ability 자체 Cost 외, Preview용 데이터 계산을 위한 GE 클래스를 반환해주는 함수입니다. */
 	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const;
@@ -43,11 +37,13 @@ public:
 	virtual bool TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 
 protected:
+	void MakeEffectContextHandle(const UGameplayAbility* OwningAbility, FGameplayEffectContextHandle& OutHandle) const;
+	bool TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
+
+protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;
 	
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag EffectApplierTag;
-
-	FGameplayEffectContextHandle EffectContextHandle;
 };

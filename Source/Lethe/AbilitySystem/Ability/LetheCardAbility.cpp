@@ -193,18 +193,6 @@ bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent*
 	return false;
 }
 
-FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const
-{
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier && EffectApplier->GetClass() == ApplierClass)
-		{
-			return EffectApplier->GetEffectContextHandle();
-		}
-	}
-	return FGameplayEffectContextHandle();
-}
-
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
@@ -459,14 +447,6 @@ void ULetheCardAbility::ResetCachedValues()
 
 void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			EffectApplier->EndAbility();
-		}
-	}
-	
 	ResetCachedValues();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -475,14 +455,6 @@ void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	// 프로젝트 특성상 한 번 발동된 Ability가 Cancel될 수는 없으나 일단 구현해두었습니다.
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			EffectApplier->CancelAbility();
-		}
-	}
-	
 	ResetCachedValues();
 	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);

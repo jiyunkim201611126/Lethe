@@ -35,6 +35,7 @@ public:
 	virtual int32 GetMaxMoveRange() const override;
 	virtual void OnDamageTaken() override;
 	virtual void Die() override;
+	virtual bool IsDead() override;
 	virtual UAnimMontage* GetMoveAnimation() override;
 	virtual ETeamSide GetTeamSide() const override;
 	//~ End of ICombatInterface

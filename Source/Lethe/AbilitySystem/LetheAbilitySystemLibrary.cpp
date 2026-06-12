@@ -96,3 +96,18 @@ bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextH
 	}
 	return false;
 }
+
+TArray<FRotator> ULetheAbilitySystemLibrary::EvenlySpacedRotators(const FVector& Forward, const FVector& Axis, const float Spread, const int32 NumOfRotators)
+{
+	const FVector LeftOfSpread = Forward.RotateAngleAxis(-Spread / 2.f, Axis);
+	const float DeltaSpread = NumOfRotators > 1 ? Spread / (NumOfRotators - 1) : 0.f;
+
+	TArray<FRotator> ResultRotators;
+	ResultRotators.Reserve(NumOfRotators);
+	for (int32 Index = 0; Index < NumOfRotators; ++Index)
+	{
+		const FVector Direction = NumOfRotators > 1 ? LeftOfSpread.RotateAngleAxis(DeltaSpread * Index, FVector::UpVector) : Forward;
+		ResultRotators.Add(Direction.Rotation());
+	}
+	return ResultRotators;
+}

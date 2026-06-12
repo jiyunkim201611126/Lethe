@@ -7,7 +7,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
-#include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardViewData.h"
 
@@ -62,11 +61,6 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 		{
 			CardTypeColor = InitParams.CardViewData->GetCardTypeColor(InitParams.CardDefinition->CardTypeTag);
 		}
-	}
-
-	if (InitParams.CharacterDefinitionData)
-	{
-		CharacterColor = FLinearColor(InitParams.CharacterDefinitionData->PersonalColor);
 	}
 
 	ApplyCardVisuals();
@@ -126,21 +120,24 @@ void ACardActor::CreateDynamicMaterialInstances()
 {
 	if (CardMesh && CardMesh->GetMaterial(0))
 	{
-		CardMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(0));
-		CardMesh->SetMaterial(0, CardMaterialInstance);
+		IllustrationMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(2));
+		CardMesh->SetMaterial(2, IllustrationMaterialInstance);
+		LeftTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(4));
+		CardMesh->SetMaterial(4, LeftTagMaterialInstance);
+		RightTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(5));
+		CardMesh->SetMaterial(5, RightTagMaterialInstance);
 	}
 }
 
 void ACardActor::ApplyCardVisuals() const
 {
-	if (!CardMaterialInstance || !CardImage)
+	if (!IllustrationMaterialInstance || !CardImage)
 	{
 		return;
 	}
 
-	CardMaterialInstance->SetTextureParameterValue(CardTextureParamName, Cast<UTexture>(CardImage));
-	CardMaterialInstance->SetVectorParameterValue(TypeFrameColorParamName, CardTypeColor);
-	CardMaterialInstance->SetVectorParameterValue(CharacterColorParamName, CharacterColor);
+	IllustrationMaterialInstance->SetTextureParameterValue(CardTextureParamName, Cast<UTexture>(CardImage));
+	LeftTagMaterialInstance->SetVectorParameterValue(FrameColorParamName, CardTypeColor);
 }
 
 void ACardActor::ToggleHighlightOutline(const bool bHighlightOn) const

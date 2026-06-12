@@ -194,7 +194,7 @@ void ALetheGameState::EnqueuePlayerAbilityActivationData(FAbilityActivationData&
 
 void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
 {
-	OnCardUseResolved.Execute(HandIndex, bSuccess);
+	OnCardUseResolved.ExecuteIfBound(HandIndex, bSuccess);
 }
 
 void ALetheGameState::StartActivatePlayerMoveAbilities() const

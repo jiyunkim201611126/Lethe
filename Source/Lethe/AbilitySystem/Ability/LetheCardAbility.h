@@ -77,9 +77,20 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End of UGameplayAbility Interface
+	
+	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
+	void ActiveFailed();
+	
+	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
+	UFUNCTION()
+	virtual void OnEventReceived(FGameplayEventData Payload);
+
+	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnApplyEffect(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
+	
+	void ResetCachedValues();
 	
 	template<typename T>
 	T* GetEffectApplier()
@@ -105,23 +116,15 @@ protected:
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
 
-	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
-	UFUNCTION()
-	void OnEventReceived(FGameplayEventData Payload);
-
-	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
-	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const;
 	void ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
 	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
-	void ActiveFailed();
-
-	void ResetCachedValues();
 	
 protected:
 	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
 	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
 
+	/** 갖고 있는 EffectAppliers를 CachedTargetActors 중 누구에게, 무엇을 적용할지 결정하는 정책입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TArray<FEffectApplyPolicy> EffectApplyPolicies;
 
@@ -134,10 +137,11 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;
+	
+	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 
 private:
 	TWeakObjectPtr<const ATile> CachedCenterTargetTile;
-	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 
 #if WITH_EDITOR
 public:

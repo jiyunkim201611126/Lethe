@@ -129,28 +129,27 @@ protected:
 	TObjectPtr<UStaticMeshComponent> CardOutlineMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Card | Material")
-	FName CardTextureParamName = TEXT("CardTexture");
+	FName CardTextureParamName = TEXT("Texture");
 
 	UPROPERTY(EditAnywhere, Category = "Card | Material")
-	FName TypeFrameColorParamName = TEXT("TypeFrameColor");
-
-	UPROPERTY(EditAnywhere, Category = "Card | Material")
-	FName SortFrameColorParamName = TEXT("SortFrameColor");
-
-	UPROPERTY(EditAnywhere, Category = "Card | Material")
-	FName CharacterColorParamName = TEXT("CharacterColor");
+	FName FrameColorParamName = TEXT("Color");
 
 private:
 	FText CardNameText;
 	FSavedCard SavedCard;
 	FLinearColor CardTypeColor = FLinearColor::White;
-	FLinearColor CharacterColor = FLinearColor::White;
 
 	UPROPERTY()
 	TObjectPtr<UTexture2D> CardImage;
 
 	UPROPERTY(Transient)
-	TObjectPtr<UMaterialInstanceDynamic> CardMaterialInstance;
+	TObjectPtr<UMaterialInstanceDynamic> IllustrationMaterialInstance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> LeftTagMaterialInstance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> RightTagMaterialInstance;
 
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 

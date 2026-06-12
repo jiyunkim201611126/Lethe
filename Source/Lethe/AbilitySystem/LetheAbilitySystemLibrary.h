@@ -40,4 +40,7 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Cue")
 	static bool GetCueDataContext(UPARAM(ref)const FGameplayEffectContextHandle& EffectContextHandle, FCueDataPayload& OutCueDataContext);
+
+	UFUNCTION(BlueprintCallable, Category = "LetheAbilitySystemLibrary | GameplayMechanics")
+	static TArray<FRotator> EvenlySpacedRotators(UPARAM(ref) const FVector& Forward, UPARAM(ref) const FVector& Axis, const float Spread, const int32 NumOfRotators);
 };

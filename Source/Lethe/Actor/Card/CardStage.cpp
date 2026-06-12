@@ -284,9 +284,12 @@ void ACardStage::HandleTurnEndButtonClicked() const
 			}
 			UpdateAllCardLocations();
 
-			if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+			if (TurnEndSoundTag.IsValid())
 			{
-				FXManagerSubsystem->AsyncPlaySound2D(TurnEndSoundTag, 1.f, 1.f);
+				if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+				{
+					FXManagerSubsystem->AsyncPlaySound2D(TurnEndSoundTag, 1.f, 1.f);
+				}
 			}
 		}
 		break;
@@ -418,16 +421,19 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 	{
 		UpdateAllCardLocations();
 
-		if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+		if (DrawSoundTag.IsValid())
 		{
-			FXManagerSubsystem->AsyncPlaySound2D(DrawSoundTag, 1.f, 1.f);
+			if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+			{
+				FXManagerSubsystem->AsyncPlaySound2D(DrawSoundTag, 1.f, 1.f);
+			}
 		}
-	}
 
-	// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.
-	if (CardContainerManager->GetCurrentHandCount() >= MAX_HAND_COUNT)
-	{
-		OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
+		// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.
+		if (CardContainerManager->GetCurrentHandCount() >= MAX_HAND_COUNT)
+		{
+			OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
+		}
 	}
 }
 

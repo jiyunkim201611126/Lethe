@@ -41,6 +41,7 @@ public:
 	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;
 	
 	void OnDied() const;
+	bool IsDead() const;
 
 protected:
 	virtual void InitUI(const TArray<UUserWidget*>& AttributeWidgets);

@@ -104,6 +104,11 @@ void ALetheCharacterBase::Die()
 	GASManagerComponent->OnDied();
 }
 
+bool ALetheCharacterBase::IsDead()
+{
+	return GASManagerComponent->IsDead();
+}
+
 UAnimMontage* ALetheCharacterBase::GetMoveAnimation()
 {
 	return MoveAnimation;

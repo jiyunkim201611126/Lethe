@@ -2,6 +2,8 @@
 
 #include "DeckBoxes.h"
 
+#include "Animation/AnimSingleNodeInstance.h"
+#include "Components/BoxComponent.h"
 #include "Lethe/Lethe.h"
 
 ADeckBoxes::ADeckBoxes()
@@ -10,24 +12,30 @@ ADeckBoxes::ADeckBoxes()
 
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
 	SetRootComponent(Root);
-
-	DeckBox0 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox0");
-	DeckBox0->SetupAttachment(Root);
-
-	DeckBox1 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox1");
-	DeckBox1->SetupAttachment(Root);
 	
-	DeckBox2 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox2");
-	DeckBox2->SetupAttachment(Root);
-
-	DeckBox3 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox3");
-	DeckBox3->SetupAttachment(Root);
-
+	DeckBoxCollisions.Reset();
+	DeckBoxCollisions.Reserve(PLAYER_CHARACTER_NUMBER);
+	DeckBoxes.Reset();
 	DeckBoxes.Reserve(PLAYER_CHARACTER_NUMBER);
-	DeckBoxes.Add(DeckBox0);
-	DeckBoxes.Add(DeckBox1);
-	DeckBoxes.Add(DeckBox2);
-	DeckBoxes.Add(DeckBox3);
+
+	OpenedStates.Reset();
+	OpenedStates.Init(false, PLAYER_CHARACTER_NUMBER);
+	
+	DeckBoxCollision0 = CreateDefaultSubobject<UBoxComponent>("DeckBoxCollision0");
+	DeckBox0 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox0");
+	InitBox(DeckBoxCollision0, DeckBox0);
+
+	DeckBoxCollision1 = CreateDefaultSubobject<UBoxComponent>("DeckBoxCollision1");
+	DeckBox1 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox1");
+	InitBox(DeckBoxCollision1, DeckBox1);
+
+	DeckBoxCollision2 = CreateDefaultSubobject<UBoxComponent>("DeckBoxCollision2");
+	DeckBox2 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox2");
+	InitBox(DeckBoxCollision2, DeckBox2);
+
+	DeckBoxCollision3 = CreateDefaultSubobject<UBoxComponent>("DeckBoxCollision3");
+	DeckBox3 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox3");
+	InitBox(DeckBoxCollision3, DeckBox3);
 
 	LeftCap = CreateDefaultSubobject<UStaticMeshComponent>("LeftCap");
 	LeftCap->SetupAttachment(Root);
@@ -37,6 +45,29 @@ ADeckBoxes::ADeckBoxes()
 
 	RightCap = CreateDefaultSubobject<UStaticMeshComponent>("RightCap");
 	RightCap->SetupAttachment(Root);
+}
+
+void ADeckBoxes::InitBox(UBoxComponent* BoxCollision, USkeletalMeshComponent* DeckBox)
+{
+	BoxCollision->SetupAttachment(Root);
+	BoxCollision->SetBoxExtent(FVector(5.f, 5.f, 6.f), false);
+	BoxCollision->SetGenerateOverlapEvents(false);
+	BoxCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BoxCollision->SetCollisionResponseToChannel(ECC_Card, ECR_Block);
+	DeckBox->SetupAttachment(BoxCollision);
+	
+	DeckBoxCollisions.Add(BoxCollision);
+	DeckBoxes.Add(DeckBox);
+}
+
+void ADeckBoxes::BeginPlay()
+{
+	Super::BeginPlay();
+
+	for (USkeletalMeshComponent* DeckBox : DeckBoxes)
+	{
+		DeckBox->SetPosition(0.f, false);
+	}
 }
 
 void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
@@ -60,9 +91,9 @@ void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
 	for (int32 DeckBoxIndex = 0; DeckBoxIndex < DeckBoxLocations.Num(); ++DeckBoxIndex)
 	{
 		DeckBoxLocations[DeckBoxIndex].X += DeckBoxOffsetByDeckBox * DeckBoxIndex;
-		if (DeckBoxes.IsValidIndex(DeckBoxIndex))
+		if (DeckBoxCollisions.IsValidIndex(DeckBoxIndex))
 		{
-			DeckBoxes[DeckBoxIndex]->SetRelativeLocation(DeckBoxLocations[DeckBoxIndex]);
+			DeckBoxCollisions[DeckBoxIndex]->SetRelativeLocation(DeckBoxLocations[DeckBoxIndex]);
 		}
 	}
 
@@ -75,20 +106,80 @@ void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
 
 void ADeckBoxes::GetDeckLocations(TArray<FVector>& DeckLocations) const
 {
-	for (const auto& DeckBox : DeckBoxes)
+	for (const auto& DeckBoxCollision : DeckBoxCollisions)
 	{
-		if (DeckBox)
+		if (DeckBoxCollision)
 		{
-			DeckLocations.Add(DeckBox->GetComponentLocation());
+			DeckLocations.Add(DeckBoxCollision->GetComponentLocation());
 		}
 	}
 }
 
 FVector ADeckBoxes::GetDeckLocation(const int32 DeckIndex) const
 {
-	if (DeckBoxes.IsValidIndex(DeckIndex))
+	if (DeckBoxCollisions.IsValidIndex(DeckIndex))
 	{
-		return DeckBoxes[DeckIndex]->GetRelativeLocation();
+		return DeckBoxCollisions[DeckIndex]->GetRelativeLocation();
 	}
 	return FVector::ZeroVector;
+}
+
+void ADeckBoxes::OpenDeckBox(UBoxComponent* InDeckBoxCollision)
+{
+	const int32 DeckIndex = DeckBoxCollisions.IndexOfByKey(InDeckBoxCollision);
+	OpenDeckBox(DeckIndex);
+}
+
+void ADeckBoxes::CloseDeckBox(UBoxComponent* InDeckBoxCollision)
+{
+	const int32 DeckIndex = DeckBoxCollisions.IndexOfByKey(InDeckBoxCollision);
+	CloseDeckBox(DeckIndex);
+}
+
+void ADeckBoxes::OpenDeckBox(const int32 DeckIndex)
+{
+	if (DeckBoxes.IsValidIndex(DeckIndex) && OpenedStates.IsValidIndex(DeckIndex))
+	{
+		if (!OpenedStates[DeckIndex])
+		{
+			if (UAnimSingleNodeInstance* SingleNode = DeckBoxes[DeckIndex]->GetSingleNodeInstance())
+			{
+				SingleNode->SetReverse(false);
+				SingleNode->SetPlaying(true);
+			}
+			OpenedStates[DeckIndex] = true;
+		}
+	}
+}
+
+void ADeckBoxes::CloseDeckBox(const int32 DeckIndex)
+{
+	if (DeckBoxes.IsValidIndex(DeckIndex) && OpenedStates.IsValidIndex(DeckIndex))
+	{
+		if (OpenedStates[DeckIndex])
+		{
+			if (UAnimSingleNodeInstance* SingleNode = DeckBoxes[DeckIndex]->GetSingleNodeInstance())
+			{
+				SingleNode->SetReverse(true);
+				SingleNode->SetPlaying(true);
+			}
+			OpenedStates[DeckIndex] = false;
+		}
+	}
+}
+
+void ADeckBoxes::OpenAllBoxes()
+{
+	for (int32 DeckIndex = 0; DeckIndex < DeckBoxes.Num(); ++DeckIndex)
+	{
+		OpenDeckBox(DeckIndex);
+	}
+}
+
+void ADeckBoxes::CloseAllBoxes()
+{
+	for (int32 DeckIndex = 0; DeckIndex < DeckBoxes.Num(); ++DeckIndex)
+	{
+		CloseDeckBox(DeckIndex);
+	}
 }

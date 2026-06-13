@@ -137,6 +137,35 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
+void UCardPanelWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+
+	FVector2D TargetUV;
+	if (CardStage && TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
+	{
+		CardStage->HandleCapturedMouseMove(TargetUV);
+	}
+}
+
+FReply UCardPanelWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FVector2D TargetUV;
+	if (CardStage)
+	{
+		const bool bIsMouseOnHandStage = TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
+		if (bIsMouseOnHandStage)
+		{
+			CardStage->HandleCapturedMouseMove(TargetUV);
+		}
+		else
+		{
+			CardStage->HandleCapturedMouseLeave();
+		}
+	}
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
 void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
 {
 	if (CardStage)

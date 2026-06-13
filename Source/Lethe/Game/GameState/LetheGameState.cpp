@@ -127,7 +127,7 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	if (!SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		ShouldGoCombatPhase() ? GoDrawPhase() : GoPlayerMovePhase();
+		HasAnyCombatEnemy() ? GoDrawPhase() : GoPlayerMovePhase();
 		return;
 	}
 
@@ -167,7 +167,7 @@ void ALetheGameState::OnFinishActivationQueue()
 	}
 }
 
-bool ALetheGameState::ShouldGoCombatPhase() const
+bool ALetheGameState::HasAnyCombatEnemy() const
 {
 	return !CurrentCombatEnemies.IsEmpty();
 }
@@ -276,4 +276,19 @@ TArray<AActor*> ALetheGameState::GetPlayerCharacters() const
 		TempPlayerCharacters.Add(Cast<AActor>(PlayerCharacter.GetObject()));
 	}
 	return TempPlayerCharacters;
+}
+
+bool ALetheGameState::IsBattlePhase() const
+{
+	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
+	{
+		return HasAnyCombatEnemy();
+	}
+
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		return false;
+	}
+
+	return true;
 }

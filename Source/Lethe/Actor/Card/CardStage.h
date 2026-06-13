@@ -9,6 +9,7 @@
 #include "Lethe/SaveGame/SavedCardTypes.h"
 #include "CardStage.generated.h"
 
+class UBoxComponent;
 enum class ECardAction : uint8;
 class ACardActor;
 class UCardContainerManager;
@@ -44,6 +45,8 @@ public:
 
 	bool HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton);
 	bool HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton);
+	void HandleCapturedMouseMove(const FVector2D& TargetUV);
+	void HandleCapturedMouseLeave();
 	void HandleCapturedMouseCaptureLost();
 	bool HandleMouseButtonDownInCardUseSection() const;
 	bool HandleMouseButtonUpInCardUseSection();
@@ -58,6 +61,8 @@ public:
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */
 	ACardActor* GetCardActorAtUV(const FVector2D& TargetUV) const;
+	UBoxComponent* GetDeckBoxCollisionAtUV(const FVector2D& TargetUV) const;
+	bool TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitResult& OutHitResult) const;
 
 	void OnCardMouseEvent(ACardActor* CardActor, ECardAction CardAction);
 	void OnMouseEventWhenDrawPhase(const ACardActor* CardActor, ECardAction CardAction) const;
@@ -118,11 +123,14 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> SpawnedCards;
 
-	TWeakObjectPtr<ACardActor> PressedCard;
+	UPROPERTY()
+	TObjectPtr<ACardActor> PressedCard;
 
 	UPROPERTY()
 	TObjectPtr<ACardActor> CurrentSelectedCard;
 
 	UPROPERTY()
 	TMap<int32, TObjectPtr<ACardActor>> UseRequestedCards;
+
+	TWeakObjectPtr<UBoxComponent> CurrentHoveredDeckBoxCollision;
 };

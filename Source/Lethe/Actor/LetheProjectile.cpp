@@ -9,42 +9,41 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
-#include "Lethe/LetheLog.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/FX/FXManagerSubsystem.h"
 
 ALetheProjectile::ALetheProjectile()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	SetRootComponent(SphereComponent);
-	SphereComponent->SetCollisionObjectType(ECC_Projectile);
-	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-	SphereComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
-	SphereComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-	SphereComponent->OnComponentHit.AddDynamic(this, &ThisClass::OnHitComponent);
+	PrimaryActorTick.bCanEverTick = true;
+	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+	SetRootComponent(Sphere);
+	Sphere->SetCollisionObjectType(ECC_Projectile);
+	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	Sphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	Sphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	Sphere->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	Sphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	Sphere->OnComponentHit.AddDynamic(this, &ThisClass::OnHitComponent);
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->SetUpdatedComponent(SphereComponent);
-	ProjectileMovementComponent->InitialSpeed = 500.f;
-	ProjectileMovementComponent->MaxSpeed = 500.f;
-	ProjectileMovementComponent->ProjectileGravityScale = 0.f;
-	ProjectileMovementComponent->bIsHomingProjectile = true;
-	ProjectileMovementComponent->bSweepCollision = true;
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovement->SetUpdatedComponent(Sphere);
+	ProjectileMovement->InitialSpeed = 500.f;
+	ProjectileMovement->MaxSpeed = 500.f;
+	ProjectileMovement->ProjectileGravityScale = 0.f;
+	ProjectileMovement->bIsHomingProjectile = true;
+	ProjectileMovement->bSweepCollision = true;
 }
 
 void ALetheProjectile::SetPayload(const FProjectileSpawnPayload& InPayload)
 {
 	Payload = InPayload;
 
-	SphereComponent->IgnoreActorWhenMoving(Payload.Instigator.Get(), true);
+	Sphere->IgnoreActorWhenMoving(Payload.Instigator.Get(), true);
 
-	ProjectileMovementComponent->HomingTargetComponent = Payload.TargetActor.Get()->GetRootComponent();
-	ProjectileMovementComponent->HomingAccelerationMagnitude = Payload.HomingAcceleration;
-	ProjectileMovementComponent->InitialSpeed = Payload.ProjectileSpeed;
-	ProjectileMovementComponent->MaxSpeed = Payload.ProjectileSpeed;
+	ProjectileMovement->HomingTargetComponent = Payload.TargetActor.Get()->GetRootComponent();
+	ProjectileMovement->HomingAccelerationMagnitude = Payload.HomingAcceleration;
+	ProjectileMovement->InitialSpeed = Payload.ProjectileSpeed;
+	ProjectileMovement->MaxSpeed = Payload.ProjectileSpeed;
 
 	// 추적 도중 적이 사망했을 때를 대비한 로직을 위해 Tick을 활성화합니다.
 	SetActorTickEnabled(true);
@@ -67,10 +66,10 @@ void ALetheProjectile::BeginPlay()
 		{
 			if (WeakThis.IsValid() && LoopingSound)
 			{
-				WeakThis->LoopingSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, WeakThis->GetRootComponent());
-				if (WeakThis->LoopingSoundComponent)
+				WeakThis->LoopingSound = UGameplayStatics::SpawnSoundAttached(LoopingSound, WeakThis->GetRootComponent());
+				if (WeakThis->LoopingSound)
 				{
-					WeakThis->LoopingSoundComponent->SetVolumeMultiplier(WeakThis->Payload.VolumeMultiplier);
+					WeakThis->LoopingSound->SetVolumeMultiplier(WeakThis->Payload.VolumeMultiplier);
 				}
 			}
 		});
@@ -81,14 +80,17 @@ void ALetheProjectile::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!ProjectileMovementComponent->HomingTargetComponent.IsValid())
+	if (!ProjectileMovement->HomingTargetComponent.IsValid())
 	{
 		// 추적 중인 타겟이 사망한 경우 일반 Projectile로 변경합니다.
-		ProjectileMovementComponent->bIsHomingProjectile = false;
-		ProjectileMovementComponent->HomingTargetComponent = nullptr;
+		if (ProjectileMovement->bIsHomingProjectile)
+		{
+			ProjectileMovement->bIsHomingProjectile = false;
+			ProjectileMovement->HomingTargetComponent = nullptr;
 
-		// 0.5초 후 파괴되도록 설정합니다.
-		SetLifeSpan(0.5f);
+			// 0.5초 후 파괴되도록 설정합니다.
+			SetLifeSpan(0.5f);
+		}
 	}
 }
 
@@ -96,12 +98,12 @@ void ALetheProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	PlayHitFXs();
 	
-	SphereComponent->OnComponentHit.RemoveDynamic(this, &ThisClass::OnHitComponent);
+	Sphere->OnComponentHit.RemoveDynamic(this, &ThisClass::OnHitComponent);
 
-	if (LoopingSoundComponent)
+	if (LoopingSound)
 	{
-		LoopingSoundComponent->Stop();
-		LoopingSoundComponent->DestroyComponent();
+		LoopingSound->Stop();
+		LoopingSound->DestroyComponent();
 	}
 	
 	Super::EndPlay(EndPlayReason);

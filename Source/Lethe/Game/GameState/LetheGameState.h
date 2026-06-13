@@ -75,6 +75,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TArray<AActor*> GetPlayerCharacters() const;
 
+	bool IsBattlePhase() const;
+
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
@@ -87,7 +89,7 @@ private:
 	void ProcessCurrentEnemyPlan();
 	void OnFinishActivationQueue();
 
-	bool ShouldGoCombatPhase() const;
+	bool HasAnyCombatEnemy() const;
 
 	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
 

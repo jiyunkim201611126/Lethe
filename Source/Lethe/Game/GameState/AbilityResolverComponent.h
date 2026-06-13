@@ -15,6 +15,9 @@ enum class ETryAbilityActivationResult : uint8
 	Success,
 	
 	AllAbilityUsed,
+
+	/** 카드 연속 사용으로 대상을 지정했으나, 모종의 이유(대상의 사망이나 넉백 등으로 해당 위치를 벗어남)로 대상이 없어 발동에 실패한 경우입니다. */
+	EmptyTile,
 	
 	/** 잘못된 로직 작성으로 인한 실패의 경우 반환받게 됩니다. */
 	FailedLogicError,

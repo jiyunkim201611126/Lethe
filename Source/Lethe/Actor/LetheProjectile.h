@@ -61,13 +61,13 @@ private:
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> SphereComponent;
+	TObjectPtr<USphereComponent> Sphere;
 
 	UPROPERTY()
-	TObjectPtr<UAudioComponent> LoopingSoundComponent;
+	TObjectPtr<UAudioComponent> LoopingSound;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag LoopingSoundTag;

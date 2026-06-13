@@ -8,10 +8,12 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/World.h"
 #include "InputCoreTypes.h"
+#include "Components/BoxComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Manager/FX/FXManagerSubsystem.h"
 
 ACardStage::ACardStage()
@@ -139,7 +141,7 @@ bool ACardStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const 
 	PressedCard = GetCardActorAtUV(TargetUV);
 
 	// PressedCard가 유효하면 true를 반환합니다.
-	return PressedCard.IsValid();
+	return IsValid(PressedCard);
 }
 
 bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton)
@@ -149,14 +151,14 @@ bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FK
 		return false;
 	}
 
-	if (!PressedCard.IsValid())
+	if (!PressedCard)
 	{
 		return false;
 	}
 
 	const ACardActor* HoveredCard = GetCardActorAtUV(TargetUV);
-	ACardActor* ReleasedCard = PressedCard.Get();
-	PressedCard.Reset();
+	ACardActor* ReleasedCard = PressedCard;
+	PressedCard = nullptr;
 
 	// 마우스를 누른 카드와 뗀 카드가 다르면 클릭으로 처리하지 않습니다.
 	if (ReleasedCard != HoveredCard)
@@ -169,12 +171,55 @@ bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FK
 	return true;
 }
 
+void ACardStage::HandleCapturedMouseMove(const FVector2D& TargetUV)
+{
+	if (CurrentSelectedCard)
+	{
+		// 선택된 카드가 있다면 Deck 관련 로직은 필요하지 않습니다.
+		return;
+	}
+
+	// 커서 아래에 DeckBox가 있고, 현재 비전투 페이즈라면 해당 DeckBox를 엽니다.
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		if (!LetheGameState->IsBattlePhase())
+		{
+			if (UBoxComponent* DeckBoxCollision = GetDeckBoxCollisionAtUV(TargetUV))
+			{
+				if (CurrentHoveredDeckBoxCollision != DeckBoxCollision)
+				{
+					DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
+					CurrentHoveredDeckBoxCollision = DeckBoxCollision;
+					DeckBoxes->OpenDeckBox(CurrentHoveredDeckBoxCollision.Get());
+				}
+			}
+			else if (CurrentHoveredDeckBoxCollision.IsValid())
+			{
+				DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
+				CurrentHoveredDeckBoxCollision.Reset();
+			}
+		}
+	}
+}
+
+void ACardStage::HandleCapturedMouseLeave()
+{
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		if (!LetheGameState->IsBattlePhase())
+		{
+			DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
+			CurrentHoveredDeckBoxCollision.Reset();
+		}
+	}
+}
+
 void ACardStage::HandleCapturedMouseCaptureLost()
 {
-	if (PressedCard.IsValid())
+	if (PressedCard)
 	{
 		PressedCard->HandleCardMouseEvent(ECardMouseEvent::MouseCaptureLost);
-		PressedCard.Reset();
+		PressedCard = nullptr;
 	}
 }
 
@@ -232,6 +277,22 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 	if (CurrentPhaseState == EPhaseState::DrawPhase)
 	{
 		OnDrawPhaseStarted();
+	}
+
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		if (LetheGameState->IsBattlePhase())
+		{
+			DeckBoxes->OpenAllBoxes();
+		}
+		else
+		{
+			DeckBoxes->CloseAllBoxes();
+			CardContainerManager->AddAllHandsToGrave();
+			CardContainerManager->RefillDeck();
+			CardContainerManager->ShuffleDeck();
+			UpdateAllCardLocations();
+		}
 	}
 }
 
@@ -308,25 +369,44 @@ void ACardStage::CancelSelectedCard() const
 
 ACardActor* ACardStage::GetCardActorAtUV(const FVector2D& TargetUV) const
 {
+	FHitResult OutHitResult;
+	if (TryGetHitResultByCardChannel(TargetUV, OutHitResult))
+	{
+		return Cast<ACardActor>(OutHitResult.GetActor());
+	}
+	return nullptr;
+}
+
+UBoxComponent* ACardStage::GetDeckBoxCollisionAtUV(const FVector2D& TargetUV) const
+{
+	FHitResult OutHitResult;
+	if (TryGetHitResultByCardChannel(TargetUV, OutHitResult))
+	{
+		return Cast<UBoxComponent>(OutHitResult.GetComponent());
+	}
+	return nullptr;
+}
+
+bool ACardStage::TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitResult& OutHitResult) const
+{
 	if (!CaptureComponent || TargetUV.X < 0.f || TargetUV.X > 1.f || TargetUV.Y < 0.f || TargetUV.Y > 1.f)
 	{
-		return nullptr;
+		return false;
 	}
 
 	FVector TraceStart;
 	FVector TraceDirection;
 	if (!UGameplayStatics::DeprojectSceneCaptureComponentToWorld(CaptureComponent, TargetUV, TraceStart, TraceDirection))
 	{
-		return nullptr;
+		return false;
 	}
 
-	FHitResult HitResult;
 	const FVector TraceEnd = TraceStart + TraceDirection * CardTraceDistance;
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Card))
+	if (GetWorld()->LineTraceSingleByChannel(OutHitResult, TraceStart, TraceEnd, ECC_Card))
 	{
-		return Cast<ACardActor>(HitResult.GetActor());
+		return true;
 	}
-	return nullptr;
+	return false;
 }
 
 void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardAction)

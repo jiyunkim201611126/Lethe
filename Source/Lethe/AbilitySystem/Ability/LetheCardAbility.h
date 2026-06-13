@@ -47,7 +47,7 @@ struct FGameplayEffectPreviewData
 };
 
 /**
- * 해당 프로젝트에서 Card는 Ability를 표현하는 UMG 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
+ * 해당 프로젝트에서 Card는 Ability를 표현하는 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
  */
 UCLASS()
 class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
@@ -80,15 +80,14 @@ protected:
 	
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 	void ActiveFailed();
+
+	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
+	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
 	
-	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
-	UFUNCTION()
-	virtual void OnEventReceived(FGameplayEventData Payload);
-
-	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnApplyEffect(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
+	virtual void ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
+	
+	UFUNCTION(BlueprintImplementableEvent, meta = (ToolTip = "Ability가 발동되어 실제로 동작이 트리거됐을 때 호출됩니다. Effect 적용 시점이 아닌, Ability의 동작이 기준입니다."))
+	void OnEffectTriggered(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
 	
 	void ResetCachedValues();
 	
@@ -115,9 +114,10 @@ protected:
 
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
-
-	void ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
-	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
+	
+	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
+	UFUNCTION()
+	void OnEventReceived(FGameplayEventData InPayload);
 	
 protected:
 	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */

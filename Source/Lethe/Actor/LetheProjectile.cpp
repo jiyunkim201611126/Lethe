@@ -9,6 +9,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/Lethe.h"
+#include "Lethe/LetheLog.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/FX/FXManagerSubsystem.h"
 

@@ -4,52 +4,38 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/Actor/LetheProjectile.h"
-#include "Lethe/Manager/LetheGameplayTags.h"
 
-void ULetheProjectileCardAbility::OnEventReceived(FGameplayEventData InPayload)
+void ULetheProjectileCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
 {
-	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
+	if (!TargetActor)
 	{
-		if (InPayload.EventTag.MatchesTagExact(EffectApplyPolicy.MontageEventTag))
-		{
-			// 수신한 이벤트 태그와 EffectApplyPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
-			TArray<AActor*> TargetActors;
-			TargetActors.Reserve(CachedTargetActors.Num());
-			for (const auto& CachedTargetActor : CachedTargetActors)
-			{
-				if (CachedTargetActor.IsValid())
-				{
-					TargetActors.Add(CachedTargetActor.Get());
-				}
-			}
+		return;
+	}
 
-			TArray<AActor*> OutTargetActors;
-			GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, OutTargetActors);
-
-			if (!OutTargetActors.IsEmpty())
-			{
-				for (AActor* TargetActor : OutTargetActors)
-				{
-					SpawnProjectiles(CurrentActorInfo->AvatarActor->GetActorLocation(), TargetActor);
-				}
-			}
-			return;
-		}
+	const AActor* Instigator = CurrentActorInfo->AvatarActor.Get();
+	if (!Instigator)
+	{
+		return;
 	}
 	
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (InPayload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
+	if (TargetActor == Instigator)
 	{
-		ResetCachedValues();
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+		// 자기 자신에게 투사체를 발사하면 어떻게 처리할 건지 여기서 결정합니다.
+		return;
+	}
+
+	if (ensureMsgf(ProjectileClass, TEXT("Projectile 클래스가 할당되지 않았습니다.")))
+	{
+		SpawnProjectiles(Instigator->GetActorLocation(), EffectApplyPolicy, TargetActor);
 	}
 }
 
-TArray<ALetheProjectile*> ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSpawnLocation, AActor* TargetActor)
+void ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSpawnLocation, const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor) const
 {
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	const FVector Forward = TargetLocation - InProjectileSpawnLocation;
 
+	// 발사할 개수와 지정된 각도에 따라 부채꼴 모양으로 펼친 Rotators를 계산하고, 상하 각도를 적용합니다.
 	TArray<FRotator> Rotations = ULetheAbilitySystemLibrary::EvenlySpacedRotators(Forward, FVector::UpVector, ProjectileSpread, NumOfProjectiles);
 	if (PitchOverride > 0.f)
 	{
@@ -59,8 +45,6 @@ TArray<ALetheProjectile*> ULetheProjectileCardAbility::SpawnProjectiles(const FV
 		}
 	}
 
-	TArray<ALetheProjectile*> Projectiles;
-	Projectiles.Reserve(NumOfProjectiles);
 	for (const auto& Rotation : Rotations)
 	{
 		FTransform SpawnTransform;
@@ -73,21 +57,27 @@ TArray<ALetheProjectile*> ULetheProjectileCardAbility::SpawnProjectiles(const FV
 			continue;
 		}
 
-		ProjectileSpawnPayload.Instigator = Instigator;
-		ProjectileSpawnPayload.TargetActor = TargetActor;
-		for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
+		// Payload를 원본 그대로 사용하지 않고 값복사해 따로 생성합니다.
+		FProjectileSpawnPayload Payload = ProjectileSpawnPayload;
+
+		Payload.Instigator = Instigator;
+		Payload.TargetActor = TargetActor;
+
+		// 이번 발사에 적용할 EffectAppliers를 가져옵니다.
+		TArray<UGameplayEffectApplier*> OutEffectAppliers;
+		GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
+
+		// 가져온 EffectAppliers를 순회하며 Spec을 생성, Payload에 할당합니다.
+		for (const UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
 		{
 			FGameplayEffectContextHandle ContextHandle;
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
 			EffectApplier->TryPrepareSpecHandles(GetAbilitySystemComponentFromActorInfo(), ContextHandle, SpecHandles);
-			ProjectileSpawnPayload.SpecHandles.Append(SpecHandles);
+			Payload.SpecHandles.Append(SpecHandles);
 		}
 
-		Projectiles.Add(Projectile);
-		Projectile->SetPayload(ProjectileSpawnPayload);
+		Projectile->SetPayload(Payload);
 
 		Projectile->FinishSpawning(SpawnTransform);
 	}
-
-	return Projectiles;
 }

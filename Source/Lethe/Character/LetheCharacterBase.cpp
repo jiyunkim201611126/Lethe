@@ -29,6 +29,7 @@ ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitial
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Block);
 
 	GetMesh()->SetGenerateOverlapEvents(false);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

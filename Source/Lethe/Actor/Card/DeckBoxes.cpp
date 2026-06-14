@@ -18,8 +18,10 @@ ADeckBoxes::ADeckBoxes()
 	DeckBoxes.Reset();
 	DeckBoxes.Reserve(PLAYER_CHARACTER_NUMBER);
 
-	OpenedStates.Reset();
-	OpenedStates.Init(false, PLAYER_CHARACTER_NUMBER);
+	OpenReasons.Reset();
+	OpenReasons.Init(EDeckBoxOpenReason::None, PLAYER_CHARACTER_NUMBER);
+	PreviousOpenReasons.Reset();
+	PreviousOpenReasons.Init(EDeckBoxOpenReason::None, PLAYER_CHARACTER_NUMBER);
 	
 	DeckBoxCollision0 = CreateDefaultSubobject<UBoxComponent>("DeckBoxCollision0");
 	DeckBox0 = CreateDefaultSubobject<USkeletalMeshComponent>("DeckBox0");
@@ -124,62 +126,85 @@ FVector ADeckBoxes::GetDeckLocation(const int32 DeckIndex) const
 	return FVector::ZeroVector;
 }
 
-void ADeckBoxes::OpenDeckBox(UBoxComponent* InDeckBoxCollision)
+int32 ADeckBoxes::GetDeckIndex(const UBoxComponent* InDeckBoxCollision) const
 {
-	const int32 DeckIndex = DeckBoxCollisions.IndexOfByKey(InDeckBoxCollision);
-	OpenDeckBox(DeckIndex);
+	return DeckBoxCollisions.IndexOfByKey(InDeckBoxCollision);
 }
 
-void ADeckBoxes::CloseDeckBox(UBoxComponent* InDeckBoxCollision)
+void ADeckBoxes::SetOpenReason(const UBoxComponent* InDeckBoxCollision, const EDeckBoxOpenReason InOpenReason, const bool bEnable)
 {
-	const int32 DeckIndex = DeckBoxCollisions.IndexOfByKey(InDeckBoxCollision);
-	CloseDeckBox(DeckIndex);
-}
-
-void ADeckBoxes::OpenDeckBox(const int32 DeckIndex)
-{
-	if (DeckBoxes.IsValidIndex(DeckIndex) && OpenedStates.IsValidIndex(DeckIndex))
+	if (InOpenReason == EDeckBoxOpenReason::MouseHover)
 	{
-		if (!OpenedStates[DeckIndex])
+		// MouseHover는 유일하므로, 모든 Reason의 MouseHover 플래그를 0으로 변경합니다.
+		SetAllOpenReason(EDeckBoxOpenReason::MouseHover, false, false);
+	}
+	if (InOpenReason == EDeckBoxOpenReason::Pinned)
+	{
+		// Pinned도 마찬가지입니다.
+		SetAllOpenReason(EDeckBoxOpenReason::Pinned, false, false);
+	}
+
+	const int32 DeckIndex = GetDeckIndex(InDeckBoxCollision);
+	if (DeckIndex != INDEX_NONE)
+	{
+		if (bEnable)
 		{
-			if (UAnimSingleNodeInstance* SingleNode = DeckBoxes[DeckIndex]->GetSingleNodeInstance())
-			{
-				SingleNode->SetReverse(false);
-				SingleNode->SetPlaying(true);
-			}
-			OpenedStates[DeckIndex] = true;
+			OpenReasons[DeckIndex] |= InOpenReason;
+		}
+		else
+		{
+			OpenReasons[DeckIndex] &= ~InOpenReason;
 		}
 	}
+	ApplyDeckBoxesOpenState();
 }
 
-void ADeckBoxes::CloseDeckBox(const int32 DeckIndex)
-{
-	if (DeckBoxes.IsValidIndex(DeckIndex) && OpenedStates.IsValidIndex(DeckIndex))
-	{
-		if (OpenedStates[DeckIndex])
-		{
-			if (UAnimSingleNodeInstance* SingleNode = DeckBoxes[DeckIndex]->GetSingleNodeInstance())
-			{
-				SingleNode->SetReverse(true);
-				SingleNode->SetPlaying(true);
-			}
-			OpenedStates[DeckIndex] = false;
-		}
-	}
-}
-
-void ADeckBoxes::OpenAllBoxes()
+void ADeckBoxes::SetAllOpenReason(const EDeckBoxOpenReason InOpenReason, const bool bEnable, const bool bShouldApply)
 {
 	for (int32 DeckIndex = 0; DeckIndex < DeckBoxes.Num(); ++DeckIndex)
 	{
-		OpenDeckBox(DeckIndex);
+		if (bEnable)
+		{
+			OpenReasons[DeckIndex] |= InOpenReason;
+		}
+		else
+		{
+			OpenReasons[DeckIndex] &= ~InOpenReason;
+		}
+	}
+
+	if (bShouldApply)
+	{
+		ApplyDeckBoxesOpenState();
 	}
 }
 
-void ADeckBoxes::CloseAllBoxes()
+void ADeckBoxes::ApplyDeckBoxesOpenState()
 {
+	bool bDirty = false;
+	for (int32 ReasonIndex = 0; ReasonIndex < OpenReasons.Num(); ++ReasonIndex)
+	{
+		if (PreviousOpenReasons[ReasonIndex] != OpenReasons[ReasonIndex])
+		{
+			bDirty = true;
+			break;
+		}
+	}
+
+	if (!bDirty)
+	{
+		return;
+	}
+	
+	PreviousOpenReasons = OpenReasons;
+	
 	for (int32 DeckIndex = 0; DeckIndex < DeckBoxes.Num(); ++DeckIndex)
 	{
-		CloseDeckBox(DeckIndex);
+		const bool bShouldOpen = OpenReasons[DeckIndex] != EDeckBoxOpenReason::None;
+		if (UAnimSingleNodeInstance* SingleNode = DeckBoxes[DeckIndex]->GetSingleNodeInstance())
+		{
+			SingleNode->SetReverse(!bShouldOpen);
+			SingleNode->SetPlaying(true);
+		}
 	}
 }

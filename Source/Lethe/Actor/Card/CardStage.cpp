@@ -139,9 +139,10 @@ bool ACardStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const 
 
 	// MouseMove 처리 함수를 명시적으로 호출, HoveredCard를 갱신합니다.
 	PressedCard = GetCardActorAtUV(TargetUV);
+	PressedDeckBox = GetDeckBoxCollisionAtUV(TargetUV);
 
-	// PressedCard가 유효하면 true를 반환합니다.
-	return IsValid(PressedCard);
+	// 둘 중 하나라도 유효하면 true를 반환합니다.
+	return IsValid(PressedCard) || PressedDeckBox.IsValid();
 }
 
 bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton)
@@ -151,67 +152,66 @@ bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FK
 		return false;
 	}
 
-	if (!PressedCard)
+	if (PressedCard)
 	{
-		return false;
+		const ACardActor* HoveredCard = GetCardActorAtUV(TargetUV);
+		ACardActor* ReleasedCard = PressedCard;
+		PressedCard = nullptr;
+
+		// 마우스를 누른 카드와 뗀 카드가 같으면 카드 클릭 이벤트로 처리합니다.
+		if (HoveredCard == ReleasedCard)
+		{
+			ReleasedCard->HandleCardMouseEvent(MouseButton == EKeys::LeftMouseButton ? ECardMouseEvent::LeftMouseButtonUp : ECardMouseEvent::RightMouseButtonUp);
+			return true;
+		}
 	}
 
-	const ACardActor* HoveredCard = GetCardActorAtUV(TargetUV);
-	ACardActor* ReleasedCard = PressedCard;
-	PressedCard = nullptr;
-
-	// 마우스를 누른 카드와 뗀 카드가 다르면 클릭으로 처리하지 않습니다.
-	if (ReleasedCard != HoveredCard)
+	if (PressedDeckBox.IsValid())
 	{
-		// 클릭으로 처리하진 않더라도 마우스 입력을 정상적으로 처리했으므로 true를 반환합니다.
-		return true;
-	}
+		const UBoxComponent* HoveredDeckBox = GetDeckBoxCollisionAtUV(TargetUV);
+		UBoxComponent* ReleasedDeckBox = PressedDeckBox.Get();
+		PressedDeckBox.Reset();
 
-	ReleasedCard->HandleCardMouseEvent(MouseButton == EKeys::LeftMouseButton ? ECardMouseEvent::LeftMouseButtonUp : ECardMouseEvent::RightMouseButtonUp);
-	return true;
+		// 마우스를 누른 덱 박스와 뗀 덱 박스가 같으면 덱 박스 클릭 이벤트로 처리합니다.
+		if (HoveredDeckBox == ReleasedDeckBox)
+		{
+			const int32 DeckIndex = DeckBoxes->GetDeckIndex(ReleasedDeckBox);
+			if (DeckIndex == INDEX_NONE || !AbilitySystemComponents.IsValidIndex(DeckIndex))
+			{
+				return false;
+			}
+
+			ULetheAbilitySystemComponent* DeckOwnerASC = AbilitySystemComponents[DeckIndex].Get();
+			
+			if (CurrentPhaseState == EPhaseState::DrawPhase)
+			{
+				TryDraw(DeckOwnerASC);
+			}
+			else if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+			{
+				// 비전투 중 덱 박스를 클릭했다면, 안에 있는 모든 카드를 밖으로 꺼내 보여줍니다.
+				CardContainerManager->StopPreviewDeck(false);
+				DeckBoxes->SetOpenReason(ReleasedDeckBox, EDeckBoxOpenReason::Pinned, true);
+				CardContainerManager->PreviewDeck(DeckOwnerASC);
+			}
+
+			CurrentSelectedDeckBox = ReleasedDeckBox;
+			
+			return true;
+		}
+	}
+	return false;
 }
 
-void ACardStage::HandleCapturedMouseMove(const FVector2D& TargetUV)
+void ACardStage::HandleCapturedMouseMove(const FVector2D& TargetUV) const
 {
-	if (CurrentSelectedCard)
-	{
-		// 선택된 카드가 있다면 Deck 관련 로직은 필요하지 않습니다.
-		return;
-	}
-
 	// 커서 아래에 DeckBox가 있고, 현재 비전투 페이즈라면 해당 DeckBox를 엽니다.
-	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-	{
-		if (!LetheGameState->IsBattlePhase())
-		{
-			if (UBoxComponent* DeckBoxCollision = GetDeckBoxCollisionAtUV(TargetUV))
-			{
-				if (CurrentHoveredDeckBoxCollision != DeckBoxCollision)
-				{
-					DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
-					CurrentHoveredDeckBoxCollision = DeckBoxCollision;
-					DeckBoxes->OpenDeckBox(CurrentHoveredDeckBoxCollision.Get());
-				}
-			}
-			else if (CurrentHoveredDeckBoxCollision.IsValid())
-			{
-				DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
-				CurrentHoveredDeckBoxCollision.Reset();
-			}
-		}
-	}
+	DeckBoxes->SetOpenReason(GetDeckBoxCollisionAtUV(TargetUV), EDeckBoxOpenReason::MouseHover, true);
 }
 
-void ACardStage::HandleCapturedMouseLeave()
+void ACardStage::HandleCapturedMouseLeave() const
 {
-	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-	{
-		if (!LetheGameState->IsBattlePhase())
-		{
-			DeckBoxes->CloseDeckBox(CurrentHoveredDeckBoxCollision.Get());
-			CurrentHoveredDeckBoxCollision.Reset();
-		}
-	}
+	DeckBoxes->SetOpenReason(nullptr, EDeckBoxOpenReason::MouseHover, false);
 }
 
 void ACardStage::HandleCapturedMouseCaptureLost()
@@ -238,7 +238,7 @@ bool ACardStage::HandleMouseButtonUpInCardUseSection()
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
 	if (HandIndex == INDEX_NONE)
 	{
-		CancelSelectedCard();
+		HandleRightMouseButtonDown();
 		return false;
 	}
 
@@ -283,15 +283,21 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 	{
 		if (LetheGameState->IsBattlePhase())
 		{
-			DeckBoxes->OpenAllBoxes();
+			// 전투 중인 상황이므로, 덱을 펼쳐보던 것을 중단하고 모든 덱 박스를 엽니다.
+			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
+			CardContainerManager->StopPreviewDeck();
+			
+			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Battle, true);
 		}
 		else
 		{
-			DeckBoxes->CloseAllBoxes();
+			// 모든 카드를 덱으로 되돌린 후 덱 박스를 닫습니다.
 			CardContainerManager->AddAllHandsToGrave();
 			CardContainerManager->RefillDeck();
 			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
+			
+			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Battle, false);
 		}
 	}
 }
@@ -359,11 +365,16 @@ void ACardStage::HandleTurnEndButtonClicked() const
 	}
 }
 
-void ACardStage::CancelSelectedCard() const
+void ACardStage::HandleRightMouseButtonDown() const
 {
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+	}
+	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
+		CardContainerManager->StopPreviewDeck();
 	}
 }
 
@@ -497,7 +508,7 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 		return;
 	}
 
-	if (CardContainerManager->TryDraw(OwnerASC))
+	if (CardContainerManager->AddCardToHand(OwnerASC))
 	{
 		UpdateAllCardLocations();
 
@@ -524,7 +535,7 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		return;
 	}
 
-	CancelSelectedCard();
+	HandleRightMouseButtonDown();
 
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CardActor);
 	if (UseRequestedCards.Contains(HandIndex))
@@ -546,7 +557,7 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		}
 		else
 		{
-			CancelSelectedCard();
+			HandleRightMouseButtonDown();
 		}
 	}
 }

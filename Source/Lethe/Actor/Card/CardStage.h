@@ -45,8 +45,8 @@ public:
 
 	bool HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton);
 	bool HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton);
-	void HandleCapturedMouseMove(const FVector2D& TargetUV);
-	void HandleCapturedMouseLeave();
+	void HandleCapturedMouseMove(const FVector2D& TargetUV) const;
+	void HandleCapturedMouseLeave() const;
 	void HandleCapturedMouseCaptureLost();
 	bool HandleMouseButtonDownInCardUseSection() const;
 	bool HandleMouseButtonUpInCardUseSection();
@@ -56,7 +56,7 @@ public:
 	void HandleCancelSelectedCard();
 	void HandleResolveUseCard(int32 HandIndex, bool bSuccess);
 	void HandleTurnEndButtonClicked() const;
-	void CancelSelectedCard() const;
+	void HandleRightMouseButtonDown() const;
 
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */
@@ -129,8 +129,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<ACardActor> CurrentSelectedCard;
 
+	TWeakObjectPtr<UBoxComponent> PressedDeckBox;
+	TWeakObjectPtr<UBoxComponent> CurrentSelectedDeckBox;
+
 	UPROPERTY()
 	TMap<int32, TObjectPtr<ACardActor>> UseRequestedCards;
-
-	TWeakObjectPtr<UBoxComponent> CurrentHoveredDeckBoxCollision;
 };

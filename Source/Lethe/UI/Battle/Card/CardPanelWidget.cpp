@@ -106,13 +106,18 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 {
 	if (CardStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		CardStage->CancelSelectedCard();
+		CardStage->HandleRightMouseButtonDown();
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+	
 	FVector2D TargetUV;
 	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
 	{
@@ -126,6 +131,11 @@ FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 
 FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+	
 	FVector2D TargetUV;
 	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
 	{

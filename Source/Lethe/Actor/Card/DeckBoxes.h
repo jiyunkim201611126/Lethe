@@ -8,6 +8,21 @@
 
 class UBoxComponent;
 
+enum class EDeckBoxOpenReason : uint8
+{
+	None = 0,
+
+	/** 덱 박스에 마우스를 올린 경우입니다. */
+	MouseHover = 1 << 0,
+
+	/** 비전투 상황에 덱 박스를 클릭한 경우입니다. */
+	Pinned = 1 << 1,
+
+	/** 전투 상황이 되어 모두 열어야 하는 경우입니다. */
+	Battle = 1 << 2,
+};
+ENUM_CLASS_FLAGS(EDeckBoxOpenReason)
+
 UCLASS()
 class LETHE_API ADeckBoxes : public AActor
 {
@@ -19,11 +34,10 @@ public:
 	void UpdateLocations(const TArray<int32>& HandCounts);
 	void GetDeckLocations(TArray<FVector>& DeckLocations) const;
 	FVector GetDeckLocation(const int32 DeckIndex) const;
+	int32 GetDeckIndex(const UBoxComponent* InDeckBoxCollision) const;
 
-	void OpenDeckBox(UBoxComponent* InDeckBoxCollision);
-	void CloseDeckBox(UBoxComponent* InDeckBoxCollision);
-	void OpenAllBoxes();
-	void CloseAllBoxes();
+	void SetOpenReason(const UBoxComponent* InDeckBoxCollision, const EDeckBoxOpenReason InOpenReason, const bool bEnable);
+	void SetAllOpenReason(const EDeckBoxOpenReason InOpenReason, const bool bEnable, const bool bShouldApply = true);
 
 protected:
 	//~ Begin AActor Interface
@@ -33,8 +47,7 @@ protected:
 private:
 	void InitBox(UBoxComponent* BoxCollision, USkeletalMeshComponent* DeckBox);
 
-	void OpenDeckBox(const int32 DeckIndex);
-	void CloseDeckBox(const int32 DeckIndex);
+	void ApplyDeckBoxesOpenState();
 
 protected:
 	UPROPERTY(VisibleAnywhere)
@@ -80,7 +93,8 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<USkeletalMeshComponent>> DeckBoxes;
 
-	TArray<bool> OpenedStates;
+	TArray<EDeckBoxOpenReason> PreviousOpenReasons;
+	TArray<EDeckBoxOpenReason> OpenReasons;
 
 	float DefaultDeckBoxXLocation = 6.f;
 	float DeckBoxOffsetByDeckBox = 10.f;

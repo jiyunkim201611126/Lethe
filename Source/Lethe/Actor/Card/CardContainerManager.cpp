@@ -8,6 +8,22 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Actor/Card/CardActor.h"
 
+void FCharacterCards::SortPreviewHands()
+{
+	PreviewHands.Sort([](const TObjectPtr<ACardActor>& CardA, const TObjectPtr<ACardActor>& CardB)
+	{
+		if (CardA && CardB)
+		{
+			const uint64 CardAId = CardA->GetSavedCard().CardId;
+			const uint64 CardBId = CardB->GetSavedCard().CardId;
+			return CardAId < CardBId;
+		}
+		return false;
+	});
+}
+
+
+
 void UCardContainerManager::Initialize(const TArray<TWeakObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents, ADeckBoxes* InDeckBoxes)
 {
 	AbilitySystemComponents = InAbilitySystemComponents;
@@ -49,7 +65,7 @@ ACardActor* UCardContainerManager::GetTopCardFromDeck(ULetheAbilitySystemCompone
 	return nullptr;
 }
 
-bool UCardContainerManager::TryDraw(ULetheAbilitySystemComponent* OwnerASC)
+bool UCardContainerManager::AddCardToHand(ULetheAbilitySystemComponent* OwnerASC)
 {
 	if (OwnerASC)
 	{
@@ -142,28 +158,53 @@ void UCardContainerManager::MoveAllCards()
 		}
 
 		FVector HandCardLocation = DeckLocation + HandFirstCardLocation;
-		for (int32 HandIndex = 0; HandIndex < CharacterCards->Hands.Num(); ++HandIndex)
+		TArray<ACardActor*> SelectedHands = CharacterCards->PreviewHands.IsEmpty() ? CharacterCards->Hands : CharacterCards->PreviewHands;
+		for (ACardActor* CardInHand : SelectedHands)
 		{
-			if (ACardActor* CardInHand = CharacterCards->Hands[HandIndex])
-			{
-				CurrentHands.Add(CardInHand);
+			CurrentHands.Add(CardInHand);
 
-				HandCardLocation += FVector(HandCardXOffset, 0.f, 0.f);
-				CardInHand->SetActorLocation(HandCardLocation);
-				CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
-			}
+			HandCardLocation += FVector(HandCardXOffset, 0.f, 0.f);
+			CardInHand->SetActorLocation(HandCardLocation);
+			CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
 		}
 
 		FVector GravesCardLocation = DeckLocation + GravesFirstCardLocation;
-		for (int32 GraveIndex = 0; GraveIndex < CharacterCards->Graves.Num(); ++GraveIndex)
+		for (ACardActor* CardInGrave : CharacterCards->Graves)
 		{
-			if (ACardActor* CardInGrave = CharacterCards->Graves[GraveIndex])
-			{
-				GravesCardLocation += GravesCardOffset;
-				CardInGrave->SetActorLocation(GravesCardLocation);
-				CardInGrave->SetActorRotation(FRotator(0.f, 180.f, -60.f));
-			}
+			GravesCardLocation += GravesCardOffset;
+			CardInGrave->SetActorLocation(GravesCardLocation);
+			CardInGrave->SetActorRotation(FRotator(0.f, 180.f, -60.f));
 		}
+	}
+}
+
+void UCardContainerManager::PreviewDeck(ULetheAbilitySystemComponent* DeckOwnerASC)
+{
+	if (!DeckOwnerASC)
+	{
+		return;
+	}
+
+	// 카드 Id 순서대로(물리, 마법, 보조 순서) 보여주기 위해 핸드를 한 번 정렬합니다.
+	if (FCharacterCards* CharacterCards = ASCToCards.Find(DeckOwnerASC))
+	{
+		CharacterCards->PreviewHands = CharacterCards->Deck;
+		CharacterCards->SortPreviewHands();
+	}
+	
+	MoveAllCards();
+}
+
+void UCardContainerManager::StopPreviewDeck(const bool bShouldMoveCards)
+{
+	for (auto& Cards : ASCToCards)
+	{
+		Cards.Value.PreviewHands.Reset();
+	}
+
+	if (bShouldMoveCards)
+	{
+		MoveAllCards();
 	}
 }
 
@@ -213,13 +254,14 @@ void UCardContainerManager::GetCurrentHandCounts(TArray<int32>& HandCounts)
 
 	for (const auto& AbilitySystemComponent : AbilitySystemComponents)
 	{
-		
 		const FCharacterCards* CharacterCards = ASCToCards.Find(AbilitySystemComponent);
 		if (!CharacterCards)
 		{
 			continue;
 		}
-		
-		HandCounts.Add(CharacterCards->Hands.Num());
+
+		const int32 HandCount = CharacterCards->Hands.Num();
+		const int32 PreviewHandCount = CharacterCards->PreviewHands.Num();
+		HandCounts.Add(HandCount + PreviewHandCount);
 	}
 }

@@ -20,6 +20,7 @@ struct FCharacterCards
 	{
 		Deck.Reserve(10);
 		Hands.Reserve(8);
+		PreviewHands.Reserve(10);
 		Graves.Reserve(10);
 	}
 
@@ -29,8 +30,14 @@ struct FCharacterCards
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Hands;
 
+	/** 비전투 중 덱 열람 시 사용됩니다. */
+	UPROPERTY()
+	TArray<TObjectPtr<ACardActor>> PreviewHands;
+
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Graves;
+
+	void SortPreviewHands();
 };
 
 /**
@@ -48,7 +55,7 @@ public:
 	void AddCardToDeck(ACardActor* CardActor);
 	void ShuffleDeck();
 	ACardActor* GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const;
-	bool TryDraw(ULetheAbilitySystemComponent* OwnerASC);
+	bool AddCardToHand(ULetheAbilitySystemComponent* OwnerASC);
 
 	void AddCardToGrave(ACardActor* CardActor);
 	void AddAllHandsToGrave();
@@ -56,6 +63,9 @@ public:
 	void RefillDeck();
 
 	void MoveAllCards();
+
+	void PreviewDeck(ULetheAbilitySystemComponent* DeckOwnerASC);
+	void StopPreviewDeck(const bool bShouldMoveCards = true);
 
 	bool AreAllDecksFull() const;
 	bool AreAllDecksEmpty() const;

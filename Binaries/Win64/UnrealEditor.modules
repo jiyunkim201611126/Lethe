@@ -1,8 +1,0 @@
-{
-	"BuildId": "43139311",
-	"Modules": 
-	{
-		"Lethe": "UnrealEditor-Lethe.dll",
-		"LetheEditor": "UnrealEditor-LetheEditor.dll"
-	}
-}

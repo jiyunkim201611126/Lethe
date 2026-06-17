@@ -33,9 +33,11 @@ public class Lethe : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"Niagara",
-			
+
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+
+			"AssetRegistry",
 		});
 
 		// Uncomment if you are using Slate UI

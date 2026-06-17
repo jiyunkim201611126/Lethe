@@ -12,3 +12,7 @@ Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
+
+# Claude 개인 지침·설정 파일 무시
+CLAUDE.md
+.claude/settings.local.json

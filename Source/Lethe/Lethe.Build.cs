@@ -25,6 +25,7 @@ public class Lethe : ModuleRules
 			"GameplayAbilities",
 			
 			"AIModule",
+			"PCG",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

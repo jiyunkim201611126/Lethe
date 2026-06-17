@@ -1,21 +1,14 @@
 # ignore all files in the directory
+
+# IDE 및 환경 설정 파일 무시
 .idea/
 .vs/
-DerivedDataCache/
-Intermediate/
-Saved/*
-
-!Saved/SaveGames/
-
-Binaries/*
-!Binaries/Win64/
-Binaries/Win64/*
-
-!Binaries/Win64/LetheEditor.target
-!Binaries/Win64/UnrealEditor.modules
-!Binaries/Win64/UnrealEditor-Lethe.dll
-!Binaries/Win64/UnrealEditor-LetheEditor.dll
-
 *.vsconfig
 *.sln
-Lethe.uproject.DotSettings.user
+*.DotSettings.user
+
+# 언리얼 엔진 빌드 및 임시 폴더 통째로 무시 (내부 예외처리 제거)
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/

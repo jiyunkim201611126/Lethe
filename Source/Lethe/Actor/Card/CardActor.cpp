@@ -66,56 +66,6 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 	ApplyCardVisuals();
 }
 
-void ACardActor::MakeViewDetailData(FViewDetailData& OutData) const
-{
-	OutData.CardNameText = CardNameText;
-	OutData.CardImage = CardImage;
-	OutData.CardTypeColor = CardTypeColor;
-}
-
-void ACardActor::SetCardContainer(const ECardContainer InCardContainer, const bool bShouldSkipAnimation)
-{
-	if (CurrentCardContainer == InCardContainer)
-	{
-		return;
-	}
-
-	ToggleHighlightOutline(false);
-
-	CurrentCardContainer = InCardContainer;
-	switch (CurrentCardContainer)
-	{
-	case ECardContainer::Deck:
-		break;
-	case ECardContainer::Hand:
-		break;
-	case ECardContainer::Selected:
-		ToggleHighlightOutline(true);
-		break;
-	case ECardContainer::Grave:
-		break;
-	}
-}
-
-void ACardActor::HandleCardMouseEvent(const ECardMouseEvent InMouseEvent)
-{
-	OnCardMouseEventDelegate.ExecuteIfBound(this, GetCardActionForMouseEvent(InMouseEvent));
-}
-
-ECardAction ACardActor::GetCardActionForMouseEvent(const ECardMouseEvent InMouseEvent) const
-{
-	switch (CurrentCardContainer)
-	{
-	case ECardContainer::Deck:
-		return GetCardActionWhenDeckState(InMouseEvent);
-	case ECardContainer::Hand:
-		return GetCardActionWhenHandState(InMouseEvent);
-	default:
-		break;
-	}
-	return ECardAction::None;
-}
-
 void ACardActor::CreateDynamicMaterialInstances()
 {
 	if (CardMesh && CardMesh->GetMaterial(0))
@@ -140,9 +90,52 @@ void ACardActor::ApplyCardVisuals() const
 	LeftTagMaterialInstance->SetVectorParameterValue(FrameColorParamName, CardTypeColor);
 }
 
+void ACardActor::SetCardContainer(const ECardContainer InCardContainer)
+{
+	if (CurrentCardContainer == InCardContainer)
+	{
+		return;
+	}
+
+	ToggleHighlightOutline(false);
+
+	CurrentCardContainer = InCardContainer;
+	switch (CurrentCardContainer)
+	{
+	case ECardContainer::Deck:
+		break;
+	case ECardContainer::Hand:
+		break;
+	case ECardContainer::Selected:
+		ToggleHighlightOutline(true);
+		break;
+	case ECardContainer::Grave:
+		break;
+	}
+}
+
 void ACardActor::ToggleHighlightOutline(const bool bHighlightOn) const
 {
 	CardOutlineMesh->SetHiddenInGame(!bHighlightOn);
+}
+
+void ACardActor::HandleCardMouseEvent(const ECardMouseEvent InMouseEvent)
+{
+	OnCardMouseEventDelegate.ExecuteIfBound(this, GetCardActionForMouseEvent(InMouseEvent));
+}
+
+ECardAction ACardActor::GetCardActionForMouseEvent(const ECardMouseEvent InMouseEvent) const
+{
+	switch (CurrentCardContainer)
+	{
+	case ECardContainer::Deck:
+		return GetCardActionWhenDeckState(InMouseEvent);
+	case ECardContainer::Hand:
+		return GetCardActionWhenHandState(InMouseEvent);
+	default:
+		break;
+	}
+	return ECardAction::None;
 }
 
 ECardAction ACardActor::GetCardActionWhenDeckState(const ECardMouseEvent InMouseEvent) const
@@ -150,7 +143,9 @@ ECardAction ACardActor::GetCardActionWhenDeckState(const ECardMouseEvent InMouse
 	switch (InMouseEvent)
 	{
 	case ECardMouseEvent::LeftMouseButtonUp:
-		return ECardAction::Draw;
+		return ECardAction::Select;
+	case ECardMouseEvent::RightMouseButtonUp:
+		return ECardAction::ViewDetail;
 	default:
 		break;
 	}
@@ -162,13 +157,20 @@ ECardAction ACardActor::GetCardActionWhenHandState(const ECardMouseEvent InMouse
 	switch (InMouseEvent)
 	{
 	case ECardMouseEvent::LeftMouseButtonUp:
-		return ECardAction::Selected;
+		return ECardAction::Select;
 	case ECardMouseEvent::RightMouseButtonUp:
 		return ECardAction::ViewDetail;
 	default:
 		break;
 	}
 	return ECardAction::None;
+}
+
+void ACardActor::MakeViewDetailData(FViewDetailData& OutData) const
+{
+	OutData.CardNameText = CardNameText;
+	OutData.CardImage = CardImage;
+	OutData.CardTypeColor = CardTypeColor;
 }
 
 FGameplayTag ACardActor::GetCardTag() const

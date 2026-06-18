@@ -132,12 +132,9 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const EPhaseState MyPhaseState = GetTeamSide() == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
-	if (OldPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
-	}
-	else if (NewPhase == MyPhaseState)
+	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	
+	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

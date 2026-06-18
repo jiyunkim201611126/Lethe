@@ -65,10 +65,9 @@ private:
 	bool TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitResult& OutHitResult) const;
 
 	void OnCardMouseEvent(ACardActor* CardActor, ECardAction CardAction);
-	void OnMouseEventWhenDrawPhase(const ACardActor* CardActor, ECardAction CardAction) const;
 	void OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, ECardAction CardAction);
 	void OnKeyboardEventWhenDrawPhase(int32 Number);
-	void OnKeyboardEventWhenPlayerTurnPhase(int32 Number);
+	void OnKeyboardEventWhenPlayerPhase(int32 Number);
 
 	void UpdateAllCardLocations() const;
 

@@ -113,7 +113,7 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 
 FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton && InMouseEvent.GetEffectingButton() != EKeys::RightMouseButton)
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
@@ -131,7 +131,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 
 FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton && InMouseEvent.GetEffectingButton() != EKeys::RightMouseButton)
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}

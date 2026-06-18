@@ -263,7 +263,8 @@ void ACardStage::HandleKeyboardEvent(const int32 Number)
 		OnKeyboardEventWhenDrawPhase(Number);
 		break;
 	case EPhaseState::PlayerTurnPhase:
-		OnKeyboardEventWhenPlayerTurnPhase(Number);
+	case EPhaseState::PlayerMovePhase:
+		OnKeyboardEventWhenPlayerPhase(Number);
 		break;
 	default:
 		break;
@@ -306,7 +307,7 @@ void ACardStage::HandleCancelSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{
-		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand, true);
+		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand);
 		CurrentSelectedCard = nullptr;
 	}
 }
@@ -319,17 +320,24 @@ void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 		return;
 	}
 
-	if (bSuccess)
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
-		if (CardContainerManager)
-		{
-			CardContainerManager->AddCardToGrave(CardActor);
-		}
-		UpdateAllCardLocations();
+		CardActor->SetCardContainer(ECardContainer::Deck);
 	}
-	else
+	else if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
-		CardActor->SetCardContainer(ECardContainer::Hand, true);
+		if (bSuccess)
+		{
+			if (CardContainerManager)
+			{
+				CardContainerManager->AddCardToGrave(CardActor);
+			}
+			UpdateAllCardLocations();
+		}
+		else
+		{
+			CardActor->SetCardContainer(ECardContainer::Hand);
+		}
 	}
 
 	UseRequestedCards.Remove(HandIndex);
@@ -424,23 +432,9 @@ void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardA
 {
 	switch (CurrentPhaseState)
 	{
-	case EPhaseState::DrawPhase:
-		OnMouseEventWhenDrawPhase(CardActor, CardAction);
-		break;
+	case EPhaseState::PlayerMovePhase:
 	case EPhaseState::PlayerTurnPhase:
 		OnMouseEventWhenPlayerTurnPhase(CardActor, CardAction);
-		break;
-	default:
-		break;
-	}
-}
-
-void ACardStage::OnMouseEventWhenDrawPhase(const ACardActor* CardActor, const ECardAction CardAction) const
-{
-	switch (CardAction)
-	{
-	case ECardAction::Draw:
-		TryDraw(CardActor->GetOwnerASC());
 		break;
 	default:
 		break;
@@ -451,7 +445,7 @@ void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const EC
 {
 	switch (CardAction)
 	{
-	case ECardAction::Selected:
+	case ECardAction::Select:
 		SelectCard(CardActor);
 		break;
 	case ECardAction::ViewDetail:
@@ -475,7 +469,7 @@ void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 	}
 }
 
-void ACardStage::OnKeyboardEventWhenPlayerTurnPhase(const int32 Number)
+void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number)
 {
 	if (!CardContainerManager)
 	{
@@ -535,7 +529,11 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		return;
 	}
 
-	HandleRightMouseButtonDown();
+	// 기존에 선택된 카드가 있다면 우선 선택을 취소합니다.
+	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
+	{
+		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+	}
 
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CardActor);
 	if (UseRequestedCards.Contains(HandIndex))
@@ -549,7 +547,7 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 	}
 
 	CurrentSelectedCard = CardActor;
-	if (OnSelectCardRequested.IsBound() && CurrentSelectedCard)
+	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
 		if (OnSelectCardRequested.Execute(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
 		{
@@ -557,7 +555,7 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		}
 		else
 		{
-			HandleRightMouseButtonDown();
+			OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
 		}
 	}
 }
@@ -571,6 +569,7 @@ void ACardStage::OnDrawPhaseStarted() const
 
 	if (CardContainerManager && CardContainerManager->AreAllDecksEmpty())
 	{
+		CardContainerManager->StopPreviewDeck(false);
 		CardContainerManager->RefillDeck();
 		CardContainerManager->ShuffleDeck();
 		UpdateAllCardLocations();

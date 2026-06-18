@@ -50,7 +50,7 @@ UENUM()
 enum class ECardAction : uint8
 {
 	Draw,
-	Selected,
+	Select,
 	ViewDetail,
 
 	None,
@@ -86,14 +86,15 @@ public:
 	//~ End of AActor Interface
 
 	void SetCardInfo(const FCardInitParams& InitParams);
-	void MakeViewDetailData(FViewDetailData& OutData) const;
 
-	void SetCardContainer(ECardContainer InCardContainer, bool bShouldSkipAnimation = false);
+	void SetCardContainer(ECardContainer InCardContainer);
 
 	/** SceneCapture 화면 좌표에서 LineTrace로 검출한 카드에 대해 외부 입력 라우터가 호출하는 함수입니다. */
 	void HandleCardMouseEvent(ECardMouseEvent InMouseEvent);
 	
 	ECardAction GetCardActionForMouseEvent(ECardMouseEvent InMouseEvent) const;
+	
+	void MakeViewDetailData(FViewDetailData& OutData) const;
 
 	FGameplayTag GetCardTag() const;
 	const FSavedCard& GetSavedCard() const;
@@ -105,8 +106,8 @@ private:
 	void ApplyCardVisuals() const;
 	void ToggleHighlightOutline(const bool bHighlightOn) const;
 
-	ECardAction GetCardActionWhenDeckState(ECardMouseEvent InMouseEvent) const;
-	ECardAction GetCardActionWhenHandState(ECardMouseEvent InMouseEvent) const;
+	ECardAction GetCardActionWhenDeckState(const ECardMouseEvent InMouseEvent) const;
+	ECardAction GetCardActionWhenHandState(const ECardMouseEvent InMouseEvent) const;
 
 public:
 	FOnCardActorMouseEventSignature OnCardMouseEventDelegate;

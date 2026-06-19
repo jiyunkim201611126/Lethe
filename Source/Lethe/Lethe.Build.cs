@@ -19,6 +19,8 @@ public class Lethe : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
+			"CommonUI",
+			"CommonInput",
 			
 			"ModularGameplay",
 			

@@ -61,7 +61,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeCardStage);
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
+		//CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
@@ -216,7 +216,7 @@ void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams) const
 	}
 }
 
-void UCardPanelWidget::OnKeyboardEvent(const int32 Number) const
+void UCardPanelWidget::HandleKeyboardEvent(const int32 Number) const
 {
 	if (CardStage)
 	{

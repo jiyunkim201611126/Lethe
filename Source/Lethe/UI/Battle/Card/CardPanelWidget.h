@@ -30,6 +30,8 @@ public:
 	virtual void WidgetControllerSet_Implementation() override;
 	//~ End of ULetheUserWidget Interface
 
+	void HandleKeyboardEvent(int32 Number) const;
+	
 protected:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
@@ -43,7 +45,6 @@ protected:
 	//~ End of UUserWidget Interface
 
 private:
-	/**  */
 	void TryInitializeCardStage() const;
 	
 	/**
@@ -54,7 +55,6 @@ private:
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
-	void OnKeyboardEvent(int32 Number) const;
 	bool OnMouseButtonDownInCardUseSection() const;
 	bool OnMouseButtonUpInCardUseSection() const;
 	void OnCancelSelectedCard() const;

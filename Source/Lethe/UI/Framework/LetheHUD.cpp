@@ -34,6 +34,7 @@ void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponen
 		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
 		OverlayWidget->SetWidgetController(OverlayWidgetController);
 		OverlayWidget->AddToViewport();
+		OverlayWidget->ActivateWidget();
 	}
 }
 

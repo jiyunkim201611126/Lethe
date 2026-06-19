@@ -83,8 +83,8 @@ void PCGPointGenerator::BakePCGDataAsset(UPCGPointArrayData* TilePoints)
 	
 	FSavePackageArgs SaveArgs;
 	SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
-	const bool bSaved = UPackage::SavePackage(Package, DataAsset, *FilePath, SaveArgs);
-	check(bSaved);
+	//const bool bSaved = UPackage::SavePackage(Package, DataAsset, *FilePath, SaveArgs);
+	//check(bSaved);
 	#endif
 }
 

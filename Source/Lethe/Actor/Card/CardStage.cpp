@@ -492,7 +492,7 @@ void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number)
 	if (CurrentHands.IsValidIndex(Number))
 	{
 		ACardActor* SelectingCard = CurrentHands[Number];
-		if (SelectingCard && SelectingCard->GetCurrentCardContainer() == ECardContainer::Hand)
+		if (SelectingCard)
 		{
 			SelectCard(SelectingCard);
 		}

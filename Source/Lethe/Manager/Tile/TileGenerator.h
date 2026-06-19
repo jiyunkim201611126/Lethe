@@ -15,6 +15,7 @@ struct FTileGenerationResult
 {
 	TMap<FCubeCoord, FTileData> TileDataMap;
 	TMap<int32, FRoomData> RoomDataMap;
+	TMap<FCubeCoord, TArray<FSoftObjectPath>> MeshPathMap;
 };
 
 class LETHE_API FTileGenerator

@@ -16,3 +16,7 @@ Saved/
 # Claude 개인 지침·설정 파일 무시
 CLAUDE.md
 .claude/settings.local.json
+
+# 런타임에 베이크되는 PCG 타일 포인트 DA (Seed로 재생성되는 로컬 산출물, 공유 불필요)
+# 주의: 같은 폴더의 PCG 그래프 에셋은 커밋해야 하므로 폴더가 아닌 이 파일만 무시
+Content/Blueprint/PCG/DA_PCGTilePoints.uasset

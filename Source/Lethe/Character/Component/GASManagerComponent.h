@@ -50,7 +50,7 @@ protected:
 	
 	virtual void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
 	
-	virtual void OnPlanPhaseStarted() const;
+	void OnPlanPhaseStarted() const;
 
 private:
 	ETeamSide GetTeamSide() const;

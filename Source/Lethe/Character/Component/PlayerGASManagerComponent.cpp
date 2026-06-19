@@ -58,6 +58,12 @@ void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase,
 	if (NewPhase == EPhaseState::EnemyPlanningPhase)
 	{
 		OnPlanPhaseStarted();
+		ApplyTurnStartRecovery();
+	}
+
+	if (NewPhase == EPhaseState::DrawPhase)
+	{
+		ApplyTurnStartRecovery();
 	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -69,10 +75,8 @@ void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase,
 	}
 }
 
-void UPlayerGASManagerComponent::OnPlanPhaseStarted() const
+void UPlayerGASManagerComponent::ApplyTurnStartRecovery() const
 {
-	Super::OnPlanPhaseStarted();
-	
 	if (!TurnStartRecovery)
 	{
 		return;

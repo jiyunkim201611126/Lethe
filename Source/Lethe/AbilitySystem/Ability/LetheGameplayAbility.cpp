@@ -60,7 +60,7 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 				// 소음 범위 내의 모든 적을 전투 상태로 변경합니다.
 				for (const AEnemyCharacterBase* Enemy : CombatStartingEnemies)
 				{
-					Enemy->StartCombat();
+					Enemy->NotifyNoiseHeard();
 				}
 			}
 		}

@@ -106,7 +106,10 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 {
 	if (CardStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		CardStage->HandleRightMouseButtonDown();
+		if (CardStage->HandleRightMouseButtonDown())
+		{
+			return FReply::Handled();
+		}
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 }

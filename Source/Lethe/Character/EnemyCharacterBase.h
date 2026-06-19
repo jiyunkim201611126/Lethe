@@ -26,7 +26,7 @@ public:
 	virtual void Die() override;
 	//~ End of ICombatInterface
 
-	void StartCombat() const;
+	void NotifyNoiseHeard() const;
 
 	const FBFSRange& GetAbilityRange() const;
 

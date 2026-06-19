@@ -238,7 +238,16 @@ bool ACardStage::HandleMouseButtonUpInCardUseSection()
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
 	if (HandIndex == INDEX_NONE)
 	{
-		HandleRightMouseButtonDown();
+		if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
+		{
+			OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+		}
+		if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
+		{
+			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
+			CardContainerManager->StopPreviewDeck();
+		}
+		
 		return false;
 	}
 
@@ -373,17 +382,20 @@ void ACardStage::HandleTurnEndButtonClicked() const
 	}
 }
 
-void ACardStage::HandleRightMouseButtonDown() const
+bool ACardStage::HandleRightMouseButtonDown() const
 {
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+		return true;
 	}
 	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
 		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
 		CardContainerManager->StopPreviewDeck();
+		return true;
 	}
+	return false;
 }
 
 ACardActor* ACardStage::GetCardActorAtUV(const FVector2D& TargetUV) const

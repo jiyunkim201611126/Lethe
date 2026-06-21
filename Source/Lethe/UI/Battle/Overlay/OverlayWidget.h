@@ -36,6 +36,8 @@ private:
 	void HandleKeyboard6() const;
 	void HandleKeyboard7() const;
 	void HandleKeyboard8() const;
+	void HandleKeyboard9() const;
+	void HandleKeyboard0() const;
 
 protected:
 	UPROPERTY(meta = (BindWidget))
@@ -64,4 +66,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> Keyboard8;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> Keyboard9;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> Keyboard0;
 };

@@ -10,7 +10,7 @@
 
 void FCharacterCards::SortPreviewHands()
 {
-	PreviewHands.Sort([](const TObjectPtr<ACardActor>& CardA, const TObjectPtr<ACardActor>& CardB)
+	Algo::Sort(PreviewHands, [](const ACardActor* CardA, const ACardActor* CardB)
 	{
 		if (CardA && CardB)
 		{
@@ -28,6 +28,7 @@ void UCardContainerManager::Initialize(const TArray<TWeakObjectPtr<ULetheAbility
 {
 	AbilitySystemComponents = InAbilitySystemComponents;
 	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);
+	CurrentHands.Reserve(10);
 	DeckBoxes = InDeckBoxes;
 }
 

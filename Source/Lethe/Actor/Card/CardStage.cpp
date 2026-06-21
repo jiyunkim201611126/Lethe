@@ -238,16 +238,7 @@ bool ACardStage::HandleMouseButtonUpInCardUseSection()
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
 	if (HandIndex == INDEX_NONE)
 	{
-		if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
-		{
-			OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-		}
-		if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
-		{
-			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
-			CardContainerManager->StopPreviewDeck();
-		}
-		
+		CancelSelect();
 		return false;
 	}
 
@@ -296,6 +287,7 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 			// 전투 중인 상황이므로, 덱을 펼쳐보던 것을 중단하고 모든 덱 박스를 엽니다.
 			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
 			CardContainerManager->StopPreviewDeck();
+			CurrentSelectedDeckBox.Reset();
 			
 			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Battle, true);
 		}
@@ -308,6 +300,7 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 			UpdateAllCardLocations();
 			
 			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Battle, false);
+			CurrentSelectedDeckBox.Reset();
 		}
 	}
 }
@@ -382,7 +375,18 @@ void ACardStage::HandleTurnEndButtonClicked() const
 	}
 }
 
-bool ACardStage::HandleRightMouseButtonDown() const
+bool ACardStage::HandleRightMouseButtonDown(const FVector2D& TargetUV)
+{
+	// 우클릭한 위치에 카드가 있다면 CardPanelWidget이 마우스를 캡쳐할 수 있도록 true를 반환합니다.
+	if (GetCardActorAtUV(TargetUV))
+	{
+		return true;
+	}
+	
+	return CancelSelect();
+}
+
+bool ACardStage::CancelSelect()
 {
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
@@ -393,6 +397,7 @@ bool ACardStage::HandleRightMouseButtonDown() const
 	{
 		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
 		CardContainerManager->StopPreviewDeck();
+		CurrentSelectedDeckBox.Reset();
 		return true;
 	}
 	return false;

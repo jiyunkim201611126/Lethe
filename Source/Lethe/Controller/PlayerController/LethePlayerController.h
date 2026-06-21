@@ -24,7 +24,6 @@ struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 struct FSavedCard;
 
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
 DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
@@ -41,7 +40,6 @@ public:
 	ULetheWidgetController* InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
-	void OnNumberKeyPressed(const int32 InNumber) const;
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void OnLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
@@ -76,7 +74,6 @@ private:
 	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
 
 public:
-	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 	FOnCancelCardSelectSignature OnCancelCardSelectCancelDelegate;
 	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;

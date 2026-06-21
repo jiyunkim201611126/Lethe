@@ -25,7 +25,6 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	{
 		LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
 
-		LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
 		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
@@ -124,11 +123,6 @@ void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySyste
 void UCardPanelWidgetController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
 	OnPhaseStateChangedDelegate.Broadcast(OldState, NewState);
-}
-
-void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
-{
-	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
 
 void UCardPanelWidgetController::OnCancelCardSelect() const

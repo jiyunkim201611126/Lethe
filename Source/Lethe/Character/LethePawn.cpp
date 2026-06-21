@@ -51,7 +51,6 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 	EnhancedInputComponent->BindAction(MouseWheelAction, ETriggerEvent::Triggered, this, &ThisClass::Zoom);
-	EnhancedInputComponent->BindAction(NumberAction, ETriggerEvent::Triggered, this, &ThisClass::NumberKeyPressed);
 	EnhancedInputComponent->BindAction(LeftMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::LeftMouseButtonClicked);
 	EnhancedInputComponent->BindAction(RightMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::RightMouseButtonClicked);
 	EnhancedInputComponent->BindAction(SpaceAction, ETriggerEvent::Completed, this, &ThisClass::SpaceKeyPressed);
@@ -104,18 +103,6 @@ void ALethePawn::Zoom(const FInputActionValue& InputActionValue)
 float ALethePawn::GetAttributeWidgetSize() const
 {
 	return FMath::Clamp((1000.f - SpringArmComponent->TargetArmLength) / 600.f, 0.4f, 1.f);
-}
-
-void ALethePawn::NumberKeyPressed(const FInputActionValue& InputActionValue)
-{
-	// Input 설정에서 값을 0으로 주면 입력 자체가 발생하지 않는 현상이 있어, 설정에서 최소값으로 1을 준 뒤 여기서 1을 빼고 사용합니다.
-	const float RawValue = InputActionValue.Get<float>() - 1;
-	const int32 InputIndex = FMath::RoundToInt(RawValue);
-
-	if (const ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
-	{
-		PlayerController->OnNumberKeyPressed(InputIndex);
-	}
 }
 
 void ALethePawn::LeftMouseButtonClicked()

@@ -75,3 +75,13 @@ void UOverlayWidget::HandleKeyboard8() const
 {
 	CardPanel->HandleKeyboardEvent(7);
 }
+
+void UOverlayWidget::HandleKeyboard9() const
+{
+	CardPanel->HandleKeyboardEvent(8);
+}
+
+void UOverlayWidget::HandleKeyboard0() const
+{
+	CardPanel->HandleKeyboardEvent(9);
+}

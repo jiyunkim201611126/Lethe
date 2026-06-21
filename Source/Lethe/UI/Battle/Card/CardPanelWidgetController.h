@@ -47,7 +47,6 @@ struct FCardInitParams
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_DELEGATE(FOnAbilitySystemReferencesUpdated);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCardSelectCanceled);
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
 
@@ -78,7 +77,6 @@ public:
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
-	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
 	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
 
@@ -86,7 +84,6 @@ public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
 	FOnAbilitySystemReferencesUpdated OnAbilitySystemReferencesUpdatedDelegate;
 	FOnPhaseStateChanged OnPhaseStateChangedDelegate;
-	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 	FOnCardSelectCanceled OnCardSelectCanceledDelegate;
 	FOnUseCardResolved OnUseCardResolvedDelegate;
 

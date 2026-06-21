@@ -26,7 +26,6 @@ void UCardPanelWidget::NativeDestruct()
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.Unbind();
 		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.Unbind();
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.RemoveAll(this);
-		CardPanelWidgetController->OnNumberKeyPressedDelegate.Unbind();
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.Unbind();
 		CardPanelWidgetController->OnUseCardResolvedDelegate.Unbind();
 	}
@@ -61,7 +60,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeCardStage);
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		//CardPanelWidgetController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnKeyboardEvent);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
@@ -106,9 +104,21 @@ FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeome
 {
 	if (CardStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		if (CardStage->HandleRightMouseButtonDown())
+		// 우클릭한 위치에 카드가 있을 가능성이 있다면 우클릭 처리를, 그렇지 않다면 현재 선택된 대상이 선택 취소될 수 있도록 처리합니다.
+		FVector2D TargetUV;
+		if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
 		{
-			return FReply::Handled();
+			if (CardStage->HandleRightMouseButtonDown(TargetUV))
+			{
+				return FReply::Handled();
+			}
+		}
+		else
+		{
+			if (CardStage->CancelSelect())
+			{
+				return FReply::Handled();
+			}
 		}
 	}
 	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);

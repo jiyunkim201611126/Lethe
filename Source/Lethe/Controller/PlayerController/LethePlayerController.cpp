@@ -43,11 +43,6 @@ ULetheWidgetController* ALethePlayerController::InitEnemyUI(UAbilitySystemCompon
 	return LetheHUD->CreateEnemyAttributeWidgetController(this, ASC, AS);
 }
 
-void ALethePlayerController::OnNumberKeyPressed(const int32 InNumber) const
-{
-	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
-}
-
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 {
 	if (OnCameraHeightChangedDelegate.IsBound())
@@ -303,8 +298,6 @@ void ALethePlayerController::BeginPlay()
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnNumberKeyPressedDelegate.Unbind();
-	
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);

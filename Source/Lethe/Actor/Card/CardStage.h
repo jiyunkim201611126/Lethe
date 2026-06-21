@@ -56,7 +56,8 @@ public:
 	void HandleCancelSelectedCard();
 	void HandleResolveUseCard(int32 HandIndex, bool bSuccess);
 	void HandleTurnEndButtonClicked() const;
-	bool HandleRightMouseButtonDown() const;
+	bool HandleRightMouseButtonDown(const FVector2D& TargetUV);
+	bool CancelSelect();
 
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */

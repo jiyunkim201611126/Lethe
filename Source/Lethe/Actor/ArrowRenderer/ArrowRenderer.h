@@ -34,11 +34,11 @@ public:
 	
 	void DrawCardPreviewArrow(const AActor* SourceActor, const TArray<AActor*>& TargetActors);
 	void DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations);
-	void DeactivateArrow();
+	void DeactivateCardPreviewArrow();
+	void DeactivateMovePreviewArrow();
 
 private:
 	void SetAllSplinePointsType(const ESplinePointType::Type PointType) const;
-	void DeactivateCardPreviewArrow();
 	
 	void EnsureCardPreviewSplineMeshCount(int32 RequiredCount);
 	USplineMeshComponent* CreateCardPreviewSplineMeshComponent();

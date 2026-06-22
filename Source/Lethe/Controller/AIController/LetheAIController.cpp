@@ -89,7 +89,7 @@ void ALetheAIController::ProcessTelegraphPlan() const
 
 void ALetheAIController::DeactivateArrow() const
 {
-	ArrowRenderer->DeactivateArrow();
+	ArrowRenderer->DeactivateCardPreviewArrow();
 }
 
 void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const

@@ -12,7 +12,6 @@ class ACardStage;
 class UButton;
 class UCanvasPanel;
 class UCardPanelWidgetController;
-class UCardUseSectionWidget;
 class ULetheAbilitySystemComponent;
 class ULetheImage;
 class UViewCardDetailWidget;
@@ -36,12 +35,10 @@ protected:
 	//~ Begin UUserWidget Interface
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 	//~ End of UUserWidget Interface
 
 private:
@@ -52,11 +49,13 @@ private:
 	 * 반환값은 마우스가 CapturedCardStage 위 Hovered 상태 여부입니다.
 	 */
 	bool TryGetCapturedCardStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const;
+	
+	bool IsMouseInWorldSection(const FPointerEvent& InMouseEvent) const;
+
+	void UpdateMouseInWorldSectionState(const FPointerEvent& InMouseEvent) const;
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
-	bool OnMouseButtonDownInCardUseSection() const;
-	bool OnMouseButtonUpInCardUseSection() const;
 	void OnCancelSelectedCard() const;
 	void OnResolveUseCard(int32 HandIndex, bool bSuccess) const;
 	void StartViewCardDetail(const ACardActor* CardActor) const;
@@ -76,7 +75,7 @@ protected:
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCardUseSectionWidget> CardUseSection;
+	TObjectPtr<ULetheImage> WorldSection;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> TurnEndButton;

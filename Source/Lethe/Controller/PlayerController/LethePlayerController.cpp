@@ -51,7 +51,7 @@ void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 	}
 }
 
-void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
+void ALethePlayerController::HandleLeftMouseButtonClickedOnWorld()
 {
 	if (SelectedCardAbility.IsValid())
 	{
@@ -175,7 +175,7 @@ void ALethePlayerController::RefreshMovePreview() const
 {
 	if (!bIsReservedMovePreviewingMode)
 	{
-		ArrowRenderer->DeactivateArrow();
+		ArrowRenderer->DeactivateMovePreviewArrow();
 		return;
 	}
 	
@@ -186,7 +186,7 @@ void ALethePlayerController::RefreshMovePreview() const
 	}
 	else
 	{
-		ArrowRenderer->DeactivateArrow();
+		ArrowRenderer->DeactivateMovePreviewArrow();
 	}
 }
 
@@ -261,7 +261,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	SelectedCardOwnerASC = nullptr;
 	ActorSelector->UnhighlightActorsByAbility();
 	ActorSelector->UnhighlightActorByMouse();
-	ArrowRenderer->DeactivateArrow();
+	ArrowRenderer->DeactivateCardPreviewArrow();
 	if (OnCancelCardSelectCancelDelegate.IsBound())
 	{
 		OnCancelCardSelectCancelDelegate.Broadcast();
@@ -269,9 +269,9 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	return false;
 }
 
-void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)
+void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSection)
 {
-	bMouseOnCardUseSection = bInMouseOnCardUseSection;
+	bMouseOnWorldSection = bInMouseOnWorldSection;
 }
 
 void ALethePlayerController::BeginPlay()
@@ -337,7 +337,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	FTileAndActor OutTileAndActor;
 	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
 	
-	if (SelectedCharacter.IsValid() && bMouseOnCardUseSection)
+	if (SelectedCharacter.IsValid() && bMouseOnWorldSection)
 	{
 		// 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
 		if (OutTileAndActor.Tile)
@@ -349,7 +349,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		return;
 	}
 
-	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnCardUseSection)
+	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnWorldSection)
 	{
 		// 선택된 카드가 있는 경우 들어오는 분기입니다.
 		const ATile* CurrentTile = OutTileAndActor.Tile;
@@ -370,11 +370,11 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 
 			// 사용 범위를 벗어난 경우 프리뷰 및 Arrow를 비활성화합니다.
 			PreviewCoordinatorComponent->StopAllPreview();
-			ArrowRenderer->DeactivateArrow();
+			ArrowRenderer->DeactivateCardPreviewArrow();
 		}
 	}
 
-	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnCardUseSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnWorldSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
 		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
@@ -409,10 +409,7 @@ void ALethePlayerController::OnOtherTileDetected(const TArray<AActor*>& CurrentA
 	{
 		// 빈 타일에 마우스를 올린 경우 들어오는 분기입니다.
 		PreviewCoordinatorComponent->StopAllPreview();
-		if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
-		{
-			ArrowRenderer->DeactivateArrow();
-		}
+		ArrowRenderer->DeactivateCardPreviewArrow();
 	}
 }
 

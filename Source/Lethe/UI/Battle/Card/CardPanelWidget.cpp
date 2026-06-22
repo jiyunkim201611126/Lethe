@@ -3,11 +3,11 @@
 #include "CardPanelWidget.h"
 
 #include "CardPanelWidgetController.h"
-#include "CardUseSectionWidget.h"
 #include "ViewCardDetailWidget.h"
 #include "Components/Button.h"
 #include "InputCoreTypes.h"
 #include "Lethe/Actor/Card/CardStage.h"
+#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/UI/Core/LetheImage.h"
 
 void UCardPanelWidget::NativeConstruct()
@@ -15,8 +15,6 @@ void UCardPanelWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	TurnEndButton->OnClicked.AddDynamic(this, &ThisClass::OnTurnEndButtonClicked);
-	CardUseSection->OnMouseButtonDown.BindUObject(this, &ThisClass::OnMouseButtonDownInCardUseSection);
-	CardUseSection->OnMouseButtonUp.BindUObject(this, &ThisClass::OnMouseButtonUpInCardUseSection);
 }
 
 void UCardPanelWidget::NativeDestruct()
@@ -33,11 +31,6 @@ void UCardPanelWidget::NativeDestruct()
 	if (TurnEndButton)
 	{
 		TurnEndButton->OnClicked.RemoveDynamic(this, &ThisClass::OnTurnEndButtonClicked);
-	}
-	if (CardUseSection)
-	{
-		CardUseSection->OnMouseButtonDown.Unbind();
-		CardUseSection->OnMouseButtonUp.Unbind();
 	}
 	if (CardStage)
 	{
@@ -100,64 +93,69 @@ void UCardPanelWidget::TryInitializeCardStage() const
 	}
 }
 
-FReply UCardPanelWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
-{
-	if (CardStage && InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-	{
-		// 우클릭한 위치에 카드가 있을 가능성이 있다면 우클릭 처리를, 그렇지 않다면 현재 선택된 대상이 선택 취소될 수 있도록 처리합니다.
-		FVector2D TargetUV;
-		if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
-		{
-			if (CardStage->HandleRightMouseButtonDown(TargetUV))
-			{
-				return FReply::Handled();
-			}
-		}
-		else
-		{
-			if (CardStage->CancelSelect())
-			{
-				return FReply::Handled();
-			}
-		}
-	}
-	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
-}
-
 FReply UCardPanelWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton && InMouseEvent.GetEffectingButton() != EKeys::RightMouseButton)
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
-	
-	FVector2D TargetUV;
-	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
-	{
-		if (CardStage && CardStage->HandleCapturedMouseButtonDown(TargetUV, InMouseEvent.GetEffectingButton()))
-		{
-			return FReply::Handled().CaptureMouse(TakeWidget());
-		}
-	}
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+
+	// 마우스 클릭은 모두 위젯을 거쳐 처리되므로 일단 캡쳐합니다.
+	return FReply::Handled().CaptureMouse(TakeWidget());
 }
 
 FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton && InMouseEvent.GetEffectingButton() != EKeys::RightMouseButton)
+	if (!CardStage)
 	{
-		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+		return FReply::Handled().ReleaseMouseCapture();
 	}
 	
 	FVector2D TargetUV;
-	if (TryGetCapturedCardStageUV(InMouseEvent, TargetUV))
+	const bool bIsMouseInCardStage = TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
+	
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
-		if (CardStage && CardStage->HandleCapturedMouseButtonUp(TargetUV, InMouseEvent.GetEffectingButton()))
+		if (bIsMouseInCardStage)
 		{
-			return FReply::Handled().ReleaseMouseCapture();
+			if (CardStage->HandleLeftMouseButtonClickedInCardStageSection(TargetUV))
+			{
+				return FReply::Handled().ReleaseMouseCapture();
+			}
+		}
+		if (IsMouseInWorldSection(InMouseEvent))
+		{
+			// 카드 선택도 사용도 하지 않았으며 마우스는 월드 섹션에 있는 경우, PlayerController에게 좌클릭 입력을 내려줍니다.
+			const bool bHandled = CardStage->HandleLeftMouseButtonClickedInWorldSection();
+			if (!bHandled)
+			{
+				if (ALethePlayerController* LethePlayerController = GetOwningPlayer<ALethePlayerController>())
+				{
+					LethePlayerController->HandleLeftMouseButtonClickedOnWorld();
+				}
+			}
 		}
 	}
-	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+
+	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+	{
+		bool bHandled = false;
+		if (bIsMouseInCardStage)
+		{
+			bHandled = CardStage->HandleViewDetail(TargetUV);
+		}
+
+		if (!bHandled)
+		{
+			CardStage->CancelSelect();
+			if (ALethePlayerController* LethePlayerController = GetOwningPlayer<ALethePlayerController>())
+			{
+				LethePlayerController->ResetSelectedCharacter();
+			}
+		}
+	}
+	
+	return FReply::Handled().ReleaseMouseCapture();
 }
 
 void UCardPanelWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -169,6 +167,8 @@ void UCardPanelWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPo
 	{
 		CardStage->HandleCapturedMouseMove(TargetUV);
 	}
+
+	UpdateMouseInWorldSectionState(InMouseEvent);
 }
 
 FReply UCardPanelWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -186,17 +186,10 @@ FReply UCardPanelWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FP
 			CardStage->HandleCapturedMouseLeave();
 		}
 	}
+
+	UpdateMouseInWorldSectionState(InMouseEvent);
+	
 	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-}
-
-void UCardPanelWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
-{
-	if (CardStage)
-	{
-		CardStage->HandleCapturedMouseCaptureLost();
-	}
-
-	Super::NativeOnMouseCaptureLost(CaptureLostEvent);
 }
 
 bool UCardPanelWidget::TryGetCapturedCardStageUV(const FPointerEvent& InMouseEvent, FVector2D& OutUV) const
@@ -218,6 +211,32 @@ bool UCardPanelWidget::TryGetCapturedCardStageUV(const FPointerEvent& InMouseEve
 	return OutUV.X >= 0.f && OutUV.X <= 1.f && OutUV.Y >= 0.f && OutUV.Y <= 1.f;
 }
 
+bool UCardPanelWidget::IsMouseInWorldSection(const FPointerEvent& InMouseEvent) const
+{
+	if (!WorldSection)
+	{
+		return false;
+	}
+
+	const FGeometry& SectionGeometry = WorldSection->GetCachedGeometry();
+	const FVector2D SectionSize = SectionGeometry.GetLocalSize();
+	if (SectionSize.X <= UE_SMALL_NUMBER || SectionSize.Y <= UE_SMALL_NUMBER)
+	{
+		return false;
+	}
+
+	const FVector2D LocalPosition = SectionGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+	return LocalPosition.X >= 0.f && LocalPosition.X <= SectionSize.X && LocalPosition.Y >= 0.f && LocalPosition.Y <= SectionSize.Y;
+}
+
+void UCardPanelWidget::UpdateMouseInWorldSectionState(const FPointerEvent& InMouseEvent) const
+{
+	if (ALethePlayerController* LethePlayerController = GetOwningPlayer<ALethePlayerController>())
+	{
+		LethePlayerController->SetMouseOnWorldSection(IsMouseInWorldSection(InMouseEvent));
+	}
+}
+
 void UCardPanelWidget::CreateCard(const FCardInitParams& CardInitParams) const
 {
 	if (CardStage)
@@ -232,16 +251,6 @@ void UCardPanelWidget::HandleKeyboardEvent(const int32 Number) const
 	{
 		CardStage->HandleKeyboardEvent(Number);
 	}
-}
-
-bool UCardPanelWidget::OnMouseButtonDownInCardUseSection() const
-{
-	return CardStage && CardStage->HandleMouseButtonDownInCardUseSection();
-}
-
-bool UCardPanelWidget::OnMouseButtonUpInCardUseSection() const
-{
-	return CardStage && CardStage->HandleMouseButtonUpInCardUseSection();
 }
 
 void UCardPanelWidget::OnCancelSelectedCard() const

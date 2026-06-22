@@ -43,21 +43,19 @@ public:
 
 	void CreateCard(const FCardInitParams& CardInitParams);
 
-	bool HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton);
-	bool HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton);
+	bool HandleLeftMouseButtonClickedInCardStageSection(const FVector2D& TargetUV);
 	void HandleCapturedMouseMove(const FVector2D& TargetUV) const;
 	void HandleCapturedMouseLeave() const;
-	void HandleCapturedMouseCaptureLost();
-	bool HandleMouseButtonDownInCardUseSection() const;
-	bool HandleMouseButtonUpInCardUseSection();
+	bool HandleLeftMouseButtonClickedInWorldSection();
 	void HandleKeyboardEvent(int32 Number);
+
+	bool HandleViewDetail(const FVector2D& TargetUV) const;
 
 	void HandlePhaseStateChanged(EPhaseState OldState, EPhaseState NewState);
 	void HandleCancelSelectedCard();
 	void HandleResolveUseCard(int32 HandIndex, bool bSuccess);
 	void HandleTurnEndButtonClicked() const;
-	bool HandleRightMouseButtonDown(const FVector2D& TargetUV);
-	bool CancelSelect();
+	void CancelSelect();
 
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */
@@ -124,12 +122,8 @@ private:
 	TArray<TObjectPtr<ACardActor>> SpawnedCards;
 
 	UPROPERTY()
-	TObjectPtr<ACardActor> PressedCard;
-
-	UPROPERTY()
 	TObjectPtr<ACardActor> CurrentSelectedCard;
-
-	TWeakObjectPtr<UBoxComponent> PressedDeckBox;
+	
 	TWeakObjectPtr<UBoxComponent> CurrentSelectedDeckBox;
 
 	UPROPERTY()

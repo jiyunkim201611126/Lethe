@@ -130,75 +130,38 @@ void ACardStage::CreateCard(const FCardInitParams& CardInitParams)
 	}
 }
 
-bool ACardStage::HandleCapturedMouseButtonDown(const FVector2D& TargetUV, const FKey& MouseButton)
+bool ACardStage::HandleLeftMouseButtonClickedInCardStageSection(const FVector2D& TargetUV)
 {
-	if (MouseButton != EKeys::LeftMouseButton && MouseButton != EKeys::RightMouseButton)
+	if (ACardActor* ClickedCard = GetCardActorAtUV(TargetUV))
 	{
-		return false;
+		ClickedCard->HandleCardMouseEvent(ECardMouseEvent::LeftMouseButtonUp);
+		return true;
 	}
 
-	// MouseMove 처리 함수를 명시적으로 호출, HoveredCard를 갱신합니다.
-	PressedCard = GetCardActorAtUV(TargetUV);
-	PressedDeckBox = GetDeckBoxCollisionAtUV(TargetUV);
-
-	// 둘 중 하나라도 유효하면 true를 반환합니다.
-	return IsValid(PressedCard) || PressedDeckBox.IsValid();
-}
-
-bool ACardStage::HandleCapturedMouseButtonUp(const FVector2D& TargetUV, const FKey& MouseButton)
-{
-	if (MouseButton != EKeys::LeftMouseButton && MouseButton != EKeys::RightMouseButton)
+	if (UBoxComponent* ClickedDeckBox = GetDeckBoxCollisionAtUV(TargetUV))
 	{
-		return false;
-	}
-
-	if (PressedCard)
-	{
-		const ACardActor* HoveredCard = GetCardActorAtUV(TargetUV);
-		ACardActor* ReleasedCard = PressedCard;
-		PressedCard = nullptr;
-
-		// 마우스를 누른 카드와 뗀 카드가 같으면 카드 클릭 이벤트로 처리합니다.
-		if (HoveredCard == ReleasedCard)
+		const int32 DeckIndex = DeckBoxes->GetDeckIndex(ClickedDeckBox);
+		if (DeckIndex == INDEX_NONE || !AbilitySystemComponents.IsValidIndex(DeckIndex))
 		{
-			ReleasedCard->HandleCardMouseEvent(MouseButton == EKeys::LeftMouseButton ? ECardMouseEvent::LeftMouseButtonUp : ECardMouseEvent::RightMouseButtonUp);
-			return true;
+			return false;
 		}
-	}
 
-	if (PressedDeckBox.IsValid())
-	{
-		const UBoxComponent* HoveredDeckBox = GetDeckBoxCollisionAtUV(TargetUV);
-		UBoxComponent* ReleasedDeckBox = PressedDeckBox.Get();
-		PressedDeckBox.Reset();
-
-		// 마우스를 누른 덱 박스와 뗀 덱 박스가 같으면 덱 박스 클릭 이벤트로 처리합니다.
-		if (HoveredDeckBox == ReleasedDeckBox)
+		ULetheAbilitySystemComponent* DeckOwnerASC = AbilitySystemComponents[DeckIndex].Get();
+		
+		if (CurrentPhaseState == EPhaseState::DrawPhase)
 		{
-			const int32 DeckIndex = DeckBoxes->GetDeckIndex(ReleasedDeckBox);
-			if (DeckIndex == INDEX_NONE || !AbilitySystemComponents.IsValidIndex(DeckIndex))
-			{
-				return false;
-			}
-
-			ULetheAbilitySystemComponent* DeckOwnerASC = AbilitySystemComponents[DeckIndex].Get();
-			
-			if (CurrentPhaseState == EPhaseState::DrawPhase)
-			{
-				TryDraw(DeckOwnerASC);
-			}
-			else if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
-			{
-				// 비전투 중 덱 박스를 클릭했다면, 안에 있는 모든 카드를 밖으로 꺼내 보여줍니다.
-				CardContainerManager->StopPreviewDeck(false);
-				DeckBoxes->SetOpenReason(ReleasedDeckBox, EDeckBoxOpenReason::Pinned, true);
-				CardContainerManager->PreviewDeck(DeckOwnerASC);
-			}
-
-			CurrentSelectedDeckBox = ReleasedDeckBox;
-			
-			return true;
+			TryDraw(DeckOwnerASC);
 		}
+		else if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+		{
+			// 비전투 중 덱 박스를 클릭했다면, 안에 있는 모든 카드를 밖으로 꺼내 보여줍니다.
+			CardContainerManager->StopPreviewDeck(false);
+			DeckBoxes->SetOpenReason(ClickedDeckBox, EDeckBoxOpenReason::Pinned, true);
+			CardContainerManager->PreviewDeck(DeckOwnerASC);
+		}
+
+		CurrentSelectedDeckBox = ClickedDeckBox;
+		return true;
 	}
 	return false;
 }
@@ -214,21 +177,7 @@ void ACardStage::HandleCapturedMouseLeave() const
 	DeckBoxes->SetOpenReason(nullptr, EDeckBoxOpenReason::MouseHover, false);
 }
 
-void ACardStage::HandleCapturedMouseCaptureLost()
-{
-	if (PressedCard)
-	{
-		PressedCard->HandleCardMouseEvent(ECardMouseEvent::MouseCaptureLost);
-		PressedCard = nullptr;
-	}
-}
-
-bool ACardStage::HandleMouseButtonDownInCardUseSection() const
-{
-	return CurrentSelectedCard != nullptr;
-}
-
-bool ACardStage::HandleMouseButtonUpInCardUseSection()
+bool ACardStage::HandleLeftMouseButtonClickedInWorldSection()
 {
 	if (!CurrentSelectedCard || !CardContainerManager || !OnUseCardRequested.IsBound() || !OnSelectCardRequested.IsBound())
 	{
@@ -251,8 +200,9 @@ bool ACardStage::HandleMouseButtonUpInCardUseSection()
 	{
 		CurrentSelectedCard = nullptr;
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+		return true;
 	}
-	return true;
+	return false;
 }
 
 void ACardStage::HandleKeyboardEvent(const int32 Number)
@@ -269,6 +219,16 @@ void ACardStage::HandleKeyboardEvent(const int32 Number)
 	default:
 		break;
 	}
+}
+
+bool ACardStage::HandleViewDetail(const FVector2D& TargetUV) const
+{
+	if (ACardActor* CardActor = GetCardActorAtUV(TargetUV))
+	{
+		CardActor->HandleCardMouseEvent(ECardMouseEvent::RightMouseButtonUp);
+		return true;
+	}
+	return false;
 }
 
 void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
@@ -294,13 +254,15 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 		else
 		{
 			// 모든 카드를 덱으로 되돌린 후 덱 박스를 닫습니다.
+			CardContainerManager->StopPreviewDeck();
+			CurrentSelectedDeckBox.Reset();
+			
 			CardContainerManager->AddAllHandsToGrave();
 			CardContainerManager->RefillDeck();
 			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
 			
 			DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Battle, false);
-			CurrentSelectedDeckBox.Reset();
 		}
 	}
 }
@@ -375,32 +337,18 @@ void ACardStage::HandleTurnEndButtonClicked() const
 	}
 }
 
-bool ACardStage::HandleRightMouseButtonDown(const FVector2D& TargetUV)
-{
-	// 우클릭한 위치에 카드가 있다면 CardPanelWidget이 마우스를 캡쳐할 수 있도록 true를 반환합니다.
-	if (GetCardActorAtUV(TargetUV))
-	{
-		return true;
-	}
-	
-	return CancelSelect();
-}
-
-bool ACardStage::CancelSelect()
+void ACardStage::CancelSelect()
 {
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-		return true;
 	}
 	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
 		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
 		CardContainerManager->StopPreviewDeck();
 		CurrentSelectedDeckBox.Reset();
-		return true;
 	}
-	return false;
 }
 
 ACardActor* ACardStage::GetCardActorAtUV(const FVector2D& TargetUV) const

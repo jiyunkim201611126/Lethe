@@ -41,7 +41,7 @@ public:
 	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 	void OnWheeled(const float AttributeWidgetSize) const;
-	void OnLeftMouseButtonClickedOnWorld();
+	void HandleLeftMouseButtonClickedOnWorld();
 	void ResetSelectedCharacter();
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;
@@ -49,7 +49,7 @@ public:
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
-	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
+	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const;
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
@@ -96,7 +96,7 @@ private:
 	EPhaseState CurrentPhaseState = EPhaseState::None;
 	FDelegateHandle OnPhaseStateChangedHandle;
 	
-	uint8 bMouseOnCardUseSection : 1 = false;
+	uint8 bMouseOnWorldSection : 1 = false;
 	
 	/** CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다. */
 	TWeakObjectPtr<const ULetheCardAbility> SelectedCardAbility;

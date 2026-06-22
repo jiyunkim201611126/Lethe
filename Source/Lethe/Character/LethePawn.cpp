@@ -51,8 +51,6 @@ void ALethePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 	EnhancedInputComponent->BindAction(MouseWheelAction, ETriggerEvent::Triggered, this, &ThisClass::Zoom);
-	EnhancedInputComponent->BindAction(LeftMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::LeftMouseButtonClicked);
-	EnhancedInputComponent->BindAction(RightMouseButtonClickAction, ETriggerEvent::Completed, this, &ThisClass::RightMouseButtonClicked);
 	EnhancedInputComponent->BindAction(SpaceAction, ETriggerEvent::Completed, this, &ThisClass::SpaceKeyPressed);
 }
 
@@ -103,22 +101,6 @@ void ALethePawn::Zoom(const FInputActionValue& InputActionValue)
 float ALethePawn::GetAttributeWidgetSize() const
 {
 	return FMath::Clamp((1000.f - SpringArmComponent->TargetArmLength) / 600.f, 0.4f, 1.f);
-}
-
-void ALethePawn::LeftMouseButtonClicked()
-{
-	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
-	{
-		PlayerController->OnLeftMouseButtonClickedOnWorld();
-	}
-}
-
-void ALethePawn::RightMouseButtonClicked()
-{
-	if (ALethePlayerController* PlayerController = Cast<ALethePlayerController>(GetController()))
-	{
-		PlayerController->ResetSelectedCharacter();
-	}
 }
 
 void ALethePawn::SpaceKeyPressed()

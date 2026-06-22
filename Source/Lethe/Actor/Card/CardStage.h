@@ -49,7 +49,7 @@ public:
 	bool HandleLeftMouseButtonClickedInWorldSection();
 	void HandleKeyboardEvent(int32 Number);
 
-	bool HandleViewDetail(const FVector2D& TargetUV) const;
+	bool TryViewDetail(const FVector2D& TargetUV) const;
 
 	void HandlePhaseStateChanged(EPhaseState OldState, EPhaseState NewState);
 	void HandleCancelSelectedCard();

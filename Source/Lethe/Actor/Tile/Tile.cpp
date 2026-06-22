@@ -121,6 +121,11 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 		TileVisionState = VisionState;
 		switch (TileVisionState)
 		{
+		case ETileVisionState::Hidden:
+			SetActorHiddenInGame(true);
+			TextRender->SetVisibility(false);
+			SetTileTraceIgnore(true);
+			break;
 		case ETileVisionState::Visible:
 			SetActorHiddenInGame(false);
 			TextRender->SetVisibility(IsTopTile());
@@ -129,12 +134,7 @@ void ATile::SetTileVisionState(const ETileVisionState VisionState)
 		case ETileVisionState::Recognizable:
 			SetActorHiddenInGame(false);
 			TextRender->SetVisibility(false);
-			SetTileTraceIgnore(true);
-			break;
-		case ETileVisionState::Hidden:
-			SetActorHiddenInGame(true);
-			TextRender->SetVisibility(false);
-			SetTileTraceIgnore(true);
+			SetTileTraceIgnore(false);
 			break;
 		default:
 			break;

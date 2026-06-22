@@ -215,12 +215,12 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 	// 스테이지의 모든 RoomAssignmentRule을 순회합니다.
 	for (const URoomRoleAssignmentRuleData* RoomRoleAssignmentRuleData : StageData->RoomAssignmentRules)
 	{
+		ERoomRole CurrentRoomRole = RoomRoleAssignmentRuleData->RoomRole;
+		
 		// Rule을 만족하는 모든 좌표를 가져옵니다.
 		TArray<FRoomRolePlacementCandidate> RoomRoleAssignmentCandidates;
 		if (RoomManagerSubsystem->TryFindRoomRoleCandidates(RoomRoleAssignmentRuleData, RoomRoleAssignmentCandidates))
 		{
-			ERoomRole CurrentRoomRole = RoomRoleAssignmentRuleData->RoomRole;
-			
 			// 좌표들 중에서 추가적인 조건을 만족하는 좌표를 하나 선택합니다.
 			const FRoomRolePlacementCandidate* SelectedCandidate = SelectRoomRoleCandidate(this, RoomRoleAssignmentRuleData, RoomRoleAssignmentCandidates, RoomRoleSelectionContext);
 			if (!SelectedCandidate)
@@ -310,6 +310,13 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 					}
 					break;
 				}
+			}
+		}
+		else
+		{
+			if (CurrentRoomRole == ERoomRole::PlayerSpawn || CurrentRoomRole == ERoomRole::Boss || CurrentRoomRole == ERoomRole::StageEnd)
+			{
+				checkf(false, TEXT("필수 RoomRole이 정상적으로 부여되지 않았습니다. RoomRole: %s"), *LogHelper::EnumToString(CurrentRoomRole));
 			}
 		}
 	}

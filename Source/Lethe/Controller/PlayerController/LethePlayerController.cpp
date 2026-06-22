@@ -51,7 +51,7 @@ void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 	}
 }
 
-void ALethePlayerController::HandleLeftMouseButtonClickedOnWorld()
+void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 {
 	if (SelectedCardAbility.IsValid())
 	{

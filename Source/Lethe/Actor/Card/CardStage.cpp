@@ -38,6 +38,11 @@ void ACardStage::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::HandlePhaseStateChanged);
+	}
+
 	CardContainerManager = NewObject<UCardContainerManager>(this);
 	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 
@@ -49,6 +54,11 @@ void ACardStage::BeginPlay()
 
 void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->OnChangePhaseState.RemoveAll(this);
+	}
+	
 	OnViewCardDetailRequested.Unbind();
 	OnSelectCardRequested.Unbind();
 	OnGoPlayerTurnPhaseRequested.Unbind();
@@ -221,7 +231,7 @@ void ACardStage::HandleKeyboardEvent(const int32 Number)
 	}
 }
 
-bool ACardStage::HandleViewDetail(const FVector2D& TargetUV) const
+bool ACardStage::TryViewDetail(const FVector2D& TargetUV) const
 {
 	if (ACardActor* CardActor = GetCardActorAtUV(TargetUV))
 	{
@@ -342,6 +352,7 @@ void ACardStage::CancelSelect()
 	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
 	{
 		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
+		return;
 	}
 	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{

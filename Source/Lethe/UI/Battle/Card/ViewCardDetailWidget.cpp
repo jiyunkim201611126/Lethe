@@ -4,7 +4,6 @@
 
 #include "CardPanelWidgetController.h"
 #include "CardWidget.h"
-#include "Components/Overlay.h"
 #include "Lethe/Actor/Card/CardActor.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
@@ -22,12 +21,12 @@ void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 		CardDescriptionTextBlock->SetText(FinalText);
 	}
-	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	ActivateWidget();
 }
 
 void UViewCardDetailWidget::EndViewDetail()
 {
-	SetVisibility(ESlateVisibility::Collapsed);
+	DeactivateWidget();
 }
 
 FReply UViewCardDetailWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -42,6 +41,15 @@ FReply UViewCardDetailWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 		EndViewDetail();
 	}
 	return FReply::Handled();
+}
+
+TOptional<FUIInputConfig> UViewCardDetailWidget::GetDesiredInputConfig() const
+{
+	FUIInputConfig Config(ECommonInputMode::Menu, EMouseCaptureMode::CaptureDuringMouseDown, false);
+	Config.bIgnoreMoveInput = false;
+	Config.bIgnoreLookInput = false;
+
+	return Config;
 }
 
 void UViewCardDetailWidget::WidgetControllerSet_Implementation()

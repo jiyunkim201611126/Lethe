@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/UI/Framework/LetheUserWidget.h"
+#include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "ViewCardDetailWidget.generated.h"
 
 class ACardActor;
@@ -13,7 +13,7 @@ class ULetheRichTextBlock;
 class UOverlay;
 
 UCLASS(Abstract)
-class LETHE_API UViewCardDetailWidget : public ULetheUserWidget
+class LETHE_API UViewCardDetailWidget : public ULetheActivatableWidget
 {
 	GENERATED_BODY()
 
@@ -27,9 +27,13 @@ protected:
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
 
-	//~ Begin ULetheUserWidget Interface
+	//~ Begin UCommonActivatableWidget Interface
+	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
+	//~ End of UCommonActivatableWidget Interface
+
+	//~ Begin ULetheActivatableWidget Interface
 	virtual void WidgetControllerSet_Implementation() override;
-	//~ End of ULetheUserWidget Interface
+	//~ End of ULetheActivatableWidget Interface
 
 protected:
 	UPROPERTY(meta = (BindWidget))

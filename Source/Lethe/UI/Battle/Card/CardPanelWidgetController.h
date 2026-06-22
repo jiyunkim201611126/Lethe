@@ -74,6 +74,10 @@ public:
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
+	void UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const;
+	void HandleLeftMouseButtonClickedInWorldSection() const;
+	void ResetSelectedCharacter() const;
+
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;

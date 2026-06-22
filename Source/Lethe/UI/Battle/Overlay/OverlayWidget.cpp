@@ -20,6 +20,8 @@ void UOverlayWidget::NativeOnInitialized()
 	RegisterUIActionBinding(FBindUIActionArgs(Keyboard6, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard6)));
 	RegisterUIActionBinding(FBindUIActionArgs(Keyboard7, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard7)));
 	RegisterUIActionBinding(FBindUIActionArgs(Keyboard8, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard8)));
+	RegisterUIActionBinding(FBindUIActionArgs(Keyboard9, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard9)));
+	RegisterUIActionBinding(FBindUIActionArgs(Keyboard0, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard0)));
 }
 
 TOptional<FUIInputConfig> UOverlayWidget::GetDesiredInputConfig() const

@@ -41,7 +41,7 @@ public:
 	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
 	void OnWheeled(const float AttributeWidgetSize) const;
-	void HandleLeftMouseButtonClickedOnWorld();
+	void HandleLeftMouseButtonClickedInWorldSection();
 	void ResetSelectedCharacter();
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;

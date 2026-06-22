@@ -4,7 +4,6 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
-#include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 
 void UCardPanelWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
@@ -117,6 +116,30 @@ void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySyste
 	if (LethePlayerController)
 	{
 		LethePlayerController->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
+	}
+}
+
+void UCardPanelWidgetController::UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->SetMouseOnWorldSection(bIsMouseInWorldSection);
+	}
+}
+
+void UCardPanelWidgetController::HandleLeftMouseButtonClickedInWorldSection() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->HandleLeftMouseButtonClickedInWorldSection();
+	}
+}
+
+void UCardPanelWidgetController::ResetSelectedCharacter() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->ResetSelectedCharacter();
 	}
 }
 

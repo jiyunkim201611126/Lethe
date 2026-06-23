@@ -18,13 +18,12 @@ class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
 class ULetheHUD;
 class ULetheWidgetController;
-class UPlayerAbilityContextComponent;
+class UPlayerAbilityRequestComponent;
 class UPreviewCoordinatorComponent;
 struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 struct FSavedCard;
 
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressedSignature, const int32 /* InNumber */);
 DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
@@ -41,9 +40,8 @@ public:
 	ULetheWidgetController* InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
 
-	void OnNumberKeyPressed(const int32 InNumber) const;
 	void OnWheeled(const float AttributeWidgetSize) const;
-	void OnLeftMouseButtonClickedOnWorld();
+	void HandleLeftMouseButtonClickedInWorldSection();
 	void ResetSelectedCharacter();
 	void ToggleMovePreview();
 	void RefreshMovePreview() const;
@@ -51,7 +49,7 @@ public:
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
 	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
-	void SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection);
+	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const;
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
@@ -76,7 +74,6 @@ private:
 	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
 
 public:
-	FOnNumberKeyPressedSignature OnNumberKeyPressedDelegate;
 	FOnCancelCardSelectSignature OnCancelCardSelectCancelDelegate;
 	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
@@ -94,12 +91,12 @@ private:
 	TObjectPtr<UPreviewCoordinatorComponent> PreviewCoordinatorComponent;
 
 	UPROPERTY()
-	TObjectPtr<UPlayerAbilityContextComponent> PlayerAbilityContextComponent;
+	TObjectPtr<UPlayerAbilityRequestComponent> PlayerAbilityRequestComponent;
 
 	EPhaseState CurrentPhaseState = EPhaseState::None;
 	FDelegateHandle OnPhaseStateChangedHandle;
 	
-	uint8 bMouseOnCardUseSection : 1 = false;
+	uint8 bMouseOnWorldSection : 1 = false;
 	
 	/** CDO를 캐싱할 멤버변수기 때문에 템플릿에도 const를 붙여줍니다. */
 	TWeakObjectPtr<const ULetheCardAbility> SelectedCardAbility;

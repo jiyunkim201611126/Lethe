@@ -121,7 +121,7 @@ void AArrowRenderer::DrawCardPreviewArrow(const AActor* SourceActor, const TArra
 
 void AArrowRenderer::DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVector>>& MovePathLocations)
 {
-	DeactivateArrow();
+	DeactivateMovePreviewArrow();
 
 	// SplineMeshComponent를 필요한 만큼 생성합니다.
 	int32 RequiredMeshCount = 0;
@@ -170,17 +170,6 @@ void AArrowRenderer::DrawMovePreviewArrow(TMap<APlayerCharacterBase*, TArray<FVe
 	}
 }
 
-void AArrowRenderer::DeactivateArrow()
-{
-	DeactivateCardPreviewArrow();
-
-	for (USplineMeshComponent* SplineMeshComponent : MovePreviewSplineMeshComponents)
-	{
-		SplineMeshComponent->SetVisibility(false);
-	}
-
-}
-
 void AArrowRenderer::DeactivateCardPreviewArrow()
 {
 	Spline->ClearSplinePoints(false);
@@ -200,7 +189,14 @@ void AArrowRenderer::DeactivateCardPreviewArrow()
 			ArrowHeadComponent->SetVisibility(false);
 		}
 	}
+}
 
+void AArrowRenderer::DeactivateMovePreviewArrow()
+{
+	for (USplineMeshComponent* SplineMeshComponent : MovePreviewSplineMeshComponents)
+	{
+		SplineMeshComponent->SetVisibility(false);
+	}
 }
 
 void AArrowRenderer::SetAllSplinePointsType(const ESplinePointType::Type PointType) const

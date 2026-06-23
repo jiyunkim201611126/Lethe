@@ -107,6 +107,13 @@ void UGASManagerComponent::OnDied() const
 	ASC->AddLooseGameplayTag(LetheGameplayTags.State_Character_Dead, 1);
 }
 
+bool UGASManagerComponent::IsDead() const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	const ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
+	return ASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead);
+}
+
 void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const
 {
 	check(IsValid(AbilitySystemComponent));
@@ -125,12 +132,9 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const EPhaseState MyPhaseState = GetTeamSide() == ETeamSide::Player ? EPhaseState::PlayerTurnPhase : EPhaseState::EnemyTurnPhase;
-	if (OldPhase == MyPhaseState)
-	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
-	}
-	else if (NewPhase == MyPhaseState)
+	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	
+	if (NewPhase == EPhaseState::EnemyTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

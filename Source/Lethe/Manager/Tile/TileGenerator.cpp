@@ -10,10 +10,6 @@
 
 namespace TileGeneratorInternal
 {
-	//타일과 타일 사이의 간격
-	static constexpr float TileWidthInterval = 173.205f;
-	static constexpr float TileHeightInterval = 150.f;
-
 	//크기 만큼의 좌표 영역을 반환
 	void GetCoordFromRange(const FCubeCoord& CenterCoord, TArray<FCubeCoord>& OutCoordList, const int32 Width, const int32 Height)
 	{
@@ -32,16 +28,6 @@ namespace TileGeneratorInternal
 				OutCoordList.Add(CenterCoord + FCubeCoord(Q, R));
 			}
 		}
-	}
-
-	//Cube좌표를 World좌표로 전환
-	FVector CubeCoordToWorldCoord(const FCubeCoord& Coord)
-	{
-		// 언리얼은 왼손 좌표계로, 검지가 X축, 중지가 Y축, 엄지가 Z축에 해당합니다.
-		const float WorldX = TileHeightInterval * (-Coord.R);
-		const float WorldY = TileWidthInterval * (Coord.Q + Coord.R * 0.5f);
-
-		return FVector(WorldX, WorldY, 0.f);
 	}
 
 	template <typename BFSConditionFunc, typename SelectConditionFunc>
@@ -423,20 +409,18 @@ namespace TileGeneratorInternal
 	}
 
 	//타일 생성
-	void MakeTileActor(UWorld* World, TMap<FCubeCoord, FTileData>& TileDataMap, TMap<int32, FRoomData>& RoomDataMap, const FStageData* StageData)
+	void MakeTileActor(UWorld* World, TMap<FCubeCoord, FTileData>& TileDataMap, TMap<int32, FRoomData>& RoomDataMap, const FStageData* StageData, TMap<FCubeCoord, TArray<FSoftObjectPath>>& OutResult)
 	{
 		TMap<FCubeCoord, TArray<TWeakObjectPtr<ATile>>> TilesByCoord;
 		
 		for (auto& Pair : TileDataMap)
 		{
-			FVector WorldPosition = CubeCoordToWorldCoord(Pair.Key);
-
 			TArray<ATile*> NonTopTiles;
 			NonTopTiles.Reserve(Pair.Value.Floor - 1);
 			
 			for (int32 Floor = 1; Floor <= Pair.Value.Floor; Floor++)
 			{
-				WorldPosition.Z += 40.f;
+				FVector WorldPosition = FCubeCoord::CubeCoordToWorldCoord(Pair.Key, Floor);
 				
 				ATile* TileActor = World->SpawnActor<ATile>(StageData->TileBP, WorldPosition, FRotator::ZeroRotator);
 
@@ -450,7 +434,7 @@ namespace TileGeneratorInternal
 				TArray<UStaticMesh*> TileMeshes;
 				TileMeshes.Reserve(7);
 				ETileMeshType MeshKey = ETileMeshType::Main;
-				
+								
 				// 꼭대기 층이 아닌 모든 경우에, key + 1을 하여 해당 메쉬의 Under 버전으로 변경 
 				if (Floor < Pair.Value.Floor)
 				{
@@ -520,6 +504,17 @@ namespace TileGeneratorInternal
 					
 						NonTopTiles.Empty();
 					}
+					
+					//PCG
+					TArray<FSoftObjectPath> MeshPaths;
+					MeshPaths.Reserve(7);
+					
+					for (auto& StaticMesh : TileMeshes)
+					{
+						MeshPaths.Add(FSoftObjectPath(StaticMesh));
+					}
+					
+					OutResult.FindOrAdd(Pair.Key).Append(MeshPaths);
 				}
 				else
 				{
@@ -556,6 +551,7 @@ bool FTileGenerator::GenerateTileMap(UWorld* World, const FStageData* StageData,
 	
 	OutResult.TileDataMap.Reset();
 	OutResult.RoomDataMap.Reset();
+	OutResult.MeshPathMap.Reset();
 
 	if (!World || !StageData || !StageInitData)
 	{
@@ -580,7 +576,7 @@ bool FTileGenerator::GenerateTileMap(UWorld* World, const FStageData* StageData,
 	TileGeneratorInternal::InitMapData(OutResult.TileDataMap, StageInitData);
 	TileGeneratorInternal::MakeFloorData(OutResult.TileDataMap, &RandomStream, StageInitData);
 	TileGeneratorInternal::MakeEventData(OutResult.TileDataMap, OutResult.RoomDataMap, &RandomStream, StageInitData);
-	TileGeneratorInternal::MakeTileActor(World, OutResult.TileDataMap, OutResult.RoomDataMap, StageData);
+	TileGeneratorInternal::MakeTileActor(World, OutResult.TileDataMap, OutResult.RoomDataMap, StageData, OutResult.MeshPathMap);
 
 	return true;
 }

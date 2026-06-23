@@ -33,7 +33,7 @@ void UAnimNotify_LetheGameplayCue::Notify(USkeletalMeshComponent* MeshComp, UAni
 		return;
 	}
 
-	FCueDataContext RuntimeCueDataContext = CueDataContext;
+	FCueDataPayload RuntimeCueDataContext = CueDataContext;
 	if (RuntimeCueDataContext.Locations.IsEmpty())
 	{
 		RuntimeCueDataContext.Locations.Add(OwnerActor->GetActorLocation());

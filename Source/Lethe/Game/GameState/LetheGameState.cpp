@@ -127,7 +127,7 @@ void ALetheGameState::ProcessCurrentEnemyPlan()
 	if (!SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		ShouldGoCombatPhase() ? GoDrawPhase() : GoPlayerMovePhase();
+		HasAnyCombatEnemy() ? GoDrawPhase() : GoPlayerMovePhase();
 		return;
 	}
 
@@ -167,7 +167,7 @@ void ALetheGameState::OnFinishActivationQueue()
 	}
 }
 
-bool ALetheGameState::ShouldGoCombatPhase() const
+bool ALetheGameState::HasAnyCombatEnemy() const
 {
 	return !CurrentCombatEnemies.IsEmpty();
 }
@@ -192,9 +192,18 @@ void ALetheGameState::EnqueuePlayerAbilityActivationData(FAbilityActivationData&
 	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(MoveTemp(ActivationData), bStartImmediately);
 }
 
-void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
+void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 {
-	OnCardUseResolved.Execute(HandIndex, bSuccess);
+	OnCardUseResolved.ExecuteIfBound(HandIndex, bSuccess);
+
+	// PlayerMovePhase에 카드를 사용했고, 전투 중인 적이 하나라도 있다면 DrawPhase로 직행합니다.
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		if (HasAnyCombatEnemy())
+		{
+			GoDrawPhase();
+		}
+	}
 }
 
 void ALetheGameState::StartActivatePlayerMoveAbilities() const
@@ -222,12 +231,12 @@ void ALetheGameState::OnAbilityActivationFailed() const
 	AbilityResolverComponent->OnAbilityActivationFailed();
 }
 
-void ALetheGameState::OnResolvePlayerMove(AActor* MovedCharacter) const
+void ALetheGameState::NotifyPlayerMoveResolved(AActor* MovedCharacter) const
 {
 	OnPlayerMoveResolved.ExecuteIfBound(MovedCharacter);
 }
 
-void ALetheGameState::OnResolveEnemyPlanMove()
+void ALetheGameState::NotifyEnemyPlanMoveResolved()
 {
 	LETHE_LOG(LogLetheGameState, Log, "On Enemy Plan Move Resolved");
 	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
@@ -276,4 +285,19 @@ TArray<AActor*> ALetheGameState::GetPlayerCharacters() const
 		TempPlayerCharacters.Add(Cast<AActor>(PlayerCharacter.GetObject()));
 	}
 	return TempPlayerCharacters;
+}
+
+bool ALetheGameState::IsBattlePhase() const
+{
+	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
+	{
+		return HasAnyCombatEnemy();
+	}
+
+	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	{
+		return false;
+	}
+
+	return true;
 }

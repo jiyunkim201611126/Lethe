@@ -39,14 +39,14 @@ struct FCardInitParams
 	const UCardDefinitionData* CardDefinition = nullptr;
 
 	FSavedCard SavedCard;
-	
+
 	UPROPERTY()
 	UCardViewData* CardViewData = nullptr;
 };
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
+DECLARE_DELEGATE(FOnAbilitySystemReferencesUpdated);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
-DECLARE_DELEGATE_OneParam(FOnNumberKeyPressed, const int32);
 DECLARE_DELEGATE(FOnCardSelectCanceled);
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
 
@@ -57,6 +57,7 @@ class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
 
 public:
 	//~ Begin ULetheWidgetController Interface
+	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams) override;
 	virtual void BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS) override;
 	//~ End of ULetheWidgetController Interface
 
@@ -64,8 +65,6 @@ public:
 	virtual void BeginDestroy() override;
 	//~ End of UObject Interface
 
-	FVector2D GetCardSize() const;
-	
 	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
 
 	void GoPlayerTurnPhase() const;
@@ -75,17 +74,20 @@ public:
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
+	void UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const;
+	void HandleLeftMouseButtonClickedInWorldSection() const;
+	void ResetSelectedCharacter() const;
+
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
-	void OnNumberKeyPressed(int32 InNumber) const;
 	void OnCancelCardSelect() const;
 	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
+	FOnAbilitySystemReferencesUpdated OnAbilitySystemReferencesUpdatedDelegate;
 	FOnPhaseStateChanged OnPhaseStateChangedDelegate;
-	FOnNumberKeyPressed OnNumberKeyPressedDelegate;
 	FOnCardSelectCanceled OnCardSelectCanceledDelegate;
 	FOnUseCardResolved OnUseCardResolvedDelegate;
 
@@ -95,7 +97,7 @@ protected:
 
 private:
 	uint8 bInitialized : 1 = false;
-	
+
 	UPROPERTY()
 	TObjectPtr<ALethePlayerController> LethePlayerController;
 

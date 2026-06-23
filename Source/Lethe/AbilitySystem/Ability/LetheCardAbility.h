@@ -47,7 +47,7 @@ struct FGameplayEffectPreviewData
 };
 
 /**
- * 해당 프로젝트에서 Card는 Ability를 표현하는 UMG 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
+ * 해당 프로젝트에서 Card는 Ability를 표현하는 수단이며, Ability는 해당 카드를 사용함으로 수행되는 캐릭터의 동작입니다.
  */
 UCLASS()
 class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
@@ -77,9 +77,19 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End of UGameplayAbility Interface
+	
+	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
+	void ActiveFailed();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnApplyEffect(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
+	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
+	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
+	
+	virtual void ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
+	
+	UFUNCTION(BlueprintImplementableEvent, meta = (ToolTip = "Ability가 발동되어 실제로 동작이 트리거됐을 때 호출됩니다. Effect 적용 시점이 아닌, Ability의 동작이 기준입니다."))
+	void OnEffectTriggered(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
+	
+	void ResetCachedValues();
 	
 	template<typename T>
 	T* GetEffectApplier()
@@ -95,13 +105,6 @@ protected:
 		}
 		return nullptr;
 	}
-	
-	/**
-	 * 매개변수로 들어온 GameplayEffectApplier 클래스가 갖고 있는 GameplayEffectContextHandle을 가져오는 함수입니다.
-	 * 반드시 Card가 소유하고 있는 GameplayEffectApplier를 사용해야 합니다.
-	 */ 
-	UFUNCTION(BlueprintPure, Category = "Effect")
-	FGameplayEffectContextHandle GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const;
 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetRangeDescription() const;
@@ -111,24 +114,17 @@ protected:
 
 private:
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
-
+	
 	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
 	UFUNCTION()
-	void OnEventReceived(FGameplayEventData Payload);
-
-	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
-	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const;
-	void ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
-	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const;
-	void ActiveFailed();
-
-	void ResetCachedValues();
+	void OnEventReceived(FGameplayEventData InPayload);
 	
 protected:
 	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effect")
 	TArray<TObjectPtr<UGameplayEffectApplier>> EffectAppliers;
 
+	/** 갖고 있는 EffectAppliers를 CachedTargetActors 중 누구에게, 무엇을 적용할지 결정하는 정책입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TArray<FEffectApplyPolicy> EffectApplyPolicies;
 
@@ -141,10 +137,11 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;
+	
+	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 
 private:
 	TWeakObjectPtr<const ATile> CachedCenterTargetTile;
-	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 
 #if WITH_EDITOR
 public:

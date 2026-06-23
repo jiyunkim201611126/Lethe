@@ -55,7 +55,7 @@ public:
 
 	/** 플레이어 캐릭터의 이동을 성공적으로 마친 경우 호출하는 함수입니다. */
 	UFUNCTION(BlueprintCallable)
-	void OnResolvePlayerMove(AActor* MovedCharacter) const;
+	void NotifyPlayerMoveResolved(AActor* MovedCharacter) const;
 
 	/**
 	 * Enemy Plan 단계에서 MoveAbility가 끝났거나, MoveAbility를 사용할 필요가 없을 때 호출합니다.
@@ -63,7 +63,7 @@ public:
 	 * 만약 적이 MoveAbility를 연속으로 발동한다면 문제가 생길 수 있으나, 프로젝트 정책상 그럴 일이 없어 현재 해결해두지 않았습니다.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void OnResolveEnemyPlanMove();
+	void NotifyEnemyPlanMoveResolved();
 
 	void OnPlanTimerEnded();
 
@@ -74,6 +74,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	TArray<AActor*> GetPlayerCharacters() const;
+
+	bool IsBattlePhase() const;
 
 protected:
 	//~ Begin AActor Interface
@@ -87,9 +89,9 @@ private:
 	void ProcessCurrentEnemyPlan();
 	void OnFinishActivationQueue();
 
-	bool ShouldGoCombatPhase() const;
+	bool HasAnyCombatEnemy() const;
 
-	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
+	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
 
 public:
 	FOnChangePhaseState OnChangePhaseState;

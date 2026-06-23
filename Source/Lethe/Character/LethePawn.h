@@ -40,9 +40,6 @@ protected:
 private:
 	void Move(const FInputActionValue& InputActionValue);
 	void Zoom(const FInputActionValue& InputActionValue);
-	void NumberKeyPressed(const FInputActionValue& InputActionValue);
-	void LeftMouseButtonClicked();
-	void RightMouseButtonClicked();
 	void SpaceKeyPressed();
 
 protected:
@@ -63,15 +60,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> MouseWheelAction;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> NumberAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> LeftMouseButtonClickAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> RightMouseButtonClickAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> SpaceAction;

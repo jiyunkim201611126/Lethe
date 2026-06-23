@@ -26,5 +26,5 @@ protected:
 	FGameplayTag GameplayCueTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GameplayCue")
-	FCueDataContext CueDataContext;
+	FCueDataPayload CueDataContext;
 };

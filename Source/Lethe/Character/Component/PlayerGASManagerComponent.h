@@ -20,8 +20,11 @@ public:
 
 protected:
 	virtual void InitUI(const TArray<UUserWidget*>& AttributeWidgets) override;
-	
-	virtual void OnPlanPhaseStarted() const override;
+
+	virtual void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const override;
+
+private:
+	void ApplyTurnStartRecovery() const;
 
 protected:
 	/** 턴 시작 시 Cost와 Mana를 회복하는 GameplayEffect입니다. */

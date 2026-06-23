@@ -97,6 +97,7 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
 	case ETryAbilityActivationResult::FailedNotActivated:
+	case ETryAbilityActivationResult::EmptyTile:
 	default:
 		ProcessAllPlayerAbilitiesFailed();
 		break;
@@ -288,8 +289,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			switch (CurrentActivationCharacterTeamSide)
 			{
 			case ETeamSide::Player:
-				// 플레이어는 유효한 대상이 없는 상태로 여기까지 왔다면 로직 오류입니다.
-				return ETryAbilityActivationResult::FailedLogicError;
+				// 플레이어가 유효한 대상 없이 여기까지 진입했다면, 사망 등의 이유로 TargetTile 위치에 대상이 없는 경우입니다.
+				return ETryAbilityActivationResult::EmptyTile;
 			case ETeamSide::Enemy:
 				{
 					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.

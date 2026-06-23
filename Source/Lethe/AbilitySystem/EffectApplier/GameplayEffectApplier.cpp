@@ -5,38 +5,30 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 
-void UGameplayEffectApplier::CancelAbility()
+void UGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility, FGameplayEffectContextHandle& OutHandle) const
 {
-	EffectContextHandle.Clear();
+	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
+	if (const UAbilitySystemComponent* OwningASC = OwningAbility->GetAbilitySystemComponentFromActorInfo())
+	{
+		OutHandle.Clear();
+		OutHandle = OwningASC->MakeEffectContext();
+		OutHandle.SetAbility(OwningAbility);
+	}
 }
 
-void UGameplayEffectApplier::EndAbility()
-{
-	EffectContextHandle.Clear();
-}
-
-bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, TArray<FGameplayEffectSpecHandle>& OutSpecHandles)
+bool UGameplayEffectApplier::TryMakeSpecHandlesWithContextHandle(const UGameplayAbility* OwningAbility, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	UAbilitySystemComponent* ASC = OwningAbility->GetAbilitySystemComponentFromActorInfo();
 	if (!ASC)
 	{
 		return false;
 	}
-	
-	MakeEffectContextHandle(OwningAbility);
-	return TryMakeSpecHandles(ASC, EffectContextHandle, OutSpecHandles);
-}
 
-void UGameplayEffectApplier::MakeEffectContextHandle(const UGameplayAbility* OwningAbility)
-{
-	// EffectContext를 생성 및 할당합니다.
-	// MakeEffectContext 함수는 자동으로 OwnerActor를 Instigator로, AvatarActor를 EffectCauser로 할당합니다.
-	if (const UAbilitySystemComponent* OwningASC = OwningAbility->GetAbilitySystemComponentFromActorInfo())
+	if (InContextHandle.IsValid())
 	{
-		EffectContextHandle.Clear();
-		EffectContextHandle = OwningASC->MakeEffectContext();
-		EffectContextHandle.SetAbility(OwningAbility);
+		return TryPrepareSpecHandles(ASC, InContextHandle, OutSpecHandles);
 	}
+	return false;
 }
 
 TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetEffectClass() const
@@ -49,17 +41,12 @@ const FGameplayTag& UGameplayEffectApplier::GetEffectApplierTag() const
 	return EffectApplierTag;
 }
 
-FGameplayEffectContextHandle UGameplayEffectApplier::GetEffectContextHandle() const
-{
-	return EffectContextHandle;
-}
-
 TSubclassOf<UGameplayEffect> UGameplayEffectApplier::GetSourcePreviewEffectClass() const
 {
 	return nullptr;
 }
 
-bool UGameplayEffectApplier::TryMakeSpecHandlesForSourcePreview(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool UGameplayEffectApplier::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	return false;
 }

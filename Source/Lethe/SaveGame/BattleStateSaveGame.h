@@ -15,10 +15,10 @@ struct FSavedAttributeValue
 	GENERATED_BODY()
 
 	UPROPERTY()
-	FName AttributeSetName;
+	FName AttributeSetName = NAME_None;
 
 	UPROPERTY()
-	FName AttributeName;
+	FName AttributeName = NAME_None;
 
 	UPROPERTY()
 	float BaseValue = 0.f;
@@ -30,7 +30,7 @@ struct FSavedBattleCharacterState
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int64 CharacterId;
+	int64 CharacterId = INDEX_NONE;
 
 	UPROPERTY()
 	TArray<FSavedAttributeValue> Attributes;

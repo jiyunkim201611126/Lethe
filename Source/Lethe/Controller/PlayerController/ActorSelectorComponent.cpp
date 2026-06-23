@@ -204,7 +204,6 @@ bool UActorSelectorComponent::TryGetTilesByRangeFromTile(const ATile* Tile, cons
 		{
 			if (QueryType == ETileRangeQueryType::PlayerMove)
 			{
-				// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
 				if (!NextTileData || !NextTileData->TopTile.IsValid())
 				{
 					return false;
@@ -212,10 +211,12 @@ bool UActorSelectorComponent::TryGetTilesByRangeFromTile(const ATile* Tile, cons
 				
 				if (const AActor* ActorOnNextTile = TileManagerSubsystem->GetActorOnTile(NextTileData->TopTile.Get()))
 				{
+					// 아군 캐릭터가 아닌 액터가 서있다면 해당 좌표는 이동 가능 경로에서 제외됩니다.
 					if (const ICombatInterface* CombatInterface = Cast<ICombatInterface>(ActorOnNextTile))
 					{
 						return CombatInterface->GetTeamSide() == ETeamSide::Player;
 					}
+					return false;
 				}
 			}
 			return true;

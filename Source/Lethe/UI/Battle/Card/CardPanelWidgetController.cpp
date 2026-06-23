@@ -4,8 +4,15 @@
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Controller/PlayerController/LethePlayerController.h"
-#include "Lethe/Data/Card/CardViewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
+
+void UCardPanelWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
+{
+	Super::SetWidgetControllerParams(WidgetControllerParams);
+
+	// AbilitySystemReferences가 갱신되었음을 알려줍니다.
+	OnAbilitySystemReferencesUpdatedDelegate.ExecuteIfBound();
+}
 
 void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC, ULetheAttributeSet* AS, UPlayerAttributeSet* PAS)
 {
@@ -16,16 +23,15 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	if (!bInitialized)
 	{
 		LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
-		
-		LethePlayerController->OnNumberKeyPressedDelegate.BindUObject(this, &ThisClass::OnNumberKeyPressed);
+
 		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
-		
+
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		check(LetheGameState.IsValid());
-		
+
 		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		
+
 		bInitialized = true;
 	}
 }
@@ -54,11 +60,6 @@ void UCardPanelWidgetController::BeginDestroy()
 	{
 		LetheGameState->OnChangePhaseState.RemoveAll(this);
 	}
-}
-
-FVector2D UCardPanelWidgetController::GetCardSize() const
-{
-	return CardViewData->CardSize;
 }
 
 bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
@@ -118,14 +119,33 @@ void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySyste
 	}
 }
 
+void UCardPanelWidgetController::UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->SetMouseOnWorldSection(bIsMouseInWorldSection);
+	}
+}
+
+void UCardPanelWidgetController::HandleLeftMouseButtonClickedInWorldSection() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->HandleLeftMouseButtonClickedInWorldSection();
+	}
+}
+
+void UCardPanelWidgetController::ResetSelectedCharacter() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->ResetSelectedCharacter();
+	}
+}
+
 void UCardPanelWidgetController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
 {
 	OnPhaseStateChangedDelegate.Broadcast(OldState, NewState);
-}
-
-void UCardPanelWidgetController::OnNumberKeyPressed(const int32 InNumber) const
-{
-	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
 }
 
 void UCardPanelWidgetController::OnCancelCardSelect() const

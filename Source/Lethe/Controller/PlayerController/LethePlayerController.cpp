@@ -4,7 +4,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "ActorSelectorComponent.h"
-#include "PlayerAbilityContextComponent.h"
+#include "PlayerAbilityRequestComponent.h"
 #include "PreviewCoordinatorComponent.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
@@ -23,7 +23,7 @@ ALethePlayerController::ALethePlayerController()
 	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
 	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
 
-	PlayerAbilityContextComponent = CreateDefaultSubobject<UPlayerAbilityContextComponent>("PlayerAbilityContextComponent");
+	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>("PlayerAbilityRequestComponent");
 
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -43,11 +43,6 @@ ULetheWidgetController* ALethePlayerController::InitEnemyUI(UAbilitySystemCompon
 	return LetheHUD->CreateEnemyAttributeWidgetController(this, ASC, AS);
 }
 
-void ALethePlayerController::OnNumberKeyPressed(const int32 InNumber) const
-{
-	OnNumberKeyPressedDelegate.ExecuteIfBound(InNumber);
-}
-
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 {
 	if (OnCameraHeightChangedDelegate.IsBound())
@@ -56,7 +51,7 @@ void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 	}
 }
 
-void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
+void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 {
 	if (SelectedCardAbility.IsValid())
 	{
@@ -90,7 +85,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		// 선택했던 캐릭터가 서있던 타일을 선택한 경우(제자리 클릭) 들어오는 분기입니다.
 		if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 		{
-			PlayerAbilityContextComponent->RemoveReservedMove(SelectedCharacter.Get());
+			PlayerAbilityRequestComponent->RemoveReservedMove(SelectedCharacter.Get());
 			RefreshMovePreview();
 		}
 		ResetSelectedCharacter();
@@ -127,7 +122,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		if (!bIsSelectingCharacter)
 		{
 			// 이동 타일을 예약합니다.
-			PlayerAbilityContextComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
+			PlayerAbilityRequestComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
 			ResetSelectedCharacter();
 			RefreshMovePreview();
 		}
@@ -136,7 +131,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 		{
 			// 이동 가능한 타일을 모두 가져옵니다.
 			TArray<ATile*> OutMovableTiles;
-			if (!PlayerAbilityContextComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles))
+			if (!PlayerAbilityRequestComponent->TryGetMovableTiles(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles))
 			{
 				ResetSelectedCharacter();
 				break;
@@ -150,7 +145,7 @@ void ALethePlayerController::OnLeftMouseButtonClickedOnWorld()
 			else
 			{
 				// 이동을 요청합니다.
-				PlayerAbilityContextComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
+				PlayerAbilityRequestComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
 				ResetSelectedCharacter();
 			}
 		}
@@ -180,31 +175,31 @@ void ALethePlayerController::RefreshMovePreview() const
 {
 	if (!bIsReservedMovePreviewingMode)
 	{
-		ArrowRenderer->DeactivateArrow();
+		ArrowRenderer->DeactivateMovePreviewArrow();
 		return;
 	}
 	
 	TMap<APlayerCharacterBase*, TArray<FVector>> MovePathLocations;
-	if (PlayerAbilityContextComponent->TryGetMovePathLocations(MovePathLocations))
+	if (PlayerAbilityRequestComponent->TryGetMovePathLocations(MovePathLocations))
 	{
 		ArrowRenderer->DrawMovePreviewArrow(MovePathLocations);
 	}
 	else
 	{
-		ArrowRenderer->DeactivateArrow();
+		ArrowRenderer->DeactivateMovePreviewArrow();
 	}
 }
 
 void ALethePlayerController::StartResolvePlayerMoves() const
 {
-	PlayerAbilityContextComponent->StartResolveMoves();
+	PlayerAbilityRequestComponent->StartResolveMoves();
 }
 
 void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 {
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
-		PlayerAbilityContextComponent->OnPlayerReservedMoveResolved(MovedCharacter);
+		PlayerAbilityRequestComponent->OnPlayerReservedMoveResolved(MovedCharacter);
 		RefreshMovePreview();
 	}
 }
@@ -266,7 +261,7 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	SelectedCardOwnerASC = nullptr;
 	ActorSelector->UnhighlightActorsByAbility();
 	ActorSelector->UnhighlightActorByMouse();
-	ArrowRenderer->DeactivateArrow();
+	ArrowRenderer->DeactivateCardPreviewArrow();
 	if (OnCancelCardSelectCancelDelegate.IsBound())
 	{
 		OnCancelCardSelectCancelDelegate.Broadcast();
@@ -274,9 +269,9 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	return false;
 }
 
-void ALethePlayerController::SetMouseOnCardUseSection(const bool bInMouseOnCardUseSection)
+void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSection)
 {
-	bMouseOnCardUseSection = bInMouseOnCardUseSection;
+	bMouseOnWorldSection = bInMouseOnWorldSection;
 }
 
 void ALethePlayerController::BeginPlay()
@@ -303,8 +298,6 @@ void ALethePlayerController::BeginPlay()
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnNumberKeyPressedDelegate.Unbind();
-	
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
@@ -322,11 +315,11 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 	{
 	case EPhaseState::EnemyPlanningPhase:
 		// 비전투 페이즈로 진입 시, 예약해뒀던 모든 이동이 큐에 들어갈 수 있도록 상태를 활성화합니다.
-		PlayerAbilityContextComponent->SetAllReservedMovesWaitingForQueue();
+		PlayerAbilityRequestComponent->SetAllReservedMovesWaitingForQueue();
 		break;
 	case EPhaseState::DrawPhase:
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
-		PlayerAbilityContextComponent->ResetReservedMoveData();
+		PlayerAbilityRequestComponent->ResetReservedMoveData();
 		if (bIsReservedMovePreviewingMode)
 		{
 			ToggleMovePreview();
@@ -344,7 +337,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	FTileAndActor OutTileAndActor;
 	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
 	
-	if (SelectedCharacter.IsValid() && bMouseOnCardUseSection)
+	if (SelectedCharacter.IsValid() && bMouseOnWorldSection)
 	{
 		// 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
 		if (OutTileAndActor.Tile)
@@ -356,7 +349,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		return;
 	}
 
-	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnCardUseSection)
+	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnWorldSection)
 	{
 		// 선택된 카드가 있는 경우 들어오는 분기입니다.
 		const ATile* CurrentTile = OutTileAndActor.Tile;
@@ -377,11 +370,11 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 
 			// 사용 범위를 벗어난 경우 프리뷰 및 Arrow를 비활성화합니다.
 			PreviewCoordinatorComponent->StopAllPreview();
-			ArrowRenderer->DeactivateArrow();
+			ArrowRenderer->DeactivateCardPreviewArrow();
 		}
 	}
 
-	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnCardUseSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnWorldSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
 		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
@@ -416,10 +409,7 @@ void ALethePlayerController::OnOtherTileDetected(const TArray<AActor*>& CurrentA
 	{
 		// 빈 타일에 마우스를 올린 경우 들어오는 분기입니다.
 		PreviewCoordinatorComponent->StopAllPreview();
-		if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
-		{
-			ArrowRenderer->DeactivateArrow();
-		}
+		ArrowRenderer->DeactivateCardPreviewArrow();
 	}
 }
 
@@ -430,7 +420,7 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
 {
-	if (!PlayerAbilityContextComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
@@ -443,7 +433,7 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
-	PlayerAbilityContextComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
+	PlayerAbilityRequestComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
 }
 
 ULetheHUD* ALethePlayerController::GetLetheHUD() const

@@ -79,20 +79,35 @@ void ULetheAbilitySystemLibrary::ResolveDamageRules(const UAbilitySystemComponen
 	// 절대 Out 데이터 안에 IncomingDamage를 넣어선 안 됩니다.
 }
 
-void ULetheAbilitySystemLibrary::SetCueContextToEffectContext(const FCueDataContext& CueDataContext, FGameplayEffectContextHandle& OutHandle)
+void ULetheAbilitySystemLibrary::SetCueContextToEffectContext(const FCueDataPayload& CueDataContext, FGameplayEffectContextHandle& OutHandle)
 {
 	if (FLetheGameplayEffectContext* EffectContext = static_cast<FLetheGameplayEffectContext*>(OutHandle.Get()))
 	{
-		EffectContext->SetCueDataContext(CueDataContext);
+		EffectContext->SetCueDataPayload(CueDataContext);
 	}
 }
 
-bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextHandle& EffectContextHandle, FCueDataContext& OutCueDataContext)
+bool ULetheAbilitySystemLibrary::GetCueDataContext(const FGameplayEffectContextHandle& EffectContextHandle, FCueDataPayload& OutCueDataContext)
 {
 	if (const FLetheGameplayEffectContext* EffectContext = static_cast<const FLetheGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
-		OutCueDataContext = EffectContext->GetCueDataContext();
+		OutCueDataContext = EffectContext->GetCueDataPayload();
 		return true;
 	}
 	return false;
+}
+
+TArray<FRotator> ULetheAbilitySystemLibrary::EvenlySpacedRotators(const FVector& Forward, const FVector& Axis, const float Spread, const int32 NumOfRotators)
+{
+	const FVector LeftOfSpread = Forward.RotateAngleAxis(-Spread / 2.f, Axis);
+	const float DeltaSpread = NumOfRotators > 1 ? Spread / (NumOfRotators - 1) : 0.f;
+
+	TArray<FRotator> ResultRotators;
+	ResultRotators.Reserve(NumOfRotators);
+	for (int32 Index = 0; Index < NumOfRotators; ++Index)
+	{
+		const FVector Direction = NumOfRotators > 1 ? LeftOfSpread.RotateAngleAxis(DeltaSpread * Index, FVector::UpVector) : Forward;
+		ResultRotators.Add(Direction.Rotation());
+	}
+	return ResultRotators;
 }

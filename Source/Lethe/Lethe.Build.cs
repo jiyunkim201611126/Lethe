@@ -19,12 +19,15 @@ public class Lethe : ModuleRules
 			"UMG",
 			"Slate",
 			"SlateCore",
+			"CommonUI",
+			"CommonInput",
 			
 			"ModularGameplay",
 			
 			"GameplayAbilities",
 			
 			"AIModule",
+			"PCG",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -32,9 +35,11 @@ public class Lethe : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"Niagara",
-			
+
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+
+			"AssetRegistry",
 		});
 
 		// Uncomment if you are using Slate UI

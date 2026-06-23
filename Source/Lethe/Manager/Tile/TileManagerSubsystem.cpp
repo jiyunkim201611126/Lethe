@@ -4,6 +4,7 @@
 
 #include "RoomManagerSubsystem.h"
 #include "TileGenerator.h"
+#include "PCGPointGenerator.h"
 #include "Lethe/Util.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/Stage/StageData.h"
@@ -40,6 +41,11 @@ void UTileManagerSubsystem::MakeNewTileMap(const EStageType StageType)
 				{
 					RoomManagerSubsystem->SetRoomData(MoveTemp(GenerationResult.RoomDataMap));
 				}
+				
+				//PCG Point 생성
+				UPCGPointArrayData* PCGPoints = PCGPointGenerator::GeneratePCGPoint(TileDataMap, GenerationResult.MeshPathMap);
+				//PCG 데이터 기반으로 DA 생성
+				PCGPointGenerator::BakePCGDataAsset(PCGPoints);
 			}
 		}
 	}

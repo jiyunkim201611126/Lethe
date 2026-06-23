@@ -71,7 +71,7 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSpecHandlesForSourcePreview(SourceASC, PreviewContextHandle, SpecHandles))
+			if (EffectApplier->TryMakeSourcePreviewSpecHandles(SourceASC, PreviewContextHandle, SpecHandles))
 			{
 				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
@@ -113,7 +113,7 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 				PreviewContextHandle.SetAbility(this);
 				
 				TArray<FGameplayEffectSpecHandle> SpecHandles;
-				if (EffectApplier->TryMakeSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
+				if (EffectApplier->TryPrepareSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 				{
 					TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
 				}
@@ -191,18 +191,6 @@ bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent*
 		return true;
 	}
 	return false;
-}
-
-FGameplayEffectContextHandle ULetheCardAbility::GetContextHandle(const TSubclassOf<UGameplayEffectApplier>& ApplierClass) const
-{
-	for (const UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier && EffectApplier->GetClass() == ApplierClass)
-		{
-			return EffectApplier->GetEffectContextHandle();
-		}
-	}
-	return FGameplayEffectContextHandle();
 }
 
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -341,11 +329,11 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	return true;
 }
 
-void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
+void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 {
 	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
 	{
-		if (Payload.EventTag.MatchesTagExact(EffectApplyPolicy.MontageEventTag))
+		if (InPayload.EventTag.MatchesTagExact(EffectApplyPolicy.MontageEventTag))
 		{
 			// 수신한 이벤트 태그와 EffectApplyPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
 			TArray<AActor*> TargetActors;
@@ -365,28 +353,28 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData Payload)
 			{
 				for (AActor* TargetActor : OutTargetActors)
 				{
-					ApplyEffectsByPolicy(EffectApplyPolicy, TargetActor);
+					ExecuteEffectAppliersByPolicy(EffectApplyPolicy, TargetActor);
 				}
-				OnApplyEffect(EffectApplyPolicy.MontageEventTag, OutTargetActors);
+				OnEffectTriggered(EffectApplyPolicy.MontageEventTag, OutTargetActors);
 			}
 			return;
 		}
 	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	if (Payload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
+	if (InPayload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
 	{
 		ResetCachedValues();
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 	}
 }
 
-void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& SourceTargetActors, TArray<AActor*>& OutTargetActors) const
+void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const
 {
 	if (EffectApplyPolicy.TargetActorIndices.Contains(FEffectApplyPolicy::AllIndices))
 	{
 		// 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
-		for (AActor* TargetActor : SourceTargetActors)
+		for (AActor* TargetActor : CandidateTargetActors)
 		{
 			if (TargetActor)
 			{
@@ -399,14 +387,14 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& Effect
 	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
 	for (const int32 TargetActorIndex : EffectApplyPolicy.TargetActorIndices)
 	{
-		if (SourceTargetActors.IsValidIndex(TargetActorIndex) && SourceTargetActors[TargetActorIndex])
+		if (CandidateTargetActors.IsValidIndex(TargetActorIndex) && CandidateTargetActors[TargetActorIndex])
 		{
-			OutTargetActors.AddUnique(SourceTargetActors[TargetActorIndex]);
+			OutTargetActors.AddUnique(CandidateTargetActors[TargetActorIndex]);
 		}
 	}
 }
 
-void ULetheCardAbility::ApplyEffectsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
+void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
 {
 	if (!TargetActor)
 	{
@@ -459,14 +447,6 @@ void ULetheCardAbility::ResetCachedValues()
 
 void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			EffectApplier->EndAbility();
-		}
-	}
-	
 	ResetCachedValues();
 	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -475,14 +455,6 @@ void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	// 프로젝트 특성상 한 번 발동된 Ability가 Cancel될 수는 없으나 일단 구현해두었습니다.
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
-	{
-		if (EffectApplier)
-		{
-			EffectApplier->CancelAbility();
-		}
-	}
-	
 	ResetCachedValues();
 	
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);

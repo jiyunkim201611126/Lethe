@@ -53,10 +53,30 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 	}
 }
 
-void UPlayerGASManagerComponent::OnPlanPhaseStarted() const
+void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
 {
-	Super::OnPlanPhaseStarted();
+	if (NewPhase == EPhaseState::EnemyPlanningPhase)
+	{
+		OnPlanPhaseStarted();
+		ApplyTurnStartRecovery();
+	}
+
+	if (NewPhase == EPhaseState::DrawPhase)
+	{
+		ApplyTurnStartRecovery();
+	}
 	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
+	
+	if (NewPhase == EPhaseState::PlayerMovePhase || NewPhase == EPhaseState::PlayerTurnPhase)
+	{
+		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
+	}
+}
+
+void UPlayerGASManagerComponent::ApplyTurnStartRecovery() const
+{
 	if (!TurnStartRecovery)
 	{
 		return;

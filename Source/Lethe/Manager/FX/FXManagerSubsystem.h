@@ -39,6 +39,9 @@ struct FSoundAsyncPlayData
 	GENERATED_BODY()
 
 	UPROPERTY()
+	bool bIs2D = false;
+
+	UPROPERTY()
 	FVector Location = FVector::ZeroVector;
 
 	UPROPERTY()
@@ -117,6 +120,8 @@ public:
 	/** 사운드를 비동기 로드할 때 사용하는 함수입니다. */
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation = FRotator::ZeroRotator, const float VolumeMultiplier = 1.f, const float PitchMultiplier = 1.f);
+	UFUNCTION(BlueprintCallable, Category = "FX")
+	void AsyncPlaySound2D(const FGameplayTag& SoundTag, const float VolumeMultiplier, const float PitchMultiplier);
 	void AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback);
 
 	/** 나이아가라를 비동기 로드할 때 사용하는 함수입니다. */

@@ -29,6 +29,7 @@ ALetheCharacterBase::ALetheCharacterBase(const FObjectInitializer& ObjectInitial
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Block);
 
 	GetMesh()->SetGenerateOverlapEvents(false);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -102,6 +103,11 @@ void ALetheCharacterBase::OnDamageTaken()
 void ALetheCharacterBase::Die()
 {
 	GASManagerComponent->OnDied();
+}
+
+bool ALetheCharacterBase::IsDead()
+{
+	return GASManagerComponent->IsDead();
 }
 
 UAnimMontage* ALetheCharacterBase::GetMoveAnimation()
@@ -221,7 +227,7 @@ void ALetheCharacterBase::HighlightActorByMouse_Implementation()
 void ALetheCharacterBase::HighlightActorTransparentByMouse_Implementation()
 {
 	GetMesh()->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(OutlineColorTransparent);
+	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
 }
 
 void ALetheCharacterBase::UnhighlightActorByMouse_Implementation()

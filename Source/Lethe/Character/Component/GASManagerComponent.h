@@ -41,16 +41,18 @@ public:
 	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;
 	
 	void OnDied() const;
+	bool IsDead() const;
 
 protected:
 	virtual void InitUI(const TArray<UUserWidget*>& AttributeWidgets);
 	
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
-	virtual void OnPlanPhaseStarted() const;
+	
+	virtual void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
+	
+	void OnPlanPhaseStarted() const;
 
 private:
-	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
-
 	ETeamSide GetTeamSide() const;
 
 protected:

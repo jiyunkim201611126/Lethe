@@ -63,6 +63,23 @@ public:
 	{
 		return (FMath::Abs(A.Q - B.Q) + FMath::Abs(A.R - B.R) + FMath::Abs(A.S - B.S)) / 2;
 	}
+	
+	//CubeCoord를 기반으로 월드 좌표를 반환
+	static FVector CubeCoordToWorldCoord(const FCubeCoord& Coord, const int32 Floor = 0)
+	{
+		// 언리얼은 왼손 좌표계로, 검지가 X축, 중지가 Y축, 엄지가 Z축에 해당합니다.
+		const float WorldX = TileHeightInterval * (-Coord.R);
+		const float WorldY = TileWidthInterval * (Coord.Q + Coord.R * 0.5f);
+		const float WorldZ = TileFloorInterval * Floor;
+
+		return FVector(WorldX, WorldY, WorldZ);
+	}
+	
+private:
+	//타일과 타일 사이의 간격
+	static constexpr float TileWidthInterval = 173.205f;
+	static constexpr float TileHeightInterval = 150.f;
+	static constexpr float TileFloorInterval = 40.f;
 };
 
 FORCEINLINE uint32 GetTypeHash(const FCubeCoord& Coord)

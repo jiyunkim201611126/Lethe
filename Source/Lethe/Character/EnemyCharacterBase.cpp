@@ -62,7 +62,7 @@ void AEnemyCharacterBase::Die()
 	Destroy();
 }
 
-void AEnemyCharacterBase::StartCombat() const
+void AEnemyCharacterBase::NotifyNoiseHeard() const
 {
 	if (ALetheAIController* AIController = GetController<ALetheAIController>())
 	{

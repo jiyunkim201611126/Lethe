@@ -39,6 +39,7 @@ void ALethePawn::PossessedBy(AController* NewController)
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(InputContext, 0);
+			Subsystem->AddMappingContext(UIInputContext, 0);
 		}
 	}
 }

@@ -7,10 +7,14 @@
 #include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
 #include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "Input/CommonUIInputTypes.h"
+#include "Lethe/UI/Battle/Card/ViewCardDetailWidget.h"
+#include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
 
-void UOverlayWidget::NativeOnInitialized()
+void UOverlayWidget::NativeOnActivated()
 {
-	Super::NativeOnInitialized();
+	Super::NativeOnActivated();
+
+	CardPanel->OnStartViewCardDetail.BindUObject(this, &ThisClass::OnStartViewCardDetail);
 
 	RegisterUIActionBinding(FBindUIActionArgs(Keyboard1, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard1)));
 	RegisterUIActionBinding(FBindUIActionArgs(Keyboard2, false, FSimpleDelegate::CreateUObject(this, &ThisClass::HandleKeyboard2)));
@@ -36,6 +40,12 @@ TOptional<FUIInputConfig> UOverlayWidget::GetDesiredInputConfig() const
 void UOverlayWidget::WidgetControllerSet_Implementation()
 {
 	CardPanel->SetWidgetController(ULetheAbilitySystemLibrary::GetCardPanelWidgetController(this));
+	ViewCardDetail->SetWidgetController(ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(this));
+}
+
+void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const
+{
+	ViewCardDetail->StartViewDetail(CardActor);
 }
 
 void UOverlayWidget::HandleKeyboard1() const

@@ -13,6 +13,7 @@ class ALetheHUD;
 class UAbilitySystemComponent;
 class UCardPanelWidgetController;
 class UOverlayWidgetController;
+class UViewCardDetailWidgetController;
 struct FGameplayAttribute;
 
 UCLASS()
@@ -26,6 +27,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | WidgetController", meta = (WorldContext = "WorldContextObject"))
 	static UCardPanelWidgetController* GetCardPanelWidgetController(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | WidgetController", meta = (WorldContext = "WorldContextObject"))
+	static UViewCardDetailWidgetController* GetViewCardDetailWidgetController(const UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Ability")
 	static bool CanUseAbilityByActorAndFloorGap(const AActor* SourceActor, const AActor* TargetActor, const int32 MaxFloorGap);

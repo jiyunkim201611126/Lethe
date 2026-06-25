@@ -3,7 +3,6 @@
 #include "CardPanelWidget.h"
 
 #include "CardPanelWidgetController.h"
-#include "ViewCardDetailWidget.h"
 #include "Components/Button.h"
 #include "InputCoreTypes.h"
 #include "Lethe/Actor/Card/CardStage.h"
@@ -56,8 +55,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
-
-		ViewCardDetail->SetWidgetController(WidgetController);
 
 		if (CardStageClass && !CardStage)
 		{
@@ -118,7 +115,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 	if (!CanRouteMouseInput())
 	{
 		DownPositions.Remove(InMouseEvent.GetEffectingButton());
-		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+		return MakeMouseUpReply();
 	}
 	
 	FVector2D DownPosition;
@@ -317,7 +314,7 @@ void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSucce
 
 void UCardPanelWidget::StartViewCardDetail(const ACardActor* CardActor) const
 {
-	ViewCardDetail->StartViewDetail(CardActor);
+	OnStartViewCardDetail.ExecuteIfBound(CardActor);
 }
 
 bool UCardPanelWidget::SetCardSelected(const bool bCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
@@ -372,7 +369,7 @@ void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPh
 
 FReply UCardPanelWidget::MakeMouseUpReply() const
 {
-	return DownPositions.IsEmpty() ? FReply::Handled().ReleaseMouseCapture() : FReply::Handled();
+	return DownPositions.IsEmpty() ? FReply::Handled().ReleaseMouseCapture() : FReply::Unhandled().ReleaseMouseCapture();
 }
 
 bool UCardPanelWidget::CanRouteMouseInput() const

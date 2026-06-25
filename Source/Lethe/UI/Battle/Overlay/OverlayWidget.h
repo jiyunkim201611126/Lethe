@@ -6,8 +6,10 @@
 #include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "OverlayWidget.generated.h"
 
+class ACardActor;
 class UCardPanelWidget;
 class UInputAction;
+class UViewCardDetailWidget;
 
 UCLASS()
 class LETHE_API UOverlayWidget : public ULetheActivatableWidget
@@ -15,11 +17,8 @@ class LETHE_API UOverlayWidget : public ULetheActivatableWidget
 	GENERATED_BODY()
 
 protected:
-	//~ Begin UUserWidget Interface
-	virtual void NativeOnInitialized() override;
-	//~ End of UUserWidget Interface
-
 	//~ Begin UCommonActivatableWidget Interface
+	virtual void NativeOnActivated() override;
 	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
 	//~ End of UCommonActivatableWidget Interface
 	
@@ -28,6 +27,8 @@ protected:
 	//~ End of ULetheActivatableWidget Interface
 
 private:
+	void OnStartViewCardDetail(const ACardActor* CardActor) const;
+	
 	void HandleKeyboard1() const;
 	void HandleKeyboard2() const;
 	void HandleKeyboard3() const;
@@ -42,6 +43,9 @@ private:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCardPanelWidget> CardPanel;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> Keyboard1;

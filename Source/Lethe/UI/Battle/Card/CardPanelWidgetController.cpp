@@ -111,14 +111,6 @@ void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* Ow
 	}
 }
 
-void UCardPanelWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
-{
-	if (LethePlayerController)
-	{
-		LethePlayerController->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
-	}
-}
-
 void UCardPanelWidgetController::UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const
 {
 	if (LethePlayerController)

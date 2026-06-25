@@ -63,6 +63,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> SpaceAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputMappingContext> UIInputContext;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	float MoveSpeed = 10.f;

@@ -16,6 +16,7 @@ class ULetheWidgetController;
 class UOverlayWidget;
 class UOverlayWidgetController;
 class UPlayerAttributeWidgetController;
+class UViewCardDetailWidgetController;
 struct FWidgetControllerParams;
 
 UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
@@ -30,10 +31,8 @@ public:
 	ULetheWidgetController* CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 	
 	UOverlayWidgetController* GetOrCreateOverlayWidgetController();
-	UCardPanelWidgetController* GetOrCreateCardWidgetController();
-	
-	UOverlayWidgetController* GetOverlayWidgetController() const;
-	UCardPanelWidgetController* GetCardPanelWidgetController() const;
+	UCardPanelWidgetController* GetOrCreateCardPanelWidgetController();
+	UViewCardDetailWidgetController* GetOrCreateViewCardDetailWidgetController();
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
@@ -44,6 +43,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UCardPanelWidgetController> CardPanelWidgetControllerClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UViewCardDetailWidgetController> ViewCardDetailWidgetControllerClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UAttributeWidgetController> AttributeWidgetControllerClass;
@@ -60,4 +62,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
+
+	UPROPERTY()
+	TObjectPtr<UViewCardDetailWidgetController> ViewCardDetailWidgetController;
 };

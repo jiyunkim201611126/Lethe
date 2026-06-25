@@ -2,8 +2,8 @@
 
 #include "ViewCardDetailWidget.h"
 
-#include "CardPanelWidgetController.h"
 #include "CardWidget.h"
+#include "ViewCardDetailWidgetController.h"
 #include "Lethe/Actor/Card/CardActor.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
@@ -16,17 +16,12 @@ void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 		DetailCardWidget->SetViewDetail(ViewDetailData);
 
 		FText OutDescriptionText;
-		CardPanelWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
+		ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
 
 		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 		CardDescriptionTextBlock->SetText(FinalText);
 	}
 	ActivateWidget();
-}
-
-void UViewCardDetailWidget::EndViewDetail()
-{
-	DeactivateWidget();
 }
 
 FReply UViewCardDetailWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -38,7 +33,7 @@ FReply UViewCardDetailWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		EndViewDetail();
+		DeactivateWidget();
 	}
 	return FReply::Handled();
 }
@@ -54,5 +49,5 @@ TOptional<FUIInputConfig> UViewCardDetailWidget::GetDesiredInputConfig() const
 
 void UViewCardDetailWidget::WidgetControllerSet_Implementation()
 {
-	CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
+	ViewCardDetailWidgetController = Cast<UViewCardDetailWidgetController>(WidgetController);
 }

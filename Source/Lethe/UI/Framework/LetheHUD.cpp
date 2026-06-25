@@ -8,6 +8,7 @@
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/UI/Battle/Attribute/AttributeWidgetController.h"
 #include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
+#include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidget.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidgetController.h"
 
@@ -25,9 +26,13 @@ void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponen
 	OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 	OverlayWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
 	
-	GetOrCreateCardWidgetController();
+	GetOrCreateCardPanelWidgetController();
 	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 	CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+
+	GetOrCreateViewCardDetailWidgetController();
+	ViewCardDetailWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+	ViewCardDetailWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
 
 	if (!OverlayWidget)
 	{
@@ -79,7 +84,7 @@ UOverlayWidgetController* ULetheHUD::GetOrCreateOverlayWidgetController()
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ULetheHUD::GetOrCreateCardWidgetController()
+UCardPanelWidgetController* ULetheHUD::GetOrCreateCardPanelWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{
@@ -88,12 +93,11 @@ UCardPanelWidgetController* ULetheHUD::GetOrCreateCardWidgetController()
 	return CardPanelWidgetController;
 }
 
-UOverlayWidgetController* ULetheHUD::GetOverlayWidgetController() const
+UViewCardDetailWidgetController* ULetheHUD::GetOrCreateViewCardDetailWidgetController()
 {
-	return OverlayWidgetController;
-}
-
-UCardPanelWidgetController* ULetheHUD::GetCardPanelWidgetController() const
-{
-	return CardPanelWidgetController;
+	if (!ViewCardDetailWidgetController)
+	{
+		ViewCardDetailWidgetController = NewObject<UViewCardDetailWidgetController>(this, ViewCardDetailWidgetControllerClass);
+	}
+	return ViewCardDetailWidgetController;
 }

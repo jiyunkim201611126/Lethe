@@ -18,9 +18,9 @@ UOverlayWidgetController* ULetheAbilitySystemLibrary::GetOverlayWidgetController
 	{
 		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			if (const ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
 			{
-				return LetheHUD->GetOverlayWidgetController();
+				return LetheHUD->GetOrCreateOverlayWidgetController();
 			}
 		}
 	}
@@ -33,9 +33,24 @@ UCardPanelWidgetController* ULetheAbilitySystemLibrary::GetCardPanelWidgetContro
 	{
 		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
 		{
-			if (const ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
 			{
-				return LetheHUD->GetCardPanelWidgetController();
+				return LetheHUD->GetOrCreateCardPanelWidgetController();
+			}
+		}
+	}
+	return nullptr;
+}
+
+UViewCardDetailWidgetController* ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(const UObject* WorldContextObject)
+{
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
+		{
+			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
+			{
+				return LetheHUD->GetOrCreateViewCardDetailWidgetController();
 			}
 		}
 	}

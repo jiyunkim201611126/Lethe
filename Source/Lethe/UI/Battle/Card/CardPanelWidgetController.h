@@ -72,8 +72,6 @@ public:
 	bool RequestTurnEnd() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const;
 
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
-
 	void UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const;
 	void HandleLeftMouseButtonClickedInWorldSection() const;
 	void ResetSelectedCharacter() const;

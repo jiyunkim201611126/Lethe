@@ -7,10 +7,11 @@
 #include "ViewCardDetailWidget.generated.h"
 
 class ACardActor;
-class UCardPanelWidgetController;
 class UCardWidget;
+class UInputAction;
 class ULetheRichTextBlock;
 class UOverlay;
+class UViewCardDetailWidgetController;
 
 UCLASS(Abstract)
 class LETHE_API UViewCardDetailWidget : public ULetheActivatableWidget
@@ -19,14 +20,13 @@ class LETHE_API UViewCardDetailWidget : public ULetheActivatableWidget
 
 public:
 	void StartViewDetail(const ACardActor* InCardActor);
-	void EndViewDetail();
 
 protected:
 	//~ Begin UUserWidget Interface
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	//~ End of UUserWidget Interface
-
+	
 	//~ Begin UCommonActivatableWidget Interface
 	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
 	//~ End of UCommonActivatableWidget Interface
@@ -44,5 +44,5 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<UCardPanelWidgetController> CardPanelWidgetController;
+	TObjectPtr<UViewCardDetailWidgetController> ViewCardDetailWidgetController;
 };

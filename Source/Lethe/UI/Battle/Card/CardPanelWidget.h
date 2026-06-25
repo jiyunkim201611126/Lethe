@@ -14,10 +14,11 @@ class UCanvasPanel;
 class UCardPanelWidgetController;
 class ULetheAbilitySystemComponent;
 class ULetheImage;
-class UViewCardDetailWidget;
 struct FGameplayTag;
 struct FCardInitParams;
 struct FSavedCard;
+
+DECLARE_DELEGATE_OneParam(FOnStartViewCardDetail, const ACardActor*);
 
 UCLASS(Abstract)
 class LETHE_API UCardPanelWidget : public ULetheUserWidget
@@ -78,6 +79,9 @@ private:
 	/** 에디터 플레이 중 F8로 이젝트 시, CardPanelWidget이 모든 마우스 인풋을 Capture해서 카메라를 돌릴 수 없는 현상을 해결하기 위한 함수입니다. */
 	bool CanRouteMouseInput() const;
 
+public:
+	FOnStartViewCardDetail OnStartViewCardDetail;
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCanvasPanel> RootCanvasPanel;
@@ -90,9 +94,6 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> TurnEndButton;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ACardStage> CardStageClass;

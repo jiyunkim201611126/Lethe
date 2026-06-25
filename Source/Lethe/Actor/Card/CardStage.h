@@ -9,11 +9,11 @@
 #include "Lethe/SaveGame/SavedCardTypes.h"
 #include "CardStage.generated.h"
 
-class UBoxComponent;
 enum class ECardAction : uint8;
 class ACardActor;
-class UCardContainerManager;
 class ADeckBoxes;
+class UBoxComponent;
+class UCardContainerManager;
 class ULetheAbilitySystemComponent;
 class USceneCaptureComponent2D;
 struct FCardInitParams;

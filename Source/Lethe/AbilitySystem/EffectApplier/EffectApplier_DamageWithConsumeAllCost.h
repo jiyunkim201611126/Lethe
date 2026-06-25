@@ -15,8 +15,6 @@ class LETHE_API UEffectApplier_DamageWithConsumeAllCost : public UEffectApplier_
 	GENERATED_BODY()
 
 public:
-	UEffectApplier_DamageWithConsumeAllCost();
-	
 	//~ Begin FGameplayEffectApplier Interface
 	virtual bool TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const override;
 	

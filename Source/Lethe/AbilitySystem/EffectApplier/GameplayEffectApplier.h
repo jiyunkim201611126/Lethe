@@ -52,7 +52,8 @@ protected:
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> EffectClass;
-	
+
+	/** EffectApplyPolicy가 사용하는 태그입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag EffectApplierTag;
 };

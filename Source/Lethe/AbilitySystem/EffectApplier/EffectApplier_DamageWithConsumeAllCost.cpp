@@ -10,11 +10,6 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
-UEffectApplier_DamageWithConsumeAllCost::UEffectApplier_DamageWithConsumeAllCost()
-{
-	EffectApplierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("EffectApplier.Damage.WithConsumeAllCost")));
-}
-
 bool UEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
 	const AActor* SourceActor = SourceASC->GetAvatarActor();

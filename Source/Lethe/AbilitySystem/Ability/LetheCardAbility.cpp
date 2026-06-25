@@ -394,22 +394,6 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& Effect
 	}
 }
 
-void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
-{
-	if (!TargetActor)
-	{
-		return;
-	}
-
-	TArray<UGameplayEffectApplier*> OutEffectAppliers;
-	GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
-	
-	for (UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
-	{
-		EffectApplier->ApplyEffect(this, TargetActor);
-	}
-}
-
 void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const
 {
 	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
@@ -427,6 +411,22 @@ void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& Effe
 		{
 			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectApplyPolicy가 존재합니다. Ability: %s", *GetName());
 		}
+	}
+}
+
+void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
+{
+	if (!TargetActor)
+	{
+		return;
+	}
+
+	TArray<UGameplayEffectApplier*> OutEffectAppliers;
+	GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
+	
+	for (UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+	{
+		EffectApplier->ApplyEffect(this, TargetActor);
 	}
 }
 

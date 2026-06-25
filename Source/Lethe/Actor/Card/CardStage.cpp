@@ -40,14 +40,14 @@ void ACardStage::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::HandlePhaseStateChanged);
+		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 	}
 
 	CardContainerManager = NewObject<UCardContainerManager>(this);
-	UseRequestedCards.Reserve(MAX_HAND_COUNT);
-
 	DeckBoxes = GetWorld()->SpawnActor<ADeckBoxes>(DeckBoxesClass);
 	DeckBoxes->SetActorTransform(GetActorTransform());
+	
+	UseRequestedCards.Reserve(MAX_HAND_COUNT);
 
 	CaptureComponent->ShowOnlyActors.Add(DeckBoxes);
 }
@@ -197,25 +197,16 @@ bool ACardStage::HandleLeftMouseButtonClickedInWorldSection()
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
 	if (HandIndex == INDEX_NONE)
 	{
-		CancelSelect();
 		return false;
 	}
 
 	// 사용 요청된 카드임을 기록하고 콜백 함수를 호출합니다.
 	UseRequestedCards.Add(HandIndex, CurrentSelectedCard);
 	OnUseCardRequested.Execute(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetSavedCard(), HandIndex);
-
-	// 사용 요청이 완료되었으므로 카드 선택은 취소해둡니다.
-	if (CurrentSelectedCard)
-	{
-		CurrentSelectedCard = nullptr;
-		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-		return true;
-	}
-	return false;
+	return true;
 }
 
-void ACardStage::HandleKeyboardEvent(const int32 Number)
+void ACardStage::HandleKeyboardEvent(const int32 Number) const
 {
 	switch (CurrentPhaseState)
 	{
@@ -231,17 +222,7 @@ void ACardStage::HandleKeyboardEvent(const int32 Number)
 	}
 }
 
-bool ACardStage::TryViewDetail(const FVector2D& TargetUV) const
-{
-	if (ACardActor* CardActor = GetCardActorAtUV(TargetUV))
-	{
-		CardActor->HandleCardMouseEvent(ECardMouseEvent::RightMouseButtonUp);
-		return true;
-	}
-	return false;
-}
-
-void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void ACardStage::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
 {
 	CurrentPhaseState = NewState;
 
@@ -277,7 +258,20 @@ void ACardStage::HandlePhaseStateChanged(const EPhaseState OldState, const EPhas
 	}
 }
 
-void ACardStage::HandleCancelSelectedCard()
+void ACardStage::OnCardSelected(const int32 HandIndex)
+{
+	const auto& Hands = CardContainerManager->GetCurrentHands();
+	if (Hands.IsValidIndex(HandIndex))
+	{
+		CurrentSelectedCard = Hands[HandIndex];
+		if (CurrentSelectedCard)
+		{
+			CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
+		}
+	}
+}
+
+void ACardStage::OnCancelSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{
@@ -286,7 +280,7 @@ void ACardStage::HandleCancelSelectedCard()
 	}
 }
 
-void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess)
+void ACardStage::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 {
 	ACardActor* CardActor = UseRequestedCards.FindRef(HandIndex);
 	if (!CardActor)
@@ -317,7 +311,17 @@ void ACardStage::HandleResolveUseCard(const int32 HandIndex, const bool bSuccess
 	UseRequestedCards.Remove(HandIndex);
 }
 
-void ACardStage::HandleTurnEndButtonClicked() const
+bool ACardStage::TryViewDetail(const FVector2D& TargetUV) const
+{
+	if (ACardActor* CardActor = GetCardActorAtUV(TargetUV))
+	{
+		CardActor->HandleCardMouseEvent(ECardMouseEvent::RightMouseButtonUp);
+		return true;
+	}
+	return false;
+}
+
+void ACardStage::OnTurnEndButtonClicked() const
 {
 	switch (CurrentPhaseState)
 	{
@@ -347,13 +351,8 @@ void ACardStage::HandleTurnEndButtonClicked() const
 	}
 }
 
-void ACardStage::CancelSelect()
+void ACardStage::ResetSelectedDeckBox()
 {
-	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
-	{
-		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-		return;
-	}
 	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
 	{
 		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
@@ -417,12 +416,12 @@ void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardA
 	}
 }
 
-void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction)
+void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction) const
 {
 	switch (CardAction)
 	{
 	case ECardAction::Select:
-		SelectCard(CardActor);
+		RequestSelectCard(CardActor);
 		break;
 	case ECardAction::ViewDetail:
 		OnViewCardDetailRequested.ExecuteIfBound(CardActor);
@@ -432,7 +431,7 @@ void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const EC
 	}
 }
 
-void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
+void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number) const
 {
 	if (!CardContainerManager)
 	{
@@ -445,7 +444,7 @@ void ACardStage::OnKeyboardEventWhenDrawPhase(const int32 Number)
 	}
 }
 
-void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number)
+void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number) const
 {
 	if (!CardContainerManager)
 	{
@@ -458,7 +457,7 @@ void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number)
 		ACardActor* SelectingCard = CurrentHands[Number];
 		if (SelectingCard)
 		{
-			SelectCard(SelectingCard);
+			RequestSelectCard(SelectingCard);
 		}
 	}
 }
@@ -498,17 +497,11 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
 	}
 }
 
-void ACardStage::SelectCard(ACardActor* CardActor)
+void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 {
 	if (!CardActor || !CardContainerManager)
 	{
 		return;
-	}
-
-	// 기존에 선택된 카드가 있다면 우선 선택을 취소합니다.
-	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
-	{
-		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
 	}
 
 	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CardActor);
@@ -522,27 +515,11 @@ void ACardStage::SelectCard(ACardActor* CardActor)
 		return;
 	}
 
-	CurrentSelectedCard = CardActor;
-	if (CurrentSelectedCard && OnSelectCardRequested.IsBound())
-	{
-		if (OnSelectCardRequested.Execute(true, CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetCardTag()))
-		{
-			CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
-		}
-		else
-		{
-			OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-		}
-	}
+	OnSelectCardRequested.ExecuteIfBound(HandIndex, CardActor->GetOwnerASC(), CardActor->GetCardTag());
 }
 
 void ACardStage::OnDrawPhaseStarted() const
 {
-	if (OnSelectCardRequested.IsBound())
-	{
-		OnSelectCardRequested.Execute(false, nullptr, FGameplayTag());
-	}
-
 	if (CardContainerManager && CardContainerManager->AreAllDecksEmpty())
 	{
 		CardContainerManager->StopPreviewDeck(false);

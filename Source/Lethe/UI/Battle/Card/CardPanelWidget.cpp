@@ -21,7 +21,7 @@ void UCardPanelWidget::NativeDestruct()
 	{
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.Unbind();
 		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.Unbind();
-		CardPanelWidgetController->OnPhaseStateChangedDelegate.RemoveAll(this);
+		CardPanelWidgetController->OnCardSelectedDelegate.Unbind();
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.Unbind();
 		CardPanelWidgetController->OnUseCardResolvedDelegate.Unbind();
 	}
@@ -52,7 +52,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 	{
 		CardPanelWidgetController->OnAbilityUpdatedDelegate.BindUObject(this, &ThisClass::CreateCard);
 		CardPanelWidgetController->OnAbilitySystemReferencesUpdatedDelegate.BindUObject(this, &ThisClass::TryInitializeCardStage);
-		CardPanelWidgetController->OnPhaseStateChangedDelegate.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		CardPanelWidgetController->OnCardSelectedDelegate.BindUObject(this, &ThisClass::OnCardSelected);
 		CardPanelWidgetController->OnCardSelectCanceledDelegate.BindUObject(this, &ThisClass::OnCancelSelectedCard);
 		CardPanelWidgetController->OnUseCardResolvedDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
@@ -65,7 +65,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			if (CardStage)
 			{
 				CardStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
-				CardStage->OnSelectCardRequested.BindUObject(this, &ThisClass::SetCardSelected);
+				CardStage->OnSelectCardRequested.BindUObject(this, &ThisClass::OnSelectCardRequested);
 				CardStage->OnGoPlayerTurnPhaseRequested.BindUObject(this, &ThisClass::GoPlayerTurnPhase);
 				CardStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
 				CardStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
@@ -147,7 +147,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 		}
 		if (IsMouseInWorldSection(InMouseEvent))
 		{
-			// 카드 선택도 사용도 하지 않았으며 마우스는 월드 섹션에 있는 경우, PlayerController에게 좌클릭 입력을 내려줍니다.
+			// 카드 선택도 사용도 하지 않았으며 마우스는 월드 섹션에 있는 경우, WorldSection 내 마우스 입력 처리를 시작합니다.
 			const bool bHandled = CardStage->HandleLeftMouseButtonClickedInWorldSection();
 			if (!bHandled)
 			{
@@ -168,10 +168,20 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 			bHandled = CardStage->TryViewDetail(TargetUV);
 		}
 
-		// ViewDetail이 동작하지 않았다면 모든 선택 상태를 초기화합니다.
+		// ViewDetail이 동작하지 않았다면 카드 선택 취소를 시도합니다.
 		if (!bHandled)
 		{
-			CardStage->CancelSelect();
+			if (CardPanelWidgetController->IsCardSelected())
+			{
+				CardPanelWidgetController->ResetSelectedCard();
+				bHandled = true;
+			}
+		}
+
+		// 카드 선택 취소가 동작하지 않았다면 덱 박스 선택, 캐릭터 선택을 취소합니다.
+		if (!bHandled)
+		{
+			CardStage->ResetSelectedDeckBox();
 			if (CardPanelWidgetController)
 			{
 				CardPanelWidgetController->ResetSelectedCharacter();
@@ -296,11 +306,27 @@ void UCardPanelWidget::HandleKeyboardEvent(const int32 Number) const
 	}
 }
 
+void UCardPanelWidget::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+{
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->OnSelectCardRequested(HandIndex, OwnerASC, CardTag);
+	}
+}
+
+void UCardPanelWidget::OnCardSelected(const int32 HandIndex) const
+{
+	if (CardStage)
+	{
+		CardStage->OnCardSelected(HandIndex);
+	}
+}
+
 void UCardPanelWidget::OnCancelSelectedCard() const
 {
 	if (CardStage)
 	{
-		CardStage->HandleCancelSelectedCard();
+		CardStage->OnCancelSelectedCard();
 	}
 }
 
@@ -308,18 +334,13 @@ void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSucce
 {
 	if (CardStage)
 	{
-		CardStage->HandleResolveUseCard(HandIndex, bSuccess);
+		CardStage->OnResolveUseCard(HandIndex, bSuccess);
 	}
 }
 
 void UCardPanelWidget::StartViewCardDetail(const ACardActor* CardActor) const
 {
 	OnStartViewCardDetail.ExecuteIfBound(CardActor);
-}
-
-bool UCardPanelWidget::SetCardSelected(const bool bCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
-{
-	return CardPanelWidgetController && CardPanelWidgetController->SetCardSelected(bCardSelected, OwnerASC, CardTag);
 }
 
 void UCardPanelWidget::GoPlayerTurnPhase() const
@@ -355,15 +376,7 @@ void UCardPanelWidget::OnTurnEndButtonClicked()
 {
 	if (CardStage)
 	{
-		CardStage->HandleTurnEndButtonClicked();
-	}
-}
-
-void UCardPanelWidget::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
-{
-	if (CardStage)
-	{
-		CardStage->HandlePhaseStateChanged(OldState, NewState);
+		CardStage->OnTurnEndButtonClicked();
 	}
 }
 

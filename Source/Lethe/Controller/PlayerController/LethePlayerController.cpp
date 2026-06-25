@@ -204,24 +204,28 @@ void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 	}
 }
 
-bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
+void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
 {
 	if (!ArrowRenderer)
 	{
-		return false;
+		return;
 	}
+
+	// 기존에 선택된 카드가 있을 수 있으므로 먼저 선택을 취소합니다.
+	ResetSelectedCard();
 	
-	if (bInCardSelected && OwnerASC && CardTag.IsValid())
+	if (OwnerASC && CardTag.IsValid())
 	{
+		// 카드와 캐릭터는 동시에 선택될 수 없으므로 캐릭터 선택은 초기화합니다.
+		ResetSelectedCharacter();
+		
 		TArray<FGameplayAbilitySpec*> AbilitySpecs;
 		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
 		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
 		if (AbilitySpecs.IsEmpty())
 		{
-			return false;
+			return;
 		}
-		
-		ResetSelectedCharacter();
 		
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
@@ -235,7 +239,11 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
 				if (!bCanUse)
 				{
-					return SetCardSelected(false);
+					if (OnCancelCardSelectCancelDelegate.IsBound())
+					{
+						OnCancelCardSelectCancelDelegate.Broadcast();
+					}
+					return;
 				}
 				
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
@@ -254,11 +262,15 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 		TArray<ATile*> OutTargetTiles;
 		SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles);
 		ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
-		return true;
+
+		OnSelectCardDelegate.ExecuteIfBound(HandIndex);
 	}
-	
-	SelectedCardAbility = nullptr;
-	SelectedCardOwnerASC = nullptr;
+}
+
+void ALethePlayerController::ResetSelectedCard()
+{
+	SelectedCardAbility.Reset();
+	SelectedCardOwnerASC.Reset();
 	ActorSelector->UnhighlightActorsByAbility();
 	ActorSelector->UnhighlightActorByMouse();
 	ArrowRenderer->DeactivateCardPreviewArrow();
@@ -266,7 +278,6 @@ bool ALethePlayerController::SetCardSelected(const bool bInCardSelected, ULetheA
 	{
 		OnCancelCardSelectCancelDelegate.Broadcast();
 	}
-	return false;
 }
 
 void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSection)
@@ -418,12 +429,14 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex)
 {
 	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
+	// 사용 요청 결과에 관계 없이 선택했던 카드는 초기화합니다.
+	ResetSelectedCard();
 }
 
 void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const
@@ -439,4 +452,9 @@ void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemCom
 ULetheHUD* ALethePlayerController::GetLetheHUD() const
 {
 	return LetheHUD;
+}
+
+bool ALethePlayerController::IsCardSelected() const
+{
+	return SelectedCardAbility.IsValid();
 }

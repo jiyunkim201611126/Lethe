@@ -24,6 +24,7 @@ struct FGameplayAbilityActorInfo;
 struct FPreviewData;
 struct FSavedCard;
 
+DECLARE_DELEGATE_OneParam(FOnSelectCardSignature, const int32 /* HandIndex */);
 DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
@@ -48,13 +49,15 @@ public:
 	void StartResolvePlayerMoves() const;
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
-	bool SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
+	void ResetSelectedCard();
 	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex);
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
 	ULetheHUD* GetLetheHUD() const;
+	bool IsCardSelected() const;
 
 protected:
 	//~ Begin AActor Interface
@@ -74,6 +77,7 @@ private:
 	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
 
 public:
+	FOnSelectCardSignature OnSelectCardDelegate;
 	FOnCancelCardSelectSignature OnCancelCardSelectCancelDelegate;
 	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;

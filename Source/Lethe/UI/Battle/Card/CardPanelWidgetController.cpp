@@ -24,13 +24,12 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	{
 		LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
 
+		LethePlayerController->OnSelectCardDelegate.BindUObject(this, &ThisClass::OnSelectCard);
 		LethePlayerController->OnCancelCardSelectCancelDelegate.AddUObject(this, &ThisClass::OnCancelCardSelect);
 		LethePlayerController->OnResolveUseCardDelegate.BindUObject(this, &ThisClass::OnResolveUseCard);
 
 		LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 		check(LetheGameState.IsValid());
-
-		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
 
 		bInitialized = true;
 	}
@@ -53,22 +52,10 @@ void UCardPanelWidgetController::BeginDestroy()
 
 	if (LethePlayerController)
 	{
+		LethePlayerController->OnSelectCardDelegate.Unbind();
+		LethePlayerController->OnCancelCardSelectCancelDelegate.RemoveAll(this);
 		LethePlayerController->OnResolveUseCardDelegate.Unbind();
 	}
-
-	if (LetheGameState.IsValid())
-	{
-		LetheGameState->OnChangePhaseState.RemoveAll(this);
-	}
-}
-
-bool UCardPanelWidgetController::SetCardSelected(const bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
-{
-	if (LethePlayerController)
-	{
-		return LethePlayerController->SetCardSelected(bInCardSelected, OwnerASC, CardTag);
-	}
-	return false;
 }
 
 void UCardPanelWidgetController::GoPlayerTurnPhase() const
@@ -79,14 +66,6 @@ void UCardPanelWidgetController::GoPlayerTurnPhase() const
 	}
 }
 
-void UCardPanelWidgetController::StartResolvePlayerMoves() const
-{
-	if (LethePlayerController)
-	{
-		LethePlayerController->StartResolvePlayerMoves();
-	}
-}
-
 bool UCardPanelWidgetController::RequestTurnEnd() const
 {
 	if (LetheGameState.IsValid() && LethePlayerController)
@@ -94,21 +73,13 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 		// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 		if (!LetheGameState->IsResolvingPlayerAbility())
 		{
-			LethePlayerController->SetCardSelected(false);
+			LethePlayerController->OnSelectCardRequested(false);
 			LethePlayerController->ResetSelectedCharacter();
 			LetheGameState->GoEnemyTurnPhase();
 			return true;
 		}
 	}
 	return false;
-}
-
-void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
-{
-	if (LethePlayerController)
-	{
-		LethePlayerController->RequestUseCard(OwnerASC, SavedCard, InHandIndex);
-	}
 }
 
 void UCardPanelWidgetController::UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const
@@ -135,9 +106,50 @@ void UCardPanelWidgetController::ResetSelectedCharacter() const
 	}
 }
 
-void UCardPanelWidgetController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const
+void UCardPanelWidgetController::StartResolvePlayerMoves() const
 {
-	OnPhaseStateChangedDelegate.Broadcast(OldState, NewState);
+	if (LethePlayerController)
+	{
+		LethePlayerController->StartResolvePlayerMoves();
+	}
+}
+
+void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->OnSelectCardRequested(HandIndex, OwnerASC, CardTag);
+	}
+}
+
+void UCardPanelWidgetController::ResetSelectedCard() const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->ResetSelectedCard();
+	}
+}
+
+bool UCardPanelWidgetController::IsCardSelected() const
+{
+	if (LethePlayerController)
+	{
+		return LethePlayerController->IsCardSelected();
+	}
+	return false;
+}
+
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
+{
+	if (LethePlayerController)
+	{
+		LethePlayerController->RequestUseCard(OwnerASC, SavedCard, InHandIndex);
+	}
+}
+
+void UCardPanelWidgetController::OnSelectCard(const int32 HandIndex) const
+{
+	OnCardSelectedDelegate.ExecuteIfBound(HandIndex);
 }
 
 void UCardPanelWidgetController::OnCancelCardSelect() const

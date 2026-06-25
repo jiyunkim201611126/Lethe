@@ -20,7 +20,7 @@ struct FCardInitParams;
 struct FKey;
 
 DECLARE_DELEGATE_OneParam(FOnViewCardDetailRequested, const ACardActor*);
-DECLARE_DELEGATE_RetVal_ThreeParams(bool, FOnSelectCardRequested, bool, ULetheAbilitySystemComponent*, const FGameplayTag&);
+DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandIndex */, ULetheAbilitySystemComponent*, const FGameplayTag&);
 DECLARE_DELEGATE(FOnGoPlayerTurnPhaseRequested);
 DECLARE_DELEGATE(FOnStartResolvePlayerMovesRequested);
 DECLARE_DELEGATE_ThreeParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FSavedCard&, int32);
@@ -47,15 +47,14 @@ public:
 	void HandleCapturedMouseMove(const FVector2D& TargetUV) const;
 	void HandleCapturedMouseLeave() const;
 	bool HandleLeftMouseButtonClickedInWorldSection();
-	void HandleKeyboardEvent(int32 Number);
+	void HandleKeyboardEvent(int32 Number) const;
 
+	void OnCardSelected(const int32 HandIndex);
+	void OnCancelSelectedCard();
+	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
 	bool TryViewDetail(const FVector2D& TargetUV) const;
-
-	void HandlePhaseStateChanged(EPhaseState OldState, EPhaseState NewState);
-	void HandleCancelSelectedCard();
-	void HandleResolveUseCard(int32 HandIndex, bool bSuccess);
-	void HandleTurnEndButtonClicked() const;
-	void CancelSelect();
+	void OnTurnEndButtonClicked() const;
+	void ResetSelectedDeckBox();
 
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */
@@ -64,14 +63,15 @@ private:
 	bool TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitResult& OutHitResult) const;
 
 	void OnCardMouseEvent(ACardActor* CardActor, ECardAction CardAction);
-	void OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, ECardAction CardAction);
-	void OnKeyboardEventWhenDrawPhase(int32 Number);
-	void OnKeyboardEventWhenPlayerPhase(int32 Number);
+	void OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction) const;
+	void OnKeyboardEventWhenDrawPhase(const int32 Number) const;
+	void OnKeyboardEventWhenPlayerPhase(const int32 Number) const;
 
 	void UpdateAllCardLocations() const;
 
 	void TryDraw(ULetheAbilitySystemComponent* OwnerASC) const;
-	void SelectCard(ACardActor* CardActor);
+	void RequestSelectCard(ACardActor* CardActor) const;
+	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	void OnDrawPhaseStarted() const;
 
 public:

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/Data/PhaseData.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
 #include "CardPanelWidget.generated.h"
 
@@ -59,10 +58,11 @@ private:
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
+	void OnCardSelected(const int32 HandIndex) const;
 	void OnCancelSelectedCard() const;
 	void OnResolveUseCard(int32 HandIndex, bool bSuccess) const;
 	void StartViewCardDetail(const ACardActor* CardActor) const;
-	bool SetCardSelected(bool bCardSelected, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
 	void GoPlayerTurnPhase() const;
 	void StartResolvePlayerMoves() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 HandIndex) const;
@@ -70,8 +70,6 @@ private:
 
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
-
-	void OnPhaseStateChanged(EPhaseState OldState, EPhaseState NewState) const;
 
 	/** DownPositions가 비어있는 경우에만 마우스 캡쳐를 해제할 수 있도록 FReply를 만들어 반환합니다. */
 	FReply MakeMouseUpReply() const;

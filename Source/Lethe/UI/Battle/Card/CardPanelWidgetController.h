@@ -46,7 +46,7 @@ struct FCardInitParams
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_DELEGATE(FOnAbilitySystemReferencesUpdated);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPhaseStateChanged, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
+DECLARE_DELEGATE_OneParam(FOnCardSelected, const int32 /* HandIndex */);
 DECLARE_DELEGATE(FOnCardSelectCanceled);
 DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
 
@@ -65,27 +65,31 @@ public:
 	virtual void BeginDestroy() override;
 	//~ End of UObject Interface
 
-	bool SetCardSelected(bool bInCardSelected, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
-
 	void GoPlayerTurnPhase() const;
-	void StartResolvePlayerMoves() const;
 	bool RequestTurnEnd() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const;
-
+	
 	void UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const;
 	void HandleLeftMouseButtonClickedInWorldSection() const;
 	void ResetSelectedCharacter() const;
+	
+	void StartResolvePlayerMoves() const;
+	
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
+	void ResetSelectedCard() const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const;
+	
+	bool IsCardSelected() const;
 
 private:
 	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
-	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState) const;
+	void OnSelectCard(const int32 HandIndex) const;
 	void OnCancelCardSelect() const;
 	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;
 	FOnAbilitySystemReferencesUpdated OnAbilitySystemReferencesUpdatedDelegate;
-	FOnPhaseStateChanged OnPhaseStateChangedDelegate;
+	FOnCardSelected OnCardSelectedDelegate;
 	FOnCardSelectCanceled OnCardSelectCanceledDelegate;
 	FOnUseCardResolved OnUseCardResolvedDelegate;
 

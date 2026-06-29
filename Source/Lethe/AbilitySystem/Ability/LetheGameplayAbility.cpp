@@ -8,11 +8,6 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-FBFSRange ULetheGameplayAbility::GetAbilityRange() const
-{
-	return AbilityRange;
-}
-
 void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile* TargetTile)
 {
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())

@@ -13,7 +13,7 @@ UActorSelectorComponent::UActorSelectorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actors, const bool bTransparent)
+void UActorSelectorComponent::HighlightActorsByMouse(const TArray<AActor*>& Actors, const bool bIsTile)
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -48,8 +48,6 @@ void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actor
 		}
 	}
 
-	bool bIsTile = false;
-	TArray<AActor*> ActorsOnTile;
 	for (auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
 	{
 		if (!CurrentMouseHoveredActor)
@@ -57,37 +55,25 @@ void UActorSelectorComponent::HighlightActorByMouse(const TArray<AActor*>& Actor
 			continue;
 		}
 		
-		if (const ATile* Tile = Cast<ATile>(CurrentMouseHoveredActor.GetObject()))
-		{
-			bIsTile = true;
-			if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
-			{
-				if (ActorOnTile->Implements<UCombatInterface>())
-				{
-					ActorsOnTile.Add(ActorOnTile);
-				}
-			}
-		}
-		
 		if (!LastMouseHoveredActors.Contains(CurrentMouseHoveredActor))
 		{
 			bMayHaveDetectedOtherTile = true;
-
-			if (bTransparent)
-			{
-				IHighlightInterface::Execute_HighlightActorTransparentByMouse(CurrentMouseHoveredActor.GetObject());
-			}
-			else
-			{
-				IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
-			}
+			
+			IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
 		}
 	}
 	
 	if (bIsTile && bMayHaveDetectedOtherTile)
 	{
-		OnDetectedOtherTile.ExecuteIfBound(ActorsOnTile);
+		OnDetectedOtherTile.ExecuteIfBound();
 	}
+}
+
+void UActorSelectorComponent::HighlightTilesByMouse(const TArray<ATile*>& Tiles)
+{
+	TArray<AActor*> Actors;
+	Actors.Append(Tiles);
+	HighlightActorsByMouse(Actors, true);
 }
 
 void UActorSelectorComponent::UnhighlightActorByMouse()
@@ -155,13 +141,6 @@ void UActorSelectorComponent::UnhighlightActorsByAbility()
 	}
 }
 
-void UActorSelectorComponent::HighlightTilesByMouse(const TArray<ATile*>& Tiles, const bool bTransparent)
-{
-	TArray<AActor*> Actors;
-	Actors.Append(Tiles);
-	HighlightActorByMouse(Actors, bTransparent);
-}
-
 void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
 {
 	TileAndActor.Tile = nullptr;
@@ -169,12 +148,12 @@ void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndA
 	
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
 	{
-		FHitResult Hit;
-		PlayerController->GetHitResultUnderCursor(ECC_Tile, false, Hit);
+		FHitResult HitResult;
+		PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
 
-		if (Hit.IsValidBlockingHit())
+		if (HitResult.IsValidBlockingHit())
 		{
-			if (ATile* HitTile = Cast<ATile>(Hit.GetActor()))
+			if (ATile* HitTile = Cast<ATile>(HitResult.GetActor()))
 			{
 				const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 				ATile* TopTile = HitTile->GetTopTile();

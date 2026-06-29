@@ -34,9 +34,6 @@ class LETHE_API ULetheGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 
-public:
-	FBFSRange GetAbilityRange() const;
-
 protected:
 	UFUNCTION(BlueprintCallable)
 	void ActivateNoise(const ATile* StandingTile, const ATile* TargetTile);
@@ -46,9 +43,6 @@ protected:
 	void MakeEffectContextForCue(UPARAM(ref)const FCueDataPayload& CueDataPayload, FGameplayEffectContextHandle& OutHandle);
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	FBFSRange AbilityRange;
-
 	/** 소음 발생 정책으로, 시작 타일과 그 범위를 지정하는 변수입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Noise")
 	TArray<FNoisePolicy> NoisePolicies;

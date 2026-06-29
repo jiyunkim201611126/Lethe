@@ -305,7 +305,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		}
 
 		ActorArrayData->SetActors(TargetActors);
-		ActivationData->Payload.OptionalObject = ActivationData->TargetTiles[0].Get();
+		ActivationData->Payload.OptionalObject = ActivationData->CenterTile.Get();
 		ActivationData->Payload.TargetData.Add(ActorArrayData);
 	}
 	

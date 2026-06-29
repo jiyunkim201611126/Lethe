@@ -13,6 +13,7 @@
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheHUD.h"
 
 ALethePlayerController::ALethePlayerController()
@@ -249,19 +250,18 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheCardAbility;
 				SelectedCardOwnerASC = OwnerASC;
-				
+
+				// Ability 기준으로 선택 가능한 타일을 가져와 하이라이팅합니다.
 				TArray<ATile*> OutTiles;
-				ActorSelector->TryGetTilesByRangeFromActor(CardOwner, LetheCardAbility->GetAbilityRange(), ETileRangeQueryType::Any, OutTiles);
+				SelectedCardAbility->GetSelectCandidateTiles(CardOwner, this, OutTiles);
 				ActorSelector->HighlightActorsByAbility(OutTiles, CardOwner);
 			}
 		}
 
 		// 마우스를 타일 위에 올려둔 채로 카드를 키보드로 선택한 경우에도 타일 하이라이팅 등이 정상 작동할 수 있도록 명시적으로 한 번 호출합니다.
-		FTileAndActor OutTileAndActor;
-		ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-		TArray<ATile*> OutTargetTiles;
-		SelectedCardAbility->GetTargetTiles(SelectedCardOwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles);
-		ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
+		TArray<ATile*> OutTiles;
+		SelectedCardAbility->GetTargetCandidateTiles(SelectedCardOwnerASC->GetAvatarActor(), this, OutTiles);
+		ActorSelector->HighlightTilesByMouse(OutTiles);
 
 		OnSelectCardDelegate.ExecuteIfBound(HandIndex);
 	}
@@ -309,6 +309,16 @@ void ALethePlayerController::BeginPlay()
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (ActorSelector)
+	{
+		ActorSelector->OnDetectedOtherTile.Unbind();
+	}
+	
+	if (PreviewCoordinatorComponent)
+	{
+		PreviewCoordinatorComponent->OnUpdatePreviewData.RemoveAll(this);
+	}
+	
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
@@ -353,9 +363,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		// 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
 		if (OutTileAndActor.Tile)
 		{
-			TArray<AActor*> HighlightTiles;
-			HighlightTiles.Add(OutTileAndActor.Tile);
-			ActorSelector->HighlightActorByMouse(HighlightTiles, false);
+			TArray<ATile*> HighlightTile;
+			HighlightTile.Add(OutTileAndActor.Tile);
+			ActorSelector->HighlightTilesByMouse(HighlightTile);
 		}
 		return;
 	}
@@ -364,22 +374,26 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	{
 		// 선택된 카드가 있는 경우 들어오는 분기입니다.
 		const ATile* CurrentTile = OutTileAndActor.Tile;
-		const AActor* AvatarActor = SelectedCardOwnerASC->GetAvatarActor();
+		const AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor();
 		
-		if (CurrentTile && AvatarActor)
+		if (CurrentTile && CardOwner)
 		{
-			TArray<ATile*> OutAbilityRangeTiles;
-			ActorSelector->TryGetTilesByRangeFromActor(AvatarActor, SelectedCardAbility->GetAbilityRange(), ETileRangeQueryType::Any, OutAbilityRangeTiles);
-			if (OutAbilityRangeTiles.Contains(OutTileAndActor.Tile))
+			TArray<ATile*> OutSelectCandidateTiles;
+			SelectedCardAbility->GetSelectCandidateTiles(CardOwner, this, OutSelectCandidateTiles);
+			if (OutSelectCandidateTiles.Contains(OutTileAndActor.Tile))
 			{
-				// 마우스를 올린 타일이 선택한 카드의 사용 범위 내에 있는 경우에만 하이라이팅을 활성화합니다.
-				TArray<ATile*> OutTargetTiles;
-				SelectedCardAbility->GetTargetTiles(AvatarActor, OutTileAndActor.Tile, OutTargetTiles);
-				ActorSelector->HighlightTilesByMouse(OutTargetTiles, false);
-				return;
+				// 시전 시 적용 타일을 모두 하이라이팅합니다.
+				TArray<ATile*> OutTiles;
+				SelectedCardAbility->GetTargetCandidateTiles(CardOwner, this, OutTiles);
+				if (!OutTiles.IsEmpty())
+				{
+					TArray<ATile*> OutTargetTiles;
+					ActorSelector->HighlightTilesByMouse(OutTiles);
+					return;
+				}
 			}
 
-			// 사용 범위를 벗어난 경우 프리뷰 및 Arrow를 비활성화합니다.
+			// 사용 범위를 벗어났거나, Target으로 잡힌 캐릭터가 없는 경우 프리뷰 및 Arrow를 비활성화합니다.
 			PreviewCoordinatorComponent->StopAllPreview();
 			ArrowRenderer->DeactivateCardPreviewArrow();
 		}
@@ -391,36 +405,45 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
 		TArray<AActor*> HighlightActors;
 		HighlightActors.Add(OutTileAndActor.Actor);
-		ActorSelector->HighlightActorByMouse(HighlightActors, true);
+		ActorSelector->HighlightActorsByMouse(HighlightActors);
 		return;
 	}
 
 	ActorSelector->UnhighlightActorByMouse();
 }
 
-void ALethePlayerController::OnOtherTileDetected(const TArray<AActor*>& CurrentActors) const
+void ALethePlayerController::OnOtherTileDetected() const
 {
-	if (!CurrentActors.IsEmpty())
+	PreviewCoordinatorComponent->StopAllPreview();
+	ArrowRenderer->DeactivateCardPreviewArrow();
+
+	if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
 	{
-		if (SelectedCardOwnerASC.IsValid() && SelectedCardAbility.IsValid())
+		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 		{
-			// 카드를 선택한 경우 들어오는 분기입니다.
-			if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
+			TArray<ATile*> OutTargetTiles;
+			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerActor, this, OutTargetTiles);
+
+			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
+				TArray<AActor*> TargetActors;
+				for (const ATile* Tile : OutTargetTiles)
+				{
+					if (AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(Tile))
+					{
+						// 적합한 타겟이 있는 타일만 담겨져왔기 때문에, 별다른 필터나 방어로직 없이 바로 사용합니다.
+						TargetActors.Add(TargetActor);
+					}
+				}
+				
 				FPreviewContext PreviewContext;
-				PreviewContext.CurrentTargetActors.Append(CurrentActors);
+				PreviewContext.CurrentTargetActors.Append(TargetActors);
 				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-				ArrowRenderer->DrawCardPreviewArrow(SelectedCardOwnerActor, CurrentActors);
+				ArrowRenderer->DrawCardPreviewArrow(SelectedCardOwnerActor, TargetActors);
 			}
 		}
-	}
-	else
-	{
-		// 빈 타일에 마우스를 올린 경우 들어오는 분기입니다.
-		PreviewCoordinatorComponent->StopAllPreview();
-		ArrowRenderer->DeactivateCardPreviewArrow();
 	}
 }
 
@@ -431,7 +454,7 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex)
 {
-	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, SavedCard, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(this, OwnerASC, SavedCard, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}

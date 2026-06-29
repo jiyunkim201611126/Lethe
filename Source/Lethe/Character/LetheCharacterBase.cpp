@@ -224,12 +224,6 @@ void ALetheCharacterBase::HighlightActorByMouse_Implementation()
 	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
 }
 
-void ALetheCharacterBase::HighlightActorTransparentByMouse_Implementation()
-{
-	GetMesh()->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
-}
-
 void ALetheCharacterBase::UnhighlightActorByMouse_Implementation()
 {
 	GetMesh()->SetRenderCustomDepth(false);

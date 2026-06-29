@@ -21,9 +21,6 @@ class LETHE_API IHighlightInterface
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void HighlightActorTransparentByMouse();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void HighlightActorByMouse();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

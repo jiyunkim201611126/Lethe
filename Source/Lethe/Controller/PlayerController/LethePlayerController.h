@@ -70,7 +70,7 @@ private:
 	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
 	
 	/** 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다. */
-	void OnOtherTileDetected(const TArray<AActor*>& CurrentActors) const;
+	void OnOtherTileDetected() const;
 
 	void OnUpdatePreviewData(const FPreviewData& PreviewData) const;
 	

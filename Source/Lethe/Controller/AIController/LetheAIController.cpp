@@ -398,6 +398,7 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
+			ActivationData.CenterTile = TargetTile;
 			ActivationData.TargetTiles.Add(TargetTile);
 			ActivationData.Payload.Instigator = ControlledEnemy;
 		}

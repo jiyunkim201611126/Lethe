@@ -35,6 +35,9 @@ struct FAbilityActivationData
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
+	TWeakObjectPtr<ATile> CenterTile;
+
+	UPROPERTY()
 	TArray<TWeakObjectPtr<ATile>> TargetTiles;
 
 	UPROPERTY()

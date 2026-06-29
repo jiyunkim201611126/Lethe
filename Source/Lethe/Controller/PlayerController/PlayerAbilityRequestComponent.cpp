@@ -655,7 +655,7 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
+bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* PlayerController, ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
 {
 	if (!ActorSelector.IsValid() || !OwnerASC)
 	{
@@ -702,24 +702,15 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	}
 
 	// Ability 사용 범위 내의 타일을 선택했는지 확인합니다.
-	TArray<ATile*> OutAbilityRangeTiles;
-	ActorSelector->TryGetTilesByRangeFromActor(OwnerASC->GetAvatarActor(), CardAbility->GetAbilityRange(), ETileRangeQueryType::Any, OutAbilityRangeTiles);
-	if (!OutAbilityRangeTiles.Contains(OutTileAndActor.Tile))
-	{
-		return false;
-	}
-
-	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
-	if (!LetheGameState)
+	TArray<ATile*> OutSelectCandidateTiles;
+	CardAbility->GetSelectCandidateTiles(OwnerASC->GetAvatarActor(), PlayerController, OutSelectCandidateTiles);
+	if (!OutSelectCandidateTiles.Contains(OutTileAndActor.Tile))
 	{
 		return false;
 	}
 
 	TArray<ATile*> OutTargetTiles;
-	if (!CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), OutTileAndActor.Tile, OutTargetTiles))
-	{
-		return false;
-	}
+	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, OutTargetTiles);
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -750,9 +741,17 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	FAbilityActivationData AbilityActivationData;
 	for (AActor* TargetTile : OutTargetTiles)
 	{
-		AbilityActivationData.TargetTiles.Add(CastChecked<ATile>(TargetTile));
+		AbilityActivationData.TargetTiles.Add(Cast<ATile>(TargetTile));
 	}
 
+	AbilityActivationData.CenterTile = OutTileAndActor.Tile;
+	
+	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	if (!LetheGameState)
+	{
+		return false;
+	}
+	
 	AbilityActivationData.Index = InHandIndex;
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 	AbilityActivationData.AbilityTag = SavedCard.CardTag;

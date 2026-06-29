@@ -10,6 +10,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
@@ -22,17 +23,28 @@ ULetheCardAbility::ULetheCardAbility()
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
-bool ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<ATile*>& OutTargetTiles) const
+void ULetheCardAbility::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
-	if (!EffectTargetSelector)
+	if (EffectTargetTileSelector)
 	{
-		OutTargetTiles.Add(CenterTile);
-		return true;
+		EffectTargetTileSelector->GetSelectCandidateTiles(AvatarActor, PlayerController, OutTiles);
 	}
+}
 
-	EffectTargetSelector->Select(AvatarActor, CenterTile, OutTargetTiles);
+void ULetheCardAbility::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+{
+	if (EffectTargetTileSelector)
+	{
+		EffectTargetTileSelector->GetTargetCandidateTiles(AvatarActor, PlayerController, OutTiles);
+	}
+}
 
-	return !OutTargetTiles.IsEmpty();
+void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+{
+	if (EffectTargetTileSelector)
+	{
+		EffectTargetTileSelector->GetTargetTiles(AvatarActor, PlayerController, OutTiles);
+	}
 }
 
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
@@ -309,7 +321,11 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		// 적은 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
 		TargetASCs.RemoveAll([this, SourceActor](const UAbilitySystemComponent* ASC)
 		{
-			return !ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(SourceActor, ASC->GetOwnerActor(), AbilityRange.FloorGap);
+			if (!EffectTargetTileSelector)
+			{
+				return false;
+			}
+			return !ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(SourceActor, ASC->GetOwnerActor(), EffectTargetTileSelector->GetFloorGap());
 		});
 
 		// 위 두 조건을 거친 후, 공격 가능한 Target이 남아있지 않다면 false를 반환합니다.
@@ -488,22 +504,6 @@ bool ULetheCardAbility::CommitAbilityCost(const FGameplayAbilitySpecHandle Handl
 		return Super::CommitAbilityCost(Handle, ActorInfo, ActivationInfo, OptionalRelevantTags);
 	}
 	return true;
-}
-
-FText ULetheCardAbility::GetRangeDescription() const
-{
-	FString RangeDescriptionKey;
-	switch (AbilityRange.BFSType)
-	{
-	case EBFSType::Connection:
-		RangeDescriptionKey = TEXT("Range.Connection");
-		break;
-	case EBFSType::Through:
-		RangeDescriptionKey = TEXT("Range.Through");
-		break;
-	}
-	
-	return FLetheTextManager::GetText(EStringTableType::CardDescription, RangeDescriptionKey, AbilityRange.Distance);
 }
 
 FText ULetheCardAbility::GetWeightDescription(const int32 Weight) const

@@ -5,8 +5,9 @@
 #include "CoreMinimal.h"
 #include "LetheGameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
-#include "Lethe/AbilitySystem/TargetSelector/EffectTargetTileSelector.h"
 #include "LetheCardAbility.generated.h"
+
+class UEffectTargetTileSelector;
 
 USTRUCT(BlueprintType)
 struct FEffectApplyPolicy
@@ -60,8 +61,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
-	/** EffectTargetSelector를 통해 시전 시 적용 범위에 해당하는 타일을 가져옵니다. */
-	bool GetTargetTiles(const AActor* AvatarActor, ATile* CenterTile, TArray<ATile*>& OutTargetTiles) const;
+	/** EffectTargetSelector를 통해 시전 가능 범위에 해당하는 타일들을 가져옵니다. */
+	void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+
+	/** EffectTargetSelector를 통해 시전 시 적용 범위에 해당하는 타일들을 가져옵니다. */
+	void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+
+	/** EffectTargetSelector를 통해 시전 시 적용될 대상이 존재하는 타일들을 가져옵니다. */
+	void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -107,9 +114,6 @@ protected:
 	}
 
 	UFUNCTION(BlueprintPure, Category = "Effect")
-	FText GetRangeDescription() const;
-
-	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetWeightDescription(const int32 Weight) const;
 
 private:
@@ -133,7 +137,7 @@ protected:
 	 * 할당하지 않으면 자동으로 마우스 위치의 타일 하나만 TargetTile로 지정됩니다.
 	 */
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
-	TObjectPtr<UEffectTargetTileSelector> EffectTargetSelector;
+	TObjectPtr<UEffectTargetTileSelector> EffectTargetTileSelector;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;

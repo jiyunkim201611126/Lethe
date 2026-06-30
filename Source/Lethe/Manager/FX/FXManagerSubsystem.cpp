@@ -116,102 +116,6 @@ void UFXManagerSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation, const float VolumeMultiplier, const float PitchMultiplier)
-{
-	if (!SoundTag.IsValid())
-	{
-		ensureMsgf(false, TEXT("비동기 로드를 요청한 SoundTag가 유효하지 않습니다."));
-		return;
-	}
-	
-	const TSoftObjectPtr<USoundBase> SoundToLoad = SoundMap.FindRef(SoundTag);
-	if (SoundToLoad.IsNull())
-	{
-		LETHE_LOG(LogFXManager, Warning, "SoundTag %s에 해당하는 사운드를 찾을 수 없습니다.", *SoundTag.ToString());
-		return;
-	}
-	
-	// 이미 에셋이 로드되어있는 경우 들어가는 분기입니다.
-	if (SoundToLoad.IsValid())
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, SoundToLoad.Get(), Location, Rotation, VolumeMultiplier, PitchMultiplier);
-		return;
-	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
-	
-	// 함수를 바인드하기 위한 변수를 선언 및 초기화합니다.
-	FSoundAsyncPlayData NewPlayData;
-	NewPlayData.bIs2D = false;
-	NewPlayData.Location = Location;
-	NewPlayData.Rotation = Rotation;
-	NewPlayData.VolumeMultiplier = VolumeMultiplier;
-	NewPlayData.PitchMultiplier = PitchMultiplier;
-	
-	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
-	
-	// 이미 로드 중인 경우 들어가는 분기입니다.
-	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
-	{
-		// 로드 중인 에셋이 로드 완료 시점에 이 요청에 대해서도 함께 처리하기 위해 배열에 추가합니다.
-		ExistingRequest->PlayRequests.Add(NewPlayData);
-		return;
-	}
-
-	// 새로 로드를 시작해야 하는 경우 여기로 내려옵니다.
-	// 에셋 로드가 끝난 뒤 호출되는 델리게이트에 함수를 바인드합니다.
-	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
-	NewRequest.PlayRequests.Add(NewPlayData);
-	
-	FStreamableManager& StreamableManager = GetStreamableManager();
-	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
-	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
-}
-
-void UFXManagerSubsystem::AsyncPlaySound2D(const FGameplayTag& SoundTag, const float VolumeMultiplier, const float PitchMultiplier)
-{
-	if (!SoundTag.IsValid())
-	{
-		ensureMsgf(false, TEXT("비동기 로드를 요청한 SoundTag가 유효하지 않습니다."));
-		return;
-	}
-	
-	const TSoftObjectPtr<USoundBase> SoundToLoad = SoundMap.FindRef(SoundTag);
-	if (SoundToLoad.IsNull())
-	{
-		LETHE_LOG(LogFXManager, Warning, "SoundTag %s에 해당하는 사운드를 찾을 수 없습니다.", *SoundTag.ToString());
-		return;
-	}
-	
-	// 이미 에셋이 로드되어있는 경우 들어가는 분기입니다.
-	if (SoundToLoad.IsValid())
-	{
-		UGameplayStatics::PlaySound2D(this, SoundToLoad.Get(), VolumeMultiplier, PitchMultiplier);
-		return;
-	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
-	
-	FSoundAsyncPlayData NewPlayData;
-	NewPlayData.bIs2D = true;
-	NewPlayData.VolumeMultiplier = VolumeMultiplier;
-	NewPlayData.PitchMultiplier = PitchMultiplier;
-	
-	FSoftObjectPath AssetPath = SoundToLoad.ToSoftObjectPath();
-	if (FSoundAsyncLoadRequest* ExistingRequest = PendingSoundLoadRequests.Find(AssetPath))
-	{
-		ExistingRequest->PlayRequests.Add(NewPlayData);
-		return;
-	}
-
-	FSoundAsyncLoadRequest& NewRequest = PendingSoundLoadRequests.Add(AssetPath);
-	NewRequest.PlayRequests.Add(NewPlayData);
-	
-	FStreamableManager& StreamableManager = GetStreamableManager();
-	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnSoundAsyncLoadComplete, AssetPath);
-	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
-}
-
 void UFXManagerSubsystem::AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback)
 {
 	if (!SoundTag.IsValid())
@@ -272,22 +176,10 @@ void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPa
 		}
 	}
 
-	// 로드 완료 후 사운드 재생을 시작합니다.
 	USoundBase* LoadedSound = Cast<USoundBase>(LoadedAssetPath.ResolveObject());
 
 	if (LoadedSound)
 	{
-		for (const auto& PlayData : CompletedRequest.PlayRequests)
-		{
-			if (PlayData.bIs2D)
-			{
-				UGameplayStatics::PlaySound2D(this, LoadedSound, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);
-			}
-			else
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, LoadedSound, PlayData.Location, PlayData.Rotation, PlayData.VolumeMultiplier, PlayData.PitchMultiplier);	
-			}
-		}
 		for (const auto& Callback : CompletedRequest.GetterCallbacks)
 		{
 			Callback(LoadedSound);
@@ -303,54 +195,28 @@ void UFXManagerSubsystem::OnSoundAsyncLoadComplete(FSoftObjectPath LoadedAssetPa
 	}
 }
 
-void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation, const FVector Scale, bool bAutoDestroy, bool bAutoActivate)
+void UFXManagerSubsystem::AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation, const float VolumeMultiplier, const float PitchMultiplier)
 {
-	if (!NiagaraTag.IsValid())
+	TWeakObjectPtr<UFXManagerSubsystem> WeakThis = MakeWeakObjectPtr(this);
+	AsyncGetSound(SoundTag, [WeakThis, Location, Rotation, VolumeMultiplier, PitchMultiplier](USoundBase* LoadedSound)
 	{
-		ensureMsgf(false, TEXT("비동기 로드를 요청한 NiagaraTag가 유효하지 않습니다."));
-		return;
-	}
-	
-	const TSoftObjectPtr<UNiagaraSystem> NiagaraToLoad = NiagaraMap.FindRef(NiagaraTag);
-	if (NiagaraToLoad.IsNull())
-	{
-		LETHE_LOG(LogFXManager, Warning, "NiagaraTag %s에 해당하는 나이아가라를 찾을 수 없습니다.", *NiagaraTag.ToString());
-		return;
-	}
+		if (WeakThis.IsValid() && LoadedSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(WeakThis.Get(), LoadedSound, Location, Rotation, VolumeMultiplier, PitchMultiplier);
+		}
+	});
+}
 
-	// 이미 에셋이 로드되어있는 경우 들어가는 분기입니다.
-	if (NiagaraToLoad.IsValid())
+void UFXManagerSubsystem::AsyncPlaySound2D(const FGameplayTag& SoundTag, const float VolumeMultiplier, const float PitchMultiplier)
+{
+	TWeakObjectPtr<UFXManagerSubsystem> WeakThis = MakeWeakObjectPtr(this);
+	AsyncGetSound(SoundTag, [WeakThis, VolumeMultiplier, PitchMultiplier](USoundBase* LoadedSound)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, NiagaraToLoad.Get(), Location, Rotation, Scale, bAutoDestroy, bAutoActivate);
-		return;
-	}
-	
-	FScopeLock Lock(&PendingRequestsLock);
-	
-	FNiagaraAsyncSpawnData NewPlayData;
-	NewPlayData.Location = Location;
-	NewPlayData.Rotation = Rotation;
-	NewPlayData.Scale = Scale;
-	NewPlayData.bAutoDestroy = bAutoDestroy;
-	NewPlayData.bAutoActivate = bAutoActivate;
-	
-	FSoftObjectPath AssetPath = NiagaraToLoad.ToSoftObjectPath();
-	
-	// 이미 로드 중인 경우 들어가는 분기입니다.
-	if (FNiagaraAsyncLoadRequest* ExistingRequest = PendingNiagaraLoadRequests.Find(AssetPath))
-	{
-		ExistingRequest->SpawnRequests.Add(NewPlayData);
-		return;
-	}
-	
-	// 새로 로드를 시작해야 하는 경우 여기로 내려옵니다.
-	// 에셋 로드가 완료되면 위에서 초기화한 정보들을 참조할 수 있도록 배열에 추가합니다.
-	FNiagaraAsyncLoadRequest& NewRequest = PendingNiagaraLoadRequests.Add(AssetPath);
-	NewRequest.SpawnRequests.Add(NewPlayData);
-	
-	FStreamableManager& StreamableManager = GetStreamableManager();
-	FStreamableDelegate StreamableCompleteDelegate = FStreamableDelegate::CreateUObject(this, &ThisClass::OnNiagaraAsyncLoadComplete, AssetPath);
-	NewRequest.StreamableHandle = StreamableManager.RequestAsyncLoad(AssetPath, StreamableCompleteDelegate);
+		if (WeakThis.IsValid() && LoadedSound)
+		{
+			UGameplayStatics::PlaySound2D(WeakThis.Get(), LoadedSound, VolumeMultiplier, PitchMultiplier);
+		}
+	});
 }
 
 void UFXManagerSubsystem::AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback)
@@ -417,10 +283,6 @@ void UFXManagerSubsystem::OnNiagaraAsyncLoadComplete(FSoftObjectPath LoadedAsset
 
 	if (LoadedNiagara)
 	{
-		for (const auto& PlayData : CompletedRequest.SpawnRequests)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, LoadedNiagara, PlayData.Location, PlayData.Rotation, PlayData.Scale, PlayData.bAutoDestroy, PlayData.bAutoActivate);
-		}
 		for (const auto& Callback : CompletedRequest.GetterCallbacks)
 		{
 			Callback(LoadedNiagara);
@@ -434,6 +296,18 @@ void UFXManagerSubsystem::OnNiagaraAsyncLoadComplete(FSoftObjectPath LoadedAsset
 			Callback(nullptr);
 		}
 	}
+}
+
+void UFXManagerSubsystem::AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation, const FVector Scale, bool bAutoDestroy, bool bAutoActivate)
+{
+	TWeakObjectPtr<UFXManagerSubsystem> WeakThis = MakeWeakObjectPtr(this);
+	AsyncGetNiagara(NiagaraTag, [WeakThis, Location, Rotation, Scale, bAutoDestroy, bAutoActivate](UNiagaraSystem* LoadedNiagara)
+	{
+		if (WeakThis.IsValid() && LoadedNiagara)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(WeakThis.Get(), LoadedNiagara, Location, Rotation, Scale, bAutoDestroy, bAutoActivate);
+		}
+	});
 }
 
 USoundBase* UFXManagerSubsystem::GetSound(const FGameplayTag& SoundTag) const

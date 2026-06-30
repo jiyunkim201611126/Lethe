@@ -34,58 +34,13 @@ struct FTaggedNiagaraRow : public FTableRowBase
 };
 
 USTRUCT()
-struct FSoundAsyncPlayData
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	bool bIs2D = false;
-
-	UPROPERTY()
-	FVector Location = FVector::ZeroVector;
-
-	UPROPERTY()
-	FRotator Rotation = FRotator::ZeroRotator;
-
-	UPROPERTY()
-	float VolumeMultiplier = 1.f;
-
-	UPROPERTY()
-	float PitchMultiplier = 1.f;
-};
-
-USTRUCT()
 struct FSoundAsyncLoadRequest
 {
 	GENERATED_BODY()
 
 	TSharedPtr<FStreamableHandle> StreamableHandle;
-	
-	UPROPERTY()
-	TArray<FSoundAsyncPlayData> PlayRequests;
 
 	TArray<TFunction<void(USoundBase*)>> GetterCallbacks;
-};
-
-USTRUCT()
-struct FNiagaraAsyncSpawnData
-{
-	GENERATED_BODY()
-	
-	UPROPERTY()
-	FVector Location = FVector::ZeroVector;
-
-	UPROPERTY()
-	FRotator Rotation = FRotator::ZeroRotator;
-
-	UPROPERTY()
-	FVector Scale = FVector(1.f);
-
-	UPROPERTY()
-	bool bAutoDestroy = true;
-
-	UPROPERTY()
-	bool bAutoActivate = true;
 };
 
 USTRUCT()
@@ -94,9 +49,6 @@ struct FNiagaraAsyncLoadRequest
 	GENERATED_BODY()
 
 	TSharedPtr<FStreamableHandle> StreamableHandle;
-	
-	UPROPERTY()
-	TArray<FNiagaraAsyncSpawnData> SpawnRequests;
 
 	TArray<TFunction<void(UNiagaraSystem*)>> GetterCallbacks;
 };
@@ -118,16 +70,18 @@ public:
 	//~ End Subsystem Interface
 
 	/** 사운드를 비동기 로드할 때 사용하는 함수입니다. */
+	void AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback);
+	
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncPlaySoundAtLocation(const FGameplayTag& SoundTag, const FVector Location, const FRotator Rotation = FRotator::ZeroRotator, const float VolumeMultiplier = 1.f, const float PitchMultiplier = 1.f);
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncPlaySound2D(const FGameplayTag& SoundTag, const float VolumeMultiplier, const float PitchMultiplier);
-	void AsyncGetSound(const FGameplayTag& SoundTag, const TFunction<void(USoundBase*)>& OnLoadedCallback);
 
 	/** 나이아가라를 비동기 로드할 때 사용하는 함수입니다. */
+	void AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback);
+	
 	UFUNCTION(BlueprintCallable, Category = "FX")
 	void AsyncSpawnNiagaraAtLocation(const FGameplayTag& NiagaraTag, const FVector Location, const FRotator Rotation = FRotator::ZeroRotator, const FVector Scale = FVector(1.f), bool bAutoDestroy = true, bool bAutoActivate = true);
-	void AsyncGetNiagara(const FGameplayTag& NiagaraTag, const TFunction<void(UNiagaraSystem*)>& OnLoadedCallback);
 
 	/** 동기 로드를 원하는 경우 사용하는 함수입니다. */
 	USoundBase* GetSound(const FGameplayTag& SoundTag) const;
@@ -156,7 +110,7 @@ private:
 	UPROPERTY()
 	TMap<FGameplayTag, TSoftObjectPtr<UNiagaraSystem>> NiagaraMap;
 	
-	/** 동일한 에셋에 대한 요청이 여러 개 동시에 들어올 경우, 로드가 끝날 때 모두 처리할 수 있도록 콜백 함수나 재생 관련 변수를 캐싱해 대기시키는 TMap입니다. */
+	/** 동일한 에셋에 대한 요청이 여러 개 동시에 들어올 경우, 로드가 끝날 때 모두 처리할 수 있도록 콜백 함수를 캐싱해 대기시키는 TMap입니다. */
 	UPROPERTY()
 	TMap<FSoftObjectPath, FSoundAsyncLoadRequest> PendingSoundLoadRequests;
 	

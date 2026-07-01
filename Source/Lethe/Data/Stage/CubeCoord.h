@@ -43,10 +43,12 @@ public:
 		return Q == Other.Q && R == Other.R && S == Other.S;
 	}
 	
+	static constexpr int32 HexDirectionCount = 6;
+	
 	//각 방향으로의 오프셋값, ETileDirection과 조합해서 사용
 	static FCubeCoord GetDirection(const int32 DirectionIndex)
 	{
-		static constexpr FCubeCoord DirectionOffsets[6] =
+		static constexpr FCubeCoord DirectionOffsets[HexDirectionCount] =
 		{
 			FCubeCoord(+0, -1), // LeftTop
 			FCubeCoord(-1, +0), // Left
@@ -55,7 +57,7 @@ public:
 			FCubeCoord(+1, +0), // Right
 			FCubeCoord(+1, -1), // RightTop
 		};
-		return DirectionOffsets[DirectionIndex % 6];
+		return DirectionOffsets[DirectionIndex % HexDirectionCount];
 	}
 
 	//거리 계산

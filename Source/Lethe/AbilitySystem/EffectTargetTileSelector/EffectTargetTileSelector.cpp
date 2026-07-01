@@ -13,8 +13,3 @@ void UEffectTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActo
 void UEffectTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 }
-
-int32 UEffectTargetTileSelector::GetFloorGap() const
-{
-	return FloorGap;
-}

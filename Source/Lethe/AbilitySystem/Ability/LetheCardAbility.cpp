@@ -318,16 +318,6 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 			return ASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead);
 		});
 
-		// 적은 StateTreeTask에서 이미 검증된 Tile을 사용하기 때문에 플레이어 캐릭터에서만 FloorGap 로직을 수행합니다.
-		TargetASCs.RemoveAll([this, SourceActor](const UAbilitySystemComponent* ASC)
-		{
-			if (!EffectTargetTileSelector)
-			{
-				return false;
-			}
-			return !ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(SourceActor, ASC->GetOwnerActor(), EffectTargetTileSelector->GetFloorGap());
-		});
-
 		// 위 두 조건을 거친 후, 공격 가능한 Target이 남아있지 않다면 false를 반환합니다.
 		if (TargetASCs.IsEmpty())
 		{

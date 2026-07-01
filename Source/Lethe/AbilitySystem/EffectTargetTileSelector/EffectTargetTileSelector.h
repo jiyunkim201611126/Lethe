@@ -24,10 +24,4 @@ public:
 
 	/** 시전 시 적용될 대상이 존재하는 타일들을 모두 Out 인자로 반환합니다. */
 	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
-	
-	int32 GetFloorGap() const;
-
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	int32 FloorGap = 1;
 };

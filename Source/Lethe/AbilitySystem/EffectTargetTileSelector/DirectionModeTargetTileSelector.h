@@ -29,14 +29,34 @@ public:
 	virtual void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
 	virtual void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
 	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
+
+private:
+	int32 NormalizeHexDirection(int32 Direction) const;
+	
+	/** FCubeCoord 기준 Direction을 방향 Vector로 변환해 반환합니다. */
+	FVector2D GetHexDirectionVector(int32 Direction) const;
+	
+	/** FCubeCoord 기준 Direction 0 ~ 5 중, 가장 가까운 방향으로 스냅해 반환합니다. */
+	int32 FindClosestHexDirection(const FVector2D& DesiredDirection) const;
+	
+	/**
+	 * FCubeCoord 기준 Direction 0 ~ 5 그 사이 경계 방향 Vector 중 가장 가까운 방향으로 스냅해 반환합니다.
+	 * 0: 위쪽 / 1: 좌상단과 좌측 사이 ... / 5: 우측과 우상단 사이
+	 */
+	int32 FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const;
+
+	/** 방향 Vector를 기준으로 원하는 개수만큼의 방향을 Out 인자로 반환합니다. */
+	void GetSelectedDirections(const FVector2D& DesiredDirection, TArray<int32>& OutDirections) const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	ERangeType RangeType = ERangeType::Melee;
-	
+
+	/** 선택할 방향 개수입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	int32 DirectionCount = 1;
-	
+
+	/** 기본 사거리 강화 수치입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	int32 RangeEnforceValue = 1;
 

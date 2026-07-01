@@ -230,7 +230,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 		
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
-		AActor* CardOwner = OwnerASC->GetAvatarActor();
+		const AActor* CardOwner = OwnerASC->GetAvatarActor();
 		if (LetheCardAbility && CardOwner)
 		{
 			if (OwnerASC->AbilityActorInfo.IsValid())
@@ -250,18 +250,8 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheCardAbility;
 				SelectedCardOwnerASC = OwnerASC;
-
-				// Ability 기준으로 선택 가능한 타일을 가져와 하이라이팅합니다.
-				TArray<ATile*> OutTiles;
-				SelectedCardAbility->GetSelectCandidateTiles(CardOwner, this, OutTiles);
-				ActorSelector->HighlightActorsByAbility(OutTiles, CardOwner);
 			}
 		}
-
-		// 마우스를 타일 위에 올려둔 채로 카드를 키보드로 선택한 경우에도 타일 하이라이팅 등이 정상 작동할 수 있도록 명시적으로 한 번 호출합니다.
-		TArray<ATile*> OutTiles;
-		SelectedCardAbility->GetTargetCandidateTiles(SelectedCardOwnerASC->GetAvatarActor(), this, OutTiles);
-		ActorSelector->HighlightTilesByMouse(OutTiles);
 
 		OnSelectCardDelegate.ExecuteIfBound(HandIndex);
 	}
@@ -370,30 +360,40 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		return;
 	}
 
+	// 선택된 카드가 있는 경우 들어가는 분기입니다.
 	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnWorldSection)
 	{
-		// 선택된 카드가 있는 경우 들어오는 분기입니다.
 		const ATile* CurrentTile = OutTileAndActor.Tile;
-		const AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor();
+		AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor();
 		
 		if (CurrentTile && CardOwner)
 		{
+			// 선택 가능한 타일을 모두 가져옵니다.
 			TArray<ATile*> OutSelectCandidateTiles;
 			SelectedCardAbility->GetSelectCandidateTiles(CardOwner, this, OutSelectCandidateTiles);
+			
+			// 현재 마우스를 올린 타일이 선택 가능한 타일인 경우 들어가는 분기입니다.
 			if (OutSelectCandidateTiles.Contains(OutTileAndActor.Tile))
 			{
-				// 시전 시 적용 타일을 모두 하이라이팅합니다.
-				TArray<ATile*> OutTiles;
-				SelectedCardAbility->GetTargetCandidateTiles(CardOwner, this, OutTiles);
-				if (!OutTiles.IsEmpty())
+				// 타겟이 될 수 있는 후보 타일을 모두 가져옵니다.
+				TArray<ATile*> OutTargetCandidateTiles;
+				SelectedCardAbility->GetTargetCandidateTiles(CardOwner, this, OutTargetCandidateTiles);
+
+				// 선택 가능 타일 중 타겟 후보 타일을 제거합니다.
+				OutSelectCandidateTiles.RemoveAll([&OutTargetCandidateTiles](const ATile* Tile)
 				{
-					TArray<ATile*> OutTargetTiles;
-					ActorSelector->HighlightTilesByMouse(OutTiles);
-					return;
-				}
+					return OutTargetCandidateTiles.Contains(Tile);
+				});
+
+				// 각각 역할에 맞게 하이라이팅합니다.
+				ActorSelector->HighlightActorsByAbility(OutSelectCandidateTiles, CardOwner);
+				ActorSelector->HighlightTilesByMouse(OutTargetCandidateTiles);
+				return;
 			}
 
-			// 사용 범위를 벗어났거나, Target으로 잡힌 캐릭터가 없는 경우 프리뷰 및 Arrow를 비활성화합니다.
+			ActorSelector->HighlightActorsByAbility(OutSelectCandidateTiles, CardOwner);
+			
+			// 사용 범위를 벗어났거나, 타겟으로 잡힌 캐릭터가 없는 경우 프리뷰 및 Arrow를 비활성화합니다.
 			PreviewCoordinatorComponent->StopAllPreview();
 			ArrowRenderer->DeactivateCardPreviewArrow();
 		}

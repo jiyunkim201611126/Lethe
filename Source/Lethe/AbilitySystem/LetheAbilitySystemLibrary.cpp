@@ -57,23 +57,6 @@ UViewCardDetailWidgetController* ULetheAbilitySystemLibrary::GetViewCardDetailWi
 	return nullptr;
 }
 
-bool ULetheAbilitySystemLibrary::CanUseAbilityByActorAndFloorGap(const AActor* SourceActor, const AActor* TargetActor, const int32 MaxFloorGap)
-{
-	if (SourceActor && TargetActor)
-	{
-		if (const UTileManagerSubsystem* TileManagerSubsystem = SourceActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-		{
-			const ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(SourceActor);
-			const ATile* TargetTile = TileManagerSubsystem->GetTileUnderActor(TargetActor);
-			if (SourceTile && TargetTile)
-			{
-				return CanUseAbilityByTileAndFloorGap(SourceTile, TargetTile, MaxFloorGap);
-			}
-		}
-	}
-	return false;
-}
-
 bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap)
 {
 	if (SourceTile && TargetTile)

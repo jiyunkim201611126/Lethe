@@ -3,95 +3,13 @@
 #include "DirectionModeTargetTileSelector.h"
 
 #include "Lethe/Actor/Tile/Tile.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-
-class UTileManagerSubsystem;
-
-namespace
-{
-	constexpr int32 HexDirectionCount = 6;
-
-	int32 NormalizeHexDirection(const int32 Direction)
-	{
-		return (Direction % HexDirectionCount + HexDirectionCount) % HexDirectionCount;
-	}
-
-	/** FCubeCoord 기준 Direction을 방향 Vector로 변환해 반환합니다. */
-	FVector2D GetHexDirectionVector(const int32 Direction)
-	{
-		const FVector DirectionLocation = FCubeCoord::CubeCoordToWorldCoord(FCubeCoord::GetDirection(NormalizeHexDirection(Direction)));
-		return FVector2D(DirectionLocation.X, DirectionLocation.Y).GetSafeNormal();
-	}
-
-	/** FCubeCoord 기준 Direction 0 ~ 5 중, 가장 가까운 방향으로 스냅해 반환합니다. */
-	int32 FindClosestHexDirection(const FVector2D& DesiredDirection)
-	{
-		int32 ClosestDirection = 0;
-		float BestDot = TNumericLimits<float>::Lowest();
-		for (int32 Direction = 0; Direction < HexDirectionCount; ++Direction)
-		{
-			const float Dot = FVector2D::DotProduct(DesiredDirection, GetHexDirectionVector(Direction));
-			if (Dot > BestDot)
-			{
-				BestDot = Dot;
-				ClosestDirection = Direction;
-			}
-		}
-		return ClosestDirection;
-	}
-
-	/**
-	 * FCubeCoord 기준 Direction 0 ~ 5 그 사이 경계 방향 Vector 중 가장 가까운 Vector로 스냅해 반환합니다.
-	 * 0: 위쪽 / 1: 좌상단과 좌측 사이 ... / 5: 우측과 우상단 사이
-	 */
-	int32 FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection)
-	{
-		int32 ClosestUpperDirection = 0;
-		float BestDot = TNumericLimits<float>::Lowest();
-		for (int32 Direction = 0; Direction < HexDirectionCount; ++Direction)
-		{
-			const FVector2D BoundaryDirection = (GetHexDirectionVector(Direction) + GetHexDirectionVector(Direction - 1)).GetSafeNormal();
-			const float Dot = FVector2D::DotProduct(DesiredDirection, BoundaryDirection);
-			if (Dot > BestDot)
-			{
-				BestDot = Dot;
-				ClosestUpperDirection = Direction;
-			}
-		}
-		return ClosestUpperDirection;
-	}
-
-	/** 방향 Vector를 기준으로 원하는 개수만큼의 방향을 Out 인자로 반환합니다. */
-	void GetSelectedDirections(const FVector2D& DesiredDirection, const int32 DirectionCount, TArray<int32>& OutDirections)
-	{
-		OutDirections.Reset();
-
-		const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, HexDirectionCount);
-		if (ClampedDirectionCount % 2 == 1)
-		{
-			// 홀수인 경우, 6개의 방향 중 가장 가까운 방향으로 스냅, 그 주변 방향을 함께 선택합니다.
-			const int32 CenterDirection = FindClosestHexDirection(DesiredDirection);
-			const int32 HalfDirectionCount = ClampedDirectionCount / 2;
-			for (int32 Offset = HalfDirectionCount; Offset >= -HalfDirectionCount; --Offset)
-			{
-				OutDirections.Add(NormalizeHexDirection(CenterDirection + Offset));
-			}
-			return;
-		}
-
-		// 짝수인 경우, 6개의 경계 방향 중 가장 가까운 경계 방향으로 스냅, 그리고 그 바로 반시계 방향 옆 방향을 기준으로 Direction을 가져옵니다.
-		// 해당 Direction을 기준으로 반시계 방향 (DirectionCount / 2 - 1)칸부터 시계 방향으로 회전하여 DirectionCount만큼 선택합니다.
-		const int32 UpperDirection = FindClosestHexDirectionBoundary(DesiredDirection);
-		const int32 HalfDirectionCount = ClampedDirectionCount / 2;
-		for (int32 Offset = HalfDirectionCount - 1; Offset >= -HalfDirectionCount; --Offset)
-		{
-			OutDirections.Add(NormalizeHexDirection(UpperDirection + Offset));
-		}
-	}
-}
 
 void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
+	OutTiles.Reset();
+	
 	if (!AvatarActor || !PlayerController)
 	{
 		return;
@@ -126,7 +44,7 @@ void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(DesiredDirection.GetSafeNormal(), DirectionCount, SelectedDirections);
+	GetSelectedDirections(DesiredDirection.GetSafeNormal(), SelectedDirections);
 
 	const FCubeCoord CenterCoord = StandingTile->GetCubeCoord();
 	const int32 MaxRange = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeEnforceValue);
@@ -155,8 +73,132 @@ void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 
 void UDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
+	OutTiles.Reset();
+	
+	if (!AvatarActor || !PlayerController)
+	{
+		return;
+	}
+
+	FHitResult TileHitResult;
+	PlayerController->GetHitResultUnderCursor(ECC_Tile, false, TileHitResult);
+	if (!TileHitResult.IsValidBlockingHit())
+	{
+		return;
+	}
+
+	ATile* HitTile = Cast<ATile>(TileHitResult.GetActor());
+	if (!HitTile)
+	{
+		return;
+	}
+
+	switch (RangeType)
+	{
+	case ERangeType::Melee:
+	case ERangeType::ParabolaRanged:
+		OutTiles.Add(HitTile);
+		break;
+	case ERangeType::StraightRanged:
+		{
+			const FVector StartLocation = AvatarActor->GetActorLocation();
+			FVector EndLocation = HitTile->GetActorLocation();
+			EndLocation.Z = StartLocation.Z;
+			
+			FHitResult PawnHitResult;
+			FCollisionQueryParams CollisionQueryParams;
+			CollisionQueryParams.AddIgnoredActor(AvatarActor);
+			if (AvatarActor->GetWorld()->LineTraceSingleByChannel(PawnHitResult, StartLocation, EndLocation, ECC_Pawn, CollisionQueryParams))
+			{
+				const AActor* HitActor = PawnHitResult.GetActor();
+				if (HitActor->Implements<UCombatInterface>())
+				{
+					if (const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+					{
+						OutTiles.Add(TileManagerSubsystem->GetTileUnderActor(HitActor));
+					}
+				}
+				else
+				{
+					OutTiles.Add(HitTile);
+				}
+			}
+		}
+		break;
+	}
 }
 
 void UDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
+}
+
+int32 UDirectionModeTargetTileSelector::NormalizeHexDirection(const int32 Direction) const
+{
+	return (Direction % FCubeCoord::HexDirectionCount + FCubeCoord::HexDirectionCount) % FCubeCoord::HexDirectionCount;
+}
+
+FVector2D UDirectionModeTargetTileSelector::GetHexDirectionVector(const int32 Direction) const
+{
+	const FVector DirectionLocation = FCubeCoord::CubeCoordToWorldCoord(FCubeCoord::GetDirection(NormalizeHexDirection(Direction)));
+	return FVector2D(DirectionLocation.X, DirectionLocation.Y).GetSafeNormal();
+}
+
+int32 UDirectionModeTargetTileSelector::FindClosestHexDirection(const FVector2D& DesiredDirection) const
+{
+	int32 ClosestDirection = 0;
+	float BestDot = TNumericLimits<float>::Lowest();
+	for (int32 Direction = 0; Direction < FCubeCoord::HexDirectionCount; ++Direction)
+	{
+		const float Dot = FVector2D::DotProduct(DesiredDirection, GetHexDirectionVector(Direction));
+		if (Dot > BestDot)
+		{
+			BestDot = Dot;
+			ClosestDirection = Direction;
+		}
+	}
+	return ClosestDirection;
+}
+
+int32 UDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const
+{
+	int32 ClosestUpperDirection = 0;
+	float BestDot = TNumericLimits<float>::Lowest();
+	for (int32 Direction = 0; Direction < FCubeCoord::HexDirectionCount; ++Direction)
+	{
+		const FVector2D BoundaryDirection = (GetHexDirectionVector(Direction) + GetHexDirectionVector(Direction - 1)).GetSafeNormal();
+		const float Dot = FVector2D::DotProduct(DesiredDirection, BoundaryDirection);
+		if (Dot > BestDot)
+		{
+			BestDot = Dot;
+			ClosestUpperDirection = Direction;
+		}
+	}
+	return ClosestUpperDirection;
+}
+
+void UDirectionModeTargetTileSelector::GetSelectedDirections(const FVector2D& DesiredDirection, TArray<int32>& OutDirections) const
+{
+	OutDirections.Reset();
+
+	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
+	if (ClampedDirectionCount % 2 == 1)
+	{
+		// 홀수인 경우, 6개의 방향 중 가장 가까운 방향으로 스냅, 그 주변 방향을 함께 선택합니다.
+		const int32 CenterDirection = FindClosestHexDirection(DesiredDirection);
+		const int32 HalfDirectionCount = ClampedDirectionCount / 2;
+		for (int32 Offset = HalfDirectionCount; Offset >= -HalfDirectionCount; --Offset)
+		{
+			OutDirections.Add(NormalizeHexDirection(CenterDirection + Offset));
+		}
+		return;
+	}
+
+	// 짝수인 경우, 6개의 경계 방향 중 가장 가까운 경계 방향으로 스냅, 그리고 그 바로 반시계 방향 옆 방향을 기준으로 Direction을 가져옵니다.
+	// 해당 Direction을 기준으로 반시계 방향 (DirectionCount / 2 - 1)칸부터 시계 방향으로 회전하여 DirectionCount만큼 선택합니다.
+	const int32 UpperDirection = FindClosestHexDirectionBoundary(DesiredDirection);
+	const int32 HalfDirectionCount = ClampedDirectionCount / 2;
+	for (int32 Offset = HalfDirectionCount - 1; Offset >= -HalfDirectionCount; --Offset)
+	{
+		OutDirections.Add(NormalizeHexDirection(UpperDirection + Offset));
+	}
 }

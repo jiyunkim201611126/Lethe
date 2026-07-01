@@ -32,9 +32,6 @@ public:
 	static UViewCardDetailWidgetController* GetViewCardDetailWidgetController(const UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Ability")
-	static bool CanUseAbilityByActorAndFloorGap(const AActor* SourceActor, const AActor* TargetActor, const int32 MaxFloorGap);
-
-	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Ability")
 	static bool CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap);
 
 	/** 반사 데미지, 흡혈 등 ExecCalc만으로는 해결할 수 없는 데미지 규칙의 경우, 실제 적용과 Preview에서 모두 사용하기 위해 공용으로 구현된 함수입니다. */

@@ -701,14 +701,6 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 		return false;
 	}
 
-	// Ability 사용 범위 내의 타일을 선택했는지 확인합니다.
-	TArray<ATile*> OutSelectCandidateTiles;
-	CardAbility->GetSelectCandidateTiles(OwnerASC->GetAvatarActor(), PlayerController, OutSelectCandidateTiles);
-	if (!OutSelectCandidateTiles.Contains(OutTileAndActor.Tile))
-	{
-		return false;
-	}
-
 	TArray<ATile*> OutTargetTiles;
 	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, OutTargetTiles);
 

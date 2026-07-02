@@ -23,19 +23,11 @@ ULetheCardAbility::ULetheCardAbility()
 	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
-void ULetheCardAbility::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
 {
 	if (EffectTargetTileSelector)
 	{
-		EffectTargetTileSelector->GetSelectCandidateTiles(AvatarActor, PlayerController, OutTiles);
-	}
-}
-
-void ULetheCardAbility::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
-{
-	if (EffectTargetTileSelector)
-	{
-		EffectTargetTileSelector->GetTargetCandidateTiles(AvatarActor, PlayerController, OutTiles);
+		EffectTargetTileSelector->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetCandidateTiles);
 	}
 }
 

@@ -26,11 +26,17 @@ class LETHE_API UDirectionModeTargetTileSelector : public UEffectTargetTileSelec
 	GENERATED_BODY()
 
 public:
-	virtual void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
-	virtual void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
+	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) override;
 	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
 
+protected:
+	virtual void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
+	virtual void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
+
 private:
+	void HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+	void HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+	
 	int32 NormalizeHexDirection(int32 Direction) const;
 	
 	/** FCubeCoord 기준 Direction을 방향 Vector로 변환해 반환합니다. */
@@ -56,9 +62,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int32 DirectionCount = 1;
 
-	/** 기본 사거리 강화 수치입니다. */
+	/** 사거리입니다. */
 	UPROPERTY(EditDefaultsOnly)
-	int32 RangeEnforceValue = 1;
+	int32 RangeDistance = 1;
 
 	/** Value는 EnforceValue입니다. */
 	UPROPERTY(EditDefaultsOnly)

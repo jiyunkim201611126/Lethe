@@ -368,17 +368,14 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		
 		if (CurrentTile && CardOwner)
 		{
-			// 선택 가능한 타일을 모두 가져옵니다.
+			// 선택 가능한 타일과 타겟 후보 타일을 모두 가져옵니다.
 			TArray<ATile*> OutSelectCandidateTiles;
-			SelectedCardAbility->GetSelectCandidateTiles(CardOwner, this, OutSelectCandidateTiles);
+			TArray<ATile*> OutTargetCandidateTiles;
+			SelectedCardAbility->GetCandidateTiles(CardOwner, this, OutSelectCandidateTiles, OutTargetCandidateTiles);
 			
-			// 현재 마우스를 올린 타일이 선택 가능한 타일인 경우 들어가는 분기입니다.
-			if (OutSelectCandidateTiles.Contains(OutTileAndActor.Tile))
+			// 타겟 후보 타일을 성공적으로 검출해낸 경우 들어가는 분기입니다.
+			if (!OutTargetCandidateTiles.IsEmpty())
 			{
-				// 타겟이 될 수 있는 후보 타일을 모두 가져옵니다.
-				TArray<ATile*> OutTargetCandidateTiles;
-				SelectedCardAbility->GetTargetCandidateTiles(CardOwner, this, OutTargetCandidateTiles);
-
 				// 선택 가능 타일 중 타겟 후보 타일을 제거합니다.
 				OutSelectCandidateTiles.RemoveAll([&OutTargetCandidateTiles](const ATile* Tile)
 				{
@@ -391,9 +388,8 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 				return;
 			}
 
+			// 사용 범위를 벗어난 경우 선택 후보만 하이라이팅하고 프리뷰 및 Arrow를 비활성화합니다.
 			ActorSelector->HighlightActorsByAbility(OutSelectCandidateTiles, CardOwner);
-			
-			// 사용 범위를 벗어났거나, 타겟으로 잡힌 캐릭터가 없는 경우 프리뷰 및 Arrow를 비활성화합니다.
 			PreviewCoordinatorComponent->StopAllPreview();
 			ArrowRenderer->DeactivateCardPreviewArrow();
 		}

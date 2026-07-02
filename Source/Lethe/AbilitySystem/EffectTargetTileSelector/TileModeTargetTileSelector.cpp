@@ -6,67 +6,18 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void UTileModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void UTileModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles)
 {
-	OutTiles.Reset();
-	
-	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-
-	const ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-	if (!StandingTile)
-	{
-		return;
-	}
-	
-	const int32 StandingFloor = TileManagerSubsystem->GetTileFloor(StandingTile);
-	
-	TSet<FCubeCoord> OutCubeCoords;
-	TileManagerSubsystem->TileBFS(StandingTile->GetCubeCoord(), SelectRange.Distance, SelectRange.BFSType, OutCubeCoords,
-		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-		{
-			return true;
-		},
-		[this, TileManagerSubsystem, StandingFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-		{
-			if (TileData && TileData->TopTile.IsValid())
-			{
-				const ATile* Tile = TileData->TopTile.Get();
-				const int32 CurrentTargetFloor = TileManagerSubsystem->GetTileFloor(Tile);
-				const int32 FloorGap = CurrentTargetFloor - StandingFloor;
-
-				if (FloorGap <= SelectRange.FloorGap)
-				{
-					return true;
-				}
-			}
-			return false;
-		});
-
-	for (const FCubeCoord& CubeCoord : OutCubeCoords)
-	{
-		OutTiles.Add(TileManagerSubsystem->GetTile(CubeCoord));
-	}
-}
-
-void UTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
-{
-	OutTiles.Reset();
+	OutSelectCandidateTiles.Reset();
+	OutTargetCandidateTiles.Reset();
 	
 	if (!AvatarActor || !PlayerController)
 	{
 		return;
 	}
-
-	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-
+	
+	GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
+	
 	FHitResult HitResult;
 	PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
 	if (!HitResult.IsValidBlockingHit())
@@ -79,34 +30,11 @@ void UTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarAc
 	{
 		return;
 	}
-	
-	const int32 HitTileFloor = TileManagerSubsystem->GetTileFloor(HitTile);
-	
-	TSet<FCubeCoord> OutCubeCoords;
-	TileManagerSubsystem->TileBFS(HitTile->GetCubeCoord(), TargetSelectRange.Distance, TargetSelectRange.BFSType, OutCubeCoords,
-		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-		{
-			return true;
-		},
-		[this, TileManagerSubsystem, HitTileFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-		{
-			if (TileData && TileData->TopTile.IsValid())
-			{
-				const ATile* Tile = TileData->TopTile.Get();
-				const int32 CurrentTargetFloor = TileManagerSubsystem->GetTileFloor(Tile);
-				const int32 FloorGap = CurrentTargetFloor - HitTileFloor;
 
-				if (FloorGap <= TargetSelectRange.FloorGap)
-				{
-					return true;
-				}
-			}
-			return false;
-		});
-
-	for (const FCubeCoord& CubeCoord : OutCubeCoords)
+	if (OutSelectCandidateTiles.Contains(HitTile))
 	{
-		OutTiles.Add(TileManagerSubsystem->GetTile(CubeCoord));
+		// 마우스를 올린 타일이 선택 후보 타일에 포함되는 경우에만 타겟 후보 타일을 Out 인자에 채워줍니다.
+		GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetCandidateTiles);
 	}
 }
 
@@ -166,5 +94,100 @@ void UTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, cons
 			OutTiles.Add(nullptr);
 			break;
 		}
+	}
+}
+
+void UTileModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
+	if (!CurrentTile)
+	{
+		return;
+	}
+	
+	const int32 CurrentTileFloor = TileManagerSubsystem->GetTileFloor(CurrentTile);
+	
+	TSet<FCubeCoord> OutCubeCoords;
+	TileManagerSubsystem->TileBFS(CurrentTile->GetCubeCoord(), SelectRange.Distance, SelectRange.BFSType, OutCubeCoords,
+		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+		{
+			return true;
+		},
+		[this, TileManagerSubsystem, CurrentTileFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+		{
+			if (TileData && TileData->TopTile.IsValid())
+			{
+				const ATile* Tile = TileData->TopTile.Get();
+				const int32 CurrentTargetFloor = TileManagerSubsystem->GetTileFloor(Tile);
+				const int32 FloorGap = CurrentTargetFloor - CurrentTileFloor;
+
+				if (FloorGap <= SelectRange.FloorGap)
+				{
+					return true;
+				}
+			}
+			return false;
+		});
+
+	for (const FCubeCoord& CubeCoord : OutCubeCoords)
+	{
+		OutTiles.Add(TileManagerSubsystem->GetTile(CubeCoord));
+	}
+}
+
+void UTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+{
+	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	FHitResult HitResult;
+	PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
+	if (!HitResult.IsValidBlockingHit())
+	{
+		return;
+	}
+
+	const ATile* HitTile = Cast<ATile>(HitResult.GetActor());
+	if (!HitTile)
+	{
+		return;
+	}
+	
+	const int32 HitTileFloor = TileManagerSubsystem->GetTileFloor(HitTile);
+	
+	TSet<FCubeCoord> OutCubeCoords;
+	TileManagerSubsystem->TileBFS(HitTile->GetCubeCoord(), TargetTileRange.Distance, TargetTileRange.BFSType, OutCubeCoords,
+		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
+		{
+			return true;
+		},
+		[this, TileManagerSubsystem, HitTileFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+		{
+			if (TileData && TileData->TopTile.IsValid())
+			{
+				const ATile* Tile = TileData->TopTile.Get();
+				const int32 CurrentTargetFloor = TileManagerSubsystem->GetTileFloor(Tile);
+				const int32 FloorGap = CurrentTargetFloor - HitTileFloor;
+
+				if (FloorGap <= TargetTileRange.FloorGap)
+				{
+					return true;
+				}
+			}
+			return false;
+		});
+
+	for (const FCubeCoord& CubeCoord : OutCubeCoords)
+	{
+		OutTiles.Add(TileManagerSubsystem->GetTile(CubeCoord));
 	}
 }

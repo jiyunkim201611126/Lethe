@@ -24,6 +24,13 @@ public:
 	/** 좌상단, 좌측으로 향하면 +, 우하단, 우측으로 향하면 - */
 	UPROPERTY(EditAnywhere)
 	int32 S;
+	
+	static constexpr int32 HexDirectionCount = 6;
+
+	static float GetTileWidthInterval()
+	{
+		return TileWidthInterval;
+	}
 
 	FCubeCoord() : Q(0), R(0), S(0) {}
 	
@@ -42,8 +49,6 @@ public:
 	{
 		return Q == Other.Q && R == Other.R && S == Other.S;
 	}
-	
-	static constexpr int32 HexDirectionCount = 6;
 	
 	//각 방향으로의 오프셋값, ETileDirection과 조합해서 사용
 	static FCubeCoord GetDirection(const int32 DirectionIndex)

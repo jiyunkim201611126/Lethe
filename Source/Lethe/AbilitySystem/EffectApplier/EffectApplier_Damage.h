@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -7,18 +7,17 @@
 #include "ScalableFloat.h"
 #include "EffectApplier_Damage.generated.h"
 
-UCLASS()
-class LETHE_API UEffectApplier_Damage : public UGameplayEffectApplier
+USTRUCT(BlueprintType)
+struct LETHE_API FEffectApplier_Damage : public FGameplayEffectApplier
 {
 	GENERATED_BODY()
 
-public:
-	//~ Begin UGameplayEffectApplier Interface
-	virtual void ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor) override;
+	//~ Begin FGameplayEffectApplier Interface
+	virtual void ApplyEffect(const UGameplayAbility* OwningAbility, AActor* TargetActor) const override;
 	virtual bool TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const override;
 
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
-	//~ End of UGameplayEffectApplier Interface
+	//~ End of FGameplayEffectApplier Interface
 	
 	void CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs) const;
 

@@ -1,11 +1,11 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "EffectApplier_Damage.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 
-void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor* TargetActor)
+void FEffectApplier_Damage::ApplyEffect(const UGameplayAbility* OwningAbility, AActor* TargetActor) const
 {
 	FGameplayEffectContextHandle EffectContextHandle;
 	MakeEffectContextHandle(OwningAbility, EffectContextHandle);
@@ -21,7 +21,7 @@ void UEffectApplier_Damage::ApplyEffect(UGameplayAbility* OwningAbility, AActor*
 	}
 }
 
-bool UEffectApplier_Damage::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
+bool FEffectApplier_Damage::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
 	if (!SourceASC)
 	{
@@ -47,7 +47,7 @@ bool UEffectApplier_Damage::TryPrepareSpecHandles(UAbilitySystemComponent* Sourc
 	return !OutSpecHandles.IsEmpty();
 }
 
-void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs) const
+void FEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& DamageSpecs) const
 {
 	if (!TargetActor)
 	{
@@ -68,7 +68,7 @@ void UEffectApplier_Damage::CauseDamage(const UGameplayAbility* OwningAbility, A
 	}
 }
 
-int32 UEffectApplier_Damage::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+int32 FEffectApplier_Damage::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	float AllDamage = 0.f;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)

@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -8,7 +8,6 @@
 #include "LetheGameplayAbility.generated.h"
 
 struct FCueDataPayload;
-class UGameplayEffectApplier;
 
 UENUM(BlueprintType)
 enum class ENoiseStartTile : uint8

@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "EffectApplier_DamageWithConsumeAllCost.h"
 
@@ -10,15 +10,20 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
+bool FEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
+	if (!SourceASC)
+	{
+		return false;
+	}
+
 	const AActor* SourceActor = SourceASC->GetAvatarActor();
 	if (!SourceActor || !SourceActor->Implements<UPlayerCharacterInterface>())
 	{
 		return false;
 	}
 	
-	OutSpecHandles.Reserve(DamageValues.Num() * SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
+	OutSpecHandles.Reserve(DamageValues.Num() * FMath::FloorToInt(SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute())));
 	if (!bPreview)
 	{
 		while (SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) >= 1.f)
@@ -30,7 +35,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySyst
 			// 매 반복 시마다 반드시 감소해야 하므로, 이전 Cost와 현재 Cost가 일치할 경우 분기를 빠져나갑니다.
 			if (PrevCost == NewCost)
 			{
-				LETHE_LOG(LogAbility, Error, "%s를 사용했으나, 코스트가 소모되지 않았습니다.", *GetName());
+				LETHE_LOG(LogAbility, Error, "%s를 사용했으나, 코스트가 소모되지 않았습니다.", *StaticStruct()->GetName());
 				break;
 			}
 			
@@ -48,7 +53,7 @@ bool UEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySyst
 	return !OutSpecHandles.IsEmpty();
 }
 
-void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC) const
+void FEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC) const
 {
 	if (!SourceASC)
 	{
@@ -72,7 +77,7 @@ void UEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent*
 	}
 }
 
-int32 UEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+int32 FEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	float AllDamage = 0.f;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
@@ -83,12 +88,12 @@ int32 UEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbi
 	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) : 1.f);
 }
 
-TSubclassOf<UGameplayEffect> UEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
+TSubclassOf<UGameplayEffect> FEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
 {
 	return CostEffectClass;
 }
 
-bool UEffectApplier_DamageWithConsumeAllCost::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool FEffectApplier_DamageWithConsumeAllCost::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	if (!SourceASC)
 	{

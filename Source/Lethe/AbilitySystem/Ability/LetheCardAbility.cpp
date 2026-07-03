@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LetheCardAbility.h"
 
@@ -39,6 +39,21 @@ void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerC
 	}
 }
 
+int32 ULetheCardAbility::GetEffectApplierValueForDescription(const FGameplayTag& EffectApplierTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+{
+	for (const TInstancedStruct<FGameplayEffectApplier>& EffectApplier : EffectAppliers)
+	{
+		if (const FGameplayEffectApplier* EffectApplierPtr = EffectApplier.GetPtr())
+		{
+			if (EffectApplierPtr->GetEffectApplierTag().MatchesTagExact(EffectApplierTag))
+			{
+				return EffectApplierPtr->GetValueForDescription(OwnerASC, InLevel);
+			}
+		}
+	}
+	return 0;
+}
+
 bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
 {
 	if (CostGameplayEffectClass && SourceASC)
@@ -65,10 +80,10 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 	
 	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
 	{
-		TArray<UGameplayEffectApplier*> PolicyEffectAppliers;
+		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
 		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
 		
-		for (const UGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
+		for (const FGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
 		{
 			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
 			
@@ -96,7 +111,7 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 		TArray<AActor*> PolicyTargetActors;
 		GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, PolicyTargetActors);
 
-		TArray<UGameplayEffectApplier*> PolicyEffectAppliers;
+		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
 		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
 		
 		for (AActor* TargetActor : PolicyTargetActors)
@@ -109,7 +124,7 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 			}
 			
 			TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
-			for (const UGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
+			for (const FGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
 			{
 				// EffectApplier에게 EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
 				const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
@@ -392,18 +407,19 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& Effect
 	}
 }
 
-void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<UGameplayEffectApplier*>& OutEffectAppliers) const
+void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const
 {
-	for (UGameplayEffectApplier* EffectApplier : EffectAppliers)
+	for (const TInstancedStruct<FGameplayEffectApplier>& EffectApplier : EffectAppliers)
 	{
-		if (!EffectApplier)
+		const FGameplayEffectApplier* EffectApplierPtr = EffectApplier.GetPtr();
+		if (!EffectApplierPtr)
 		{
 			continue;
 		}
 
-		if (EffectApplyPolicy.EffectApplierTags.HasTagExact(EffectApplier->GetEffectApplierTag()))
+		if (EffectApplyPolicy.EffectApplierTags.HasTagExact(EffectApplierPtr->GetEffectApplierTag()))
 		{
-			OutEffectAppliers.AddUnique(EffectApplier);
+			OutEffectAppliers.AddUnique(EffectApplierPtr);
 		}
 		else
 		{
@@ -419,10 +435,10 @@ void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& 
 		return;
 	}
 
-	TArray<UGameplayEffectApplier*> OutEffectAppliers;
+	TArray<const FGameplayEffectApplier*> OutEffectAppliers;
 	GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
 	
-	for (UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+	for (const FGameplayEffectApplier* EffectApplier : OutEffectAppliers)
 	{
 		EffectApplier->ApplyEffect(this, TargetActor);
 	}

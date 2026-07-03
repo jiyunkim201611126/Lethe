@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -9,12 +9,11 @@
 /**
  * 모든 Cost가 소모될 때까지 Cost를 1씩 소비하며 데미지를 다단히트 형식으로 주는 EA입니다.
  */
-UCLASS()
-class LETHE_API UEffectApplier_DamageWithConsumeAllCost : public UEffectApplier_Damage
+USTRUCT(BlueprintType)
+struct LETHE_API FEffectApplier_DamageWithConsumeAllCost : public FEffectApplier_Damage
 {
 	GENERATED_BODY()
 
-public:
 	//~ Begin FGameplayEffectApplier Interface
 	virtual bool TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const override;
 	

@@ -25,6 +25,7 @@ public class Lethe : ModuleRules
 			"ModularGameplay",
 			
 			"GameplayAbilities",
+			"StructUtils",
 			
 			"AIModule",
 			"PCG",

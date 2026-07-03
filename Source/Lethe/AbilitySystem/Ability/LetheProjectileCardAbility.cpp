@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LetheProjectileCardAbility.h"
 
@@ -64,15 +64,23 @@ void ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSp
 		Payload.TargetActor = TargetActor;
 
 		// 이번 발사에 적용할 EffectAppliers를 가져옵니다.
-		TArray<UGameplayEffectApplier*> OutEffectAppliers;
+		TArray<const FGameplayEffectApplier*> OutEffectAppliers;
 		GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
 
-		// 가져온 EffectAppliers를 순회하며 Spec을 생성, Payload에 할당합니다.
-		for (const UGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+		if (!SourceASC)
 		{
-			FGameplayEffectContextHandle ContextHandle;
+			Projectile->Destroy();
+			continue;
+		}
+
+		// 가져온 EffectAppliers를 순회하며 Spec을 생성, Payload에 할당합니다.
+		for (const FGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+		{
+			FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
+			ContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			EffectApplier->TryPrepareSpecHandles(GetAbilitySystemComponentFromActorInfo(), ContextHandle, SpecHandles);
+			EffectApplier->TryPrepareSpecHandles(SourceASC, ContextHandle, SpecHandles);
 			Payload.SpecHandles.Append(SpecHandles);
 		}
 

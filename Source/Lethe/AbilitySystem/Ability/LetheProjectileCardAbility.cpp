@@ -5,7 +5,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/Actor/LetheProjectile.h"
 
-void ULetheProjectileCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
+void ULetheProjectileCardAbility::ExecuteEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor)
 {
 	if (!TargetActor)
 	{
@@ -26,11 +26,11 @@ void ULetheProjectileCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApp
 
 	if (ensureMsgf(ProjectileClass, TEXT("Projectile 클래스가 할당되지 않았습니다.")))
 	{
-		SpawnProjectiles(Instigator->GetActorLocation(), EffectApplyPolicy, TargetActor);
+		SpawnProjectiles(Instigator->GetActorLocation(), EffectTargetMappingPolicy, TargetActor);
 	}
 }
 
-void ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSpawnLocation, const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor) const
+void ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSpawnLocation, const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor) const
 {
 	const FVector TargetLocation = TargetActor->GetActorLocation();
 	const FVector Forward = TargetLocation - InProjectileSpawnLocation;
@@ -65,7 +65,7 @@ void ULetheProjectileCardAbility::SpawnProjectiles(const FVector& InProjectileSp
 
 		// 이번 발사에 적용할 EffectAppliers를 가져옵니다.
 		TArray<const FGameplayEffectApplier*> OutEffectAppliers;
-		GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
+		GetEffectAppliersByPolicy(EffectTargetMappingPolicy, OutEffectAppliers);
 
 		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 		if (!SourceASC)

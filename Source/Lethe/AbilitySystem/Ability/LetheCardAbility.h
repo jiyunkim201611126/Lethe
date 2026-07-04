@@ -11,7 +11,7 @@
 class UEffectTargetTileSelector;
 
 USTRUCT(BlueprintType)
-struct FEffectApplyPolicy
+struct FEffectTargetMappingPolicy
 {
 	GENERATED_BODY()
 
@@ -93,10 +93,10 @@ protected:
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 	void ActiveFailed();
 
-	void GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
-	void GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const;
+	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
+	void GetEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const;
 	
-	virtual void ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor);
+	virtual void ExecuteEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor);
 	
 	UFUNCTION(BlueprintImplementableEvent, meta = (ToolTip = "Ability가 발동되어 실제로 동작이 트리거됐을 때 호출됩니다. Effect 적용 시점이 아닌, Ability의 동작이 기준입니다."))
 	void OnEffectTriggered(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
@@ -142,7 +142,7 @@ protected:
 
 	/** 갖고 있는 EffectAppliers를 CachedTargetActors 중 누구에게, 무엇을 적용할지 결정하는 정책입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TArray<FEffectApplyPolicy> EffectApplyPolicies;
+	TArray<FEffectTargetMappingPolicy> EffectTargetMappingPolicies;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;

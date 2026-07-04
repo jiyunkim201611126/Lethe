@@ -268,7 +268,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		{
 			if (TargetTile.IsValid())
 			{
-				// EffectApplyPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
 				AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
 
 				const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();

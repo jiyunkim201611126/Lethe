@@ -19,8 +19,8 @@
 
 ULetheCardAbility::ULetheCardAbility()
 {
-	FEffectApplyPolicy& EffectApplyPolicy = EffectApplyPolicies.Emplace_GetRef();
-	EffectApplyPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
+	FEffectTargetMappingPolicy& EffectTargetMappingPolicy = EffectTargetMappingPolicies.Emplace_GetRef();
+	EffectTargetMappingPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 }
 
 void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
@@ -78,10 +78,10 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 		return false;
 	}
 	
-	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
+	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
 		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
-		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
+		GetEffectAppliersByPolicy(EffectTargetMappingPolicy, PolicyEffectAppliers);
 		
 		for (const FGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
 		{
@@ -106,13 +106,13 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 		return false;
 	}
 	
-	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
+	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
 		TArray<AActor*> PolicyTargetActors;
-		GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, PolicyTargetActors);
+		GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActors, PolicyTargetActors);
 
 		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
-		GetEffectAppliersByPolicy(EffectApplyPolicy, PolicyEffectAppliers);
+		GetEffectAppliersByPolicy(EffectTargetMappingPolicy, PolicyEffectAppliers);
 		
 		for (AActor* TargetActor : PolicyTargetActors)
 		{
@@ -227,12 +227,12 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
 	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
 
-	// 갖고 있는 모든 EffectApplyPolicy의 MontageEventTag로 WaitGameplayEvent Task를 생성합니다.
-	for (const FEffectApplyPolicy& ApplyPolicy : EffectApplyPolicies)
+	// 갖고 있는 모든 EffectTargetMappingPolicy의 MontageEventTag로 WaitGameplayEvent Task를 생성합니다.
+	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
 		UAbilityTask_WaitGameplayEvent* WaitApplyEffectEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 			this,
-			ApplyPolicy.MontageEventTag,
+			EffectTargetMappingPolicy.MontageEventTag,
 			nullptr,
 			true,
 			true);
@@ -344,29 +344,29 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 {
-	for (const FEffectApplyPolicy& EffectApplyPolicy : EffectApplyPolicies)
+	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
-		if (InPayload.EventTag.MatchesTagExact(EffectApplyPolicy.MontageEventTag))
+		if (InPayload.EventTag.MatchesTagExact(EffectTargetMappingPolicy.MontageEventTag))
 		{
-			// 수신한 이벤트 태그와 EffectApplyPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
+			// 수신한 이벤트 태그와 EffectTargetMappingPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
 			TArray<AActor*> TargetActors;
 			TargetActors.Reserve(CachedTargetActors.Num());
 			for (const auto& CachedTargetActor : CachedTargetActors)
 			{
-				// EffectApplyPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
 				TargetActors.Add(CachedTargetActor.Get());
 			}
 
 			TArray<AActor*> OutTargetActors;
-			GetTargetActorsByPolicy(EffectApplyPolicy, TargetActors, OutTargetActors);
+			GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActors, OutTargetActors);
 
 			if (!OutTargetActors.IsEmpty())
 			{
 				for (AActor* TargetActor : OutTargetActors)
 				{
-					ExecuteEffectAppliersByPolicy(EffectApplyPolicy, TargetActor);
+					ExecuteEffectAppliersByPolicy(EffectTargetMappingPolicy, TargetActor);
 				}
-				OnEffectTriggered(EffectApplyPolicy.MontageEventTag, OutTargetActors);
+				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, OutTargetActors);
 			}
 			return;
 		}
@@ -380,9 +380,9 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 	}
 }
 
-void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const
+void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const
 {
-	if (EffectApplyPolicy.TargetActorIndices.Contains(FEffectApplyPolicy::AllIndices))
+	if (EffectTargetMappingPolicy.TargetActorIndices.Contains(FEffectTargetMappingPolicy::AllIndices))
 	{
 		// 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
 		for (AActor* TargetActor : CandidateTargetActors)
@@ -396,7 +396,7 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& Effect
 	}
 	
 	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
-	for (const int32 TargetActorIndex : EffectApplyPolicy.TargetActorIndices)
+	for (const int32 TargetActorIndex : EffectTargetMappingPolicy.TargetActorIndices)
 	{
 		if (CandidateTargetActors.IsValidIndex(TargetActorIndex) && CandidateTargetActors[TargetActorIndex])
 		{
@@ -405,7 +405,7 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectApplyPolicy& Effect
 	}
 }
 
-void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const
+void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const
 {
 	for (const TInstancedStruct<FGameplayEffectApplier>& EffectApplier : EffectAppliers)
 	{
@@ -415,18 +415,18 @@ void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectApplyPolicy& Effe
 			continue;
 		}
 
-		if (EffectApplyPolicy.EffectApplierTags.HasTagExact(EffectApplierPtr->GetEffectApplierTag()))
+		if (EffectTargetMappingPolicy.EffectApplierTags.HasTagExact(EffectApplierPtr->GetEffectApplierTag()))
 		{
 			OutEffectAppliers.AddUnique(EffectApplierPtr);
 		}
 		else
 		{
-			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectApplyPolicy가 존재합니다. Ability: %s", *GetName());
+			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectTargetMappingPolicy가 존재합니다. Ability: %s", *GetName());
 		}
 	}
 }
 
-void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& EffectApplyPolicy, AActor* TargetActor)
+void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor)
 {
 	if (!TargetActor)
 	{
@@ -434,7 +434,7 @@ void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectApplyPolicy& 
 	}
 
 	TArray<const FGameplayEffectApplier*> OutEffectAppliers;
-	GetEffectAppliersByPolicy(EffectApplyPolicy, OutEffectAppliers);
+	GetEffectAppliersByPolicy(EffectTargetMappingPolicy, OutEffectAppliers);
 	
 	for (const FGameplayEffectApplier* EffectApplier : OutEffectAppliers)
 	{

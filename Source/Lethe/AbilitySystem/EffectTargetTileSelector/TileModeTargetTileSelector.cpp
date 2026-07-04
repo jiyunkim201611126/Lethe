@@ -68,7 +68,7 @@ void UTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, cons
 		const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(TileManagerSubsystem->GetActorOnTile(Tile));
 		if (!TargetCombatInterface)
 		{
-			// EffectApplyPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+			// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
 			OutTiles.Add(nullptr);
 			continue;
 		}

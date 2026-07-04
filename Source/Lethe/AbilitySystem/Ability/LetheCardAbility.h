@@ -62,6 +62,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
 
+    /** 카드 상세보기 시 설명용 텍스트에 넣을 값을 가져오는 함수입니다. */
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	int32 GetEffectApplierValueForDescription(const FGameplayTag& EffectApplierTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 

@@ -158,7 +158,7 @@ void UDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 
 		// 선택 후보 타일을 가져옵니다.
 		TArray<ATile*> OutSelectCandidateTiles;
-		GetTargetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
+		GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
 
 		// 거리에 알맞는 타일들만 추가합니다.
 		while (OutSelectCandidateTiles.IsValidIndex(TileIndex))

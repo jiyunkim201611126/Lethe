@@ -90,6 +90,7 @@ void UTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, cons
 			{
 				OutTiles.Add(Tile);
 			}
+			break;
 		default:
 			OutTiles.Add(nullptr);
 			break;

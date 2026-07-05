@@ -103,6 +103,11 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 	{
 		for (ATile* Tile : Tiles)
 		{
+			if (!Tile)
+			{
+				continue;
+			}
+			
 			// 타일 위에 카드 주인이 있다면 검은색, 다른 게 있다면 초록색으로, 아무것도 없다면 파란색으로 아웃라인을 표시합니다.
 			int32 OutlineColor;
 			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
@@ -113,7 +118,7 @@ void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Til
 			{
 				OutlineColor = CUSTOM_DEPTH_BLUE;
 			}
-			
+
 			IHighlightInterface::Execute_HighlightActorByAbility(Tile, OutlineColor);
 			CurrentHighlightedTilesByAbility.Add(Tile);
 		}

@@ -12,6 +12,7 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
+#include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheHUD.h"
@@ -427,8 +428,10 @@ void ALethePlayerController::OnOtherTileDetected() const
 				{
 					if (AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(Tile))
 					{
-						// 적합한 타겟이 있는 타일만 담겨져왔기 때문에, 별다른 필터나 방어로직 없이 바로 사용합니다.
-						TargetActors.Add(TargetActor);
+						if (TargetActor->Implements<UCombatInterface>())
+						{
+							TargetActors.Add(TargetActor);
+						}
 					}
 				}
 				

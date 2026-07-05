@@ -5,11 +5,12 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
-#include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/AbilitySystem/EffectDelivery/EffectDelivery_Immediately.h"
+#include "Lethe/AbilitySystem/EffectSpecBuilder/GameplayEffectSpecBuilder.h"
+#include "Lethe/AbilitySystem/EffectDelivery/GameplayEffectDelivery.h"
 #include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
@@ -21,6 +22,8 @@ ULetheCardAbility::ULetheCardAbility()
 {
 	FEffectTargetMappingPolicy& EffectTargetMappingPolicy = EffectTargetMappingPolicies.Emplace_GetRef();
 	EffectTargetMappingPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
+
+	EffectDelivery.InitializeAs<FEffectDelivery_Immediately>();
 }
 
 void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
@@ -39,15 +42,15 @@ void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerC
 	}
 }
 
-int32 ULetheCardAbility::GetEffectApplierValueForDescription(const FGameplayTag& EffectApplierTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+int32 ULetheCardAbility::GetEffectSpecBuilderValueForDescription(const FGameplayTag& EffectSpecBuilderTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
-	for (const TInstancedStruct<FGameplayEffectApplier>& EffectApplier : EffectAppliers)
+	for (const auto& EffectSpecBuilder : EffectSpecBuilders)
 	{
-		if (const FGameplayEffectApplier* EffectApplierPtr = EffectApplier.GetPtr())
+		if (const FGameplayEffectSpecBuilder* EffectSpecBuilderPtr = EffectSpecBuilder.GetPtr())
 		{
-			if (EffectApplierPtr->GetEffectApplierTag().MatchesTagExact(EffectApplierTag))
+			if (EffectSpecBuilderPtr->GetEffectSpecBuilderTag().MatchesTagExact(EffectSpecBuilderTag))
 			{
-				return EffectApplierPtr->GetValueForDescription(OwnerASC, InLevel);
+				return EffectSpecBuilderPtr->GetValueForDescription(OwnerASC, InLevel);
 			}
 		}
 	}
@@ -80,17 +83,17 @@ bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponen
 	
 	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
-		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
-		GetEffectAppliersByPolicy(EffectTargetMappingPolicy, PolicyEffectAppliers);
+		TArray<const FGameplayEffectSpecBuilder*> PolicyEffectSpecBuilders;
+		GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, PolicyEffectSpecBuilders);
 		
-		for (const FGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
+		for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : PolicyEffectSpecBuilders)
 		{
-			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectApplier->GetSourcePreviewEffectClass();
+			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectSpecBuilder->GetSourcePreviewEffectClass();
 			
 			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 			PreviewContextHandle.SetAbility(this);
 			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectApplier->TryMakeSourcePreviewSpecHandles(SourceASC, PreviewContextHandle, SpecHandles))
+			if (EffectSpecBuilder->TryBuildSourcePreviewSpecHandles(SourceASC, PreviewContextHandle, SpecHandles))
 			{
 				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
 			}
@@ -111,28 +114,27 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 		TArray<AActor*> PolicyTargetActors;
 		GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActors, PolicyTargetActors);
 
-		TArray<const FGameplayEffectApplier*> PolicyEffectAppliers;
-		GetEffectAppliersByPolicy(EffectTargetMappingPolicy, PolicyEffectAppliers);
+		TArray<const FGameplayEffectSpecBuilder*> PolicyEffectSpecBuilders;
+		GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, PolicyEffectSpecBuilders);
 		
 		for (AActor* TargetActor : PolicyTargetActors)
 		{
-			const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor);
-			UAbilitySystemComponent* TargetASC = TargetAbilitySystemInterface ? TargetAbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
+			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 			if (!TargetASC)
 			{
 				continue;
 			}
 			
 			TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
-			for (const FGameplayEffectApplier* EffectApplier : PolicyEffectAppliers)
+			for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : PolicyEffectSpecBuilders)
 			{
-				// EffectApplier에게 EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
-				const TSubclassOf<UGameplayEffect>& EffectClass = EffectApplier->GetEffectClass();
+				// EffectSpecBuilder에게 EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
+				const TSubclassOf<UGameplayEffect>& EffectClass = EffectSpecBuilder->GetEffectClass();
 				FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 				PreviewContextHandle.SetAbility(this);
 				
 				TArray<FGameplayEffectSpecHandle> SpecHandles;
-				if (EffectApplier->TryPrepareSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
+				if (EffectSpecBuilder->TryBuildEffectSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
 				{
 					TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
 				}
@@ -309,9 +311,9 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	{
 		if (TargetActor.IsValid())
 		{
-			if (const IAbilitySystemInterface* TargetAbilitySystemInterface = Cast<IAbilitySystemInterface>(TargetActor))
+			if (const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor.Get()))
 			{
-				TargetASCs.Add(TargetAbilitySystemInterface->GetAbilitySystemComponent());
+				TargetASCs.Add(TargetASC);
 			}
 		}
 	}
@@ -364,7 +366,7 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 			{
 				for (AActor* TargetActor : OutTargetActors)
 				{
-					ExecuteEffectAppliersByPolicy(EffectTargetMappingPolicy, TargetActor);
+					StartDeliveryEffects(EffectTargetMappingPolicy, TargetActor);
 				}
 				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, OutTargetActors);
 			}
@@ -405,40 +407,76 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy
 	}
 }
 
-void ULetheCardAbility::GetEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const
+void ULetheCardAbility::GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const
 {
-	for (const TInstancedStruct<FGameplayEffectApplier>& EffectApplier : EffectAppliers)
+	for (const auto& EffectSpecBuilder : EffectSpecBuilders)
 	{
-		const FGameplayEffectApplier* EffectApplierPtr = EffectApplier.GetPtr();
-		if (!EffectApplierPtr)
+		const FGameplayEffectSpecBuilder* EffectSpecBuilderPtr = EffectSpecBuilder.GetPtr();
+		if (!EffectSpecBuilderPtr)
 		{
 			continue;
 		}
 
-		if (EffectTargetMappingPolicy.EffectApplierTags.HasTagExact(EffectApplierPtr->GetEffectApplierTag()))
+		if (EffectTargetMappingPolicy.EffectSpecBuilderTags.HasTagExact(EffectSpecBuilderPtr->GetEffectSpecBuilderTag()))
 		{
-			OutEffectAppliers.AddUnique(EffectApplierPtr);
+			OutEffectSpecBuilders.AddUnique(EffectSpecBuilderPtr);
 		}
 		else
 		{
-			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectApplier의 GameplayTag를 할당받은 EffectTargetMappingPolicy가 존재합니다. Ability: %s", *GetName());
+			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectSpecBuilder의 GameplayTag를 할당받은 EffectTargetMappingPolicy가 존재합니다. Ability: %s", *GetName());
 		}
 	}
 }
 
-void ULetheCardAbility::ExecuteEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor)
+void ULetheCardAbility::StartDeliveryEffects(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor) const
 {
 	if (!TargetActor)
 	{
 		return;
 	}
 
-	TArray<const FGameplayEffectApplier*> OutEffectAppliers;
-	GetEffectAppliersByPolicy(EffectTargetMappingPolicy, OutEffectAppliers);
-	
-	for (const FGameplayEffectApplier* EffectApplier : OutEffectAppliers)
+	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+	if (!SourceASC)
 	{
-		EffectApplier->ApplyEffect(this, TargetActor);
+		return;
+	}
+	
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+	if (!TargetASC)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
+	EffectContextHandle.SetAbility(this);
+
+	TArray<TWeakObjectPtr<AActor>> TargetActors;
+	TargetActors.Add(TargetActor);
+	EffectContextHandle.AddActors(TargetActors);
+
+	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
+	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
+	
+	for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : OutEffectSpecBuilders)
+	{
+		TArray<FGameplayEffectSpecHandle> SpecHandles;
+		if (EffectSpecBuilder->TryBuildEffectSpecHandles(SourceASC, EffectContextHandle, SpecHandles))
+		{
+			// EffectDelivery가 비어있다면 FEffectDelivery_Immediately를 사용하도록 fallback합니다.
+			const FGameplayEffectDelivery* EffectDeliveryPtr = EffectDelivery.GetPtr();
+			if (!EffectDeliveryPtr)
+			{
+				static const FEffectDelivery_Immediately DefaultDelivery;
+				EffectDeliveryPtr = &DefaultDelivery;
+			}
+
+			FEffectDeliveryContext EffectDeliveryContext;
+			EffectDeliveryContext.EffectSpecHandles = MoveTemp(SpecHandles);
+			EffectDeliveryContext.OwnerAbility = this;
+			EffectDeliveryContext.SourceASC = SourceASC;
+			EffectDeliveryContext.TargetASC = TargetASC;
+			EffectDeliveryPtr->StartDelivery(EffectDeliveryContext);
+		}
 	}
 }
 

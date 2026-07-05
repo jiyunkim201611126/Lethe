@@ -29,33 +29,11 @@ void UDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor,
 		return;
 	}
 	
-	// 타겟 후보 타일을 가져옵니다.
-	TArray<ATile*> OutTargetCandidateTiles;
-	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetCandidateTiles);
-
-	if (const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		for (ATile* Tile : OutTargetCandidateTiles)
-		{
-			const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile);
-			if (ActorOnTile && ActorOnTile->Implements<UCombatInterface>())
-			{
-				// 타겟 후보 타일 위에 전투 가능 액터가 있다면 OutTiles에 추가합니다.
-				OutTiles.Add(Tile);
-			}
-		}
-	}
+	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTiles);
 }
 
 void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
-	FHitResult HitResult;
-	PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
-	if (!HitResult.IsValidBlockingHit())
-	{
-		return;
-	}
-
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
 	{
@@ -68,20 +46,14 @@ void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 		return;
 	}
 
-	// 현재 서있는 위치와 마우스에서 라인트레이스를 통해 가져온 위치에서 Z축을 빼고 방향 벡터를 계산합니다.
-	const FVector CurrentLocation = CurrentTile->GetActorLocation();
-	const FVector2D DesiredDirection(HitResult.ImpactPoint.X - CurrentLocation.X, HitResult.ImpactPoint.Y - CurrentLocation.Y);
-	if (DesiredDirection.IsNearlyZero())
-	{
-		return;
-	}
-
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(DesiredDirection.GetSafeNormal(), SelectedDirections);
+	GetSelectedDirections(CurrentTile, PlayerController, SelectedDirections);
 
 	const FCubeCoord CenterCoord = CurrentTile->GetCubeCoord();
 	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
+
+	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나가면서 모든 타일을 OutTiles에 추가합니다.
 	for (const int32 Direction : SelectedDirections)
 	{
 		for (int32 Distance = 1; Distance <= MaxRangeDistance; ++Distance)
@@ -91,11 +63,9 @@ void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 				CenterCoord.Q + DirectionOffset.Q * Distance,
 				CenterCoord.R + DirectionOffset.R * Distance,
 				CenterCoord.S + DirectionOffset.S * Distance);
-			
-			if (ATile* Tile = TileManagerSubsystem->GetTile(TargetCoord))
-			{
-				OutTiles.Add(Tile);
-			}
+
+			// 인덱스가 곧 CurrentTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
+			OutTiles.Add(TileManagerSubsystem->GetTile(TargetCoord));
 		}
 	}
 }
@@ -131,39 +101,33 @@ void UDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 	FHitResult HitResult;
 	if (PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult))
 	{
-		// AvatarActor가 서있는 타일과 마우스 위치까지의 거리 제곱을 계산합니다.
+		// AvatarActor가 서있는 타일과 마우스 위치까지의 거리를 계산합니다.
 		const FVector CurrentTileLocation = CurrentTile->GetActorLocation();
 		const FVector HitLocation = HitResult.ImpactPoint;
-		const float DistanceSquared = FVector::DistSquaredXY(CurrentTileLocation, HitLocation);
+		const float Distance = FVector::Dist(CurrentTileLocation, HitLocation);
 
-		// 타일과 타일 사이의 거리 제곱을 계산합니다.
+		// 타일과 타일 사이의 거리를 가져옵니다.
 		const float TileWidthInterval = FCubeCoord::GetTileWidthInterval();
-		const float TileWidthIntervalSquared = TileWidthInterval * TileWidthInterval;
 
-		// 서있는 타일과 마우스 위치까지의 거리 제곱에서 타일과 타일 사이의 거리 제곱을 빼고, 해당 수치가 음수인 경우 얼리리턴합니다.
-		const float AdjustedDistanceSquared = DistanceSquared - TileWidthIntervalSquared;
-		if (AdjustedDistanceSquared <= 0.f)
-		{
-			return;
-		}
+		// 거리를 타일 기준으로 계산합니다.
+		const int32 TileDistance = FMath::RoundToInt(Distance / TileWidthInterval);
 
-		// 최대 사거리를 가져오고, 위에서 계산한 수치를 타일과 타잂 사이의 거리 제곱으로 나눈 후 1을 빼서 방향별 가져올 타일 인덱스를 계산합니다.
 		const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
-		int32 TileIndex = static_cast<int32>(AdjustedDistanceSquared / TileWidthIntervalSquared) - 1;
-		if (MaxRangeDistance <= TileIndex)
+		if (!(0 <= TileDistance && TileDistance <= MaxRangeDistance))
 		{
-			// 최대 사거리를 벗어나 마우스를 둔 경우 얼리리턴합니다.
+			// 사거리를 벗어나 마우스를 둔 경우 얼리리턴합니다.
 			return;
 		}
-
+		
 		// 선택 후보 타일을 가져옵니다.
 		TArray<ATile*> OutSelectCandidateTiles;
 		GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
 
 		// 거리에 알맞는 타일들만 추가합니다.
+		int32 TileIndex = TileDistance - 1;
 		while (OutSelectCandidateTiles.IsValidIndex(TileIndex))
 		{
-			OutTiles.Add(OutSelectCandidateTiles.Last());
+			OutTiles.Add(OutSelectCandidateTiles[TileIndex]);
 			TileIndex += MaxRangeDistance;
 		}
 	}
@@ -171,46 +135,60 @@ void UDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 
 void UDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
-	// 선택 후보 타일을 가져옵니다.
-	TArray<ATile*> OutSelectCandidateTiles;
-	GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
-
-	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
-	int32 TileIndex = MaxRangeDistance - 1;
-
-	// 선택 후보 타일 중, 방향의 마지막 위치 타일만 가져옵니다.
-	TArray<ATile*> DirectionLastTiles;
-	while (OutSelectCandidateTiles.IsValidIndex(TileIndex))
+	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!TileManagerSubsystem)
 	{
-		DirectionLastTiles.Add(OutSelectCandidateTiles[TileIndex]);
-		TileIndex += MaxRangeDistance;
+		return;
 	}
 
-	// AvatarActor 위치에서 마지막 위치 타일들로 LineTrace를 수행합니다.
-	if (const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
+	if (!CurrentTile)
 	{
-		const FVector StartLocation = AvatarActor->GetActorLocation();
-		FCollisionQueryParams CollisionQueryParams;
-		CollisionQueryParams.AddIgnoredActor(AvatarActor);
-		for (ATile* DirectionLastTile : DirectionLastTiles)
+		return;
+	}
+	
+	// 원하는 방향 개수만큼 방향을 선택합니다.
+	TArray<int32> SelectedDirections;
+	GetSelectedDirections(CurrentTile, PlayerController, SelectedDirections);
+
+	const FCubeCoord CenterCoord = CurrentTile->GetCubeCoord();
+	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
+
+	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나갑니다.
+	for (const int32 Direction : SelectedDirections)
+	{
+		for (int32 Distance = 1; Distance <= MaxRangeDistance; ++Distance)
 		{
-			FVector EndLocation = DirectionLastTile->GetActorLocation();
-			EndLocation.Z = StartLocation.Z;
-		
-			FHitResult HitResult;
-			if (AvatarActor->GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Pawn, CollisionQueryParams))
+			const FCubeCoord DirectionOffset = FCubeCoord::GetDirection(Direction);
+			const FCubeCoord TargetCoord(
+				CenterCoord.Q + DirectionOffset.Q * Distance,
+				CenterCoord.R + DirectionOffset.R * Distance,
+				CenterCoord.S + DirectionOffset.S * Distance);
+
+			if (ATile* Tile = TileManagerSubsystem->GetTile(TargetCoord))
 			{
-				const AActor* HitActor = HitResult.GetActor();
-				if (HitActor->Implements<UCombatInterface>())
+				if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
 				{
-					// 검출된 Pawn이 있다면 해당 Pawn이 서있는 타일을 OutTiles에 추가합니다.
-					OutTiles.Add(TileManagerSubsystem->GetTileUnderActor(HitActor));
-					continue;
+					if (ActorOnTile->Implements<UCombatInterface>())
+					{
+						// 전투 가능한 액터가 올라서있다면 타일을 추가합니다.
+						OutTiles.Add(Tile);
+					}
+					else
+					{
+						// 전투할 수 없는 액터가 올라서있다면 nullptr을 추가합니다.
+						OutTiles.Add(nullptr);
+					}
+					// 일단 액터를 만났다면 다른 방향을 탐색합니다.
+					break;
 				}
+				// 액터를 찾지 못 했다면 이 방향을 계속해서 나아갑니다.
+				continue;
 			}
 			
-			// 검출된 Pawn이 없다면 하이라이팅을 위해 마지막 위치 타일을 OutTiles에 추가합니다.
-			OutTiles.Add(DirectionLastTile);
+			// 액터를 마주치기 전에 맵 바깥으로 나가버렸다면, nullptr을 추가하고 다른 방향을 탐색합니다.
+			OutTiles.Add(nullptr);
+			break;
 		}
 	}
 }
@@ -259,10 +237,25 @@ int32 UDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FV
 	return ClosestUpperDirection;
 }
 
-void UDirectionModeTargetTileSelector::GetSelectedDirections(const FVector2D& DesiredDirection, TArray<int32>& OutDirections) const
+void UDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* CurrentTile, const APlayerController* PlayerController, TArray<int32>& OutDirections) const
 {
 	OutDirections.Reset();
 
+	FHitResult HitResult;
+	PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
+	if (!HitResult.IsValidBlockingHit())
+	{
+		return;
+	}
+
+	// 현재 서있는 위치와 마우스에서 라인트레이스를 통해 가져온 위치에서 Z축을 빼고 방향 벡터를 계산합니다.
+	const FVector CurrentLocation = CurrentTile->GetActorLocation();
+	const FVector2D DesiredDirection(HitResult.ImpactPoint.X - CurrentLocation.X, HitResult.ImpactPoint.Y - CurrentLocation.Y);
+	if (DesiredDirection.IsNearlyZero())
+	{
+		return;
+	}
+	
 	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
 	if (ClampedDirectionCount % 2 == 1)
 	{

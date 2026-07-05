@@ -1,6 +1,6 @@
 // Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "EffectApplier_DamageWithConsumeAllCost.h"
+#include "EffectSpecBuilder_DamageWithConsumeAllCost.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -10,7 +10,7 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 
-bool FEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
+bool FEffectSpecBuilder_DamageWithConsumeAllCost::TryBuildEffectSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview) const
 {
 	if (!SourceASC)
 	{
@@ -39,7 +39,7 @@ bool FEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySyst
 				break;
 			}
 			
-			Super::TryPrepareSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
+			Super::TryBuildEffectSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
 	else
@@ -47,13 +47,13 @@ bool FEffectApplier_DamageWithConsumeAllCost::TryPrepareSpecHandles(UAbilitySyst
 		const int32 StartCost = FMath::FloorToInt(SourceASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()));
 		for (int32 Index = 0; Index < StartCost; Index++)
 		{
-			Super::TryPrepareSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
+			Super::TryBuildEffectSpecHandles(SourceASC, InContextHandle, OutSpecHandles);
 		}
 	}
 	return !OutSpecHandles.IsEmpty();
 }
 
-void FEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC) const
+void FEffectSpecBuilder_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent* SourceASC) const
 {
 	if (!SourceASC)
 	{
@@ -77,7 +77,7 @@ void FEffectApplier_DamageWithConsumeAllCost::ApplyCost(UAbilitySystemComponent*
 	}
 }
 
-int32 FEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
+int32 FEffectSpecBuilder_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	float AllDamage = 0.f;
 	for (const TPair<FGameplayTag, FScalableFloat>& Pair : DamageValues)
@@ -88,12 +88,12 @@ int32 FEffectApplier_DamageWithConsumeAllCost::GetValueForDescription(const UAbi
 	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) : 1.f);
 }
 
-TSubclassOf<UGameplayEffect> FEffectApplier_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
+TSubclassOf<UGameplayEffect> FEffectSpecBuilder_DamageWithConsumeAllCost::GetSourcePreviewEffectClass() const
 {
 	return CostEffectClass;
 }
 
-bool FEffectApplier_DamageWithConsumeAllCost::TryMakeSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
+bool FEffectSpecBuilder_DamageWithConsumeAllCost::TryBuildSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
 	if (!SourceASC)
 	{

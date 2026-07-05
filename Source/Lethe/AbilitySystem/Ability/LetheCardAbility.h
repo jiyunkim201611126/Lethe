@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "LetheGameplayAbility.h"
-#include "Lethe/AbilitySystem/EffectApplier/GameplayEffectApplier.h"
+#include "Lethe/AbilitySystem/EffectDelivery/GameplayEffectDelivery.h"
+#include "Lethe/AbilitySystem/EffectSpecBuilder/GameplayEffectSpecBuilder.h"
 #include "StructUtils/InstancedStruct.h"
 #include "LetheCardAbility.generated.h"
 
@@ -18,9 +19,9 @@ struct FEffectTargetMappingPolicy
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag MontageEventTag;
 
-	/** 적용할 EffectApplier 태그 모음입니다. */
+	/** 사용할 EffectSpecBuilder 태그 모음입니다. */
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTagContainer EffectApplierTags;
+	FGameplayTagContainer EffectSpecBuilderTags;
 
 	/**
 	 * TargetActorIndices에 'AllIndices'를 할당한다는 건, 캐싱된 모든 TargetActors를 대상으로 삼겠다는 의미입니다.
@@ -29,7 +30,7 @@ struct FEffectTargetMappingPolicy
 	static constexpr int32 AllIndices = -1;
 
 	/**
-	 * EffectApplierTags에 해당하는 EffectApplier를 적용할 TargetActor의 Index 모음입니다.
+	 * EffectSpecBuilderTags에 해당하는 EffectSpecBuilder가 만든 EffectSpec을 적용할 TargetActor의 Index 모음입니다.
 	 * CachedTargetActors를 기준으로 수행되며, -1은 캐싱된 모든 TargetActor에게 적용하겠다는 의미입니다.
 	 */
 	UPROPERTY(EditDefaultsOnly)
@@ -64,7 +65,7 @@ public:
 
     /** 카드 상세보기 시 설명용 텍스트에 넣을 값을 가져오는 함수입니다. */
 	UFUNCTION(BlueprintPure, Category = "Effect")
-	int32 GetEffectApplierValueForDescription(const FGameplayTag& EffectApplierTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
+	int32 GetEffectSpecBuilderValueForDescription(const FGameplayTag& EffectSpecBuilderTag, const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
@@ -94,9 +95,7 @@ protected:
 	void ActiveFailed();
 
 	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
-	void GetEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectApplier*>& OutEffectAppliers) const;
-	
-	virtual void ExecuteEffectAppliersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor);
+	void GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const;
 	
 	UFUNCTION(BlueprintImplementableEvent, meta = (ToolTip = "Ability가 발동되어 실제로 동작이 트리거됐을 때 호출됩니다. Effect 적용 시점이 아닌, Ability의 동작이 기준입니다."))
 	void OnEffectTriggered(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
@@ -104,15 +103,15 @@ protected:
 	void ResetCachedValues();
 	
 	template<typename T>
-	const T* GetEffectApplier() const
+	const T* GetEffectSpecBuilder() const
 	{
-		static_assert(TIsDerivedFrom<T, FGameplayEffectApplier>::IsDerived, "T는 반드시 FGameplayEffectApplier를 상속받아야 합니다.");
+		static_assert(TIsDerivedFrom<T, FGameplayEffectSpecBuilder>::IsDerived, "T는 반드시 FGameplayEffectSpecBuilder를 상속받아야 합니다.");
 
-		for (const TInstancedStruct<FGameplayEffectApplier>& Applier : EffectAppliers)
+		for (const auto& Builder : EffectSpecBuilders)
 		{
-			if (const T* TypedApplier = Applier.GetPtr<T>())
+			if (const T* TypedBuilder = Builder.GetPtr<T>())
 			{
-				return TypedApplier;
+				return TypedBuilder;
 			}
 		}
 		return nullptr;
@@ -127,8 +126,14 @@ private:
 	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InPayload);
+
+	/** Effect를 지정된 방식으로 TargetActor에게 전달을 시작합니다. */
+	void StartDeliveryEffects(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor) const;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> AbilityAnimMontage;
+	
 	/**
 	 * TargetTile 지정을 수행하는 객체입니다.
 	 * 할당하지 않으면 자동으로 마우스 위치의 타일 하나만 TargetTile로 지정됩니다.
@@ -136,16 +141,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
 	TObjectPtr<UEffectTargetTileSelector> EffectTargetTileSelector;
 	
-	/** Composite 패턴으로 조합해 사용할 수 있으며, 클래스의 ApplyEffect를 직접 호출하거나 Ability의 ApplyAllEffects를 호출해 사용합니다. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effect", meta = (ExcludeBaseStruct))
-	TArray<TInstancedStruct<FGameplayEffectApplier>> EffectAppliers;
+	/** Composite 패턴으로 조합해 사용하며, Effect 적용에 필요한 GameplayEffectSpec을 생성합니다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
+	TArray<TInstancedStruct<FGameplayEffectSpecBuilder>> EffectSpecBuilders;
 
-	/** 갖고 있는 EffectAppliers를 CachedTargetActors 중 누구에게, 무엇을 적용할지 결정하는 정책입니다. */
+	/** 갖고 있는 EffectSpecBuilders가 만든 EffectSpec을 CachedTargetActors 중 누구에게 적용할지 결정하는 정책입니다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TArray<FEffectTargetMappingPolicy> EffectTargetMappingPolicies;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> AbilityAnimMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
+	TInstancedStruct<FGameplayEffectDelivery> EffectDelivery;
 	
 	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 

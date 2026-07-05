@@ -51,8 +51,8 @@ private:
 	 */
 	int32 FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const;
 
-	/** 방향 Vector를 기준으로 원하는 개수만큼의 방향을 Out 인자로 반환합니다. */
-	void GetSelectedDirections(const FVector2D& DesiredDirection, TArray<int32>& OutDirections) const;
+	/** 원하는 개수만큼의 방향을 Out 인자로 반환합니다. */
+	void GetSelectedDirections(const ATile* CurrentTile, const APlayerController* PlayerController, TArray<int32>& OutDirections) const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly)

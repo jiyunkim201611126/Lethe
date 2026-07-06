@@ -35,13 +35,6 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 		ConvertAttributeToTag(OutCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
 	}
 
-	// Target과 관계 없이 EffectSpecBuilder에 의해 Source에게 적용되는 Preview 데이터를 추출해 가져옵니다.
-	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourcePreviewData(PreviewContext.SourceASC, OutPreviewData.SourcePreviewData))
-	{
-		FAttributePreviewDelta& AttributePreviewDeltaForSource = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
-		ConvertAttributeToTag(OutPreviewData.SourcePreviewData, AttributePreviewDeltaForSource.AttributePreviewDelta);
-	}
-
 	TArray<AActor*> TargetActors;
 	TargetActors.Reserve(PreviewContext.CurrentTargetActors.Num());
 	for (const auto& TargetActor : PreviewContext.CurrentTargetActors)

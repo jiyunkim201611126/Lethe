@@ -65,41 +65,13 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 		FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
 		PreviewContextHandle.SetAbility(this);
 		const FGameplayEffectSpecHandle CostEffectSpecHandle = SourceASC->MakeOutgoingSpec(CostGameplayEffectClass, 1.f, PreviewContextHandle);
-		
+
 		TArray<FGameplayEffectSpecHandle> CostEffectSpecHandleArray;
 		CostEffectSpecHandleArray.Add(CostEffectSpecHandle);
-		
-		return TryGetGameplayEffectPreviewData(nullptr, CostGameplayEffectClass, CostEffectSpecHandleArray, OutCostPreviewData);
+
+		return TryGetGameplayEffectPreviewData(nullptr, CostEffectSpecHandleArray, OutCostPreviewData);
 	}
 	return false;
-}
-
-bool ULetheCardAbility::TryGetEffectsForSourcePreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutPreviewData) const
-{
-	if (!SourceASC)
-	{
-		return false;
-	}
-	
-	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
-	{
-		TArray<const FGameplayEffectSpecBuilder*> PolicyEffectSpecBuilders;
-		GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, PolicyEffectSpecBuilders);
-		
-		for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : PolicyEffectSpecBuilders)
-		{
-			const TSubclassOf<UGameplayEffect>& SourcePreviewEffectClass = EffectSpecBuilder->GetSourcePreviewEffectClass();
-			
-			FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
-			PreviewContextHandle.SetAbility(this);
-			TArray<FGameplayEffectSpecHandle> SpecHandles;
-			if (EffectSpecBuilder->TryBuildSourcePreviewSpecHandles(SourceASC, PreviewContextHandle, SpecHandles))
-			{
-				TryGetGameplayEffectPreviewData(SourceASC, SourcePreviewEffectClass, SpecHandles, OutPreviewData);
-			}
-		}
-	}
-	return !OutPreviewData.IsEmpty();
 }
 
 bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const
@@ -108,40 +80,33 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 	{
 		return false;
 	}
-	
+
 	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
-		TArray<AActor*> PolicyTargetActors;
-		GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActors, PolicyTargetActors);
+		FEffectTargetMappingResolveResult ResolveResult;
+		ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetActors, ResolveResult);
 
-		TArray<const FGameplayEffectSpecBuilder*> PolicyEffectSpecBuilders;
-		GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, PolicyEffectSpecBuilders);
-		
-		for (AActor* TargetActor : PolicyTargetActors)
+		TryGetGameplayEffectPreviewData(SourceASC, ResolveResult.SourceSpecHandles, OutPreviewData.SourcePreviewData);
+
+		for (const auto& Pair : ResolveResult.TargetSpecHandlesByActor)
 		{
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+			if (!Pair.Key)
+			{
+				continue;
+			}
+
+			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pair.Key);
 			if (!TargetASC)
 			{
 				continue;
 			}
-			
+
 			TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
-			for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : PolicyEffectSpecBuilders)
-			{
-				// EffectSpecBuilder에게 EffectSpec을 만들도록 요청한 뒤 가져와 사용합니다.
-				const TSubclassOf<UGameplayEffect>& EffectClass = EffectSpecBuilder->GetEffectClass();
-				FGameplayEffectContextHandle PreviewContextHandle = SourceASC->MakeEffectContext();
-				PreviewContextHandle.SetAbility(this);
-				
-				TArray<FGameplayEffectSpecHandle> SpecHandles;
-				if (EffectSpecBuilder->TryBuildEffectSpecHandles(SourceASC, PreviewContextHandle, SpecHandles, true))
-				{
-					TryGetGameplayEffectPreviewData(TargetASC, EffectClass, SpecHandles, OutPreviewDataForTarget);
-				}
-			}
+
+			TryGetGameplayEffectPreviewData(TargetASC, Pair.Value, OutPreviewDataForTarget);
 		}
 	}
-	
+
 	// 반사 데미지, 흡혈 등 ExecCalc만으로는 구현 불가능한 규칙들을 Preview에도 적용하기 위해 아래 로직을 수행합니다.
 	for (auto& TargetPreviewData : OutPreviewData.TargetPreviewData)
 	{
@@ -159,59 +124,58 @@ bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySyste
 	return !OutPreviewData.IsEmpty();
 }
 
-bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TSubclassOf<UGameplayEffect>& EffectClass, TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
+bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
 	// GameplayEffect가 적용됐을 때 어떤 변화값이 있는지 가져와서 OutData에 채워줍니다.
-	if (const UGameplayEffect* GameplayEffectCDO = EffectClass.GetDefaultObject())
+	for (auto& SpecHandle : SpecHandles)
 	{
-		for (auto& SpecHandle : SpecHandles)
+		const FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
+		if (!Spec || !Spec->Def)
 		{
-			if (!SpecHandle.Data.IsValid())
+			continue;
+		}
+
+		const UGameplayEffect* GameplayEffectCDO = Spec->Def;
+
+		for (const FGameplayModifierInfo& Modifier : GameplayEffectCDO->Modifiers)
+		{
+			float Magnitude = 0.f;
+			if (Modifier.ModifierMagnitude.AttemptCalculateMagnitude(*SpecHandle.Data.Get(), Magnitude))
+			{
+				OutPreviewData.FindOrAdd(Modifier.Attribute) += Magnitude;
+			}
+		}
+
+		// 단순 Modifier 외에도 ExecCalc에 해당하는 변화값도 뽑아옵니다.
+		for (const FGameplayEffectExecutionDefinition& ExecDef : GameplayEffectCDO->Executions)
+		{
+			if (!ExecDef.CalculationClass)
 			{
 				continue;
 			}
-			
-			for (const FGameplayModifierInfo& Modifier : GameplayEffectCDO->Modifiers)
+
+			const UGameplayEffectExecutionCalculation* ExecCalcCDO = ExecDef.CalculationClass->GetDefaultObject<UGameplayEffectExecutionCalculation>();
+			if (!ExecCalcCDO)
 			{
-				float Magnitude = 0.f;
-				if (Modifier.ModifierMagnitude.AttemptCalculateMagnitude(*SpecHandle.Data.Get(), Magnitude))
-				{
-					OutPreviewData.FindOrAdd(Modifier.Attribute) += Magnitude;
-				}
+				continue;
 			}
 
-			// 단순 Modifier 외에도 ExecCalc에 해당하는 변화값도 뽑아옵니다.
-			for (const FGameplayEffectExecutionDefinition& ExecDef : GameplayEffectCDO->Executions)
+			// ExecCalc의 계산을 실제로 한 번 돌립니다.
+			FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, PreviewTargetASC, ExecDef.PassedInTags, FPredictionKey());
+			FGameplayEffectCustomExecutionOutput ExecutionOutput;
+			ExecCalcCDO->Execute(ExecutionParameters, ExecutionOutput);
+
+			TArray<FGameplayModifierEvaluatedData> OutModifiers;
+			ExecutionOutput.GetOutputModifiers(OutModifiers);
+
+			// ExecCalc 계산을 통해 나온 Modifier를 OutData에 채워줍니다.
+			for (const FGameplayModifierEvaluatedData& Modifier : OutModifiers)
 			{
-				if (!ExecDef.CalculationClass)
-				{
-					continue;
-				}
-			
-				const UGameplayEffectExecutionCalculation* ExecCalcCDO = ExecDef.CalculationClass->GetDefaultObject<UGameplayEffectExecutionCalculation>();
-				if (!ExecCalcCDO)
-				{
-					continue;
-				}
-
-				// ExecCalc의 계산을 실제로 한 번 돌립니다.
-				FGameplayEffectCustomExecutionParameters ExecutionParameters(*SpecHandle.Data.Get(), ExecDef.CalculationModifiers, PreviewTargetASC, ExecDef.PassedInTags, FPredictionKey());
-				FGameplayEffectCustomExecutionOutput ExecutionOutput;
-				ExecCalcCDO->Execute(ExecutionParameters, ExecutionOutput);
-
-				TArray<FGameplayModifierEvaluatedData> OutModifiers;
-				ExecutionOutput.GetOutputModifiers(OutModifiers);
-
-				// ExecCalc 계산을 통해 나온 Modifier를 OutData에 채워줍니다.
-				for (const FGameplayModifierEvaluatedData& Modifier : OutModifiers)
-				{
-					OutPreviewData.FindOrAdd(Modifier.Attribute) += Modifier.Magnitude;
-				}
+				OutPreviewData.FindOrAdd(Modifier.Attribute) += Modifier.Magnitude;
 			}
 		}
-		return true;
 	}
-	return false;
+	return !OutPreviewData.IsEmpty();
 }
 
 void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -225,7 +189,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	
+
 	// 어떤 CardAbility를 사용하든, 한 번 사용하고 나면 해당 턴에서 더이상 움직일 수 없습니다.
 	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_MoveConsumed);
 
@@ -280,7 +244,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	{
 		return false;
 	}
-	
+
 	// 애니메이션 재생 후 트리거를 통한 비동기 작업으로 Effect를 적용하기 때문에, 대상을 먼저 캐싱해둡니다.
 	const FGameplayAbilityTargetDataHandle& TargetDataHandle = TriggerEventData->TargetData;
 	const FGameplayAbilityTargetData* TargetData = TargetDataHandle.Get(0);
@@ -304,7 +268,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		ResetCachedValues();
 		return false;
 	}
-	
+
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	TArray<const UAbilitySystemComponent*> TargetASCs;
 	for (const auto& TargetActor : CachedTargetActors)
@@ -317,7 +281,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 			}
 		}
 	}
-	
+
 	if (SourceActor->Implements<UPlayerCharacterInterface>())
 	{
 		// SourceActor가 플레이어 캐릭터인 경우 들어오는 분기입니다.
@@ -333,12 +297,12 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 			ResetCachedValues();
 			return false;
 		}
-		
+
 		// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
 		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
 		return true;
 	}
-	
+
 	// SourceActor가 적 캐릭터인 경우 이곳으로 내려옵니다.
 	// 이 경우 Target Tile 위에 캐릭터가 없더라도, 애니메이션이나 나이아가라를 재생하기 위해 더미 액터를 올려두어 진행하기 때문에 true를 반환합니다.
 	return true;
@@ -346,39 +310,116 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 {
+	TArray<AActor*> TargetActors;
+	TargetActors.Reserve(CachedTargetActors.Num());
+	for (const auto& CachedTargetActor : CachedTargetActors)
+	{
+		// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+		TargetActors.Add(CachedTargetActor.Get());
+	}
+
+	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+	if (!SourceASC)
+	{
+		return;
+	}
+
 	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
 		if (InPayload.EventTag.MatchesTagExact(EffectTargetMappingPolicy.MontageEventTag))
 		{
 			// 수신한 이벤트 태그와 EffectTargetMappingPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
-			TArray<AActor*> TargetActors;
-			TargetActors.Reserve(CachedTargetActors.Num());
-			for (const auto& CachedTargetActor : CachedTargetActors)
+			FEffectTargetMappingResolveResult ResolveResult;
+			ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetActors, ResolveResult);
+
+			for (const FGameplayEffectSpecHandle& SourceSpecHandle : ResolveResult.SourceSpecHandles)
 			{
-				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-				TargetActors.Add(CachedTargetActor.Get());
+				if (SourceSpecHandle.IsValid())
+				{
+					SourceASC->ApplyGameplayEffectSpecToSelf(*SourceSpecHandle.Data.Get());
+				}
 			}
 
-			TArray<AActor*> OutTargetActors;
-			GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActors, OutTargetActors);
-
-			if (!OutTargetActors.IsEmpty())
+			TArray<AActor*> EffectedTargetActors;
+			for (const auto& Pair : ResolveResult.TargetSpecHandlesByActor)
 			{
-				for (AActor* TargetActor : OutTargetActors)
+				if (Pair.Key)
 				{
-					StartDeliveryEffects(EffectTargetMappingPolicy, TargetActor);
+					EffectedTargetActors.Add(Pair.Key);
+					StartDeliveryEffects(Pair.Key, Pair.Value);
 				}
-				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, OutTargetActors);
+			}
+
+			if (!EffectedTargetActors.IsEmpty())
+			{
+				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, EffectedTargetActors);
 			}
 			return;
 		}
 	}
-	
+
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	if (InPayload.EventTag.MatchesTagExact(LetheGameplayTags.Event_Montage_EndAbility))
 	{
 		ResetCachedValues();
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+	}
+}
+
+void ULetheCardAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<AActor*>& CandidateTargetActors, FEffectTargetMappingResolveResult& OutResult) const
+{
+	OutResult.SourceSpecHandles.Reset();
+	OutResult.TargetSpecHandlesByActor.Reset();
+
+	if (!SourceASC)
+	{
+		return;
+	}
+
+	// Policy에 해당하는 TargetActors를 가져옵니다.
+	TArray<AActor*> OutTargetActors;
+	GetTargetActorsByPolicy(EffectTargetMappingPolicy, CandidateTargetActors, OutTargetActors);
+
+	// Policy에 해당하는 EffectSpecBuilder를 가져옵니다.
+	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
+	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
+
+	if (OutTargetActors.IsEmpty() || OutEffectSpecBuilders.IsEmpty())
+	{
+		return;
+	}
+
+	// Source와 Target에게 적용할 모든 Spec을 Out 인자에 추가합니다.
+	for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : OutEffectSpecBuilders)
+	{
+		FGameplayEffectContextHandle SourceEffectContextHandle = SourceASC->MakeEffectContext();
+		SourceEffectContextHandle.SetAbility(this);
+
+		TArray<FGameplayEffectSpecHandle> SourceSpecHandles;
+		if (EffectSpecBuilder->TryBuildSourceEffectSpecs(SourceASC, SourceEffectContextHandle, SourceSpecHandles))
+		{
+			OutResult.SourceSpecHandles.Append(SourceSpecHandles);
+		}
+
+		for (AActor* TargetActor : OutTargetActors)
+		{
+			// TargetActor별로 Context를 세팅합니다.
+			FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
+			EffectContextHandle.SetAbility(this);
+			TArray<TWeakObjectPtr<AActor>> TargetActorArray;
+			TargetActorArray.Add(TargetActor);
+			EffectContextHandle.AddActors(TargetActorArray);
+
+			TArray<FGameplayEffectSpecHandle> TargetSpecHandlesForActor;
+			if (EffectSpecBuilder->TryBuildTargetEffectSpecs(SourceASC, EffectContextHandle, TargetSpecHandlesForActor))
+			{
+				if (!TargetSpecHandlesForActor.IsEmpty())
+				{
+					TArray<FGameplayEffectSpecHandle>& TargetSpecHandles = OutResult.TargetSpecHandlesByActor.FindOrAdd(TargetActor);
+					TargetSpecHandles.Append(TargetSpecHandlesForActor);
+				}
+			}
+		}
 	}
 }
 
@@ -396,7 +437,7 @@ void ULetheCardAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy
 		}
 		return;
 	}
-	
+
 	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
 	for (const int32 TargetActorIndex : EffectTargetMappingPolicy.TargetActorIndices)
 	{
@@ -421,16 +462,12 @@ void ULetheCardAbility::GetEffectSpecBuildersByPolicy(const FEffectTargetMapping
 		{
 			OutEffectSpecBuilders.AddUnique(EffectSpecBuilderPtr);
 		}
-		else
-		{
-			LETHE_LOG(LogAbility, Warning, "소유하고 있지 않은 EffectSpecBuilder의 GameplayTag를 할당받은 EffectTargetMappingPolicy가 존재합니다. Ability: %s", *GetName());
-		}
 	}
 }
 
-void ULetheCardAbility::StartDeliveryEffects(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, AActor* TargetActor) const
+void ULetheCardAbility::StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const
 {
-	if (!TargetActor)
+	if (SpecHandles.IsEmpty())
 	{
 		return;
 	}
@@ -440,44 +477,27 @@ void ULetheCardAbility::StartDeliveryEffects(const FEffectTargetMappingPolicy& E
 	{
 		return;
 	}
-	
+
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (!TargetASC)
 	{
 		return;
 	}
 
-	FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
-	EffectContextHandle.SetAbility(this);
-
-	TArray<TWeakObjectPtr<AActor>> TargetActors;
-	TargetActors.Add(TargetActor);
-	EffectContextHandle.AddActors(TargetActors);
-
-	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
-	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
-	
-	for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : OutEffectSpecBuilders)
+	// EffectDelivery가 비어있다면 FEffectDelivery_Immediately를 사용하도록 fallback합니다.
+	const FGameplayEffectDelivery* EffectDeliveryPtr = EffectDelivery.GetPtr();
+	if (!EffectDeliveryPtr)
 	{
-		TArray<FGameplayEffectSpecHandle> SpecHandles;
-		if (EffectSpecBuilder->TryBuildEffectSpecHandles(SourceASC, EffectContextHandle, SpecHandles))
-		{
-			// EffectDelivery가 비어있다면 FEffectDelivery_Immediately를 사용하도록 fallback합니다.
-			const FGameplayEffectDelivery* EffectDeliveryPtr = EffectDelivery.GetPtr();
-			if (!EffectDeliveryPtr)
-			{
-				static const FEffectDelivery_Immediately DefaultDelivery;
-				EffectDeliveryPtr = &DefaultDelivery;
-			}
-
-			FEffectDeliveryContext EffectDeliveryContext;
-			EffectDeliveryContext.EffectSpecHandles = MoveTemp(SpecHandles);
-			EffectDeliveryContext.OwnerAbility = this;
-			EffectDeliveryContext.SourceASC = SourceASC;
-			EffectDeliveryContext.TargetASC = TargetASC;
-			EffectDeliveryPtr->StartDelivery(EffectDeliveryContext);
-		}
+		static const FEffectDelivery_Immediately DefaultDelivery;
+		EffectDeliveryPtr = &DefaultDelivery;
 	}
+
+	FEffectDeliveryContext EffectDeliveryContext;
+	EffectDeliveryContext.EffectSpecHandles = SpecHandles;
+	EffectDeliveryContext.OwnerAbility = this;
+	EffectDeliveryContext.SourceASC = SourceASC;
+	EffectDeliveryContext.TargetASC = TargetASC;
+	EffectDeliveryPtr->StartDelivery(EffectDeliveryContext);
 }
 
 void ULetheCardAbility::ActiveFailed()
@@ -498,7 +518,7 @@ void ULetheCardAbility::ResetCachedValues()
 void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	ResetCachedValues();
-	
+
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
@@ -506,7 +526,7 @@ void ULetheCardAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle, c
 {
 	// 프로젝트 특성상 한 번 발동된 Ability가 Cancel될 수는 없으나 일단 구현해두었습니다.
 	ResetCachedValues();
-	
+
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 }
 
@@ -531,7 +551,7 @@ bool ULetheCardAbility::CommitAbilityCost(const FGameplayAbilitySpecHandle Handl
 	{
 		return false;
 	}
-	
+
 	// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
 	if (ActorInfo->AvatarActor->Implements<UPlayerCharacterInterface>())
 	{
@@ -554,7 +574,7 @@ void ULetheCardAbility::PostInitProperties()
 	if (HasAnyFlags(RF_ClassDefaultObject))
 	{
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		
+
 		ActivationRequiredTags.AddTag(LetheGameplayTags.State_Character_CanAct);
 	}
 }

@@ -15,16 +15,10 @@ struct LETHE_API FEffectSpecBuilder_DamageWithConsumeAllCost : public FEffectSpe
 	GENERATED_BODY()
 
 	//~ Begin FGameplayEffectSpecBuilder Interface
-	virtual bool TryBuildEffectSpecHandles(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles, const bool bPreview = false) const override;
-	
+	virtual bool TryBuildSourceEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
+	virtual bool TryBuildTargetEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
-	
-	virtual TSubclassOf<UGameplayEffect> GetSourcePreviewEffectClass() const override;
-	virtual bool TryBuildSourcePreviewSpecHandles(const UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
 	//~ End of FGameplayEffectSpecBuilder Interface
-
-private:
-	void ApplyCost(UAbilitySystemComponent* SourceASC) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cost")

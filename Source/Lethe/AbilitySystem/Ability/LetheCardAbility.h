@@ -100,14 +100,26 @@ protected:
 	void OnEffectTriggered(const FGameplayTag& MontageEventTag, const TArray<AActor*>& TargetActors);
 
 private:
+	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
+	
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
-	void ActiveFailed();
 
+	UFUNCTION()
+	void ActiveFailed();
+	
+	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
+	UFUNCTION()
+	void OnEventReceived(FGameplayEventData InPayload);
+
+	/** Policy를 기반으로 어떤 대상에게 어떤 Effect를 적용할지를 취합합니다. */
 	void ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<AActor*>& CandidateTargetActors, FEffectTargetMappingResolveResult& OutResult) const;
 
 	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
 	void GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const;
 
+	/** Effect를 지정된 방식으로 TargetActor에게 전달을 시작합니다. */
+	void StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const;
+	
 	void ResetCachedValues();
 
 	template<typename T>
@@ -127,15 +139,6 @@ private:
 
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetWeightDescription(const int32 Weight) const;
-
-	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
-
-	/** AnimNotify를 통해 이벤트를 받았을 때 호출되는 함수입니다. */
-	UFUNCTION()
-	void OnEventReceived(FGameplayEventData InPayload);
-
-	/** Effect를 지정된 방식으로 TargetActor에게 전달을 시작합니다. */
-	void StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")

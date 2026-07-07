@@ -223,6 +223,8 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		NAME_None,
 		false,
 		1.f);
+	PlayMontageAndWaitTask->OnCancelled.AddDynamic(this, &ThisClass::ActiveFailed);
+	PlayMontageAndWaitTask->OnInterrupted.AddDynamic(this, &ThisClass::ActiveFailed);
 	PlayMontageAndWaitTask->ReadyForActivation();
 
 	// 플레이어 캐릭터인 경우 소음 발생 로직을 시작합니다.
@@ -232,8 +234,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
 			const ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-			const ATile* TargetTile = TileManagerSubsystem->GetTileUnderActor(CachedCenterTargetTile.Get());
-			ActivateNoise(StandingTile, TargetTile);
+			ActivateNoise(StandingTile, CachedCenterTargetTile.Get());
 		}
 	}
 }
@@ -299,7 +300,12 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		}
 
 		// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
-		CommitAbilityCost(Handle, ActorInfo, ActivationInfo);
+		if (!CommitAbilityCost(Handle, ActorInfo, ActivationInfo))
+		{
+			ResetCachedValues();
+			return false;
+		}
+
 		return true;
 	}
 
@@ -354,7 +360,6 @@ void ULetheCardAbility::OnEventReceived(FGameplayEventData InPayload)
 			{
 				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, EffectedTargetActors);
 			}
-			return;
 		}
 	}
 

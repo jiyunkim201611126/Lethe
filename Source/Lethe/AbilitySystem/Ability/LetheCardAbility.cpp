@@ -16,17 +16,17 @@
 
 void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
 {
-	if (EffectTargetTileSelector)
+	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelector->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetCandidateTiles);
+		EffectTargetTileSelectorPtr->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetCandidateTiles);
 	}
 }
 
 void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
-	if (EffectTargetTileSelector)
+	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelector->GetTargetTiles(AvatarActor, PlayerController, OutTiles);
+		EffectTargetTileSelectorPtr->GetTargetTiles(AvatarActor, PlayerController, OutTiles);
 	}
 }
 

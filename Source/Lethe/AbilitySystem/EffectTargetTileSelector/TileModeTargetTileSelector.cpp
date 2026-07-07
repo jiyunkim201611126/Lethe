@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "TileModeTargetTileSelector.h"
 
@@ -6,7 +6,7 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void UTileModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles)
+void FTileModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
 {
 	OutSelectCandidateTiles.Reset();
 	OutTargetCandidateTiles.Reset();
@@ -38,7 +38,7 @@ void UTileModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, c
 	}
 }
 
-void UTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	OutTiles.Reset();
 	
@@ -98,7 +98,7 @@ void UTileModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, cons
 	}
 }
 
-void UTileModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FTileModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -142,7 +142,7 @@ void UTileModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarAc
 	}
 }
 
-void UTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)

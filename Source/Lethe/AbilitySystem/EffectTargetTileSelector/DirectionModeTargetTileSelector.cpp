@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "DirectionModeTargetTileSelector.h"
 
@@ -6,7 +6,7 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void UDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles)
+void FDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
 {
 	OutSelectCandidateTiles.Reset();
 	OutTargetCandidateTiles.Reset();
@@ -20,7 +20,7 @@ void UDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarAct
 	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetCandidateTiles);
 }
 
-void UDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	OutTiles.Reset();
 	
@@ -32,7 +32,7 @@ void UDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor,
 	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTiles);
 }
 
-void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -70,7 +70,7 @@ void UDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 	}
 }
 
-void UDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	switch (RangeType)
 	{
@@ -84,7 +84,7 @@ void UDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* Ava
 	}
 }
 
-void UDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -133,7 +133,7 @@ void UDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 	}
 }
 
-void UDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -193,18 +193,18 @@ void UDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 	}
 }
 
-int32 UDirectionModeTargetTileSelector::NormalizeHexDirection(const int32 Direction) const
+int32 FDirectionModeTargetTileSelector::NormalizeHexDirection(const int32 Direction) const
 {
 	return (Direction % FCubeCoord::HexDirectionCount + FCubeCoord::HexDirectionCount) % FCubeCoord::HexDirectionCount;
 }
 
-FVector2D UDirectionModeTargetTileSelector::GetHexDirectionVector(const int32 Direction) const
+FVector2D FDirectionModeTargetTileSelector::GetHexDirectionVector(const int32 Direction) const
 {
 	const FVector DirectionLocation = FCubeCoord::CubeCoordToWorldCoord(FCubeCoord::GetDirection(NormalizeHexDirection(Direction)));
 	return FVector2D(DirectionLocation.X, DirectionLocation.Y).GetSafeNormal();
 }
 
-int32 UDirectionModeTargetTileSelector::FindClosestHexDirection(const FVector2D& DesiredDirection) const
+int32 FDirectionModeTargetTileSelector::FindClosestHexDirection(const FVector2D& DesiredDirection) const
 {
 	int32 ClosestDirection = 0;
 	float BestDot = TNumericLimits<float>::Lowest();
@@ -220,7 +220,7 @@ int32 UDirectionModeTargetTileSelector::FindClosestHexDirection(const FVector2D&
 	return ClosestDirection;
 }
 
-int32 UDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const
+int32 FDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const
 {
 	int32 ClosestUpperDirection = 0;
 	float BestDot = TNumericLimits<float>::Lowest();
@@ -237,7 +237,7 @@ int32 UDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FV
 	return ClosestUpperDirection;
 }
 
-void UDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* CurrentTile, const APlayerController* PlayerController, TArray<int32>& OutDirections) const
+void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* CurrentTile, const APlayerController* PlayerController, TArray<int32>& OutDirections) const
 {
 	OutDirections.Reset();
 

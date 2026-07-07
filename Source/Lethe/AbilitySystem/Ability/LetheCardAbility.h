@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/AbilitySystem/EffectSpecBuilder/GameplayEffectSpecBuilder.h"
+#include "StructUtils/InstancedStruct.h"
 #include "LetheCardAbility.generated.h"
-
-class UEffectTargetTileSelector;
 
 /**
  * TryGetEffectsForSourceAndTargetPreviewData 호출 시 사용하는 구조체입니다.
@@ -91,12 +91,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AbilityAnimMontage;
 
-	/**
-	 * TargetTile 지정을 수행하는 객체입니다.
-	 * 할당하지 않으면 자동으로 마우스 위치의 타일 하나만 TargetTile로 지정됩니다.
-	 */
-	UPROPERTY(EditDefaultsOnly, Instanced, Category = "Effect")
-	TObjectPtr<UEffectTargetTileSelector> EffectTargetTileSelector;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
+	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
 	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
 	TWeakObjectPtr<const ATile> CachedCenterTargetTile;

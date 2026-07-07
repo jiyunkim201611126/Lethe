@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -14,13 +14,12 @@ enum class ETargetTeamRelation : uint8
 	OpposingTeam,
 };
 
-UCLASS()
-class LETHE_API UTileModeTargetTileSelector : public UEffectTargetTileSelector
+USTRUCT(BlueprintType)
+struct LETHE_API FTileModeTargetTileSelector : public FEffectTargetTileSelector
 {
 	GENERATED_BODY()
 
-public:
-	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) override;
+	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const override;
 	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
 
 protected:

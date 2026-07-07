@@ -1,27 +1,27 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Lethe/Data/Stage/TileData.h"
-#include "UObject/Object.h"
 #include "EffectTargetTileSelector.generated.h"
 
 class APlayerController;
 class ATile;
 
 /**
- * Ability 발동 시 Effect를 적용할 대상이 밟고 있는 타일을 가져오는 클래스입니다.
+ * Ability 발동 시 Effect를 적용할 대상이 밟고 있는 타일을 가져옵니다.
  * 기본적으로 '유효한 대상'이 밟고 있는 타일만 추가하며, 유효하지 않은 대상이 있거나, 아무런 Actor도 없는 타일의 경우 nullptr을 추가합니다.
  * 즉, 최종적으로 TargetTiles 또한 TargetCandidateTiles와 같은 길이의 배열이 되며, 이 중 Effect를 적용하지 않을 대상은 nullptr로 들어갑니다.
  */
-UCLASS(Abstract, NotBlueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
-class LETHE_API UEffectTargetTileSelector : public UObject
+USTRUCT(BlueprintType)
+struct LETHE_API FEffectTargetTileSelector
 {
 	GENERATED_BODY()
 
-public:
-	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles);
+	virtual ~FEffectTargetTileSelector() = default;
+
+	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const;
 
 	/** 시전 시 적용될 대상이 존재하는 타일들을 모두 Out 인자로 반환합니다. */
 	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;

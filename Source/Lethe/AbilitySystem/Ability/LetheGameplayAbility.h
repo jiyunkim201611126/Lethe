@@ -28,6 +28,10 @@ struct FNoisePolicy
 	FBFSRange NoiseRange;
 };
 
+/**
+ * Card로 표현되지 않는 Ability를 구현할 때 사용하는 클래스입니다.
+ * 예시) GA_Move, GA_Swap 등
+ */
 UCLASS()
 class LETHE_API ULetheGameplayAbility : public UGameplayAbility
 {

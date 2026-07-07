@@ -268,7 +268,6 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		{
 			if (TargetTile.IsValid())
 			{
-				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
 				AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
 
 				const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();
@@ -279,6 +278,11 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 					// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
 					bIsValidCombatTarget = true;
 				}
+			}
+			else
+			{
+				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+				TargetActors.Add(nullptr);
 			}
 		}
 

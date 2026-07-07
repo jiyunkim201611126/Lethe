@@ -10,6 +10,11 @@
 class APlayerController;
 class ATile;
 
+/**
+ * Ability 발동 시 Effect를 적용할 대상이 밟고 있는 타일을 가져오는 클래스입니다.
+ * 기본적으로 '유효한 대상'이 밟고 있는 타일만 추가하며, 유효하지 않은 대상이 있거나, 아무런 Actor도 없는 타일의 경우 nullptr을 추가합니다.
+ * 즉, 최종적으로 TargetTiles 또한 TargetCandidateTiles와 같은 길이의 배열이 되며, 이 중 Effect를 적용하지 않을 대상은 nullptr로 들어갑니다.
+ */
 UCLASS(Abstract, NotBlueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
 class LETHE_API UEffectTargetTileSelector : public UObject
 {

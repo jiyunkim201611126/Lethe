@@ -4,7 +4,6 @@
 
 #include "AttributeSet.h"
 #include "GameplayTagContainer.h"
-#include "AbilitySystemInterface.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
@@ -34,20 +33,10 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
 		ConvertAttributeToTag(OutCostPreviewData, AttributePreviewDelta.AttributePreviewDelta);
 	}
-
-	TArray<AActor*> TargetActors;
-	TargetActors.Reserve(PreviewContext.CurrentTargetActors.Num());
-	for (const auto& TargetActor : PreviewContext.CurrentTargetActors)
-	{
-		if (TargetActor.IsValid() && TargetActor->Implements<UAbilitySystemInterface>())
-		{
-			TargetActors.Add(TargetActor.Get());
-		}
-	}
 	
 	// Target들에게 적용되는 Preview 데이터를 추출해 가져옵니다.
 	OutPreviewData.SourcePreviewData.Empty();
-	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, TargetActors, OutPreviewData))
+	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, PreviewContext.CurrentTargetActors, OutPreviewData))
 	{
 		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
 		ConvertAttributeToTag(OutPreviewData.SourcePreviewData, AttributePreviewDelta.AttributePreviewDelta);

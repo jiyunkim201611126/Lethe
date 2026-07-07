@@ -13,7 +13,7 @@ struct FPreviewContext
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<AActor>> CurrentTargetActors;
+	TArray<AActor*> CurrentTargetActors;
 
 	UPROPERTY()
 	UAbilitySystemComponent* SourceASC = nullptr;

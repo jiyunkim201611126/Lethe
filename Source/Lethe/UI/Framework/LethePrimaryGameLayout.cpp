@@ -27,19 +27,6 @@ ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(APlayerCo
 	return nullptr;
 }
 
-void ULethePrimaryGameLayout::FindAndRemoveWidgetFromLayer(UCommonActivatableWidget* ActivatableWidget)
-{
-	if (!ActivatableWidget)
-	{
-		return;
-	}
-
-	for (const TPair<FGameplayTag, TObjectPtr<UCommonActivatableWidgetContainerBase>>& Layer : Layers)
-	{
-		Layer.Value->RemoveWidget(*ActivatableWidget);
-	}
-}
-
 UCommonActivatableWidgetContainerBase* ULethePrimaryGameLayout::GetLayerWidget(const FGameplayTag LayerTag) const
 {
 	return Layers.FindRef(LayerTag);

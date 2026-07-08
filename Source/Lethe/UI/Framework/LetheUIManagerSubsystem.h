@@ -9,6 +9,9 @@
 
 class ULetheGameUIPolicy;
 
+/**
+ * 게임 시작 시 정해진 GameUIPolicy 객체를 생성, 관리하는 매니저 클래스입니다.
+ */
 UCLASS(Config = Game)
 class LETHE_API ULetheUIManagerSubsystem : public UGameInstanceSubsystem
 {

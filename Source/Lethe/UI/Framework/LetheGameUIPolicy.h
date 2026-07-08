@@ -10,7 +10,7 @@ class ULethePrimaryGameLayout;
 class ULetheUIManagerSubsystem;
 
 /**
- * 
+ * Root Layout으로 어떤 위젯을 사용할지 결정하는 UI 정책용 클래스입니다.
  */
 UCLASS(Blueprintable, Within = LetheUIManagerSubsystem)
 class LETHE_API ULetheGameUIPolicy : public UObject

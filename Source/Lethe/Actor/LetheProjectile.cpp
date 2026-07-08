@@ -15,35 +15,33 @@
 ALetheProjectile::ALetheProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
-	SetRootComponent(Sphere);
-	Sphere->SetCollisionObjectType(ECC_Projectile);
-	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	Sphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	Sphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
-	Sphere->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	Sphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-	Sphere->OnComponentHit.AddDynamic(this, &ThisClass::OnHitComponent);
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+	SetRootComponent(SphereComponent);
+	SphereComponent->SetCollisionObjectType(ECC_Projectile);
+	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnComponentBeginOverlap);
 
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovement->SetUpdatedComponent(Sphere);
-	ProjectileMovement->InitialSpeed = 500.f;
-	ProjectileMovement->MaxSpeed = 500.f;
-	ProjectileMovement->ProjectileGravityScale = 0.f;
-	ProjectileMovement->bIsHomingProjectile = true;
-	ProjectileMovement->bSweepCollision = true;
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovementComponent->SetUpdatedComponent(SphereComponent);
+	ProjectileMovementComponent->InitialSpeed = 500.f;
+	ProjectileMovementComponent->MaxSpeed = 500.f;
+	ProjectileMovementComponent->ProjectileGravityScale = 0.f;
+	ProjectileMovementComponent->bIsHomingProjectile = true;
+	ProjectileMovementComponent->bSweepCollision = true;
 }
 
 void ALetheProjectile::SetPayload(const FProjectileSpawnPayload& InPayload)
 {
 	Payload = InPayload;
 
-	Sphere->IgnoreActorWhenMoving(Payload.Instigator.Get(), true);
+	SphereComponent->IgnoreActorWhenMoving(Payload.Instigator.Get(), true);
 
-	ProjectileMovement->HomingTargetComponent = Payload.TargetActor.Get()->GetRootComponent();
-	ProjectileMovement->HomingAccelerationMagnitude = Payload.HomingAcceleration;
-	ProjectileMovement->InitialSpeed = Payload.ProjectileSpeed;
-	ProjectileMovement->MaxSpeed = Payload.ProjectileSpeed;
+	ProjectileMovementComponent->HomingTargetComponent = Payload.TargetActor.Get()->GetRootComponent();
+	ProjectileMovementComponent->HomingAccelerationMagnitude = Payload.HomingAcceleration;
+	ProjectileMovementComponent->InitialSpeed = Payload.ProjectileSpeed;
+	ProjectileMovementComponent->MaxSpeed = Payload.ProjectileSpeed;
 
 	// 추적 도중 적이 사망했을 때를 대비한 로직을 위해 Tick을 활성화합니다.
 	SetActorTickEnabled(true);
@@ -66,10 +64,10 @@ void ALetheProjectile::BeginPlay()
 		{
 			if (WeakThis.IsValid() && LoopingSound)
 			{
-				WeakThis->LoopingSound = UGameplayStatics::SpawnSoundAttached(LoopingSound, WeakThis->GetRootComponent());
-				if (WeakThis->LoopingSound)
+				WeakThis->LoopingSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, WeakThis->GetRootComponent());
+				if (WeakThis->LoopingSoundComponent)
 				{
-					WeakThis->LoopingSound->SetVolumeMultiplier(WeakThis->Payload.VolumeMultiplier);
+					WeakThis->LoopingSoundComponent->SetVolumeMultiplier(WeakThis->Payload.VolumeMultiplier);
 				}
 			}
 		});
@@ -80,13 +78,13 @@ void ALetheProjectile::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!ProjectileMovement->HomingTargetComponent.IsValid())
+	if (!Payload.TargetActor.IsValid())
 	{
-		// 추적 중인 타겟이 사망한 경우 일반 Projectile로 변경합니다.
-		if (ProjectileMovement->bIsHomingProjectile)
+		// 추적 중인 타겟이 사망 등의 이유로 유효하지 않게 되면 추적을 중단합니다.
+		if (ProjectileMovementComponent->bIsHomingProjectile)
 		{
-			ProjectileMovement->bIsHomingProjectile = false;
-			ProjectileMovement->HomingTargetComponent = nullptr;
+			ProjectileMovementComponent->bIsHomingProjectile = false;
+			ProjectileMovementComponent->HomingTargetComponent = nullptr;
 
 			// 0.5초 후 파괴되도록 설정합니다.
 			SetLifeSpan(0.5f);
@@ -96,52 +94,63 @@ void ALetheProjectile::Tick(float DeltaSeconds)
 
 void ALetheProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	PlayHitFXs();
-	
-	Sphere->OnComponentHit.RemoveDynamic(this, &ThisClass::OnHitComponent);
+	SphereComponent->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnComponentBeginOverlap);
 
-	if (LoopingSound)
+	if (LoopingSoundComponent)
 	{
-		LoopingSound->Stop();
-		LoopingSound->DestroyComponent();
+		LoopingSoundComponent->Stop();
+		LoopingSoundComponent->DestroyComponent();
 	}
 	
 	Super::EndPlay(EndPlayReason);
 }
 
-void ALetheProjectile::OnHitComponent(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void ALetheProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(OtherActor))
+	if (bIsHandled)
 	{
-		if (!CombatInterface->IsDead())
+		return;
+	}
+
+	// Overlap 대상이 추적 중인 대상인 경우에만 Effect 적용을 수행합니다.
+	if (OtherActor == Payload.TargetActor)
+	{
+		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(OtherActor))
 		{
-			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
+			if (!CombatInterface->IsDead())
 			{
-				for (const FGameplayEffectSpecHandle& SpecHandle : Payload.SpecHandles)
+				if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 				{
-					if (SpecHandle.IsValid())
+					for (const FGameplayEffectSpecHandle& SpecHandle : Payload.SpecHandles)
 					{
-						TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+						if (SpecHandle.IsValid())
+						{
+							TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+						}
 					}
 				}
 			}
 		}
+		
+		const FVector PlayFXLocation = bFromSweep ? FVector(SweepResult.Location) : GetActorLocation();
+		PlayHitFXs(PlayFXLocation);
+		
+		bIsHandled = true;
+		Destroy();
 	}
-	
-	Destroy();
 }
 
-void ALetheProjectile::PlayHitFXs() const
+void ALetheProjectile::PlayHitFXs(const FVector& PlayFXLocation) const
 {
 	if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
 	{
 		if (ImpactSoundTag.IsValid())
 		{
-			FXManagerSubsystem->AsyncPlaySoundAtLocation(ImpactSoundTag, GetActorLocation(), FRotator::ZeroRotator, Payload.VolumeMultiplier);
+			FXManagerSubsystem->AsyncPlaySoundAtLocation(ImpactSoundTag, PlayFXLocation, FRotator::ZeroRotator, Payload.VolumeMultiplier);
 		}
 		if (ImpactEffectTag.IsValid())
 		{
-			FXManagerSubsystem->AsyncSpawnNiagaraAtLocation(ImpactEffectTag, GetActorLocation());
+			FXManagerSubsystem->AsyncSpawnNiagaraAtLocation(ImpactEffectTag, PlayFXLocation);
 		}
 	}
 }

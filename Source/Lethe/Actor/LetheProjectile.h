@@ -56,18 +56,19 @@ protected:
 
 private:
 	UFUNCTION()
-	void OnHitComponent(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-	void PlayHitFXs() const;
+	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	void PlayHitFXs(const FVector& PlayFXLocation) const;
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> Sphere;
+	TObjectPtr<USphereComponent> SphereComponent;
 
 	UPROPERTY()
-	TObjectPtr<UAudioComponent> LoopingSound;
+	TObjectPtr<UAudioComponent> LoopingSoundComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag LoopingSoundTag;
@@ -80,4 +81,7 @@ protected:
 
 private:
 	FProjectileSpawnPayload Payload;
+
+	/** TargetActor와 Overlap되어 처리가 완료됨을 표시하는 플래그입니다. */
+	uint8 bIsHandled : 1 = false;
 };

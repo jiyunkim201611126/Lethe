@@ -2,7 +2,6 @@
 
 #include "LetheHUD.h"
 
-#include "Blueprint/UserWidget.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
@@ -11,6 +10,8 @@
 #include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidget.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidgetController.h"
+#include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
 void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
@@ -36,10 +37,16 @@ void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponen
 
 	if (!OverlayWidget)
 	{
-		OverlayWidget = CreateWidget<UOverlayWidget>(GetWorld(), OverlayWidgetClass);
-		OverlayWidget->SetWidgetController(OverlayWidgetController);
-		OverlayWidget->AddToViewport();
-		OverlayWidget->ActivateWidget();
+		if (ensure(OverlayWidgetClass))
+		{
+			if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(PC))
+			{
+				OverlayWidget = RootLayout->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, OverlayWidgetClass, [this](UOverlayWidget& WidgetToInit)
+				{
+					WidgetToInit.SetWidgetController(OverlayWidgetController);
+				});
+			}
+		}
 	}
 }
 

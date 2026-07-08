@@ -68,6 +68,12 @@ struct FLetheGameplayTags
 	FGameplayTag Event_Montage_EndAbility;
 	//~ End of Montage Event
 
+	//~ Begin UI Layer
+	FGameplayTag UI_Layer_Game;
+	FGameplayTag UI_Layer_GameMenu;
+	FGameplayTag UI_Layer_Modal;
+	//~ End of UI Layer
+
 private:
 	static FLetheGameplayTags GameplayTags;
 };

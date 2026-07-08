@@ -9,6 +9,8 @@
 #include "Input/CommonUIInputTypes.h"
 #include "Lethe/UI/Battle/Card/ViewCardDetailWidget.h"
 #include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
+#include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 
 void UOverlayWidget::NativeOnActivated()
 {
@@ -40,12 +42,23 @@ TOptional<FUIInputConfig> UOverlayWidget::GetDesiredInputConfig() const
 void UOverlayWidget::WidgetControllerSet_Implementation()
 {
 	CardPanel->SetWidgetController(ULetheAbilitySystemLibrary::GetCardPanelWidgetController(this));
-	ViewCardDetail->SetWidgetController(ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(this));
 }
 
 void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const
 {
-	ViewCardDetail->StartViewDetail(CardActor);
+	if (!ensure(ViewCardDetailWidgetClass))
+	{
+		return;
+	}
+
+	if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(GetOwningPlayer()))
+	{
+		RootLayout->PushWidgetToLayerStack<UViewCardDetailWidget>(FLetheGameplayTags::Get().UI_Layer_GameMenu, ViewCardDetailWidgetClass, [this, CardActor](UViewCardDetailWidget& WidgetToInit)
+		{
+			WidgetToInit.SetWidgetController(ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(this));
+			WidgetToInit.StartViewDetail(CardActor);
+		});
+	}
 }
 
 void UOverlayWidget::HandleKeyboard1() const

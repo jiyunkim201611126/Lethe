@@ -44,8 +44,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCardPanelWidget> CardPanel;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UViewCardDetailWidget> ViewCardDetail;
+	UPROPERTY(EditDefaultsOnly, Category = "View")
+	TSubclassOf<UViewCardDetailWidget> ViewCardDetailWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> Keyboard1;

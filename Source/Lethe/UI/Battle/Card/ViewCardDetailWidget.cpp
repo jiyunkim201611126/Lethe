@@ -7,21 +7,9 @@
 #include "Lethe/Actor/Card/CardActor.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
-void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
+void UViewCardDetailWidget::WidgetControllerSet_Implementation()
 {
-	if (InCardActor)
-	{
-		FViewDetailData ViewDetailData;
-		InCardActor->MakeViewDetailData(ViewDetailData);
-		DetailCardWidget->SetViewDetail(ViewDetailData);
-
-		FText OutDescriptionText;
-		ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
-
-		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
-		CardDescriptionTextBlock->SetText(FinalText);
-	}
-	ActivateWidget();
+	ViewCardDetailWidgetController = Cast<UViewCardDetailWidgetController>(WidgetController);
 }
 
 FReply UViewCardDetailWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -38,6 +26,29 @@ FReply UViewCardDetailWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 	return FReply::Handled();
 }
 
+void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
+{
+	if (InCardActor)
+	{
+		FViewDetailData ViewDetailData;
+		InCardActor->MakeViewDetailData(ViewDetailData);
+		DetailCardWidget->SetViewDetail(ViewDetailData);
+
+		FText OutDescriptionText;
+		if (ViewCardDetailWidgetController)
+		{
+			ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
+		}
+
+		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
+		CardDescriptionTextBlock->SetText(FinalText);
+		
+		ActivateWidget();
+		return;
+	}
+	DeactivateWidget();
+}
+
 TOptional<FUIInputConfig> UViewCardDetailWidget::GetDesiredInputConfig() const
 {
 	FUIInputConfig Config(ECommonInputMode::Menu, EMouseCaptureMode::CaptureDuringMouseDown, false);
@@ -45,9 +56,4 @@ TOptional<FUIInputConfig> UViewCardDetailWidget::GetDesiredInputConfig() const
 	Config.bIgnoreLookInput = false;
 
 	return Config;
-}
-
-void UViewCardDetailWidget::WidgetControllerSet_Implementation()
-{
-	ViewCardDetailWidgetController = Cast<UViewCardDetailWidgetController>(WidgetController);
 }

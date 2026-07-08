@@ -120,7 +120,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 	
 	FVector2D DownPosition;
 	const bool bIsValid = DownPositions.RemoveAndCopyValue(InMouseEvent.GetEffectingButton(), DownPosition);
-	if (!bIsValid || !CardStage)
+	if (!bIsValid || !CardStage || !CardPanelWidgetController)
 	{
 		return MakeMouseUpReply();
 	}
@@ -134,6 +134,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 	
 	FVector2D TargetUV;
 	const bool bIsMouseInCardStage = TryGetCapturedCardStageUV(InMouseEvent, TargetUV);
+	const bool bIsMouseInWorldSection = IsMouseInWorldSection(InMouseEvent);
 	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
@@ -145,16 +146,13 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 				return MakeMouseUpReply();
 			}
 		}
-		if (IsMouseInWorldSection(InMouseEvent))
+		if (bIsMouseInWorldSection)
 		{
 			// 카드 선택도 사용도 하지 않았으며 마우스는 월드 섹션에 있는 경우, WorldSection 내 마우스 입력 처리를 시작합니다.
 			const bool bHandled = CardStage->HandleLeftMouseButtonClickedInWorldSection();
 			if (!bHandled)
 			{
-				if (CardPanelWidgetController)
-				{
-					CardPanelWidgetController->HandleLeftMouseButtonClickedInWorldSection();
-				}
+				CardPanelWidgetController->HandleLeftMouseButtonClickedInWorldSection();
 			}
 		}
 	}
@@ -182,10 +180,7 @@ FReply UCardPanelWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 		if (!bHandled)
 		{
 			CardStage->ResetSelectedDeckBox();
-			if (CardPanelWidgetController)
-			{
-				CardPanelWidgetController->ResetSelectedCharacter();
-			}
+			CardPanelWidgetController->ResetSelectedCharacter();
 		}
 	}
 	

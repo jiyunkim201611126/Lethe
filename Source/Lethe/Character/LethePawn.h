@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "InputMappingContext.h"
 #include "LethePawn.generated.h"
 
 class UCameraComponent;
 class UInputAction;
-class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
 

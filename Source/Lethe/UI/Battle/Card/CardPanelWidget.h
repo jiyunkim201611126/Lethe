@@ -71,7 +71,7 @@ private:
 	UFUNCTION()
 	void OnTurnEndButtonClicked();
 
-	/** DownPositions가 비어있는 경우에만 마우스 캡쳐를 해제할 수 있도록 FReply를 만들어 반환합니다. */
+	/** DownPositions의 상태에 따라 마우스 입력을 내릴지 말지 결정합니다. */
 	FReply MakeMouseUpReply() const;
 
 	/** 에디터 플레이 중 F8로 이젝트 시, CardPanelWidget이 모든 마우스 인풋을 Capture해서 카메라를 돌릴 수 없는 현상을 해결하기 위한 함수입니다. */

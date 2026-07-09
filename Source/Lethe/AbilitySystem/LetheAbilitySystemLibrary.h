@@ -22,15 +22,6 @@ class LETHE_API ULetheAbilitySystemLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:	
-	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | WidgetController", meta = (WorldContext = "WorldContextObject"))
-	static UOverlayWidgetController* GetOverlayWidgetController(const UObject* WorldContextObject);
-	
-	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | WidgetController", meta = (WorldContext = "WorldContextObject"))
-	static UCardPanelWidgetController* GetCardPanelWidgetController(const UObject* WorldContextObject);
-
-	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | WidgetController", meta = (WorldContext = "WorldContextObject"))
-	static UViewCardDetailWidgetController* GetViewCardDetailWidgetController(const UObject* WorldContextObject);
-
 	UFUNCTION(BlueprintPure, Category = "LetheAbilitySystemLibrary | Ability")
 	static bool CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap);
 

@@ -3,14 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LetheGameUIFeature.h"
 #include "Engine/World.h"
 #include "LetheGameUIPolicy.generated.h"
 
+class ULetheGameUIFeature;
 class ULethePrimaryGameLayout;
 class ULetheUIManagerSubsystem;
 
 /**
  * Root Layout으로 어떤 위젯을 사용할지 결정하는 UI 정책용 클래스입니다.
+ * RootLayout과 Layer 접근을 제공합니다.
  */
 UCLASS(Blueprintable, Within = LetheUIManagerSubsystem)
 class LETHE_API ULetheGameUIPolicy : public UObject
@@ -23,7 +26,22 @@ public:
 	virtual UWorld* GetWorld() const override;
 	ULetheUIManagerSubsystem* GetOwningUIManager() const;
 	ULethePrimaryGameLayout* GetOrCreateRootLayout(APlayerController* PlayerController);
-	ULethePrimaryGameLayout* GetRootLayout() const { return RootLayout; }
+	ULethePrimaryGameLayout* GetRootLayout() const;
+
+	template <typename FeatureT>
+	FeatureT* FindUIFeature() const
+	{
+		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
+
+		for (ULetheGameUIFeature* UIFeature : UIFeatures)
+		{
+			if (FeatureT* TypedFeature = Cast<FeatureT>(UIFeature))
+			{
+				return TypedFeature;
+			}
+		}
+		return nullptr;
+	}
 
 protected:
 	void AddLayoutToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout);
@@ -31,12 +49,15 @@ protected:
 	virtual void OnRootLayoutAddedToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout);
 
 	void CreateLayoutWidget(APlayerController* PlayerController);
-	TSubclassOf<ULethePrimaryGameLayout> GetLayoutWidgetClass() const;
+
+protected:
+	UPROPERTY(EditAnywhere)
+	TSoftClassPtr<ULethePrimaryGameLayout> LayoutWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Instanced)
+	TArray<TObjectPtr<ULetheGameUIFeature>> UIFeatures;
 
 private:
-	UPROPERTY(EditAnywhere)
-	TSoftClassPtr<ULethePrimaryGameLayout> LayoutClass;
-
 	UPROPERTY(Transient)
 	TObjectPtr<ULethePrimaryGameLayout> RootLayout;
 };

@@ -1,6 +1,6 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "LetheHUD.h"
+#include "BattleUIFeature.h"
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
@@ -13,7 +13,12 @@
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
+void UBattleUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget)
+{
+	Super::InitializeFeature(InLayoutWidget);
+}
+
+void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
 
@@ -37,20 +42,19 @@ void ULetheHUD::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponen
 
 	if (!OverlayWidget)
 	{
-		if (ensure(OverlayWidgetClass))
+		if (ensure(OverlayWidgetClass) && LayoutWidget.IsValid())
 		{
-			if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(PC))
-			{
-				OverlayWidget = RootLayout->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, OverlayWidgetClass, [this](UOverlayWidget& WidgetToInit)
+			OverlayWidget = LayoutWidget->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, OverlayWidgetClass,
+				[this](UOverlayWidget& WidgetToInit)
 				{
+					WidgetToInit.SetBattleWidgetControllers(CardPanelWidgetController, ViewCardDetailWidgetController);
 					WidgetToInit.SetWidgetController(OverlayWidgetController);
 				});
-			}
 		}
 	}
 }
 
-ULetheWidgetController* ULetheHUD::CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
+ULetheWidgetController* UBattleUIFeature::CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
 	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
@@ -67,7 +71,7 @@ ULetheWidgetController* ULetheHUD::CreatePlayerAttributeWidgetController(APlayer
 	return nullptr;
 }
 
-ULetheWidgetController* ULetheHUD::CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS)
+ULetheWidgetController* UBattleUIFeature::CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
 	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
@@ -82,7 +86,7 @@ ULetheWidgetController* ULetheHUD::CreateEnemyAttributeWidgetController(APlayerC
 	return nullptr;
 }
 
-UOverlayWidgetController* ULetheHUD::GetOrCreateOverlayWidgetController()
+UOverlayWidgetController* UBattleUIFeature::GetOrCreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
@@ -91,7 +95,7 @@ UOverlayWidgetController* ULetheHUD::GetOrCreateOverlayWidgetController()
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* ULetheHUD::GetOrCreateCardPanelWidgetController()
+UCardPanelWidgetController* UBattleUIFeature::GetOrCreateCardPanelWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{
@@ -100,7 +104,7 @@ UCardPanelWidgetController* ULetheHUD::GetOrCreateCardPanelWidgetController()
 	return CardPanelWidgetController;
 }
 
-UViewCardDetailWidgetController* ULetheHUD::GetOrCreateViewCardDetailWidgetController()
+UViewCardDetailWidgetController* UBattleUIFeature::GetOrCreateViewCardDetailWidgetController()
 {
 	if (!ViewCardDetailWidgetController)
 	{

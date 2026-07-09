@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
-#include "LetheHUD.generated.h"
+#include "LetheGameUIFeature.h"
+#include "BattleUIFeature.generated.h"
 
 class UAbilitySystemComponent;
 class UAttributeSet;
@@ -23,16 +23,19 @@ struct FWidgetControllerParams;
  * 배틀 화면에 필요한 WidgetController들을 생성하고 Overlay에 꽂아주는 역할을 수행합니다.
  */
 UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
-class LETHE_API ULetheHUD : public UObject
+class LETHE_API UBattleUIFeature : public ULetheGameUIFeature
 {
 	GENERATED_BODY()
 
 public:
+	virtual void InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget) override;
+	
 	/** AttributeWidget, CardActor 초기화를 위해 필요한 변수를 PlayerCharacter BeginPlay 타이밍마다 한 번씩 호출(최대 총 4번)합니다. */
 	void InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS);
-	
+
+private:
 	UOverlayWidgetController* GetOrCreateOverlayWidgetController();
 	UCardPanelWidgetController* GetOrCreateCardPanelWidgetController();
 	UViewCardDetailWidgetController* GetOrCreateViewCardDetailWidgetController();

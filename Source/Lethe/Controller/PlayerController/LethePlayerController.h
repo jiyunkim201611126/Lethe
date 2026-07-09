@@ -16,7 +16,7 @@ class UActorSelectorComponent;
 class UAttributeSet;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
-class ULetheHUD;
+class UBattleUIFeature;
 class ULetheWidgetController;
 class UPlayerAbilityRequestComponent;
 class UPreviewCoordinatorComponent;
@@ -38,9 +38,6 @@ class LETHE_API ALethePlayerController : public APlayerController
 public:
 	ALethePlayerController();
 
-	ULetheWidgetController* InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
-	ULetheWidgetController* InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS);
-
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void HandleLeftMouseButtonClickedInWorldSection();
 	void ResetSelectedCharacter();
@@ -56,7 +53,6 @@ public:
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
-	ULetheHUD* GetLetheHUD() const;
 	bool IsCardSelected() const;
 
 protected:
@@ -82,10 +78,6 @@ public:
 	FOnPreviewDataUpdatedSignature OnPreviewDataUpdatedDelegate;
 	FOnResolveUseCardSignature OnResolveUseCardDelegate;
 	FOnCameraHeightChangedSignature OnCameraHeightChangedDelegate;
-	
-protected:
-	UPROPERTY(EditDefaultsOnly, Instanced, Category = "LetheHUD")
-	TObjectPtr<ULetheHUD> LetheHUD;
 	
 private:
 	UPROPERTY()

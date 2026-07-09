@@ -5,6 +5,7 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Framework/Application/SlateApplication.h"
+#include "LetheGameUIFeature.h"
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 
@@ -51,6 +52,11 @@ ULethePrimaryGameLayout* ULetheGameUIPolicy::GetOrCreateRootLayout(APlayerContro
 	return RootLayout;
 }
 
+ULethePrimaryGameLayout* ULetheGameUIPolicy::GetRootLayout() const
+{
+	return RootLayout;
+}
+
 void ULetheGameUIPolicy::AddLayoutToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout)
 {
 	if (!PlayerController || !Layout)
@@ -80,15 +86,18 @@ void ULetheGameUIPolicy::CreateLayoutWidget(APlayerController* PlayerController)
 		return;
 	}
 
-	const TSubclassOf<ULethePrimaryGameLayout> LayoutWidgetClass = GetLayoutWidgetClass();
-	if (ensure(LayoutWidgetClass && !LayoutWidgetClass->HasAnyClassFlags(CLASS_Abstract)))
+	const TSubclassOf<ULethePrimaryGameLayout> LoadedLayoutWidgetClass = LayoutWidgetClass.LoadSynchronous();
+	if (ensure(LoadedLayoutWidgetClass && !LoadedLayoutWidgetClass->HasAnyClassFlags(CLASS_Abstract)))
 	{
-		RootLayout = CreateWidget<ULethePrimaryGameLayout>(PlayerController, LayoutWidgetClass);
+		RootLayout = CreateWidget<ULethePrimaryGameLayout>(PlayerController, LoadedLayoutWidgetClass);
 		AddLayoutToViewport(PlayerController, RootLayout);
-	}
-}
 
-TSubclassOf<ULethePrimaryGameLayout> ULetheGameUIPolicy::GetLayoutWidgetClass() const
-{
-	return LayoutClass.LoadSynchronous();
+		for (ULetheGameUIFeature* UIFeature : UIFeatures)
+		{
+			if (UIFeature)
+			{
+				UIFeature->InitializeFeature(RootLayout);
+			}
+		}
+	}
 }

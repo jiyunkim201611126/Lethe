@@ -3,8 +3,8 @@
 #include "LethePrimaryGameLayout.h"
 
 #include "Engine/GameInstance.h"
-#include "Lethe/UI/Framework/LetheGameUIPolicy.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
+#include "Policy/LetheGameUIPolicy.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 
 ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(APlayerController* PlayerController)

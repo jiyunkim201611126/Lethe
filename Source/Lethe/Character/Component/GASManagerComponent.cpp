@@ -5,11 +5,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Character/LetheCharacterBase.h"
-#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
+#include "Lethe/UI/Framework/Policy/BattleUIFeature.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -75,13 +76,19 @@ void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 	
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController);
-	if (!LethePlayerController)
+	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
+	if (!PlayerController || !UIManagerSubsystem)
+	{
+		return;
+	}
+
+	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeatureWithEnsureRootLayout<UBattleUIFeature>(PlayerController);
+	if (!BattleUIFeature)
 	{
 		return;
 	}
 	
-	ULetheWidgetController* WidgetController = LethePlayerController->InitEnemyUI(AbilitySystemComponent, AttributeSet);
+	ULetheWidgetController* WidgetController = BattleUIFeature->CreateEnemyAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet);
 	for (UUserWidget* AttributeWidget : AttributeWidgets)
 	{
 		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);

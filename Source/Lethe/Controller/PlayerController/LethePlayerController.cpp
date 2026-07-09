@@ -15,7 +15,6 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-#include "Lethe/UI/Framework/LetheHUD.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -32,17 +31,6 @@ ALethePlayerController::ALethePlayerController()
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
-}
-
-ULetheWidgetController* ALethePlayerController::InitPlayerUI(UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
-{
-	LetheHUD->InitPlayerBattleUI(this, ASC, AS, PAS);
-	return LetheHUD->CreatePlayerAttributeWidgetController(this, ASC, AS, PAS);
-}
-
-ULetheWidgetController* ALethePlayerController::InitEnemyUI(UAbilitySystemComponent* ASC, UAttributeSet* AS)
-{
-	return LetheHUD->CreateEnemyAttributeWidgetController(this, ASC, AS);
 }
 
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
@@ -472,11 +460,6 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
 	PlayerAbilityRequestComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
-}
-
-ULetheHUD* ALethePlayerController::GetLetheHUD() const
-{
-	return LetheHUD;
 }
 
 bool ALethePlayerController::IsCardSelected() const

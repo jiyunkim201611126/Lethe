@@ -8,10 +8,12 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Character/LetheCharacterBase.h"
-#include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "Lethe/Data/PhaseData.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
+#include "Lethe/UI/Framework/Policy/BattleUIFeature.h"
 
 UPlayerGASManagerComponent::UPlayerGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -28,13 +30,26 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 {
 	ALetheCharacterBase* OwnerCharacter = GetOwner<ALetheCharacterBase>();
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController);
-	if (!OwnerCharacter || !LethePlayerController)
+	if (!OwnerCharacter || !PlayerController)
 	{
 		return;
 	}
+
+	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
+	if (!UIManagerSubsystem)
+	{
+		return;
+	}
+
+	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeatureWithEnsureRootLayout<UBattleUIFeature>(PlayerController);
+	if (!BattleUIFeature)
+	{
+		return;
+	}
+
+	BattleUIFeature->InitPlayerBattleUI(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
+	ULetheWidgetController* WidgetController = BattleUIFeature->CreatePlayerAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 	
-	ULetheWidgetController* WidgetController = LethePlayerController->InitPlayerUI(AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 	for (UUserWidget* AttributeWidget : AttributeWidgets)
 	{
 		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);

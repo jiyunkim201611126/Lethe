@@ -3,59 +3,11 @@
 #include "LetheAbilitySystemLibrary.h"
 
 #include "LetheAttributeSet.h"
-#include "Kismet/GameplayStatics.h"
 #include "Lethe/LetheAbilityTypes.h"
 #include "Lethe/Actor/Tile/Tile.h"
-#include "Lethe/Controller/PlayerController/LethePlayerController.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-#include "Lethe/UI/Framework/LetheHUD.h"
 
 class UTileManagerSubsystem;
-
-UOverlayWidgetController* ULetheAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
-{
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
-	{
-		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-		{
-			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
-			{
-				return LetheHUD->GetOrCreateOverlayWidgetController();
-			}
-		}
-	}
-	return nullptr;
-}
-
-UCardPanelWidgetController* ULetheAbilitySystemLibrary::GetCardPanelWidgetController(const UObject* WorldContextObject)
-{
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
-	{
-		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-		{
-			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
-			{
-				return LetheHUD->GetOrCreateCardPanelWidgetController();
-			}
-		}
-	}
-	return nullptr;
-}
-
-UViewCardDetailWidgetController* ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(const UObject* WorldContextObject)
-{
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
-	{
-		if (const ALethePlayerController* LethePlayerController = Cast<ALethePlayerController>(PlayerController))
-		{
-			if (ULetheHUD* LetheHUD = LethePlayerController->GetLetheHUD())
-			{
-				return LetheHUD->GetOrCreateViewCardDetailWidgetController();
-			}
-		}
-	}
-	return nullptr;
-}
 
 bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap)
 {

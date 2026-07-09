@@ -11,20 +11,19 @@ class UCardPanelWidget;
 class UInputAction;
 class UViewCardDetailWidget;
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API UOverlayWidget : public ULetheActivatableWidget
 {
 	GENERATED_BODY()
+
+public:
+	void SetBattleWidgetControllers(ULetheWidgetController* InCardPanelWidgetController, ULetheWidgetController* InViewCardDetailWidgetController);
 
 protected:
 	//~ Begin UCommonActivatableWidget Interface
 	virtual void NativeOnActivated() override;
 	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
 	//~ End of UCommonActivatableWidget Interface
-	
-	//~ Begin ULetheActivatableWidget Interface
-	virtual void WidgetControllerSet_Implementation() override;
-	//~ End of ULetheActivatableWidget Interface
 
 private:
 	void OnStartViewCardDetail(const ACardActor* CardActor) const;
@@ -45,7 +44,7 @@ protected:
 	TObjectPtr<UCardPanelWidget> CardPanel;
 
 	UPROPERTY(EditDefaultsOnly, Category = "View")
-	TSubclassOf<UViewCardDetailWidget> ViewCardDetailWidgetClass;
+	TSoftClassPtr<UViewCardDetailWidget> ViewCardDetailWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> Keyboard1;
@@ -76,4 +75,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> Keyboard0;
+
+private:
+	TWeakObjectPtr<ULetheWidgetController> ViewCardDetailWidgetController;
 };

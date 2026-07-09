@@ -2,7 +2,7 @@
 
 #include "LetheUIManagerSubsystem.h"
 
-#include "Lethe/UI/Framework/LetheGameUIPolicy.h"
+#include "Policy/LetheGameUIPolicy.h"
 
 void ULetheUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -22,10 +22,23 @@ void ULetheUIManagerSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+ULetheGameUIPolicy* ULetheUIManagerSubsystem::GetCurrentUIPolicy()
+{
+	return CurrentPolicy;
+}
+
 void ULetheUIManagerSubsystem::SwitchToPolicy(ULetheGameUIPolicy* InPolicy)
 {
 	if (CurrentPolicy != InPolicy)
 	{
 		CurrentPolicy = InPolicy;
+	}
+}
+
+void ULetheUIManagerSubsystem::EnsureCreateRootLayout(APlayerController* PlayerController) const
+{
+	if (CurrentPolicy && !CurrentPolicy->GetRootLayout())
+	{
+		CurrentPolicy->GetOrCreateRootLayout(PlayerController);
 	}
 }

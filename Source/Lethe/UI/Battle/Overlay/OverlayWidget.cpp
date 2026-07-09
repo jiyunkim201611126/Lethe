@@ -2,14 +2,12 @@
 
 #include "OverlayWidget.h"
 
-#include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
-#include "Lethe/UI/Battle/Card/CardPanelWidget.h"
-#include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
-#include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "Input/CommonUIInputTypes.h"
+#include "Lethe/UI/Battle/Card/CardPanelWidget.h"
 #include "Lethe/UI/Battle/Card/ViewCardDetailWidget.h"
-#include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
+#include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
+#include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
 void UOverlayWidget::NativeOnActivated()
@@ -39,9 +37,13 @@ TOptional<FUIInputConfig> UOverlayWidget::GetDesiredInputConfig() const
 	return Config;
 }
 
-void UOverlayWidget::WidgetControllerSet_Implementation()
+void UOverlayWidget::SetBattleWidgetControllers(ULetheWidgetController* InCardPanelWidgetController, ULetheWidgetController* InViewCardDetailWidgetController)
 {
-	CardPanel->SetWidgetController(ULetheAbilitySystemLibrary::GetCardPanelWidgetController(this));
+	if (ensure(InCardPanelWidgetController) && ensure(InViewCardDetailWidgetController))
+	{
+		CardPanel->SetWidgetController(InCardPanelWidgetController);
+		ViewCardDetailWidgetController = InViewCardDetailWidgetController;
+	}
 }
 
 void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const
@@ -53,11 +55,18 @@ void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const
 
 	if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(GetOwningPlayer()))
 	{
-		RootLayout->PushWidgetToLayerStack<UViewCardDetailWidget>(FLetheGameplayTags::Get().UI_Layer_GameMenu, ViewCardDetailWidgetClass, [this, CardActor](UViewCardDetailWidget& WidgetToInit)
+		const TSubclassOf<UViewCardDetailWidget> LoadedViewCardDetailWidgetClass = ViewCardDetailWidgetClass.LoadSynchronous();
+		if (!ensure(LoadedViewCardDetailWidgetClass))
 		{
-			WidgetToInit.SetWidgetController(ULetheAbilitySystemLibrary::GetViewCardDetailWidgetController(this));
-			WidgetToInit.StartViewDetail(CardActor);
-		});
+			return;
+		}
+		
+		RootLayout->PushWidgetToLayerStack<UViewCardDetailWidget>(FLetheGameplayTags::Get().UI_Layer_GameMenu, LoadedViewCardDetailWidgetClass,
+			[this, CardActor](UViewCardDetailWidget& WidgetToInit)
+			{
+				WidgetToInit.SetWidgetController(ViewCardDetailWidgetController.Get());
+				WidgetToInit.StartViewDetail(CardActor);
+			});
 	}
 }
 

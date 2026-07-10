@@ -7,20 +7,25 @@
 #include "Policy/LetheGameUIPolicy.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 
-ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(APlayerController* PlayerController)
+ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(const APlayerController* PlayerController)
 {
-	if (!PlayerController)
+	return PlayerController ? GetPrimaryGameLayout(PlayerController->GetLocalPlayer()) : nullptr;
+}
+
+ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(ULocalPlayer* LocalPlayer)
+{
+	if (!LocalPlayer)
 	{
 		return nullptr;
 	}
 
-	if (const UGameInstance* GameInstance = PlayerController->GetGameInstance())
+	if (const UGameInstance* GameInstance = LocalPlayer->GetGameInstance())
 	{
 		if (ULetheUIManagerSubsystem* UIManager = GameInstance->GetSubsystem<ULetheUIManagerSubsystem>())
 		{
 			if (ULetheGameUIPolicy* Policy = UIManager->GetCurrentUIPolicy())
 			{
-				return Policy->GetOrCreateRootLayout(PlayerController);
+				return Policy->GetOrCreateRootLayout(LocalPlayer);
 			}
 		}
 	}

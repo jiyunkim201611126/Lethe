@@ -24,7 +24,8 @@ public:
 	static ULetheGameUIPolicy* GetGameUIPolicy(const UObject* WorldContextObject);
 
 	ULetheUIManagerSubsystem* GetOwningUIManager() const;
-	ULethePrimaryGameLayout* GetOrCreateRootLayout(APlayerController* PlayerController);
+	
+	ULethePrimaryGameLayout* GetOrCreateRootLayout(ULocalPlayer* LocalPlayer);
 	ULethePrimaryGameLayout* GetRootLayout() const;
 
 	template <typename FeatureT>
@@ -42,18 +43,20 @@ public:
 		return nullptr;
 	}
 
-	void Deinitialize() const;
+	void DeinitializeFeatures();
+
+	virtual UWorld* GetWorld() const override;
 
 protected:
-	void AddLayoutToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout);
+	void CreateLayoutWidget(ULocalPlayer* LocalPlayer);
+	
+	void AddLayoutToViewport(ULocalPlayer* LocalPlayer, ULethePrimaryGameLayout* Layout);
 
-	virtual void OnRootLayoutAddedToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout);
-
-	void CreateLayoutWidget(APlayerController* PlayerController);
+	virtual void OnRootLayoutAddedToViewport(ULocalPlayer* LocalPlayer, ULethePrimaryGameLayout* Layout);
 
 protected:
 	UPROPERTY(EditAnywhere)
-	TSoftClassPtr<ULethePrimaryGameLayout> LayoutWidgetClass;
+	TSoftClassPtr<ULethePrimaryGameLayout> RootLayoutWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Instanced)
 	TArray<TObjectPtr<ULetheGameUIFeature>> UIFeatures;
@@ -61,4 +64,6 @@ protected:
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<ULethePrimaryGameLayout> RootLayout;
+
+	uint8 bFeaturesInitialized : 1 = false;
 };

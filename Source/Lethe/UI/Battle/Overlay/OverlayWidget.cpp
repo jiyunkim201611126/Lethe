@@ -53,7 +53,7 @@ void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const
 		return;
 	}
 
-	if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(GetOwningPlayer()))
+	if (ULethePrimaryGameLayout* RootLayout = ULethePrimaryGameLayout::GetPrimaryGameLayout(GetOwningLocalPlayer()))
 	{
 		const TSubclassOf<UViewCardDetailWidget> LoadedViewCardDetailWidgetClass = ViewCardDetailWidgetClass.LoadSynchronous();
 		if (!ensure(LoadedViewCardDetailWidgetClass))

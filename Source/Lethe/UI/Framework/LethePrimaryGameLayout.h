@@ -19,7 +19,8 @@ class LETHE_API ULethePrimaryGameLayout : public UCommonUserWidget
 	GENERATED_BODY()
 
 public:
-	static ULethePrimaryGameLayout* GetPrimaryGameLayout(APlayerController* PlayerController);
+	static ULethePrimaryGameLayout* GetPrimaryGameLayout(const APlayerController* PlayerController);
+	static ULethePrimaryGameLayout* GetPrimaryGameLayout(ULocalPlayer* LocalPlayer);
 
 	template <typename ActivatableWidgetT = UCommonActivatableWidget>
 	ActivatableWidgetT* PushWidgetToLayerStack(const FGameplayTag& LayerTag, UClass* WidgetClass)

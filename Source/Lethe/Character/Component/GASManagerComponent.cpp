@@ -82,7 +82,13 @@ void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 		return;
 	}
 
-	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeatureWithEnsureRootLayout<UBattleUIFeature>(PlayerController);
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (!LocalPlayer)
+	{
+		return;
+	}
+
+	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeatureWithEnsureRootLayout<UBattleUIFeature>(LocalPlayer);
 	if (!BattleUIFeature)
 	{
 		return;

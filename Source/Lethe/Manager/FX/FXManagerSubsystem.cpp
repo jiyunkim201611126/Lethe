@@ -19,7 +19,7 @@ void UFXManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		if (ULevelManagerSubsystem* LevelManagerSubsystem = GameInstance->GetSubsystem<ULevelManagerSubsystem>())
 		{
-			OnLevelChangeStartedHandle = LevelManagerSubsystem->OnStartLevelChanged.AddUObject(this, &ThisClass::RemoveAllPending);
+			OnLevelChangeStartedHandle = LevelManagerSubsystem->OnStartLevelChange.AddUObject(this, &ThisClass::RemoveAllPending);
 		}
 	}
 
@@ -109,7 +109,7 @@ void UFXManagerSubsystem::Deinitialize()
 	{
 		if (ULevelManagerSubsystem* LevelManagerSubsystem = GameInstance->GetSubsystem<ULevelManagerSubsystem>())
 		{
-			LevelManagerSubsystem->OnStartLevelChanged.Remove(OnLevelChangeStartedHandle);
+			LevelManagerSubsystem->OnStartLevelChange.Remove(OnLevelChangeStartedHandle);
 		}
 	}
 	

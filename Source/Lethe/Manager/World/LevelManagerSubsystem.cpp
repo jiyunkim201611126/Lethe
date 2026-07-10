@@ -24,9 +24,9 @@ void ULevelManagerSubsystem::StartLevelTransition(const ELevelType TargetLevelTy
 
 	checkf(!NextLevel.IsNull(), TEXT("NextLevel을 찾을 수 없습니다."));
 
-	if (OnStartLevelChanged.IsBound())
+	if (OnStartLevelChange.IsBound())
 	{
-		OnStartLevelChanged.Broadcast();
+		OnStartLevelChange.Broadcast();
 	}
 
 	// TODO: 로딩 위젯 켜기

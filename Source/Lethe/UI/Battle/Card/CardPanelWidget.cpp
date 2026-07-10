@@ -43,10 +43,7 @@ void UCardPanelWidget::NativeDestruct()
 
 void UCardPanelWidget::WidgetControllerSet_Implementation()
 {
-	if (!CardPanelWidgetController)
-	{
-		CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
-	}
+	CardPanelWidgetController = Cast<UCardPanelWidgetController>(WidgetController);
 
 	if (CardPanelWidgetController)
 	{

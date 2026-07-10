@@ -42,8 +42,6 @@ void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 
 		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
 		CardDescriptionTextBlock->SetText(FinalText);
-		
-		ActivateWidget();
 		return;
 	}
 	DeactivateWidget();

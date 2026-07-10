@@ -13,6 +13,22 @@
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
+void UBattleUIFeature::DeinitializeFeature()
+{
+	if (OverlayWidget)
+	{
+		OverlayWidget->DeactivateWidget();
+		OverlayWidget->RemoveFromParent();
+		OverlayWidget = nullptr;
+	}
+
+	OverlayWidgetController = nullptr;
+	CardPanelWidgetController = nullptr;
+	ViewCardDetailWidgetController = nullptr;
+	
+	Super::DeinitializeFeature();
+}
+
 void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
@@ -24,16 +40,30 @@ void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemC
 	// WidgetController 객체를 생성합니다.
 	GetOrCreateOverlayWidgetController();
 	// 총 4쌍의 ASC, AS를 WidgetController에게 넘겨줘야 하기 때문에 생성 시점이 아닌 여기서 호출합니다.
-	OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	OverlayWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	if (OverlayWidgetController)
+	{
+		OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+		OverlayWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	}
 	
 	GetOrCreateCardPanelWidgetController();
-	CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+		CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	}
 
 	GetOrCreateViewCardDetailWidgetController();
-	ViewCardDetailWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-	ViewCardDetailWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	if (ViewCardDetailWidgetController)
+	{
+		ViewCardDetailWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+		ViewCardDetailWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+	}
+
+	if (!OverlayWidgetController || !CardPanelWidgetController || !ViewCardDetailWidgetController)
+	{
+		return;
+	}
 
 	if (!OverlayWidget)
 	{

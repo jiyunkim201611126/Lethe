@@ -17,7 +17,7 @@ enum class ELevelType : uint8
 	Battle,
 };
 
-DECLARE_MULTICAST_DELEGATE(FOnStartLevelChanged);
+DECLARE_MULTICAST_DELEGATE(FOnStartLevelChange);
 
 /**
  * 레벨 이동을 담당하는 Subsystem입니다.
@@ -42,7 +42,7 @@ private:
 	void OnPostLoadMapWithWorld(UWorld* World);
 
 public:
-	FOnStartLevelChanged OnStartLevelChanged;
+	FOnStartLevelChange OnStartLevelChange;
 
 private:
 	/** TODO: 임시로 CurrentLevelType에 DeckEditing을 할당해두었습니다. 추후 MainMenu 같은 레벨이 생기면 해당 enum 선언 후 할당해줍니다. */

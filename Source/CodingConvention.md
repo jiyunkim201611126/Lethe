@@ -82,3 +82,17 @@ MyValue > 0
 MyValue1 <= MyValue2
 0 < MyValue && MyValue < 10
 ```
+
+---
+
+## 접근지정자 순서
+
+함수, 변수 순으로 작성하며, public, protected, private 순으로 작성합니다.
+추가로 아래와 같은 주석은 부모 클래스의 함수를 region처럼 묶어 가독성을 향상시킵니다.
+```c++
+//~ Begin AActor Interface
+//~ End of AActor Interface
+```
+반드시 있어야 하는 것은 아닙니다.
+public 함수와 protected 함수를 모두 오버라이드하는 경우가 있다면 접근 지정자를 포함해 묶게 되므로,
+가독성을 오히려 저하시킬 수 있으므로 이 경우는 주의해서 사용합니다.

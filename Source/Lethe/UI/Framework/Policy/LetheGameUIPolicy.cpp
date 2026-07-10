@@ -2,8 +2,6 @@
 
 #include "LetheGameUIPolicy.h"
 
-#include "Engine/Engine.h"
-#include "Engine/GameInstance.h"
 #include "Framework/Application/SlateApplication.h"
 #include "LetheGameUIFeature.h"
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
@@ -11,7 +9,12 @@
 
 ULetheGameUIPolicy* ULetheGameUIPolicy::GetGameUIPolicy(const UObject* WorldContextObject)
 {
-	if (const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+	if (!WorldContextObject)
+	{
+		return nullptr;
+	}
+	
+	if (const UWorld* World = WorldContextObject->GetWorld())
 	{
 		if (const UGameInstance* GameInstance = World->GetGameInstance())
 		{
@@ -20,20 +23,6 @@ ULetheGameUIPolicy* ULetheGameUIPolicy::GetGameUIPolicy(const UObject* WorldCont
 				return UIManager->GetCurrentUIPolicy();
 			}
 		}
-	}
-	return nullptr;
-}
-
-UWorld* ULetheGameUIPolicy::GetWorld() const
-{
-	if (HasAnyFlags(RF_ClassDefaultObject))
-	{
-		return nullptr;
-	}
-
-	if (const ULetheUIManagerSubsystem* UIManager = GetOwningUIManager())
-	{
-		return UIManager->GetGameInstance()->GetWorld();
 	}
 	return nullptr;
 }
@@ -99,5 +88,21 @@ void ULetheGameUIPolicy::CreateLayoutWidget(APlayerController* PlayerController)
 				UIFeature->InitializeFeature(RootLayout);
 			}
 		}
+	}
+}
+
+void ULetheGameUIPolicy::Deinitialize() const
+{
+	for (ULetheGameUIFeature* UIFeature : UIFeatures)
+	{
+		if (UIFeature)
+		{
+			UIFeature->DeinitializeFeature();
+		}
+	}
+	
+	if (RootLayout)
+	{
+		RootLayout->RemoveFromParent();
 	}
 }

@@ -23,7 +23,6 @@ class LETHE_API ULetheGameUIPolicy : public UObject
 public:
 	static ULetheGameUIPolicy* GetGameUIPolicy(const UObject* WorldContextObject);
 
-	virtual UWorld* GetWorld() const override;
 	ULetheUIManagerSubsystem* GetOwningUIManager() const;
 	ULethePrimaryGameLayout* GetOrCreateRootLayout(APlayerController* PlayerController);
 	ULethePrimaryGameLayout* GetRootLayout() const;
@@ -42,6 +41,8 @@ public:
 		}
 		return nullptr;
 	}
+
+	void Deinitialize() const;
 
 protected:
 	void AddLayoutToViewport(APlayerController* PlayerController, ULethePrimaryGameLayout* Layout);

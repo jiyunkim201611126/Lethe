@@ -28,8 +28,6 @@ class LETHE_API UBattleUIFeature : public ULetheGameUIFeature
 	GENERATED_BODY()
 
 public:
-	virtual void InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget) override;
-	
 	/** AttributeWidget, CardActor 초기화를 위해 필요한 변수를 PlayerCharacter BeginPlay 타이밍마다 한 번씩 호출(최대 총 4번)합니다. */
 	void InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
@@ -42,22 +40,22 @@ private:
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UOverlayWidget> OverlayWidgetClass;
+	TSoftClassPtr<UOverlayWidget> OverlayWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UOverlayWidgetController> OverlayWidgetControllerClass;
+	TSoftClassPtr<UOverlayWidgetController> OverlayWidgetControllerClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UCardPanelWidgetController> CardPanelWidgetControllerClass;
+	TSoftClassPtr<UCardPanelWidgetController> CardPanelWidgetControllerClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UViewCardDetailWidgetController> ViewCardDetailWidgetControllerClass;
+	TSoftClassPtr<UViewCardDetailWidgetController> ViewCardDetailWidgetControllerClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UAttributeWidgetController> AttributeWidgetControllerClass;
+	TSoftClassPtr<UAttributeWidgetController> EnemyAttributeWidgetControllerClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UAttributeWidgetController> PlayerAttributeWidgetControllerClass;
+	TSoftClassPtr<UAttributeWidgetController> PlayerAttributeWidgetControllerClass;
 	
 private:
 	UPROPERTY()

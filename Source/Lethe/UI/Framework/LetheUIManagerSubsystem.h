@@ -41,10 +41,12 @@ public:
 	{
 		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
 		
-		EnsureCreateRootLayout(PlayerController);
-		if (CurrentPolicy)
+		if (EnsureCreateRootLayout(PlayerController))
 		{
-			return CurrentPolicy->FindUIFeature<FeatureT>();
+			if (CurrentPolicy)
+			{
+				return CurrentPolicy->FindUIFeature<FeatureT>();
+			}
 		}
 		return nullptr;
 	}
@@ -53,7 +55,7 @@ protected:
 	void SwitchToPolicy(ULetheGameUIPolicy* InPolicy);
 
 private:
-	void EnsureCreateRootLayout(APlayerController* PlayerController) const;
+	bool EnsureCreateRootLayout(APlayerController* PlayerController) const;
 
 protected:
 	UPROPERTY(Config, EditAnywhere)

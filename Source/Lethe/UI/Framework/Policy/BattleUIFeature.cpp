@@ -13,11 +13,6 @@
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void UBattleUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget)
-{
-	Super::InitializeFeature(InLayoutWidget);
-}
-
 void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
@@ -42,14 +37,18 @@ void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemC
 
 	if (!OverlayWidget)
 	{
-		if (ensure(OverlayWidgetClass) && LayoutWidget.IsValid())
+		if (LayoutWidget.IsValid())
 		{
-			OverlayWidget = LayoutWidget->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, OverlayWidgetClass,
-				[this](UOverlayWidget& WidgetToInit)
-				{
-					WidgetToInit.SetBattleWidgetControllers(CardPanelWidgetController, ViewCardDetailWidgetController);
-					WidgetToInit.SetWidgetController(OverlayWidgetController);
-				});
+			const TSubclassOf<UOverlayWidget> LoadedWidgetClass = OverlayWidgetClass.LoadSynchronous();
+			if (ensure(LoadedWidgetClass))
+			{
+				OverlayWidget = LayoutWidget->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, LoadedWidgetClass,
+					[this](UOverlayWidget& WidgetToInit)
+					{
+						WidgetToInit.SetBattleWidgetControllers(CardPanelWidgetController, ViewCardDetailWidgetController);
+						WidgetToInit.SetWidgetController(OverlayWidgetController);
+					});
+			}
 		}
 	}
 }
@@ -57,16 +56,20 @@ void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemC
 ULetheWidgetController* UBattleUIFeature::CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
-	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, PlayerAttributeWidgetControllerClass);
-	if (AttributeWidgetController)
+	const TSubclassOf<UAttributeWidgetController> LoadedWidgetClass = PlayerAttributeWidgetControllerClass.LoadSynchronous();
+	if (ensure(LoadedWidgetClass))
 	{
-		const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
-		ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-		ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
-		UPlayerAttributeSet* PlayerAS = Cast<UPlayerAttributeSet>(PAS);
-		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
-		return AttributeWidgetController;
+		UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, LoadedWidgetClass);
+		if (AttributeWidgetController)
+		{
+			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
+			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
+			UPlayerAttributeSet* PlayerAS = Cast<UPlayerAttributeSet>(PAS);
+			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+			return AttributeWidgetController;
+		}
 	}
 	return nullptr;
 }
@@ -75,13 +78,17 @@ ULetheWidgetController* UBattleUIFeature::CreateEnemyAttributeWidgetController(A
 {
 	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
 	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
-	UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, AttributeWidgetControllerClass);
-	if (AttributeWidgetController)
+	const TSubclassOf<UAttributeWidgetController> LoadedWidgetClass = EnemyAttributeWidgetControllerClass.LoadSynchronous();
+	if (ensure(LoadedWidgetClass))
 	{
-		const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, nullptr);
-		AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, nullptr);
-		return AttributeWidgetController;
+		UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, LoadedWidgetClass);
+		if (AttributeWidgetController)
+		{
+			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, nullptr);
+			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
+			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, nullptr);
+			return AttributeWidgetController;
+		}
 	}
 	return nullptr;
 }
@@ -90,7 +97,11 @@ UOverlayWidgetController* UBattleUIFeature::GetOrCreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
-		OverlayWidgetController = NewObject<UOverlayWidgetController>(this, OverlayWidgetControllerClass);
+		const TSubclassOf<UOverlayWidgetController> LoadedControllerClass = OverlayWidgetControllerClass.LoadSynchronous();
+		if (ensure(LoadedControllerClass))
+		{
+			OverlayWidgetController = NewObject<UOverlayWidgetController>(this, LoadedControllerClass);
+		}
 	}
 	return OverlayWidgetController;
 }
@@ -99,7 +110,11 @@ UCardPanelWidgetController* UBattleUIFeature::GetOrCreateCardPanelWidgetControll
 {
 	if (!CardPanelWidgetController)
 	{
-		CardPanelWidgetController = NewObject<UCardPanelWidgetController>(this, CardPanelWidgetControllerClass);
+		const TSubclassOf<UCardPanelWidgetController> LoadedControllerClass = CardPanelWidgetControllerClass.LoadSynchronous();
+		if (ensure(LoadedControllerClass))
+		{
+			CardPanelWidgetController = NewObject<UCardPanelWidgetController>(this, LoadedControllerClass);
+		}
 	}
 	return CardPanelWidgetController;
 }
@@ -108,7 +123,11 @@ UViewCardDetailWidgetController* UBattleUIFeature::GetOrCreateViewCardDetailWidg
 {
 	if (!ViewCardDetailWidgetController)
 	{
-		ViewCardDetailWidgetController = NewObject<UViewCardDetailWidgetController>(this, ViewCardDetailWidgetControllerClass);
+		const TSubclassOf<UViewCardDetailWidgetController> LoadedControllerClass = ViewCardDetailWidgetControllerClass.LoadSynchronous();
+		if (ensure(LoadedControllerClass))
+		{
+			ViewCardDetailWidgetController = NewObject<UViewCardDetailWidgetController>(this, LoadedControllerClass);
+		}
 	}
 	return ViewCardDetailWidgetController;
 }

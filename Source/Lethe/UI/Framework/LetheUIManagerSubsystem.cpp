@@ -17,6 +17,10 @@ void ULetheUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void ULetheUIManagerSubsystem::Deinitialize()
 {
+	if (CurrentPolicy)
+	{
+		CurrentPolicy->Deinitialize();
+	}
 	SwitchToPolicy(nullptr);
 
 	Super::Deinitialize();
@@ -35,10 +39,11 @@ void ULetheUIManagerSubsystem::SwitchToPolicy(ULetheGameUIPolicy* InPolicy)
 	}
 }
 
-void ULetheUIManagerSubsystem::EnsureCreateRootLayout(APlayerController* PlayerController) const
+bool ULetheUIManagerSubsystem::EnsureCreateRootLayout(APlayerController* PlayerController) const
 {
-	if (CurrentPolicy && !CurrentPolicy->GetRootLayout())
+	if (CurrentPolicy && CurrentPolicy->GetOrCreateRootLayout(PlayerController))
 	{
-		CurrentPolicy->GetOrCreateRootLayout(PlayerController);
+		return true;
 	}
+	return false;
 }

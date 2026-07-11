@@ -30,8 +30,10 @@ class LETHE_API UBattleUIFeature : public ULetheGameUIFeature
 public:
 	virtual void DeinitializeFeature() override;
 	
-	/** AttributeWidget, CardActor 초기화를 위해 필요한 변수를 PlayerCharacter BeginPlay 타이밍마다 한 번씩 호출(최대 총 4번)합니다. */
+	/** OverlayWidget, CardPanelWidget, CardActor 등의 초기화를 담당하는 함수로, PlayerCharacter BeginPlay 타이밍에 호출(최대 총 4번)합니다. */
 	void InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
+
+	/** AttributeWidget을 가진 캐릭터가 BeginPlay 타이밍에 호출합니다. */
 	ULetheWidgetController* CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);
 	ULetheWidgetController* CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS);
 

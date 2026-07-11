@@ -106,8 +106,6 @@ ULetheWidgetController* UBattleUIFeature::CreatePlayerAttributeWidgetController(
 
 ULetheWidgetController* UBattleUIFeature::CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
-	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 	const TSubclassOf<UAttributeWidgetController> LoadedWidgetClass = EnemyAttributeWidgetControllerClass.LoadSynchronous();
 	if (ensure(LoadedWidgetClass))
 	{
@@ -115,6 +113,8 @@ ULetheWidgetController* UBattleUIFeature::CreateEnemyAttributeWidgetController(A
 		if (AttributeWidgetController)
 		{
 			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, nullptr);
+			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
 			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, nullptr);
 			return AttributeWidgetController;

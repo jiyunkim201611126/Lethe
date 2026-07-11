@@ -20,9 +20,10 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
+	bool EnsureCreateRootLayout(ULocalPlayer* LocalPlayer) const;
+	
 	ULetheGameUIPolicy* GetCurrentUIPolicy();
 
-	/** RootLayout의 생성이 확실할 때 사용하는 함수입니다. */
 	template <typename FeatureT>
 	FeatureT* FindUIFeature() const
 	{
@@ -35,28 +36,10 @@ public:
 		return nullptr;
 	}
 
-	/** RootLayout의 생성이 불확실한 상황(게임 시작 직후 등)에 Feature가 필요한 경우 사용합니다. */
-	template <typename FeatureT>
-	FeatureT* FindUIFeatureWithEnsureRootLayout(ULocalPlayer* LocalPlayer) const
-	{
-		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
-		
-		if (EnsureCreateRootLayout(LocalPlayer))
-		{
-			if (CurrentPolicy)
-			{
-				return CurrentPolicy->FindUIFeature<FeatureT>();
-			}
-		}
-		return nullptr;
-	}
-
 protected:
 	void SwitchToPolicy(ULetheGameUIPolicy* InPolicy);
 
 private:
-	bool EnsureCreateRootLayout(ULocalPlayer* LocalPlayer) const;
-	
 	void OnLevelChangeStarted() const;
 
 protected:

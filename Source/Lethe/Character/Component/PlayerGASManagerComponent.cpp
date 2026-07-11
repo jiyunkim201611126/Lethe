@@ -28,6 +28,7 @@ void UPlayerGASManagerComponent::SetPlayerAttributeSet(UPlayerAttributeSet* InPl
 
 void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 {
+	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	ALetheCharacterBase* OwnerCharacter = GetOwner<ALetheCharacterBase>();
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
 	if (!OwnerCharacter || !PlayerController)
@@ -36,18 +37,18 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 	}
 
 	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
-	if (!LocalPlayer)
-	{
-		return;
-	}
-
 	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
-	if (!UIManagerSubsystem)
+	if (!LocalPlayer || !UIManagerSubsystem)
+	{
+		return;
+	}
+	
+	if (!UIManagerSubsystem->EnsureCreateRootLayout(LocalPlayer))
 	{
 		return;
 	}
 
-	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeatureWithEnsureRootLayout<UBattleUIFeature>(LocalPlayer);
+	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeature<UBattleUIFeature>();
 	if (!BattleUIFeature)
 	{
 		return;

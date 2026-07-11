@@ -35,7 +35,10 @@ ULetheUIManagerSubsystem* ULetheGameUIPolicy::GetOwningUIManager() const
 
 ULethePrimaryGameLayout* ULetheGameUIPolicy::GetOrCreateRootLayout(ULocalPlayer* LocalPlayer)
 {
-	CreateLayoutWidget(LocalPlayer);
+	if (!IsValid(RootLayout))
+	{
+		CreateLayoutWidget(LocalPlayer);
+	}
 	return RootLayout;
 }
 

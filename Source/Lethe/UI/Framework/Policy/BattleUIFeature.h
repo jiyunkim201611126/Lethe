@@ -22,7 +22,7 @@ struct FWidgetControllerParams;
 /**
  * 배틀 화면에 필요한 WidgetController들을 생성하고 Overlay에 꽂아주는 역할을 수행합니다.
  */
-UCLASS(Abstract, Blueprintable, DefaultToInstanced, EditInlineNew)
+UCLASS()
 class LETHE_API UBattleUIFeature : public ULetheGameUIFeature
 {
 	GENERATED_BODY()

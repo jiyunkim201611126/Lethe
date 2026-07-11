@@ -11,6 +11,7 @@
 class UBoxComponent;
 class UCardDefinitionData;
 class UCardViewData;
+class UCardWidgetInitContext;
 class UCharacterDefinitionData;
 class UCurveFloat;
 class ULetheAbilitySystemComponent;
@@ -18,7 +19,6 @@ class UMaterialInstanceDynamic;
 class USceneComponent;
 class UStaticMeshComponent;
 struct FCardInitParams;
-struct FViewDetailData;
 
 /**
  * Card가 현재 어디에 속해있는지 나타내는 Enum입니다.
@@ -56,20 +56,7 @@ enum class ECardAction : uint8
 	None,
 };
 
-USTRUCT()
-struct FViewDetailData
-{
-	GENERATED_BODY()
-
-	FText CardNameText;
-
-	UPROPERTY()
-	UObject* CardImage = nullptr;
-
-	FLinearColor CardTypeColor;
-};
-
-class ACardActor;
+// ReSharper disable once CppUseOfUndeclaredClass
 DECLARE_DELEGATE_TwoParams(FOnCardActorMouseEventSignature, ACardActor*, const ECardAction);
 
 UCLASS(Abstract)
@@ -94,7 +81,7 @@ public:
 	
 	ECardAction GetCardActionForMouseEvent(ECardMouseEvent InMouseEvent) const;
 	
-	void MakeViewDetailData(FViewDetailData& OutData) const;
+	void MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const;
 
 	FGameplayTag GetCardTag() const;
 	const FSavedCard& GetSavedCard() const;
@@ -141,7 +128,7 @@ private:
 	FLinearColor CardTypeColor = FLinearColor::White;
 
 	UPROPERTY()
-	TObjectPtr<UTexture2D> CardImage;
+	TObjectPtr<UTexture2D> CardTexture;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> IllustrationMaterialInstance;

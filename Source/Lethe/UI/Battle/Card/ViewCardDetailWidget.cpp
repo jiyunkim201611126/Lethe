@@ -5,6 +5,7 @@
 #include "CardWidget.h"
 #include "ViewCardDetailWidgetController.h"
 #include "Lethe/Actor/Card/CardActor.h"
+#include "Lethe/UI/Battle/DeckEditing/CardWidgetInitContext.h"
 #include "Lethe/UI/Core/LetheRichTextBlock.h"
 
 void UViewCardDetailWidget::WidgetControllerSet_Implementation()
@@ -28,23 +29,23 @@ FReply UViewCardDetailWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 
 void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 {
-	if (InCardActor)
+	UCardWidgetInitContext* ContextObject = NewObject<UCardWidgetInitContext>(this);
+	if (!InCardActor || !ContextObject)
 	{
-		FViewDetailData ViewDetailData;
-		InCardActor->MakeViewDetailData(ViewDetailData);
-		DetailCardWidget->SetViewDetail(ViewDetailData);
-
-		FText OutDescriptionText;
-		if (ViewCardDetailWidgetController)
-		{
-			ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
-		}
-
-		const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ViewDetailData.CardNameText, OutDescriptionText);
-		CardDescriptionTextBlock->SetText(FinalText);
-		return;
+		DeactivateWidget();
 	}
-	DeactivateWidget();
+	
+	InCardActor->MakeCardWidgetInitContext(ContextObject);
+	DetailCardWidget->InitCardView(ContextObject);
+
+	FText OutDescriptionText;
+	if (ViewCardDetailWidgetController)
+	{
+		ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
+	}
+
+	const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ContextObject->CardNameText, OutDescriptionText);
+	CardDescriptionTextBlock->SetText(FinalText);
 }
 
 TOptional<FUIInputConfig> UViewCardDetailWidget::GetDesiredInputConfig() const

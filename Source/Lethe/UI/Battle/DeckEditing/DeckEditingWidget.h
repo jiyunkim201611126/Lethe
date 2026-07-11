@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "Blueprint/UserWidget.h"
+#include "Lethe/UI/Framework/LetheActivatableWidget.h"
 #include "DeckEditingWidget.generated.h"
 
 enum class ECardAction : uint8;
 class UButton;
 class UCardViewData;
-class UDeckEditingCardListObject;
+class UCardWidgetInitContext;
 class ULetheGameplayAbility;
 class ULetheTextBlock;
 class UTileView;
@@ -24,7 +24,7 @@ struct FDeckListObjects
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<TObjectPtr<UDeckEditingCardListObject>> CardListObjects;
+	TArray<TObjectPtr<UCardWidgetInitContext>> CardListObjects;
 
 	void Sort();
 
@@ -32,8 +32,8 @@ struct FDeckListObjects
 	int32 GetTotalCardWeight() const;
 };
 
-UCLASS()
-class LETHE_API UDeckEditingWidget : public UUserWidget
+UCLASS(Abstract)
+class LETHE_API UDeckEditingWidget : public ULetheActivatableWidget
 {
 	GENERATED_BODY()
 
@@ -66,7 +66,7 @@ private:
 
 	void UpdateCardPage(const int32 NewCharacterIndex, const int32 NewPageIndex);
 
-	bool CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, const FGameplayTag& CharacterTag, UDeckEditingCardListObject* InDeckObject) const;
+	bool CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, const FGameplayTag& CharacterTag, const UCardWidgetInitContext* InitContext) const;
 
 	UFUNCTION()
 	void OnGoToBattleButtonClicked();

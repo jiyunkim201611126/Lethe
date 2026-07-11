@@ -2,7 +2,7 @@
 
 #include "DeckEditingWidget.h"
 
-#include "DeckEditingCardListObject.h"
+#include "CardWidgetInitContext.h"
 #include "Components/Button.h"
 #include "Components/TileView.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
@@ -15,18 +15,18 @@
 
 void FDeckListObjects::Sort()
 {
-	CardListObjects.Sort([](const UDeckEditingCardListObject& A, const UDeckEditingCardListObject& B)
+	CardListObjects.Sort([](const UCardWidgetInitContext& A, const UCardWidgetInitContext& B)
 	{
-		return A.SavedCardInfo.CardId < B.SavedCardInfo.CardId;
+		return A.SavedCard.CardId < B.SavedCard.CardId;
 	});
 }
 
 int32 FDeckListObjects::GetEqualCardCount(const FGameplayTag& CardTag) const
 {
 	int32 EqualCardCount = 0;
-	for (const UDeckEditingCardListObject* EquippedDeckListObject : CardListObjects)
+	for (const UCardWidgetInitContext* CardListObject : CardListObjects)
 	{
-		if (EquippedDeckListObject->SavedCardInfo.CardTag == CardTag)
+		if (CardListObject->SavedCard.CardTag == CardTag)
 		{
 			++EqualCardCount;
 		}
@@ -37,7 +37,7 @@ int32 FDeckListObjects::GetEqualCardCount(const FGameplayTag& CardTag) const
 int32 FDeckListObjects::GetTotalCardWeight() const
 {
 	int32 TotalWeight = 0;
-	for (const UDeckEditingCardListObject* ListObject : CardListObjects)
+	for (const UCardWidgetInitContext* ListObject : CardListObjects)
 	{
 		TotalWeight += ListObject->Weight;
 	}
@@ -149,10 +149,10 @@ void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, cons
 			}
 		
 			// TileView에 추가할 UObject 객체를 생성합니다.
-			if (UDeckEditingCardListObject* CardListObject = NewObject<UDeckEditingCardListObject>(this))
+			if (UCardWidgetInitContext* CardListObject = NewObject<UCardWidgetInitContext>(this))
 			{
 				// DeckEditingCardWidget의 초기화에 필요한 정보를 할당합니다.
-				CardListObject->SavedCardInfo = CardInfo.SavedCard;
+				CardListObject->SavedCard = CardInfo.SavedCard;
 				CardListObject->CardTypeColor = CardViewData->GetCardTypeColor(CardInfo.CardDefinition->CardTypeTag);
 				CardListObject->CardTexture = CardInfo.CardDefinition->CardTexture;
 				CardListObject->Weight = CardInfo.CardDefinition->GetWeight(CardInfo.SavedCard.CardLevel);
@@ -203,7 +203,7 @@ void UDeckEditingWidget::OnEquippedCardClicked(UObject* InListObject)
 {
 	if (CharacterTags.IsValidIndex(CurrentCharacterIndex))
 	{
-		if (UDeckEditingCardListObject* DeckListObject = Cast<UDeckEditingCardListObject>(InListObject))
+		if (UCardWidgetInitContext* DeckListObject = Cast<UCardWidgetInitContext>(InListObject))
 		{
 			const FGameplayTag& CharacterTag = CharacterTags[CurrentCharacterIndex];
 
@@ -224,7 +224,7 @@ void UDeckEditingWidget::OnUnequippedCardClicked(UObject* InListObject)
 {
 	if (CharacterTags.IsValidIndex(CurrentCharacterIndex))
 	{
-		if (UDeckEditingCardListObject* DeckListObject = Cast<UDeckEditingCardListObject>(InListObject))
+		if (UCardWidgetInitContext* DeckListObject = Cast<UCardWidgetInitContext>(InListObject))
 		{
 			// 현재 표시되고 있는 캐릭터에 해당하는 CardListObjects들을 가져옵니다.
 			const FGameplayTag& CharacterTag = CharacterTags[CurrentCharacterIndex];
@@ -263,7 +263,7 @@ void UDeckEditingWidget::UpdateCardPage(const int32 NewCharacterIndex, const int
 	if (FDeckListObjects* UnequippedDeckListObjects = CharacterUnequippedDeckListObjects.Find(CurrentCharacterTag))
 	{
 		UnequippedDeckListObjects->Sort();
-		const TArray<TObjectPtr<UDeckEditingCardListObject>>& UnequippedDeckObjects = UnequippedDeckListObjects->CardListObjects;
+		const TArray<TObjectPtr<UCardWidgetInitContext>>& UnequippedDeckObjects = UnequippedDeckListObjects->CardListObjects;
 		const int32 TotalCards = UnequippedDeckObjects.Num();
 
 		// 최대 페이지 수를 계산합니다.
@@ -287,11 +287,11 @@ void UDeckEditingWidget::UpdateCardPage(const int32 NewCharacterIndex, const int
 	if (FDeckListObjects* EquippedDeckListObjects = CharacterEquippedDeckListObjects.Find(CurrentCharacterTag))
 	{
 		EquippedDeckListObjects->Sort();
-		const TArray<TObjectPtr<UDeckEditingCardListObject>>& EquippedDeckObjects = EquippedDeckListObjects->CardListObjects;
+		const TArray<TObjectPtr<UCardWidgetInitContext>>& EquippedDeckObjects = EquippedDeckListObjects->CardListObjects;
 
 		// 장착 덱 페이지 갱신을 시작합니다.
 		EquippedDeckTileView->ClearListItems();
-		for (UDeckEditingCardListObject* EquippedDeckObject : EquippedDeckObjects)
+		for (UCardWidgetInitContext* EquippedDeckObject : EquippedDeckObjects)
 		{
 			EquippedDeckTileView->AddItem(EquippedDeckObject);
 		}
@@ -303,35 +303,36 @@ void UDeckEditingWidget::UpdateCardPage(const int32 NewCharacterIndex, const int
 	}
 }
 
-bool UDeckEditingWidget::CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, const FGameplayTag& CharacterTag, UDeckEditingCardListObject* InDeckObject) const
+bool UDeckEditingWidget::CanAddCardToEquippedDeck(const FDeckListObjects* EquippedDeckListObjects, const FGameplayTag& CharacterTag, const UCardWidgetInitContext* InitContext) const
 {
-	if (const UDeckEditingCardListObject* DeckObject = Cast<UDeckEditingCardListObject>(InDeckObject))
+	if (!EquippedDeckListObjects || !CharacterTag.IsValid()|| !InitContext)
 	{
-		if (EquippedDeckListObjects->CardListObjects.Num() >= MAX_DECK_COUNT)
-		{
-			// 장착 카드 개수가 10장을 초과할 수 없습니다.
-			return false;
-		}
-
-		const int32 EqualCardCount = EquippedDeckListObjects->GetEqualCardCount(DeckObject->SavedCardInfo.CardTag);
-		if (MaxEqualCardCount <= EqualCardCount)
-		{
-			// 동일한 카드를 3장 초과 장착할 수 없습니다.
-			return false;
-		}
-
-		const int32 TotalCardWeight = EquippedDeckListObjects->GetTotalCardWeight() + DeckObject->Weight;
-		const int32 DeckCapacity = CharacterDeckCapacities.FindRef(CharacterTag);
-		if (DeckCapacity <= 0 || DeckCapacity < TotalCardWeight)
-		{
-			// 카드 총합 무게가 캐릭터의 용량을 초과할 수 없습니다.
-			return false;
-		}
-
-		// 위 조건에 모두 해당하지 않는다면 장착 가능한 상태라고 판단합니다.
-		return true;
+		return false;
 	}
-	return false;
+	
+	if (EquippedDeckListObjects->CardListObjects.Num() >= MAX_DECK_COUNT)
+	{
+		// 장착 카드 개수가 10장을 초과할 수 없습니다.
+		return false;
+	}
+
+	const int32 EqualCardCount = EquippedDeckListObjects->GetEqualCardCount(InitContext->SavedCard.CardTag);
+	if (MaxEqualCardCount <= EqualCardCount)
+	{
+		// 동일한 카드를 3장 초과 장착할 수 없습니다.
+		return false;
+	}
+
+	const int32 TotalCardWeight = EquippedDeckListObjects->GetTotalCardWeight() + InitContext->Weight;
+	const int32 DeckCapacity = CharacterDeckCapacities.FindRef(CharacterTag);
+	if (DeckCapacity <= 0 || DeckCapacity < TotalCardWeight)
+	{
+		// 카드 총합 무게가 캐릭터의 용량을 초과할 수 없습니다.
+		return false;
+	}
+
+	// 위 조건에 모두 해당하지 않는다면 장착 가능한 상태라고 판단합니다.
+	return true;
 }
 
 void UDeckEditingWidget::OnGoToBattleButtonClicked()
@@ -347,7 +348,7 @@ void UDeckEditingWidget::OnGoToBattleButtonClicked()
 			FSavedCharacterDeck SavedCharacterDeck;
 			for (const auto& CardListObject : EquippedDeckListObjects.Value.CardListObjects)
 			{
-				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCardInfo);
+				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCard);
 			}
 
 			EquippedDecks.Emplace(EquippedDeckListObjects.Key, SavedCharacterDeck);
@@ -358,7 +359,7 @@ void UDeckEditingWidget::OnGoToBattleButtonClicked()
 			FSavedCharacterDeck SavedCharacterDeck;
 			for (const auto& CardListObject : UnequippedDeckListObjects.Value.CardListObjects)
 			{
-				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCardInfo);
+				SavedCharacterDeck.Deck.Emplace(CardListObject->SavedCard);
 			}
 
 			UnequippedDecks.Emplace(UnequippedDeckListObjects.Key, SavedCharacterDeck);

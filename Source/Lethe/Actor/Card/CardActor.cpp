@@ -9,6 +9,7 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
 #include "Lethe/Data/Card/CardViewData.h"
+#include "Lethe/UI/Battle/DeckEditing/CardWidgetInitContext.h"
 
 ACardActor::ACardActor()
 {
@@ -55,7 +56,7 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 	if (InitParams.CardDefinition)
 	{
 		CardNameText = InitParams.CardDefinition->CardNameText;
-		CardImage = InitParams.CardDefinition->CardTexture;
+		CardTexture = InitParams.CardDefinition->CardTexture;
 
 		if (InitParams.CardViewData)
 		{
@@ -81,12 +82,12 @@ void ACardActor::CreateDynamicMaterialInstances()
 
 void ACardActor::ApplyCardVisuals() const
 {
-	if (!IllustrationMaterialInstance || !CardImage)
+	if (!IllustrationMaterialInstance || !CardTexture)
 	{
 		return;
 	}
 
-	IllustrationMaterialInstance->SetTextureParameterValue(CardTextureParamName, Cast<UTexture>(CardImage));
+	IllustrationMaterialInstance->SetTextureParameterValue(CardTextureParamName, Cast<UTexture>(CardTexture));
 	LeftTagMaterialInstance->SetVectorParameterValue(FrameColorParamName, CardTypeColor);
 }
 
@@ -166,11 +167,12 @@ ECardAction ACardActor::GetCardActionWhenHandState(const ECardMouseEvent InMouse
 	return ECardAction::None;
 }
 
-void ACardActor::MakeViewDetailData(FViewDetailData& OutData) const
+void ACardActor::MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const
 {
-	OutData.CardNameText = CardNameText;
-	OutData.CardImage = CardImage;
-	OutData.CardTypeColor = CardTypeColor;
+	OutContext->CardNameText = CardNameText;
+	OutContext->SavedCard = SavedCard;
+	OutContext->CardTexture = CardTexture;
+	OutContext->CardTypeColor = CardTypeColor;
 }
 
 FGameplayTag ACardActor::GetCardTag() const

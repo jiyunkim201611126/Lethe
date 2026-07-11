@@ -6,7 +6,7 @@
 #include "CharacterStatusWidget.h"
 #include "PlayerCharacterStatusWidget.generated.h"
 
-UCLASS(Abstract, Blueprintable)
+UCLASS(Abstract)
 class LETHE_API UPlayerCharacterStatusWidget : public UCharacterStatusWidget
 {
 	GENERATED_BODY()

@@ -66,6 +66,8 @@ void ULevelManagerSubsystem::OnPostLoadMapWithWorld(UWorld* World)
 	NextLevel.Reset();
 	bIsTransitioning = false;
 
+	OnFinishLevelChange.Broadcast();
+
 	// TODO: 로딩 위젯 끄기
 }
 

@@ -9,7 +9,7 @@
 class ACardActor;
 class UCardWidget;
 
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API USubmitCardWidget : public ULetheActivatableWidget
 {
 	GENERATED_BODY()

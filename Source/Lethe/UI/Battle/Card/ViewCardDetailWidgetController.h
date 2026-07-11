@@ -9,7 +9,7 @@
 class ALethePlayerController;
 struct FSavedCard;
 
-UCLASS()
+UCLASS(Abstract, Blueprintable)
 class LETHE_API UViewCardDetailWidgetController : public ULetheWidgetController
 {
 	GENERATED_BODY()

@@ -25,12 +25,6 @@ ALethePlayerController::ALethePlayerController()
 	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
 
 	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>("PlayerAbilityRequestComponent");
-
-	PrimaryActorTick.bCanEverTick = true;
-	
-	bShowMouseCursor = true;
-	bEnableClickEvents = true;
-	bEnableMouseOverEvents = true;
 }
 
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
@@ -267,11 +261,6 @@ void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSe
 void ALethePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	FInputModeGameAndUI InputMode;
-	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	InputMode.SetHideCursorDuringCapture(false);
-	SetInputMode(InputMode);
 
 	check(ArrowRendererClass);
 	FActorSpawnParameters SpawnParameters;

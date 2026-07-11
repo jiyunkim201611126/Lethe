@@ -11,7 +11,7 @@ class ULetheWidgetController;
 /**
  * 활성화되면 키보드나 게임패드 등의 입력을 직접 받을 수 있는 위젯 클래스입니다.
  */
-UCLASS()
+UCLASS(Abstract)
 class LETHE_API ULetheActivatableWidget : public UCommonActivatableWidget
 {
 	GENERATED_BODY()

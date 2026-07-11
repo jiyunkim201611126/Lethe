@@ -10,15 +10,18 @@ void ULetheUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	Collection.InitializeDependency<ULevelManagerSubsystem>();
-	if (ULevelManagerSubsystem* LevelManagerSubsystem = GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>())
+	
+	ULevelManagerSubsystem* LevelManagerSubsystem = GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>();
+	if (LevelManagerSubsystem)
 	{
 		OnLevelChangeStartedHandle = LevelManagerSubsystem->OnStartLevelChange.AddUObject(this, &ThisClass::OnLevelChangeStarted);
-	}
+		OnLevelChangeFinishedHandle = LevelManagerSubsystem->OnFinishLevelChange.AddUObject(this, &ThisClass::OnLevelChangeFinished);
 
-	if (!CurrentPolicy && !DefaultUIPolicyClass.IsNull())
-	{
-		const TSubclassOf<ULetheGameUIPolicy> PolicyClass = DefaultUIPolicyClass.LoadSynchronous();
-		SwitchToPolicy(NewObject<ULetheGameUIPolicy>(this, PolicyClass));
+		const ELevelType CurrentLevelType = LevelManagerSubsystem->GetCurrentLevelType();
+		if (ULetheGameUIPolicy* CreatedUIPolicy = CreateUIPolicyByLevelType(CurrentLevelType))
+		{
+			SwitchToPolicy(CreatedUIPolicy);
+		}
 	}
 }
 
@@ -33,17 +36,10 @@ void ULetheUIManagerSubsystem::Deinitialize()
 	if (ULevelManagerSubsystem* LevelManagerSubsystem = GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>())
 	{
 		LevelManagerSubsystem->OnStartLevelChange.Remove(OnLevelChangeStartedHandle);
+		LevelManagerSubsystem->OnFinishLevelChange.Remove(OnLevelChangeFinishedHandle);
 	}
 
 	Super::Deinitialize();
-}
-
-void ULetheUIManagerSubsystem::SwitchToPolicy(ULetheGameUIPolicy* InPolicy)
-{
-	if (CurrentPolicy != InPolicy)
-	{
-		CurrentPolicy = InPolicy;
-	}
 }
 
 bool ULetheUIManagerSubsystem::EnsureCreateRootLayout(ULocalPlayer* LocalPlayer) const
@@ -55,11 +51,60 @@ bool ULetheUIManagerSubsystem::EnsureCreateRootLayout(ULocalPlayer* LocalPlayer)
 	return false;
 }
 
-void ULetheUIManagerSubsystem::OnLevelChangeStarted() const
+void ULetheUIManagerSubsystem::OnLevelChangeStarted()
 {
 	if (CurrentPolicy)
 	{
 		CurrentPolicy->DeinitializeFeatures();
+	}
+	SwitchToPolicy(nullptr);
+}
+
+void ULetheUIManagerSubsystem::OnLevelChangeFinished()
+{
+	const ULevelManagerSubsystem* LevelManagerSubsystem = GetGameInstance()->GetSubsystem<ULevelManagerSubsystem>();
+	if (LevelManagerSubsystem)
+	{
+		const ELevelType CurrentLevelType = LevelManagerSubsystem->GetCurrentLevelType();
+		if (ULetheGameUIPolicy* CreatedUIPolicy = CreateUIPolicyByLevelType(CurrentLevelType))
+		{
+			SwitchToPolicy(CreatedUIPolicy);
+		}
+	}
+}
+
+ULetheGameUIPolicy* ULetheUIManagerSubsystem::CreateUIPolicyByLevelType(const ELevelType LevelType)
+{
+	const UDataTable* LoadedUIPolicyDataTable = UIPolicyDataTable.LoadSynchronous();
+	if (!ensure(LoadedUIPolicyDataTable))
+	{
+		return nullptr;
+	}
+
+	TArray<FUIPolicyTableRow*> Rows;
+	LoadedUIPolicyDataTable->GetAllRows(TEXT("UIPolicy"), Rows);
+	
+	for (const auto& UIPolicyTableRow : Rows)
+	{
+		if (UIPolicyTableRow && UIPolicyTableRow->LevelType == LevelType)
+		{
+			const TSubclassOf<ULetheGameUIPolicy> LoadedUIPolicyClass = UIPolicyTableRow->UIPolicyClass.LoadSynchronous();
+			if (!ensure(LoadedUIPolicyClass))
+			{
+				return nullptr;
+			}
+	
+			return NewObject<ULetheGameUIPolicy>(this, LoadedUIPolicyClass);
+		}
+	}
+	return nullptr;
+}
+
+void ULetheUIManagerSubsystem::SwitchToPolicy(ULetheGameUIPolicy* InPolicy)
+{
+	if (CurrentPolicy != InPolicy)
+	{
+		CurrentPolicy = InPolicy;
 	}
 }
 

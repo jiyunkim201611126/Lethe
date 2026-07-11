@@ -10,7 +10,7 @@ class ULetheTextBlock;
 class ULetheProgressBar;
 struct FAttributeData;
 
-UCLASS(Abstract, Blueprintable)
+UCLASS(Abstract)
 class LETHE_API UCharacterStatusWidget : public ULetheUserWidget
 {
 	GENERATED_BODY()

@@ -8,7 +8,7 @@
 
 class ULetheWidgetController;
 
-UCLASS(Abstract, BlueprintType, Blueprintable)
+UCLASS(Abstract)
 class LETHE_API ULetheUserWidget : public UUserWidget
 {
 	GENERATED_BODY()

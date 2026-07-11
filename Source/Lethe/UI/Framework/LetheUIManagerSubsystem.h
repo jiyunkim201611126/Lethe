@@ -3,10 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
+#include "Lethe/Data/LevelData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "UObject/SoftObjectPtr.h"
 #include "Policy/LetheGameUIPolicy.h"
 #include "LetheUIManagerSubsystem.generated.h"
+
+USTRUCT(BlueprintType)
+struct FUIPolicyTableRow : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	ELevelType LevelType = ELevelType::None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSoftClassPtr<ULetheGameUIPolicy> UIPolicyClass;
+};
 
 /**
  * 게임 시작 시 정해진 GameUIPolicy 객체를 생성, 관리하는 매니저 클래스입니다.
@@ -36,19 +49,22 @@ public:
 		return nullptr;
 	}
 
-protected:
+private:
+	void OnLevelChangeStarted();
+	void OnLevelChangeFinished();
+	
+	ULetheGameUIPolicy* CreateUIPolicyByLevelType(const ELevelType LevelType);
+	
 	void SwitchToPolicy(ULetheGameUIPolicy* InPolicy);
 
-private:
-	void OnLevelChangeStarted() const;
-
 protected:
-	UPROPERTY(Config, EditAnywhere)
-	TSoftClassPtr<ULetheGameUIPolicy> DefaultUIPolicyClass;
+	UPROPERTY(Config)
+	TSoftObjectPtr<UDataTable> UIPolicyDataTable;
 
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<ULetheGameUIPolicy> CurrentPolicy;
 
 	FDelegateHandle OnLevelChangeStartedHandle;
+	FDelegateHandle OnLevelChangeFinishedHandle;
 };

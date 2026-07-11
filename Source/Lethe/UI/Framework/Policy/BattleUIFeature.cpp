@@ -65,20 +65,17 @@ void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemC
 		return;
 	}
 
-	if (!OverlayWidget)
+	if (!OverlayWidget && LayoutWidget.IsValid())
 	{
-		if (LayoutWidget.IsValid())
+		const TSubclassOf<UOverlayWidget> LoadedWidgetClass = OverlayWidgetClass.LoadSynchronous();
+		if (ensure(LoadedWidgetClass))
 		{
-			const TSubclassOf<UOverlayWidget> LoadedWidgetClass = OverlayWidgetClass.LoadSynchronous();
-			if (ensure(LoadedWidgetClass))
-			{
-				OverlayWidget = LayoutWidget->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, LoadedWidgetClass,
-					[this](UOverlayWidget& WidgetToInit)
-					{
-						WidgetToInit.SetBattleWidgetControllers(CardPanelWidgetController, ViewCardDetailWidgetController);
-						WidgetToInit.SetWidgetController(OverlayWidgetController);
-					});
-			}
+			OverlayWidget = LayoutWidget->PushWidgetToLayerStack<UOverlayWidget>(FLetheGameplayTags::Get().UI_Layer_Game, LoadedWidgetClass,
+				[this](UOverlayWidget& WidgetToInit)
+				{
+					WidgetToInit.SetBattleWidgetControllers(CardPanelWidgetController, ViewCardDetailWidgetController);
+					WidgetToInit.SetWidgetController(OverlayWidgetController);
+				});
 		}
 	}
 }

@@ -20,6 +20,10 @@ enum class EAdditionalRangeType : uint8
 	Penetration,
 };
 
+/**
+ * 방향을 기반으로 선택하는 Selector입니다.
+ * 반시계 방향으로 회전하며 인덱스를 채워나갑니다.
+ */
 USTRUCT(BlueprintType)
 struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSelector
 {
@@ -67,5 +71,5 @@ protected:
 
 	/** Value는 EnforceValue입니다. */
 	UPROPERTY(EditDefaultsOnly)
-	TMap<EAdditionalRangeType, int32> AdditionalRangeTypes;
+	TMap<EAdditionalRangeType, int32> AdditionalRanges;
 };

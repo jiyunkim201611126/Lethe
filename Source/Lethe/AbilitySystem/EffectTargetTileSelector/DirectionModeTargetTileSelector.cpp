@@ -256,24 +256,22 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 		return;
 	}
 	
+	// 6개의 방향 중 가장 가까운 방향으로 스냅, 그 방향을 중심으로 해 반시계 방향으로 회전하며 선택합니다.
 	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
 	if (ClampedDirectionCount % 2 == 1)
 	{
-		// 홀수인 경우, 6개의 방향 중 가장 가까운 방향으로 스냅, 그 주변 방향을 함께 선택합니다.
 		const int32 CenterDirection = FindClosestHexDirection(DesiredDirection);
 		const int32 HalfDirectionCount = ClampedDirectionCount / 2;
-		for (int32 Offset = HalfDirectionCount; Offset >= -HalfDirectionCount; --Offset)
+		for (int32 Offset = -HalfDirectionCount; Offset <= HalfDirectionCount; ++Offset)
 		{
 			OutDirections.Add(NormalizeHexDirection(CenterDirection + Offset));
 		}
 		return;
 	}
 
-	// 짝수인 경우, 6개의 경계 방향 중 가장 가까운 경계 방향으로 스냅, 그리고 그 바로 반시계 방향 옆 방향을 기준으로 Direction을 가져옵니다.
-	// 해당 Direction을 기준으로 반시계 방향 (DirectionCount / 2 - 1)칸부터 시계 방향으로 회전하여 DirectionCount만큼 선택합니다.
 	const int32 UpperDirection = FindClosestHexDirectionBoundary(DesiredDirection);
 	const int32 HalfDirectionCount = ClampedDirectionCount / 2;
-	for (int32 Offset = HalfDirectionCount - 1; Offset >= -HalfDirectionCount; --Offset)
+	for (int32 Offset = -HalfDirectionCount; Offset <= HalfDirectionCount - 1; ++Offset)
 	{
 		OutDirections.Add(NormalizeHexDirection(UpperDirection + Offset));
 	}

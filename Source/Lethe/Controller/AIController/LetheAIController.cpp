@@ -329,9 +329,11 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
+			FTargetTileResult& TargetTileResult = MoveAbilityActivationData.TargetTileResults.Emplace_GetRef();
+			TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
 			for (ATile* PathTile : PathTiles)
 			{
-				MoveAbilityActivationData.TargetTiles.Add(PathTile);
+				TargetTileResult.TargetTiles.Add(PathTile);
 			}
 			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
 			
@@ -398,8 +400,10 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.CenterTile = TargetTile;
-			ActivationData.TargetTiles.Add(TargetTile);
+			ActivationData.NoiseTile = TargetTile;
+			FTargetTileResult& TargetTileResult = ActivationData.TargetTileResults.Emplace_GetRef();
+			TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+			TargetTileResult.TargetTiles.Add(TargetTile);
 			ActivationData.Payload.Instigator = ControlledEnemy;
 		}
 

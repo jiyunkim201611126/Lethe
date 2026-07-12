@@ -78,6 +78,11 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.Event_Montage_EndAbility = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.Montage.EndAbility"), FString(""));
+	
+	GameplayTags.TargetTile_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetTile.Primary"), FString(""));
+	GameplayTags.TargetTile_Penetration = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetTile.Penetration"), FString(""));
 
 	GameplayTags.UI_Layer_Game = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("UI.Layer.Game"), FString(""));

@@ -20,6 +20,15 @@ public:
 };
 
 USTRUCT()
+struct FTargetTileResult
+{
+	GENERATED_BODY()
+	
+	FGameplayTag TargetTag;
+	TArray<TWeakObjectPtr<ATile>> TargetTiles;
+};
+
+USTRUCT()
 struct FAbilityActivationData
 {
 	GENERATED_BODY()
@@ -34,11 +43,12 @@ struct FAbilityActivationData
 	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
+	/** 소음이 발생할 TargetTile입니다. */
 	UPROPERTY()
-	TWeakObjectPtr<ATile> CenterTile;
+	TWeakObjectPtr<ATile> NoiseTile;
 
 	UPROPERTY()
-	TArray<TWeakObjectPtr<ATile>> TargetTiles;
+	TArray<FTargetTileResult> TargetTileResults;
 
 	UPROPERTY()
 	FGameplayEventData Payload;

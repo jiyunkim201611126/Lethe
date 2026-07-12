@@ -227,7 +227,11 @@ bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationData()
 			AbilityActivationData.Payload.OptionalObject2 = OutSwapTargetReservedMove->PlayerCharacter.Get();
 		}
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
-		AbilityActivationData.TargetTiles = MoveTemp(PathTiles);
+		
+		FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
+		TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+		TargetTileResult.TargetTiles = MoveTemp(PathTiles);
+		
 		LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData), false);
 		
 		bIsActivationDataAdded = true;
@@ -592,11 +596,14 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					
+					FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
+					TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
 						{
-							AbilityActivationData.TargetTiles.Emplace(PathTile);
+							TargetTileResult.TargetTiles.Emplace(PathTile);
 						}
 					}
 					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
@@ -641,11 +648,14 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Swap;
 					AbilityActivationData.Payload.OptionalObject2 = SwapTargetActor;
 					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					
+					FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
+					TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
 						{
-							AbilityActivationData.TargetTiles.Emplace(PathTile);
+							TargetTileResult.TargetTiles.Emplace(PathTile);
 						}
 					}
 					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
@@ -701,8 +711,8 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 		return false;
 	}
 
-	TArray<ATile*> OutTargetTiles;
-	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, OutTargetTiles);
+	TArray<FTargetTileResult> OutResults;
+	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, OutResults);
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -712,14 +722,17 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 
 	// TargetTile 위에 유효한 대상이 있는지 확인합니다.
 	bool bContainsValidActor = false;
-	for (const ATile* TargetTile : OutTargetTiles)
+	for (const FTargetTileResult& Result : OutResults)
 	{
-		if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile))
+		for (const auto& TargetTile : Result.TargetTiles)
 		{
-			if (ActorOnTile->Implements<UCombatInterface>())
+			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get()))
 			{
-				bContainsValidActor = true;
-				break;
+				if (ActorOnTile->Implements<UCombatInterface>())
+				{
+					bContainsValidActor = true;
+					break;
+				}
 			}
 		}
 	}
@@ -730,13 +743,20 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 		return false;
 	}
 
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	
 	FAbilityActivationData AbilityActivationData;
-	for (AActor* TargetTile : OutTargetTiles)
+	FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
+	TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+	for (const FTargetTileResult& Result : OutResults)
 	{
-		AbilityActivationData.TargetTiles.Add(Cast<ATile>(TargetTile));
+		for (const auto& TargetTile : Result.TargetTiles)
+		{
+			TargetTileResult.TargetTiles.Add(TargetTile);
+		}
 	}
 
-	AbilityActivationData.CenterTile = OutTileAndActor.Tile;
+	AbilityActivationData.NoiseTile = OutTileAndActor.Tile;
 	
 	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!LetheGameState)

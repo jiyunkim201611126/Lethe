@@ -240,11 +240,14 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			MovePayload->PathTiles.Add(StartTile);
 		}
 		
-		for (const auto& TargetTile : ActivationData->TargetTiles)
+		for (const FTargetTileResult& Result : ActivationData->TargetTileResults)
 		{
-			if (TargetTile.IsValid())
+			for (const auto& TargetTile : Result.TargetTiles)
 			{
-				MovePayload->PathTiles.Add(TargetTile.Get());
+				if (TargetTile.IsValid())
+				{
+					MovePayload->PathTiles.Add(TargetTile.Get());
+				}
 			}
 		}
 		
@@ -257,32 +260,36 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	}
 	else
 	{
-		if (ActivationData->TargetTiles.IsEmpty())
+		if (ActivationData->TargetTileResults.IsEmpty() || ActivationData->TargetTileResults[0].TargetTiles.IsEmpty())
 		{
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 
 		bool bIsValidCombatTarget = false;
 		TArray<TWeakObjectPtr<AActor>> TargetActors;
-		for (const auto& TargetTile : ActivationData->TargetTiles)
+		
+		for (const FTargetTileResult& Result : ActivationData->TargetTileResults)
 		{
-			if (TargetTile.IsValid())
+			for (const auto& TargetTile : Result.TargetTiles)
 			{
-				AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
-
-				const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();
-				TargetActors.Add(bIsTargetCombat ? ActorOnTile : nullptr);
-				
-				if (bIsTargetCombat)
+				if (TargetTile.IsValid())
 				{
-					// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
-					bIsValidCombatTarget = true;
+					AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
+
+					const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();
+					TargetActors.Add(bIsTargetCombat ? ActorOnTile : nullptr);
+				
+					if (bIsTargetCombat)
+					{
+						// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
+						bIsValidCombatTarget = true;
+					}
 				}
-			}
-			else
-			{
-				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-				TargetActors.Add(nullptr);
+				else
+				{
+					// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
+					TargetActors.Add(nullptr);
+				}
 			}
 		}
 
@@ -298,7 +305,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			case ETeamSide::Enemy:
 				{
 					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
-					const FVector DummyActorLocation = ActivationData->TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+					const FVector DummyActorLocation = ActivationData->TargetTileResults[0].TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
 					DummyActor->SetActorLocation(DummyActorLocation);
 					TargetActors.Add(DummyActor);
 				}
@@ -309,7 +316,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		}
 
 		ActorArrayData->SetActors(TargetActors);
-		ActivationData->Payload.OptionalObject = ActivationData->CenterTile.Get();
+		ActivationData->Payload.OptionalObject = ActivationData->NoiseTile.Get();
 		ActivationData->Payload.TargetData.Add(ActorArrayData);
 	}
 	

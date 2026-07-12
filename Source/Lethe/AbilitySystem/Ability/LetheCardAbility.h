@@ -42,10 +42,10 @@ public:
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
 	 * 여기서 OutTargetCandidateTiles는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
 	 */
-	void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const;
+	void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const;
 
 	/** 시전 시 적용될 대상이 존재하는 타일들을 가져옵니다. */
-	void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+	void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
@@ -95,7 +95,7 @@ protected:
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
 	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
-	TWeakObjectPtr<const ATile> CachedCenterTargetTile;
+	TWeakObjectPtr<const ATile> CachedNoiseTargetTile;
 
 #if WITH_EDITOR
 public:

@@ -14,19 +14,19 @@
 #include "Lethe/Manager/LetheTextManager.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
+void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const
 {
 	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelectorPtr->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetCandidateTiles);
+		EffectTargetTileSelectorPtr->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetResults);
 	}
 }
 
-void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
 {
 	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelectorPtr->GetTargetTiles(AvatarActor, PlayerController, OutTiles);
+		EffectTargetTileSelectorPtr->GetTargetTiles(AvatarActor, PlayerController, OutResults);
 	}
 }
 
@@ -123,7 +123,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
 			const ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-			ActivateNoise(StandingTile, CachedCenterTargetTile.Get());
+			ActivateNoise(StandingTile, CachedNoiseTargetTile.Get());
 		}
 	}
 
@@ -194,9 +194,9 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	}
 
 	CachedTargetActors = TargetData->GetActors();
-	CachedCenterTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
+	CachedNoiseTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
 
-	if (CachedTargetActors.IsEmpty() || !CachedCenterTargetTile.IsValid())
+	if (CachedTargetActors.IsEmpty() || !CachedNoiseTargetTile.IsValid())
 	{
 		ResetCachedValues();
 		return false;
@@ -265,7 +265,7 @@ void ULetheCardAbility::ActiveFailed()
 void ULetheCardAbility::ResetCachedValues()
 {
 	CachedTargetActors.Empty();
-	CachedCenterTargetTile.Reset();
+	CachedNoiseTargetTile.Reset();
 }
 
 void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

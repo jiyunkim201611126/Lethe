@@ -37,6 +37,11 @@ struct FEffectTargetMappingPolicy
 struct FEffectTargetMappingResolveResult
 {
 	TArray<FGameplayEffectSpecHandle> SourceSpecHandles;
+
+	/**
+	 * Key는 Effect를 적용할 액터, Value는 적용될 Effect들입니다.
+	 * 로컬 변수로 잠깐 생성되는 구조체기 때문에 오래 들고 있을 필요가 없어 UPROPERTY는 붙이지 않습니다.
+	 */
 	TMap<AActor*, TArray<FGameplayEffectSpecHandle>> TargetSpecHandlesByActor;
 };
 

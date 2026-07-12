@@ -2,14 +2,14 @@
 
 #include "DirectionModeTargetTileSelector.h"
 
-#include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void FDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<ATile*>& OutTargetCandidateTiles) const
+void FDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const
 {
 	OutSelectCandidateTiles.Reset();
-	OutTargetCandidateTiles.Reset();
+	OutTargetResults.Reset();
 	
 	if (!AvatarActor || !PlayerController)
 	{
@@ -17,19 +17,19 @@ void FDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarAct
 	}
 
 	GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
-	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetCandidateTiles);
+	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetResults);
 }
 
-void FDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
 {
-	OutTiles.Reset();
+	OutResults.Reset();
 	
 	if (!AvatarActor || !PlayerController)
 	{
 		return;
 	}
 	
-	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTiles);
+	GetTargetCandidateTiles(AvatarActor, PlayerController, OutResults);
 }
 
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
@@ -70,21 +70,21 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 	}
 }
 
-void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
 {
 	switch (RangeType)
 	{
 	case ERangeType::Melee:
 	case ERangeType::ParabolaRanged:
-		HandleMeleeAndParabolaRanged(AvatarActor, PlayerController, OutTiles);
+		HandleMeleeAndParabolaRanged(AvatarActor, PlayerController, OutResults);
 		break;
 	case ERangeType::StraightRanged:
-		HandleStraightRanged(AvatarActor, PlayerController, OutTiles);
+		HandleStraightRanged(AvatarActor, PlayerController, OutResults);
 		break;
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -122,18 +122,22 @@ void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 		// 선택 후보 타일을 가져옵니다.
 		TArray<ATile*> OutSelectCandidateTiles;
 		GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
+		
+		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+		FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
+		PrimaryTargets.TargetTag = LetheGameplayTags.TargetTile_Primary;
 
 		// 거리에 알맞는 타일들만 추가합니다.
 		int32 TileIndex = TileDistance - 1;
 		while (OutSelectCandidateTiles.IsValidIndex(TileIndex))
 		{
-			OutTiles.Add(OutSelectCandidateTiles[TileIndex]);
+			PrimaryTargets.TargetTiles.Add(OutSelectCandidateTiles[TileIndex]);
 			TileIndex += MaxRangeDistance;
 		}
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -153,6 +157,11 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 
 	const FCubeCoord CenterCoord = CurrentTile->GetCubeCoord();
 	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
+		
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
+	PrimaryTargets.TargetTag = LetheGameplayTags.TargetTile_Primary;
+	PrimaryTargets.TargetTiles.Reserve(SelectedDirections.Num() * MaxRangeDistance);
 
 	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나갑니다.
 	for (const int32 Direction : SelectedDirections)
@@ -172,12 +181,12 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 					if (ActorOnTile->Implements<UCombatInterface>())
 					{
 						// 전투 가능한 액터가 올라서있다면 타일을 추가합니다.
-						OutTiles.Add(Tile);
+						PrimaryTargets.TargetTiles.Add(Tile);
 					}
 					else
 					{
 						// 전투할 수 없는 액터가 올라서있다면 nullptr을 추가합니다.
-						OutTiles.Add(nullptr);
+						PrimaryTargets.TargetTiles.Add(nullptr);
 					}
 					// 일단 액터를 만났다면 다른 방향을 탐색합니다.
 					break;
@@ -187,7 +196,7 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 			}
 			
 			// 액터를 마주치기 전에 맵 바깥으로 나가버렸다면, nullptr을 추가하고 다른 방향을 탐색합니다.
-			OutTiles.Add(nullptr);
+			PrimaryTargets.TargetTiles.Add(nullptr);
 			break;
 		}
 	}
@@ -258,6 +267,8 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 	
 	// 6개의 방향 중 가장 가까운 방향으로 스냅, 그 방향을 중심으로 해 반시계 방향으로 회전하며 선택합니다.
 	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
+	OutDirections.Reserve(ClampedDirectionCount);
+	
 	if (ClampedDirectionCount % 2 == 1)
 	{
 		const int32 CenterDirection = FindClosestHexDirection(DesiredDirection);

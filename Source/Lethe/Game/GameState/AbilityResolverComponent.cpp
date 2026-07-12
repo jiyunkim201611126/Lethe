@@ -265,11 +265,13 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			return ETryAbilityActivationResult::FailedLogicError;
 		}
 
-		bool bIsValidCombatTarget = false;
-		TArray<TWeakObjectPtr<AActor>> TargetActors;
+		int32 AllTargetActorsCount = 0;
 		
+		FGameplayAbilityTargetData_TargetActorResults* ActorArrayData = new FGameplayAbilityTargetData_TargetActorResults();
 		for (const FTargetTileResult& Result : ActivationData->TargetTileResults)
 		{
+			TArray<TWeakObjectPtr<AActor>> TargetActors;
+			bool bHasValidTargetForCurrentResult = false;
 			for (const auto& TargetTile : Result.TargetTiles)
 			{
 				if (TargetTile.IsValid())
@@ -282,7 +284,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 					if (bIsTargetCombat)
 					{
 						// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
-						bIsValidCombatTarget = true;
+						bHasValidTargetForCurrentResult = true;
+						++AllTargetActorsCount;
 					}
 				}
 				else
@@ -291,31 +294,27 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 					TargetActors.Add(nullptr);
 				}
 			}
-		}
 
-		FGameplayAbilityTargetData_ActorArray* ActorArrayData = new FGameplayAbilityTargetData_ActorArray();
-		if (!bIsValidCombatTarget)
-		{
-			// 유효한 대상이 하나도 없는 경우 들어오는 분기입니다.
-			switch (CurrentActivationCharacterTeamSide)
+			if (!bHasValidTargetForCurrentResult && CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
 			{
-			case ETeamSide::Player:
-				// 플레이어가 유효한 대상 없이 여기까지 진입했다면, 사망 등의 이유로 TargetTile 위치에 대상이 없는 경우입니다.
-				return ETryAbilityActivationResult::EmptyTile;
-			case ETeamSide::Enemy:
-				{
-					// 적의 경우, 타일 위에 캐릭터가 없다면 DummyActor를 그 위치에 올려두고 Ability를 발동합니다.
-					const FVector DummyActorLocation = ActivationData->TargetTileResults[0].TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
-					DummyActor->SetActorLocation(DummyActorLocation);
-					TargetActors.Add(DummyActor);
-				}
-				break;
-			default:
-				break;
+				// Enemy의 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓고 발동을 시작합니다.
+				const FVector DummyActorLocation = ActivationData->TargetTileResults[0].TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+				DummyActor->SetActorLocation(DummyActorLocation);
+				TargetActors.Add(DummyActor);
 			}
+			
+			FTargetActorResult& TargetActor = ActorArrayData->TargetActorResults.Emplace_GetRef();
+			TargetActor.TargetGroupTag = Result.TargetGroupTag;
+			TargetActor.TargetActors = MoveTemp(TargetActors);
 		}
 
-		ActorArrayData->SetActors(TargetActors);
+		if (AllTargetActorsCount <= 0 && CurrentActivationCharacterTeamSide == ETeamSide::Player)
+		{
+			// 플레이어의 Ability를 발동하려 했으나, TargetActor의 사망 등의 이유로 유효한 대상이 하나도 없는 경우 얼리리턴합니다.
+			delete ActorArrayData;
+			return ETryAbilityActivationResult::EmptyTile;
+		}
+		
 		ActivationData->Payload.OptionalObject = ActivationData->NoiseTile.Get();
 		ActivationData->Payload.TargetData.Add(ActorArrayData);
 	}

@@ -7,7 +7,6 @@
 #include "EffectTargetTileSelector.generated.h"
 
 class APlayerController;
-class ATile;
 struct FTargetTileResult;
 
 /**

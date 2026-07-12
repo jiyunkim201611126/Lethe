@@ -339,12 +339,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	}
 
 	// 선택된 카드가 있는 경우 들어가는 분기입니다.
-	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid() && bMouseOnWorldSection)
+	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid())
 	{
-		const ATile* CurrentTile = OutTileAndActor.Tile;
-		AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor();
-		
-		if (CurrentTile && CardOwner)
+		if (AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor())
 		{
 			// 선택 가능한 타일과 타겟 후보 타일을 모두 가져옵니다.
 			TArray<ATile*> OutSelectCandidateTiles;
@@ -360,9 +357,9 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 					TargetCandidateTiles.Add(TargetTile.Get());
 				}
 			}
-			
+		
 			// 타겟 후보 타일을 성공적으로 검출해낸 경우 들어가는 분기입니다.
-			if (!TargetCandidateTiles.IsEmpty())
+			if (!TargetCandidateTiles.IsEmpty() && bMouseOnWorldSection)
 			{
 				// 선택 가능 타일 중 타겟 후보 타일을 제거합니다.
 				OutSelectCandidateTiles.RemoveAll([&TargetCandidateTiles](const ATile* Tile)
@@ -405,16 +402,20 @@ void ALethePlayerController::OnOtherTileDetected() const
 	{
 		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 		{
-			TArray<FTargetTileResult> OutTargetResults;
-			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerActor, this, OutTargetResults);
+			TArray<FTargetTileResult> OutTargetTileResults;
+			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerActor, this, OutTargetTileResults);
 
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
+				TArray<FTargetActorResult> TargetActorResults;
 				TArray<AActor*> TargetActors;
-				for (const FTargetTileResult& Result : OutTargetResults)
+				for (const FTargetTileResult& Result : OutTargetTileResults)
 				{
-					TargetActors.Reserve(TargetActors.Num() + Result.TargetTiles.Num());
+					FTargetActorResult& TargetActorResult = TargetActorResults.Emplace_GetRef();
+					TargetActorResult.TargetGroupTag = Result.TargetGroupTag;
+					TargetActorResult.TargetActors.Reserve(Result.TargetTiles.Num());
 					
+					TargetActors.Reserve(TargetActors.Num() + Result.TargetTiles.Num());
 					for (const auto& TargetTile : Result.TargetTiles)
 					{
 						if (AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile.Get()))
@@ -422,16 +423,18 @@ void ALethePlayerController::OnOtherTileDetected() const
 							if (TargetActor->Implements<UCombatInterface>())
 							{
 								TargetActors.Add(TargetActor);
+								TargetActorResult.TargetActors.Add(TargetActor);
 								continue;
 							}
 						}
 						// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
 						TargetActors.Add(nullptr);
+						TargetActorResult.TargetActors.Add(nullptr);
 					}
 				}
 				
 				FPreviewContext PreviewContext;
-				PreviewContext.CurrentTargetActors.Append(TargetActors);
+				PreviewContext.TargetActorResults = TargetActorResults;
 				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);

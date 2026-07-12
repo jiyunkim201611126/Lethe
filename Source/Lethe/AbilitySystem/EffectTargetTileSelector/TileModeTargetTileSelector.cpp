@@ -194,7 +194,7 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarAc
 	// '타겟 후보'를 찾는 중이므로, 조건을 따지지 않고 검출된 모든 타일을 Out 인자에 넣어줍니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
-	PrimaryTargets.TargetTag = LetheGameplayTags.TargetTile_Primary;
+	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 	PrimaryTargets.TargetTiles.Reserve(OutCubeCoords.Num());
 	
 	for (const FCubeCoord& CubeCoord : OutCubeCoords)

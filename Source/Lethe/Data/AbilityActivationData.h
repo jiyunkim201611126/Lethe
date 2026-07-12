@@ -19,13 +19,43 @@ public:
 	TArray<TObjectPtr<ATile>> PathTiles;
 };
 
+/** TargetTileSelector의 동작 결과 데이터입니다. */
 USTRUCT()
 struct FTargetTileResult
 {
 	GENERATED_BODY()
 	
-	FGameplayTag TargetTag;
+	FGameplayTag TargetGroupTag;
 	TArray<TWeakObjectPtr<ATile>> TargetTiles;
+};
+
+/** 위 TargetTileResult를 Ability가 사용 가능한 형태로 바꾼 데이터입니다. */
+USTRUCT()
+struct FTargetActorResult
+{
+	GENERATED_BODY()
+
+	FGameplayTag TargetGroupTag;
+	TArray<TWeakObjectPtr<AActor>> TargetActors;
+};
+
+USTRUCT()
+struct FGameplayAbilityTargetData_TargetActorResults : public FGameplayAbilityTargetData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FTargetActorResult> TargetActorResults;
+
+	virtual UScriptStruct* GetScriptStruct() const override
+	{
+		return StaticStruct();
+	}
+
+	virtual FString ToString() const override
+	{
+		return TEXT("FGameplayAbilityTargetData_TargetActorResults");
+	}
 };
 
 USTRUCT()
@@ -43,12 +73,12 @@ struct FAbilityActivationData
 	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
+	UPROPERTY()
+	TArray<FTargetTileResult> TargetTileResults;
+
 	/** 소음이 발생할 TargetTile입니다. */
 	UPROPERTY()
 	TWeakObjectPtr<ATile> NoiseTile;
-
-	UPROPERTY()
-	TArray<FTargetTileResult> TargetTileResults;
 
 	UPROPERTY()
 	FGameplayEventData Payload;

@@ -6,6 +6,7 @@
 #include "LetheGameplayAbility.h"
 #include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/AbilitySystem/EffectSpecBuilder/GameplayEffectSpecBuilder.h"
+#include "Lethe/Data/AbilityActivationData.h"
 #include "StructUtils/InstancedStruct.h"
 #include "LetheCardAbility.generated.h"
 
@@ -49,7 +50,7 @@ public:
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
-	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const;
+	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const;
 
 	//~ Begin UGameplayAbility Interface
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
@@ -94,7 +95,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
-	TArray<TWeakObjectPtr<AActor>> CachedTargetActors;
+	TArray<FTargetActorResult> CachedTargetActorResults;
 	TWeakObjectPtr<const ATile> CachedNoiseTargetTile;
 
 #if WITH_EDITOR

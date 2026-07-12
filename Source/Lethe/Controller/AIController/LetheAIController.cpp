@@ -330,7 +330,7 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
 			FTargetTileResult& TargetTileResult = MoveAbilityActivationData.TargetTileResults.Emplace_GetRef();
-			TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+			TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 			for (ATile* PathTile : PathTiles)
 			{
 				TargetTileResult.TargetTiles.Add(PathTile);
@@ -400,10 +400,10 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.NoiseTile = TargetTile;
 			FTargetTileResult& TargetTileResult = ActivationData.TargetTileResults.Emplace_GetRef();
-			TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+			TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 			TargetTileResult.TargetTiles.Add(TargetTile);
+			ActivationData.NoiseTile = TargetTile;
 			ActivationData.Payload.Instigator = ControlledEnemy;
 		}
 

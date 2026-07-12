@@ -68,10 +68,10 @@ struct FLetheGameplayTags
 	FGameplayTag Event_Montage_EndAbility;
 	//~ End of Montage Event
 
-	//~ Begin TargetTile
-	FGameplayTag TargetTile_Primary;
-	FGameplayTag TargetTile_Penetration;
-	//~ End of TargetTile
+	//~ Begin TargetTileGroup
+	FGameplayTag TargetTileGroup_Primary;
+	FGameplayTag TargetTileGroup_Penetration;
+	//~ End of TargetTileGroup
 
 	//~ Begin UI Layer
 	FGameplayTag UI_Layer_Game;

@@ -125,7 +125,7 @@ void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor
 		
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
-		PrimaryTargets.TargetTag = LetheGameplayTags.TargetTile_Primary;
+		PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 
 		// 거리에 알맞는 타일들만 추가합니다.
 		int32 TileIndex = TileDistance - 1;
@@ -160,7 +160,7 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 		
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
-	PrimaryTargets.TargetTag = LetheGameplayTags.TargetTile_Primary;
+	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 	PrimaryTargets.TargetTiles.Reserve(SelectedDirections.Num() * MaxRangeDistance);
 
 	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나갑니다.

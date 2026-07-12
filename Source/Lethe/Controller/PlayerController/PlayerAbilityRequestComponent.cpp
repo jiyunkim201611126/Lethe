@@ -229,7 +229,7 @@ bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationData()
 		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 		
 		FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
-		TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+		TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 		TargetTileResult.TargetTiles = MoveTemp(PathTiles);
 		
 		LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData), false);
@@ -598,7 +598,7 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
 					
 					FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
-					TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+					TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
@@ -650,7 +650,7 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
 					
 					FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
-					TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
+					TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
@@ -711,8 +711,8 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 		return false;
 	}
 
-	TArray<FTargetTileResult> OutResults;
-	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, OutResults);
+	FAbilityActivationData AbilityActivationData;
+	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, AbilityActivationData.TargetTileResults);
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
@@ -722,7 +722,7 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 
 	// TargetTile 위에 유효한 대상이 있는지 확인합니다.
 	bool bContainsValidActor = false;
-	for (const FTargetTileResult& Result : OutResults)
+	for (const FTargetTileResult& Result : AbilityActivationData.TargetTileResults)
 	{
 		for (const auto& TargetTile : Result.TargetTiles)
 		{
@@ -741,19 +741,6 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 	if (!bContainsValidActor)
 	{
 		return false;
-	}
-
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	
-	FAbilityActivationData AbilityActivationData;
-	FTargetTileResult& TargetTileResult = AbilityActivationData.TargetTileResults.Emplace_GetRef();
-	TargetTileResult.TargetTag = LetheGameplayTags.TargetTile_Primary;
-	for (const FTargetTileResult& Result : OutResults)
-	{
-		for (const auto& TargetTile : Result.TargetTiles)
-		{
-			TargetTileResult.TargetTiles.Add(TargetTile);
-		}
 	}
 
 	AbilityActivationData.NoiseTile = OutTileAndActor.Tile;

@@ -8,29 +8,33 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/EffectDelivery/EffectDelivery_Immediately.h"
 
+FEffectTargetMappingPolicy::FEffectTargetMappingPolicy()
+{
+	MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
+	EffectSpecBuilderTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Event.EffectSpecBuilder.1"), false));
+	TargetGroupTags.AddTag(FGameplayTag::RequestGameplayTag(FName("TargetTileGroup.Primary"), false));
+}
+
 ULetheCommonAbility::ULetheCommonAbility()
 {
-	FEffectTargetMappingPolicy& EffectTargetMappingPolicy = EffectTargetMappingPolicies.Emplace_GetRef();
-	EffectTargetMappingPolicy.MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
-
 	EffectDelivery.InitializeAs<FEffectDelivery_Immediately>();
 }
 
-bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
-	if (!SourceASC || TargetActors.IsEmpty())
+	if (!SourceASC || TargetActorResults.IsEmpty())
 	{
 		return false;
 	}
 
 	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
-		FEffectTargetMappingResolveResult ResolveResult;
-		ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetActors, ResolveResult);
+		FEffectTargetMappingResolveResult OutResolveResult;
+		ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetActorResults, OutResolveResult);
 
-		TryGetGameplayEffectPreviewData(SourceASC, ResolveResult.SourceSpecHandles, OutPreviewData.SourcePreviewData);
+		TryGetGameplayEffectPreviewData(SourceASC, OutResolveResult.SourceSpecHandles, OutPreviewData.SourcePreviewData);
 
-		for (const auto& Pair : ResolveResult.TargetSpecHandlesByActor)
+		for (const auto& Pair : OutResolveResult.TargetSpecHandlesByActor)
 		{
 			if (!Pair.Key)
 			{
@@ -93,14 +97,6 @@ void ULetheCommonAbility::RegisterAbilityEventTasks()
 
 void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload)
 {
-	TArray<AActor*> TargetActors;
-	TargetActors.Reserve(CachedTargetActors.Num());
-	for (const auto& CachedTargetActor : CachedTargetActors)
-	{
-		// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-		TargetActors.Add(CachedTargetActor.Get());
-	}
-
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 	if (!SourceASC)
 	{
@@ -112,10 +108,10 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 		if (InPayload.EventTag.MatchesTagExact(EffectTargetMappingPolicy.MontageEventTag))
 		{
 			// 수신한 이벤트 태그와 EffectTargetMappingPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
-			FEffectTargetMappingResolveResult ResolveResult;
-			ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetActors, ResolveResult);
+			FEffectTargetMappingResolveResult OutResolveResult;
+			ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, CachedTargetActorResults, OutResolveResult);
 
-			for (const FGameplayEffectSpecHandle& SourceSpecHandle : ResolveResult.SourceSpecHandles)
+			for (const FGameplayEffectSpecHandle& SourceSpecHandle : OutResolveResult.SourceSpecHandles)
 			{
 				if (SourceSpecHandle.IsValid())
 				{
@@ -124,7 +120,7 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 			}
 
 			TArray<AActor*> EffectedTargetActors;
-			for (const auto& Pair : ResolveResult.TargetSpecHandlesByActor)
+			for (const auto& Pair : OutResolveResult.TargetSpecHandlesByActor)
 			{
 				if (Pair.Key)
 				{
@@ -141,19 +137,26 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 	}
 }
 
-void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<AActor*>& CandidateTargetActors, FEffectTargetMappingResolveResult& OutResult) const
+void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FEffectTargetMappingResolveResult& OutResult) const
 {
 	OutResult.SourceSpecHandles.Reset();
 	OutResult.TargetSpecHandlesByActor.Reset();
 
-	if (!SourceASC)
+	const bool bHasValidTargetGroupPolicy = EffectTargetMappingPolicy.bApplyToAllTargetActors || !EffectTargetMappingPolicy.TargetGroupTags.IsEmpty();
+	if (!ensure(bHasValidTargetGroupPolicy) || !SourceASC)
 	{
 		return;
 	}
 
 	// Policy에 해당하는 TargetActors를 가져옵니다.
 	TArray<AActor*> OutTargetActors;
-	GetTargetActorsByPolicy(EffectTargetMappingPolicy, CandidateTargetActors, OutTargetActors);
+	for (const FTargetActorResult& TargetActorResult : TargetActorResults)
+	{
+		if (EffectTargetMappingPolicy.bApplyToAllTargetActors || EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(TargetActorResult.TargetGroupTag))
+		{
+			GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActorResult.TargetActors, OutTargetActors);
+		}
+	}
 
 	// Policy에 해당하는 EffectSpecBuilder를 가져옵니다.
 	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
@@ -198,16 +201,16 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 	}
 }
 
-void ULetheCommonAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const
+void ULetheCommonAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<TWeakObjectPtr<AActor>>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const
 {
-	if (EffectTargetMappingPolicy.TargetActorIndices.Contains(FEffectTargetMappingPolicy::AllIndices))
+	if (EffectTargetMappingPolicy.bApplyToAllTargetActors || EffectTargetMappingPolicy.TargetActorIndices.Contains(FEffectTargetMappingPolicy::AllIndices))
 	{
-		// 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
-		for (AActor* TargetActor : CandidateTargetActors)
+		// 모든 TargetActor를 대상으로 하고 있거나, 그룹 내의 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
+		for (const auto& TargetActor : CandidateTargetActors)
 		{
-			if (TargetActor)
+			if (TargetActor.IsValid())
 			{
-				OutTargetActors.AddUnique(TargetActor);
+				OutTargetActors.AddUnique(TargetActor.Get());
 			}
 		}
 		return;
@@ -216,9 +219,9 @@ void ULetheCommonAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPoli
 	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
 	for (const int32 TargetActorIndex : EffectTargetMappingPolicy.TargetActorIndices)
 	{
-		if (CandidateTargetActors.IsValidIndex(TargetActorIndex) && CandidateTargetActors[TargetActorIndex])
+		if (CandidateTargetActors.IsValidIndex(TargetActorIndex) && CandidateTargetActors[TargetActorIndex].IsValid())
 		{
-			OutTargetActors.AddUnique(CandidateTargetActors[TargetActorIndex]);
+			OutTargetActors.AddUnique(CandidateTargetActors[TargetActorIndex].Get());
 		}
 	}
 }

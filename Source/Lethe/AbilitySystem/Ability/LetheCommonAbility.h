@@ -13,6 +13,8 @@ struct FEffectTargetMappingPolicy
 {
 	GENERATED_BODY()
 
+	FEffectTargetMappingPolicy();
+
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag MontageEventTag;
 
@@ -20,17 +22,25 @@ struct FEffectTargetMappingPolicy
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer EffectSpecBuilderTags;
 
+	/** 해당 플래그가 true면 모든 그룹, 모든 타겟을 대상으로 Effect를 적용합니다. */
+	UPROPERTY(EditDefaultsOnly)
+	bool bApplyToAllTargetActors = true;
+
+	/** 적용할 대상 그룹 태그 모음입니다. */
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "!bApplyToAllTargetActors", EditConditionHides))
+	FGameplayTagContainer TargetGroupTags;
+
 	/**
-	 * TargetActorIndices에 'AllIndices'를 할당한다는 건, 캐싱된 모든 TargetActors를 대상으로 삼겠다는 의미입니다.
+	 * TargetActorIndices에 'AllIndices'를 할당한다는 건, 해당하는 그룹 내에 모든 TargetActors를 대상으로 삼겠다는 의미입니다.
 	 * 'AllIndices'이 들어간 이상 배열에는 1개의 요소만 있어야 합니다.
 	 */
 	static constexpr int32 AllIndices = -1;
 
 	/**
 	 * EffectSpecBuilderTags에 해당하는 EffectSpecBuilder가 만든 EffectSpec을 적용할 TargetActor의 Index 모음입니다.
-	 * CachedTargetActors를 기준으로 수행되며, -1은 캐싱된 모든 TargetActor에게 적용하겠다는 의미입니다.
+	 * -1은 해당하는 그룹 내에 모든 TargetActors를 대상으로 삼겠다는 의미입니다.
 	 */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "!bApplyToAllTargetActors", EditConditionHides))
 	TArray<int32> TargetActorIndices = { AllIndices };
 };
 
@@ -59,7 +69,7 @@ public:
 	ULetheCommonAbility();
 
 	//~ Begin ULetheCardAbility Interface
-	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const override;
+	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const override;
 
 protected:
 	virtual void RegisterAbilityEventTasks() override;
@@ -70,10 +80,13 @@ private:
 	/** Effect를 지정된 방식으로 TargetActor에게 전달을 시작합니다. */
 	void StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const;
 	
-	/** Policy를 기반으로 어떤 대상에게 어떤 Effect를 적용할지를 취합합니다. */
-	void ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<AActor*>& CandidateTargetActors, FEffectTargetMappingResolveResult& OutResult) const;
+	/**
+	 * Policy를 기반으로 어떤 대상에게 어떤 Effect를 적용할지를 취합합니다.
+	 * MontageEvent에 해당하는 Policy만 따로 집계해야 하므로, 한 번에 뭉탱이로 계산하지 않고 Policy별로 따로 집계합니다.
+	 */
+	void ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FEffectTargetMappingResolveResult& OutResult) const;
 
-	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<AActor*>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
+	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<TWeakObjectPtr<AActor>>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
 	void GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const;
 	
 	template<typename T>

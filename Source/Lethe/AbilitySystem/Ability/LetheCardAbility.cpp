@@ -47,7 +47,7 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 	return false;
 }
 
-bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<AActor*>& TargetActors, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
 	return false;
 }
@@ -193,10 +193,17 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		return false;
 	}
 
-	CachedTargetActors = TargetData->GetActors();
+	if (TargetData->GetScriptStruct() != FGameplayAbilityTargetData_TargetActorResults::StaticStruct())
+	{
+		return false;
+	}
+
+	const FGameplayAbilityTargetData_TargetActorResults* TargetActorResultsData = static_cast<const FGameplayAbilityTargetData_TargetActorResults*>(TargetData);
+
+	CachedTargetActorResults = TargetActorResultsData->TargetActorResults;
 	CachedNoiseTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
 
-	if (CachedTargetActors.IsEmpty() || !CachedNoiseTargetTile.IsValid())
+	if (CachedTargetActorResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
 	{
 		ResetCachedValues();
 		return false;
@@ -211,10 +218,15 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	TArray<const UAbilitySystemComponent*> TargetASCs;
-	for (const auto& TargetActor : CachedTargetActors)
+	for (const auto& TargetActorResult : CachedTargetActorResults)
 	{
-		if (TargetActor.IsValid())
+		for (const auto& TargetActor : TargetActorResult.TargetActors)
 		{
+			if (!TargetActor.IsValid())
+			{
+				continue;
+			}
+			
 			if (const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor.Get()))
 			{
 				TargetASCs.Add(TargetASC);
@@ -264,7 +276,7 @@ void ULetheCardAbility::ActiveFailed()
 
 void ULetheCardAbility::ResetCachedValues()
 {
-	CachedTargetActors.Empty();
+	CachedTargetActorResults.Empty();
 	CachedNoiseTargetTile.Reset();
 }
 

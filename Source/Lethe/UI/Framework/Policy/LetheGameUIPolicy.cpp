@@ -57,8 +57,6 @@ void ULetheGameUIPolicy::CreateLayoutWidget(ULocalPlayer* LocalPlayer)
 	// RootLayout의 유효성을 확인하고, 없다면 생성합니다.
 	if (!IsValid(RootLayout))
 	{
-		// RootLayout이 유효하지 않다면 Feature의 Initialize 호출이 필요하기 때문에 여기서 false로 변경합니다.
-		bFeaturesInitialized = false;
 		RootLayout = nullptr;
 		
 		const TSubclassOf<ULethePrimaryGameLayout> LoadedLayoutWidgetClass = RootLayoutWidgetClass.LoadSynchronous();
@@ -81,17 +79,18 @@ void ULetheGameUIPolicy::CreateLayoutWidget(ULocalPlayer* LocalPlayer)
 		}
 	}
 
-	// Feature를 통해 Layout에 기본적으로 추가될 위젯들을 구성합니다.
-	if (IsValid(RootLayout) && !bFeaturesInitialized)
+	if (IsValid(RootLayout))
 	{
-		for (ULetheGameUIFeature* UIFeature : UIFeatures)
+		for (const auto& StartUIFeatureClass : StartUIFeatureClasses)
 		{
-			if (UIFeature)
+			const TSubclassOf<ULetheGameUIFeature> LoadedUIFeatureClass = StartUIFeatureClass.LoadSynchronous();
+			
+			if (ULetheGameUIFeature* CreatedFeature = NewObject<ULetheGameUIFeature>(this, LoadedUIFeatureClass))
 			{
-				UIFeature->InitializeFeature(RootLayout);
+				CreatedFeature->InitializeFeature(GetRootLayout());
+				UIFeatures.Add(CreatedFeature);
 			}
 		}
-		bFeaturesInitialized = true;
 	}
 }
 
@@ -126,7 +125,6 @@ void ULetheGameUIPolicy::DeinitializeFeatures()
 			UIFeature->DeinitializeFeature();
 		}
 	}
-	bFeaturesInitialized = false;
 }
 
 UWorld* ULetheGameUIPolicy::GetWorld() const

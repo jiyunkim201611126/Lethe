@@ -42,15 +42,6 @@ void ULetheUIManagerSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-bool ULetheUIManagerSubsystem::EnsureCreateRootLayout(ULocalPlayer* LocalPlayer) const
-{
-	if (CurrentPolicy && CurrentPolicy->GetOrCreateRootLayout(LocalPlayer))
-	{
-		return true;
-	}
-	return false;
-}
-
 void ULetheUIManagerSubsystem::OnLevelChangeStarted()
 {
 	if (CurrentPolicy)
@@ -106,6 +97,15 @@ void ULetheUIManagerSubsystem::SwitchToPolicy(ULetheGameUIPolicy* InPolicy)
 	{
 		CurrentPolicy = InPolicy;
 	}
+}
+
+bool ULetheUIManagerSubsystem::EnsureCreateRootLayout(ULocalPlayer* LocalPlayer) const
+{
+	if (CurrentPolicy && CurrentPolicy->GetOrCreateRootLayout(LocalPlayer))
+	{
+		return true;
+	}
+	return false;
 }
 
 ULetheGameUIPolicy* ULetheUIManagerSubsystem::GetCurrentUIPolicy()

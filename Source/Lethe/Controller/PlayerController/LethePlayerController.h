@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "LetheBasePlayerController.h"
+#include "LethePlayerControllerBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Lethe/Data/PhaseData.h"
 #include "LethePlayerController.generated.h"
@@ -35,7 +35,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float
  * LethePawn을 통해 들어오는 WASD, 마우스 휠 조작 처리 및 게임 플레이 규칙(캐릭터 선택, 카드 사용 등)의 로직을 담당합니다.
  */
 UCLASS()
-class LETHE_API ALethePlayerController : public ALetheBasePlayerController
+class LETHE_API ALethePlayerController : public ALethePlayerControllerBase
 {
 	GENERATED_BODY()
 

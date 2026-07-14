@@ -29,7 +29,7 @@ public:
 	ULethePrimaryGameLayout* GetRootLayout() const;
 
 	template <typename FeatureT>
-	FeatureT* FindUIFeature() const
+	FeatureT* GetOrCreateUIFeature(const TSubclassOf<FeatureT>& FeatureTClass)
 	{
 		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
 
@@ -39,6 +39,13 @@ public:
 			{
 				return TypedFeature;
 			}
+		}
+
+		if (FeatureT* CreatedFeature = NewObject<FeatureT>(this, FeatureTClass))
+		{
+			CreatedFeature->InitializeFeature(GetRootLayout());
+			UIFeatures.Add(CreatedFeature);
+			return CreatedFeature;
 		}
 		return nullptr;
 	}
@@ -58,12 +65,13 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<ULethePrimaryGameLayout> RootLayoutWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, Instanced)
+	UPROPERTY(Transient)
 	TArray<TObjectPtr<ULetheGameUIFeature>> UIFeatures;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TSoftClassPtr<ULetheGameUIFeature>> StartUIFeatureClasses;
 
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<ULethePrimaryGameLayout> RootLayout;
-
-	uint8 bFeaturesInitialized : 1 = false;
 };

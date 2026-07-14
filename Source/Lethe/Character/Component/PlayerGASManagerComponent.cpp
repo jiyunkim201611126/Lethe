@@ -36,19 +36,14 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 		return;
 	}
 
-	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
 	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
-	if (!LocalPlayer || !UIManagerSubsystem)
-	{
-		return;
-	}
-	
-	if (!UIManagerSubsystem->EnsureCreateRootLayout(LocalPlayer))
+	if (!UIManagerSubsystem)
 	{
 		return;
 	}
 
-	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->FindUIFeature<UBattleUIFeature>();
+	const TSubclassOf<UBattleUIFeature> LoadedBattleUIFeatureClass = BattleUIFeatureClass.LoadSynchronous();
+	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UBattleUIFeature>(LoadedBattleUIFeatureClass);
 	if (!BattleUIFeature)
 	{
 		return;

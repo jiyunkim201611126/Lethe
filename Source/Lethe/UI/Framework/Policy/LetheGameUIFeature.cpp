@@ -13,3 +13,12 @@ void ULetheGameUIFeature::DeinitializeFeature()
 {
 	LayoutWidget.Reset();
 }
+
+UWorld* ULetheGameUIFeature::GetWorld() const
+{
+	if (LayoutWidget.IsValid())
+	{
+		return LayoutWidget->GetWorld();
+	}
+	return Super::GetWorld();
+}

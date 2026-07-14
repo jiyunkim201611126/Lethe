@@ -8,7 +8,7 @@
 
 class UDeckEditingWidget;
 
-UCLASS()
+UCLASS(Abstract, Blueprintable)
 class LETHE_API UDeckEditingUIFeature : public ULetheGameUIFeature
 {
 	GENERATED_BODY()

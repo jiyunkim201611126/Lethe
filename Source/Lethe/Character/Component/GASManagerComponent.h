@@ -11,6 +11,7 @@
 enum class EPhaseState : uint8;
 class UAbilitySystemComponent;
 class UAttributeSet;
+class UBattleUIFeature;
 class UGameplayAbility;
 class UGameplayEffect;
 class UPlayerAttributeSet;
@@ -72,4 +73,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftClassPtr<UBattleUIFeature> BattleUIFeatureClass;
 };

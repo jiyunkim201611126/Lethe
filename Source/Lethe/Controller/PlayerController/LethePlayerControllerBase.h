@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "LetheBasePlayerController.generated.h"
+#include "LethePlayerControllerBase.generated.h"
 
 UCLASS()
-class LETHE_API ALetheBasePlayerController : public APlayerController
+class LETHE_API ALethePlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
 
 public:
-	ALetheBasePlayerController();
+	ALethePlayerControllerBase();
 	
 protected:
 	//~ Begin AActor Interface

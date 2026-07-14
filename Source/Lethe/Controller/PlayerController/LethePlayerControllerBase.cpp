@@ -1,10 +1,10 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "LetheBasePlayerController.h"
+#include "LethePlayerControllerBase.h"
 
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 
-ALetheBasePlayerController::ALetheBasePlayerController()
+ALethePlayerControllerBase::ALethePlayerControllerBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -13,10 +13,10 @@ ALetheBasePlayerController::ALetheBasePlayerController()
 	bEnableMouseOverEvents = true;
 }
 
-void ALetheBasePlayerController::BeginPlay()
+void ALethePlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	if (const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>())
 	{
 		UIManagerSubsystem->EnsureCreateRootLayout(GetLocalPlayer());

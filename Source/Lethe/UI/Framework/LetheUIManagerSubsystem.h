@@ -38,13 +38,18 @@ public:
 	ULetheGameUIPolicy* GetCurrentUIPolicy();
 
 	template <typename FeatureT>
-	FeatureT* FindUIFeature() const
+	FeatureT* GetOrCreateUIFeature(const TSubclassOf<FeatureT>& FeatureTClass) const
 	{
 		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
 
+		if (!EnsureCreateRootLayout(GetGameInstance()->GetFirstGamePlayer()))
+		{
+			return nullptr;
+		}
+
 		if (CurrentPolicy)
 		{
-			return CurrentPolicy->FindUIFeature<FeatureT>();
+			return CurrentPolicy->GetOrCreateUIFeature<FeatureT>(FeatureTClass);
 		}
 		return nullptr;
 	}

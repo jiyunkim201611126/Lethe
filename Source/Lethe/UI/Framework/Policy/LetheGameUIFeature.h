@@ -14,7 +14,7 @@ struct FGameplayTag;
  * GameUIPolicy에 꽂히는 UI 기능 단위입니다.
  * 특정 UI 기능의 Widget/Controller 생성과 Push 흐름을 담당합니다.
  */
-UCLASS(Abstract, EditInlineNew, DefaultToInstanced)
+UCLASS(Abstract)
 class LETHE_API ULetheGameUIFeature : public UObject
 {
 	GENERATED_BODY()
@@ -22,6 +22,8 @@ class LETHE_API ULetheGameUIFeature : public UObject
 public:
 	virtual void InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget);
 	virtual void DeinitializeFeature();
+
+	virtual UWorld* GetWorld() const override;
 
 protected:
 	TWeakObjectPtr<ULethePrimaryGameLayout> LayoutWidget;

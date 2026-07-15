@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LetheGameUIFeature.h"
 #include "Engine/World.h"
+#include "Lethe/UI/Framework/UIFeature/LetheGameUIFeature.h"
 #include "LetheGameUIPolicy.generated.h"
 
 class ULetheGameUIFeature;
@@ -35,22 +35,25 @@ public:
 
 		for (ULetheGameUIFeature* UIFeature : UIFeatures)
 		{
-			if (FeatureT* TypedFeature = Cast<FeatureT>(UIFeature))
+			if (UIFeature && UIFeature->GetClass() == FeatureTClass)
 			{
-				return TypedFeature;
+				return Cast<FeatureT>(UIFeature);
 			}
 		}
 
-		if (FeatureT* CreatedFeature = NewObject<FeatureT>(this, FeatureTClass))
+		if (ensure(FeatureTClass && !FeatureTClass->HasAnyClassFlags(CLASS_Abstract)))
 		{
-			CreatedFeature->InitializeFeature(GetRootLayout());
-			UIFeatures.Add(CreatedFeature);
-			return CreatedFeature;
+			if (FeatureT* CreatedFeature = NewObject<FeatureT>(this, FeatureTClass))
+			{
+				CreatedFeature->InitializeFeature(GetRootLayout());
+				UIFeatures.Add(CreatedFeature);
+				return CreatedFeature;
+			}
 		}
 		return nullptr;
 	}
 
-	void DeinitializeFeatures();
+	void Deinitialize();
 
 	virtual UWorld* GetWorld() const override;
 

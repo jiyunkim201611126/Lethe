@@ -6,6 +6,7 @@
 #include "GASManagerComponent.h"
 #include "PlayerGASManagerComponent.generated.h"
 
+class UCardPanelUIFeature;
 class UPlayerAttributeSet;
 
 UCLASS(NotBlueprintable)
@@ -33,4 +34,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSoftClassPtr<UCardPanelUIFeature> CardPanelUIFeatureClass;
 };

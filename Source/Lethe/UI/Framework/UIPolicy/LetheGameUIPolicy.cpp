@@ -3,7 +3,6 @@
 #include "LetheGameUIPolicy.h"
 
 #include "Framework/Application/SlateApplication.h"
-#include "LetheGameUIFeature.h"
 #include "Blueprint/GameViewportSubsystem.h"
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
@@ -116,7 +115,7 @@ void ULetheGameUIPolicy::OnRootLayoutAddedToViewport(ULocalPlayer* LocalPlayer, 
 #endif
 }
 
-void ULetheGameUIPolicy::DeinitializeFeatures()
+void ULetheGameUIPolicy::Deinitialize()
 {
 	for (ULetheGameUIFeature* UIFeature : UIFeatures)
 	{
@@ -124,6 +123,12 @@ void ULetheGameUIPolicy::DeinitializeFeatures()
 		{
 			UIFeature->DeinitializeFeature();
 		}
+	}
+	UIFeatures.Empty();
+	
+	if (RootLayout)
+	{
+		RootLayout->RemoveFromParent();
 	}
 }
 

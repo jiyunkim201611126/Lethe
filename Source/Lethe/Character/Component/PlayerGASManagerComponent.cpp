@@ -13,7 +13,8 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
-#include "Lethe/UI/Framework/Policy/BattleUIFeature.h"
+#include "Lethe/UI/Framework/UIFeature/AttributeUIFeature.h"
+#include "Lethe/UI/Framework/UIFeature/CardPanelUIFeature.h"
 
 UPlayerGASManagerComponent::UPlayerGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -42,20 +43,26 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 		return;
 	}
 
-	const TSubclassOf<UBattleUIFeature> LoadedBattleUIFeatureClass = BattleUIFeatureClass.LoadSynchronous();
-	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UBattleUIFeature>(LoadedBattleUIFeatureClass);
-	if (!BattleUIFeature)
+	const TSubclassOf<UAttributeUIFeature> LoadedAttributeUIFeatureClass = AttributeUIFeatureClass.LoadSynchronous();
+	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LoadedAttributeUIFeatureClass);
+	if (!AttributeUIFeature)
 	{
 		return;
 	}
-
-	BattleUIFeature->InitPlayerBattleUI(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
-	ULetheWidgetController* WidgetController = BattleUIFeature->CreatePlayerAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 	
+	ULetheWidgetController* WidgetController = AttributeUIFeature->CreatePlayerAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 	for (UUserWidget* AttributeWidget : AttributeWidgets)
 	{
 		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
 	}
+
+	const TSubclassOf<UCardPanelUIFeature> LoadedCardPanelUIFeatureClass = CardPanelUIFeatureClass.LoadSynchronous();
+	UCardPanelUIFeature* CardPanelUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UCardPanelUIFeature>(LoadedCardPanelUIFeatureClass);
+	if (!CardPanelUIFeature)
+	{
+		return;
+	}
+	CardPanelUIFeature->InitializePlayerCardUI(PlayerController, AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 
 	// UDeckManagerSubsystem에서 Owner의 EquippedDeck을 가져옵니다.
 	const FGameplayTag& CharacterTag = OwnerCharacter->GetCharacterTag();

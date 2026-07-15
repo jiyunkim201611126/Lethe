@@ -4,7 +4,6 @@
 
 #include "Engine/GameInstance.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
-#include "Policy/LetheGameUIPolicy.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 
 ULethePrimaryGameLayout* ULethePrimaryGameLayout::GetPrimaryGameLayout(const APlayerController* PlayerController)

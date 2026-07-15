@@ -10,7 +10,7 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
 #include "Lethe/UI/Framework/LetheUserWidget.h"
-#include "Lethe/UI/Framework/Policy/BattleUIFeature.h"
+#include "Lethe/UI/Framework/UIFeature/AttributeUIFeature.h"
 
 UGASManagerComponent::UGASManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -87,14 +87,14 @@ void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 		return;
 	}
 
-	const TSubclassOf<UBattleUIFeature> LoadedBattleUIFeatureClass = BattleUIFeatureClass.LoadSynchronous();
-	UBattleUIFeature* BattleUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UBattleUIFeature>(LoadedBattleUIFeatureClass);
-	if (!BattleUIFeature)
+	const TSubclassOf<UAttributeUIFeature> LoadedAttributeUIFeatureClass = AttributeUIFeatureClass.LoadSynchronous();
+	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LoadedAttributeUIFeatureClass);
+	if (!AttributeUIFeature)
 	{
 		return;
 	}
 	
-	ULetheWidgetController* WidgetController = BattleUIFeature->CreateEnemyAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet);
+	ULetheWidgetController* WidgetController = AttributeUIFeature->CreateEnemyAttributeWidgetController(PlayerController, AbilitySystemComponent, AttributeSet);
 	for (UUserWidget* AttributeWidget : AttributeWidgets)
 	{
 		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);

@@ -6,7 +6,7 @@
 #include "Engine/DataTable.h"
 #include "Lethe/Data/LevelData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "Policy/LetheGameUIPolicy.h"
+#include "UIPolicy/LetheGameUIPolicy.h"
 #include "LetheUIManagerSubsystem.generated.h"
 
 USTRUCT(BlueprintType)

@@ -15,6 +15,7 @@ class LETHE_API UDeckEditingUIFeature : public ULetheGameUIFeature
 
 public:
 	virtual void InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget) override;
+	virtual void DeinitializeFeature() override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

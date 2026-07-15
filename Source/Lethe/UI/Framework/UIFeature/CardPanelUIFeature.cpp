@@ -1,11 +1,10 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "BattleUIFeature.h"
+#include "CardPanelUIFeature.h"
 
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
-#include "Lethe/UI/Battle/Attribute/AttributeWidgetController.h"
 #include "Lethe/UI/Battle/Card/CardPanelWidgetController.h"
 #include "Lethe/UI/Battle/Card/ViewCardDetailWidgetController.h"
 #include "Lethe/UI/Battle/Overlay/OverlayWidget.h"
@@ -13,7 +12,7 @@
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void UBattleUIFeature::DeinitializeFeature()
+void UCardPanelUIFeature::DeinitializeFeature()
 {
 	if (OverlayWidget)
 	{
@@ -29,7 +28,7 @@ void UBattleUIFeature::DeinitializeFeature()
 	Super::DeinitializeFeature();
 }
 
-void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
+void UCardPanelUIFeature::InitializePlayerCardUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
 
@@ -80,47 +79,7 @@ void UBattleUIFeature::InitPlayerBattleUI(APlayerController* PC, UAbilitySystemC
 	}
 }
 
-ULetheWidgetController* UBattleUIFeature::CreatePlayerAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)
-{
-	// 각 캐릭터의 AttributeWidget에 Controller를 하나씩 만들어 할당합니다.
-	const TSubclassOf<UAttributeWidgetController> LoadedWidgetClass = PlayerAttributeWidgetControllerClass.LoadSynchronous();
-	if (ensure(LoadedWidgetClass))
-	{
-		UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, LoadedWidgetClass);
-		if (AttributeWidgetController)
-		{
-			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
-			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
-			UPlayerAttributeSet* PlayerAS = Cast<UPlayerAttributeSet>(PAS);
-			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
-			return AttributeWidgetController;
-		}
-	}
-	return nullptr;
-}
-
-ULetheWidgetController* UBattleUIFeature::CreateEnemyAttributeWidgetController(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS)
-{
-	const TSubclassOf<UAttributeWidgetController> LoadedWidgetClass = EnemyAttributeWidgetControllerClass.LoadSynchronous();
-	if (ensure(LoadedWidgetClass))
-	{
-		UAttributeWidgetController* AttributeWidgetController = NewObject<UAttributeWidgetController>(this, LoadedWidgetClass);
-		if (AttributeWidgetController)
-		{
-			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, nullptr);
-			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
-			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, nullptr);
-			return AttributeWidgetController;
-		}
-	}
-	return nullptr;
-}
-
-UOverlayWidgetController* UBattleUIFeature::GetOrCreateOverlayWidgetController()
+UOverlayWidgetController* UCardPanelUIFeature::GetOrCreateOverlayWidgetController()
 {
 	if (!OverlayWidgetController)
 	{
@@ -133,7 +92,7 @@ UOverlayWidgetController* UBattleUIFeature::GetOrCreateOverlayWidgetController()
 	return OverlayWidgetController;
 }
 
-UCardPanelWidgetController* UBattleUIFeature::GetOrCreateCardPanelWidgetController()
+UCardPanelWidgetController* UCardPanelUIFeature::GetOrCreateCardPanelWidgetController()
 {
 	if (!CardPanelWidgetController)
 	{
@@ -146,7 +105,7 @@ UCardPanelWidgetController* UBattleUIFeature::GetOrCreateCardPanelWidgetControll
 	return CardPanelWidgetController;
 }
 
-UViewCardDetailWidgetController* UBattleUIFeature::GetOrCreateViewCardDetailWidgetController()
+UViewCardDetailWidgetController* UCardPanelUIFeature::GetOrCreateViewCardDetailWidgetController()
 {
 	if (!ViewCardDetailWidgetController)
 	{

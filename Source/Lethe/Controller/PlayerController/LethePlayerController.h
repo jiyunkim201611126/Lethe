@@ -17,7 +17,7 @@ class UActorSelectorComponent;
 class UAttributeSet;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
-class UBattleUIFeature;
+class UCardPanelUIFeature;
 class ULetheWidgetController;
 class UPlayerAbilityRequestComponent;
 class UPreviewCoordinatorComponent;

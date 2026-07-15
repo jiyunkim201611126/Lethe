@@ -19,3 +19,15 @@ void UDeckEditingUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutW
 		}
 	}
 }
+
+void UDeckEditingUIFeature::DeinitializeFeature()
+{
+	if (DeckEditingWidget)
+	{
+		DeckEditingWidget->DeactivateWidget();
+		DeckEditingWidget->RemoveFromParent();
+		DeckEditingWidget = nullptr;
+	}
+	
+	Super::DeinitializeFeature();
+}

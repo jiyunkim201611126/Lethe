@@ -3,7 +3,6 @@
 #include "LetheUIManagerSubsystem.h"
 
 #include "Lethe/Manager/World/LevelManagerSubsystem.h"
-#include "Policy/LetheGameUIPolicy.h"
 
 void ULetheUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -29,7 +28,7 @@ void ULetheUIManagerSubsystem::Deinitialize()
 {
 	if (CurrentPolicy)
 	{
-		CurrentPolicy->DeinitializeFeatures();
+		CurrentPolicy->Deinitialize();
 	}
 	SwitchToPolicy(nullptr);
 
@@ -46,7 +45,7 @@ void ULetheUIManagerSubsystem::OnLevelChangeStarted()
 {
 	if (CurrentPolicy)
 	{
-		CurrentPolicy->DeinitializeFeatures();
+		CurrentPolicy->Deinitialize();
 	}
 	SwitchToPolicy(nullptr);
 }

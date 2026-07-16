@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataTable.h"
 #include "Lethe/Data/LevelData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -19,6 +20,18 @@ struct FUIPolicyTableRow : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSoftClassPtr<ULetheGameUIPolicy> UIPolicyClass;
+};
+
+USTRUCT(BlueprintType)
+struct FUIFeatureTable : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag UIFeatureTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftClassPtr<ULetheGameUIFeature> UIFeatureClass;
 };
 
 /**
@@ -38,7 +51,7 @@ public:
 	ULetheGameUIPolicy* GetCurrentUIPolicy();
 
 	template <typename FeatureT>
-	FeatureT* GetOrCreateUIFeature(const TSubclassOf<FeatureT>& FeatureTClass) const
+	FeatureT* GetOrCreateUIFeature(const FGameplayTag& FeatureTag) const
 	{
 		static_assert(TIsDerivedFrom<FeatureT, ULetheGameUIFeature>::IsDerived, "FeatureT는 반드시 ULetheGameUIFeature를 상속받아야 합니다.");
 
@@ -49,7 +62,11 @@ public:
 
 		if (CurrentPolicy)
 		{
-			return CurrentPolicy->GetOrCreateUIFeature<FeatureT>(FeatureTClass);
+			if (const auto* UIFeatureClass = UIFeatureClasses.Find(FeatureTag))
+			{
+				const TSubclassOf<FeatureT> LoadedUIFeatureClass = UIFeatureClass->LoadSynchronous();
+				return CurrentPolicy->GetOrCreateUIFeature<FeatureT>(LoadedUIFeatureClass);
+			}
 		}
 		return nullptr;
 	}
@@ -65,10 +82,15 @@ private:
 protected:
 	UPROPERTY(Config)
 	TSoftObjectPtr<UDataTable> UIPolicyDataTable;
+	
+	UPROPERTY(Config)
+	TSoftObjectPtr<UDataTable> UIFeatureDataTable;
 
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<ULetheGameUIPolicy> CurrentPolicy;
+
+	TMap<FGameplayTag, TSoftClassPtr<ULetheGameUIFeature>> UIFeatureClasses;
 
 	FDelegateHandle OnLevelChangeStartedHandle;
 	FDelegateHandle OnLevelChangeFinishedHandle;

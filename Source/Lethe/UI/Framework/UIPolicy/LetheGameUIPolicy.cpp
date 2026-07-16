@@ -77,18 +77,18 @@ void ULetheGameUIPolicy::CreateLayoutWidget(ULocalPlayer* LocalPlayer)
 			AddLayoutToViewport(LocalPlayer, RootLayout);
 		}
 	}
-
+	
 	if (IsValid(RootLayout))
 	{
-		for (const auto& StartUIFeatureClass : StartUIFeatureClasses)
+		const ULetheUIManagerSubsystem* UIManagerSubsystem = GetOwningUIManager();
+		if (!UIManagerSubsystem)
 		{
-			const TSubclassOf<ULetheGameUIFeature> LoadedUIFeatureClass = StartUIFeatureClass.LoadSynchronous();
-			
-			if (ULetheGameUIFeature* CreatedFeature = NewObject<ULetheGameUIFeature>(this, LoadedUIFeatureClass))
-			{
-				CreatedFeature->InitializeFeature(GetRootLayout());
-				UIFeatures.Add(CreatedFeature);
-			}
+			return;
+		}
+		
+		for (const auto& StartUIFeatureTag : StartUIFeatureTags)
+		{
+			ensureAlwaysMsgf(UIManagerSubsystem->GetOrCreateUIFeature<ULetheGameUIFeature>(StartUIFeatureTag), TEXT("UIFeature 생성 실패했습니다. UIFeatureTag: %s"), *StartUIFeatureTag.ToString());
 		}
 	}
 }
@@ -121,7 +121,7 @@ void ULetheGameUIPolicy::Deinitialize()
 	{
 		if (UIFeature)
 		{
-			UIFeature->DeinitializeFeature();
+			UIFeature->Deinitialize();
 		}
 	}
 	UIFeatures.Empty();
@@ -129,6 +129,7 @@ void ULetheGameUIPolicy::Deinitialize()
 	if (RootLayout)
 	{
 		RootLayout->RemoveFromParent();
+		RootLayout = nullptr;
 	}
 }
 

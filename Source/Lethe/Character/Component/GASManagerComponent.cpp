@@ -76,19 +76,14 @@ void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 	
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	if (!PlayerController)
-	{
-		return;
-	}
-
 	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
-	if (!UIManagerSubsystem)
+	if (!PlayerController || !UIManagerSubsystem)
 	{
 		return;
 	}
 
-	const TSubclassOf<UAttributeUIFeature> LoadedAttributeUIFeatureClass = AttributeUIFeatureClass.LoadSynchronous();
-	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LoadedAttributeUIFeatureClass);
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LetheGameplayTags.UI_Feature_Attribute);
 	if (!AttributeUIFeature)
 	{
 		return;

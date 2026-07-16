@@ -32,19 +32,14 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 	// PlayerController가 빙의하는 캐릭터가 아니기 때문에 라이브러리 함수로 가져옵니다.
 	ALetheCharacterBase* OwnerCharacter = GetOwner<ALetheCharacterBase>();
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-	if (!OwnerCharacter || !PlayerController)
-	{
-		return;
-	}
-
 	const ULetheUIManagerSubsystem* UIManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULetheUIManagerSubsystem>();
-	if (!UIManagerSubsystem)
+	if (!OwnerCharacter || !PlayerController || !UIManagerSubsystem)
 	{
 		return;
 	}
-
-	const TSubclassOf<UAttributeUIFeature> LoadedAttributeUIFeatureClass = AttributeUIFeatureClass.LoadSynchronous();
-	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LoadedAttributeUIFeatureClass);
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	UAttributeUIFeature* AttributeUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UAttributeUIFeature>(LetheGameplayTags.UI_Feature_Attribute);
 	if (!AttributeUIFeature)
 	{
 		return;
@@ -56,8 +51,7 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 		CastChecked<ULetheUserWidget>(AttributeWidget)->SetWidgetController(WidgetController);
 	}
 
-	const TSubclassOf<UCardPanelUIFeature> LoadedCardPanelUIFeatureClass = CardPanelUIFeatureClass.LoadSynchronous();
-	UCardPanelUIFeature* CardPanelUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UCardPanelUIFeature>(LoadedCardPanelUIFeatureClass);
+	UCardPanelUIFeature* CardPanelUIFeature = UIManagerSubsystem->GetOrCreateUIFeature<UCardPanelUIFeature>(LetheGameplayTags.UI_Feature_CardPanel);
 	if (!CardPanelUIFeature)
 	{
 		return;

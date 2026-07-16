@@ -22,6 +22,23 @@ void ULetheUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 			SwitchToPolicy(CreatedUIPolicy);
 		}
 	}
+
+	const UDataTable* LoadedUIFeatureDataTable = UIFeatureDataTable.LoadSynchronous();
+	if (!ensure(LoadedUIFeatureDataTable))
+	{
+		return;
+	}
+
+	TArray<FUIFeatureTable*> Rows;
+	LoadedUIFeatureDataTable->GetAllRows(TEXT("UIFeature"), Rows);
+	
+	for (const FUIFeatureTable* UIFeatureTableRow : Rows)
+	{
+		if (UIFeatureTableRow)
+		{
+			UIFeatureClasses.Emplace(UIFeatureTableRow->UIFeatureTag, UIFeatureTableRow->UIFeatureClass);
+		}
+	}
 }
 
 void ULetheUIManagerSubsystem::Deinitialize()
@@ -37,6 +54,8 @@ void ULetheUIManagerSubsystem::Deinitialize()
 		LevelManagerSubsystem->OnStartLevelChange.Remove(OnLevelChangeStartedHandle);
 		LevelManagerSubsystem->OnFinishLevelChange.Remove(OnLevelChangeFinishedHandle);
 	}
+
+	UIFeatureClasses.Empty();
 
 	Super::Deinitialize();
 }
@@ -74,7 +93,7 @@ ULetheGameUIPolicy* ULetheUIManagerSubsystem::CreateUIPolicyByLevelType(const EL
 	TArray<FUIPolicyTableRow*> Rows;
 	LoadedUIPolicyDataTable->GetAllRows(TEXT("UIPolicy"), Rows);
 	
-	for (const auto& UIPolicyTableRow : Rows)
+	for (const FUIPolicyTableRow* UIPolicyTableRow : Rows)
 	{
 		if (UIPolicyTableRow && UIPolicyTableRow->LevelType == LevelType)
 		{

@@ -22,7 +22,7 @@ class LETHE_API UCardPanelUIFeature : public ULetheGameUIFeature
 	GENERATED_BODY()
 
 public:
-	virtual void DeinitializeFeature() override;
+	virtual void OnDeinitialized() override;
 	
 	/** OverlayWidget, CardPanelWidget, CardActor 등의 초기화를 담당하는 함수로, PlayerCharacter BeginPlay 타이밍에 호출(최대 총 4번)합니다. */
 	void InitializePlayerCardUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS);

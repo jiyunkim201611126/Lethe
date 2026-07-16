@@ -4,14 +4,26 @@
 // ReSharper disable once CppUnusedIncludeDirective
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 
-void ULetheGameUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget)
+void ULetheGameUIFeature::Initialize(ULethePrimaryGameLayout* InLayoutWidget)
 {
 	LayoutWidget = InLayoutWidget;
+	
+	OnInitialized();
 }
 
-void ULetheGameUIFeature::DeinitializeFeature()
+void ULetheGameUIFeature::Deinitialize()
 {
+	OnDeinitialized();
+	
 	LayoutWidget.Reset();
+}
+
+void ULetheGameUIFeature::OnInitialized()
+{
+}
+
+void ULetheGameUIFeature::OnDeinitialized()
+{
 }
 
 UWorld* ULetheGameUIFeature::GetWorld() const

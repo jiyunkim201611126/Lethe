@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/World.h"
 #include "Lethe/UI/Framework/UIFeature/LetheGameUIFeature.h"
 #include "LetheGameUIPolicy.generated.h"
@@ -45,7 +46,7 @@ public:
 		{
 			if (FeatureT* CreatedFeature = NewObject<FeatureT>(this, FeatureTClass))
 			{
-				CreatedFeature->InitializeFeature(GetRootLayout());
+				CreatedFeature->Initialize(GetRootLayout());
 				UIFeatures.Add(CreatedFeature);
 				return CreatedFeature;
 			}
@@ -72,7 +73,7 @@ protected:
 	TArray<TObjectPtr<ULetheGameUIFeature>> UIFeatures;
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<TSoftClassPtr<ULetheGameUIFeature>> StartUIFeatureClasses;
+	FGameplayTagContainer StartUIFeatureTags;
 
 private:
 	UPROPERTY(Transient)

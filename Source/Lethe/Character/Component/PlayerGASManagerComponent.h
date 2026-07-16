@@ -34,7 +34,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSoftClassPtr<UCardPanelUIFeature> CardPanelUIFeatureClass;
 };

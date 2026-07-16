@@ -6,10 +6,8 @@
 #include "Lethe/UI/Battle/DeckEditing/DeckEditingWidget.h"
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 
-void UDeckEditingUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget)
+void UDeckEditingUIFeature::OnInitialized()
 {
-	Super::InitializeFeature(InLayoutWidget);
-
 	if (!DeckEditingWidget && LayoutWidget.IsValid())
 	{
 		const TSubclassOf<UDeckEditingWidget> LoadedWidgetClass = DeckEditingWidgetClass.LoadSynchronous();
@@ -20,7 +18,7 @@ void UDeckEditingUIFeature::InitializeFeature(ULethePrimaryGameLayout* InLayoutW
 	}
 }
 
-void UDeckEditingUIFeature::DeinitializeFeature()
+void UDeckEditingUIFeature::OnDeinitialized()
 {
 	if (DeckEditingWidget)
 	{
@@ -28,6 +26,4 @@ void UDeckEditingUIFeature::DeinitializeFeature()
 		DeckEditingWidget->RemoveFromParent();
 		DeckEditingWidget = nullptr;
 	}
-	
-	Super::DeinitializeFeature();
 }

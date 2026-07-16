@@ -90,4 +90,11 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("UI.Layer.GameMenu"), FString(""));
 	GameplayTags.UI_Layer_Modal = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("UI.Layer.Modal"), FString(""));
+	
+	GameplayTags.UI_Feature_DeckEditing = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("UI.Feature.DeckEditing"), FString(""));
+	GameplayTags.UI_Feature_Attribute = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("UI.Feature.Attribute"), FString(""));
+	GameplayTags.UI_Feature_CardPanel = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("UI.Feature.CardPanel"), FString(""));
 }

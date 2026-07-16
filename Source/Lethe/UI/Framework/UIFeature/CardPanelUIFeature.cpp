@@ -12,7 +12,7 @@
 #include "Lethe/UI/Framework/LethePrimaryGameLayout.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
-void UCardPanelUIFeature::DeinitializeFeature()
+void UCardPanelUIFeature::OnDeinitialized()
 {
 	if (OverlayWidget)
 	{
@@ -24,8 +24,6 @@ void UCardPanelUIFeature::DeinitializeFeature()
 	OverlayWidgetController = nullptr;
 	CardPanelWidgetController = nullptr;
 	ViewCardDetailWidgetController = nullptr;
-	
-	Super::DeinitializeFeature();
 }
 
 void UCardPanelUIFeature::InitializePlayerCardUI(APlayerController* PC, UAbilitySystemComponent* ASC, UAttributeSet* AS, UAttributeSet* PAS)

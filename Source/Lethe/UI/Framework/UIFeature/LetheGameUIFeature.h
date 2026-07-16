@@ -8,11 +8,15 @@
 
 class UCommonActivatableWidget;
 class ULethePrimaryGameLayout;
-struct FGameplayTag;
 
 /**
- * GameUIPolicy에 꽂히는 UI 기능 단위입니다.
- * 특정 UI 기능의 Widget/Controller 생성과 Push 흐름을 담당합니다.
+ * GameUIPolicy에 꽂히는, 특정 UI를 구현하기 위한 기능 단위입니다.
+ * 자식 클래스들이 아래 기능들 중 몇 가지를 선택해 수행합니다.
+ * 전부 수행하는 경우도 있고, 한 가지만 수행하는 경우도 있습니다.
+ *
+ * Widget 생성 및 Layout에 푸쉬
+ * WidgetController 생성
+ * Widget과 WidgetController, Model(캐릭터 등)을 바인드
  */
 UCLASS(Abstract)
 class LETHE_API ULetheGameUIFeature : public UObject
@@ -20,8 +24,11 @@ class LETHE_API ULetheGameUIFeature : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void InitializeFeature(ULethePrimaryGameLayout* InLayoutWidget);
-	virtual void DeinitializeFeature();
+	void Initialize(ULethePrimaryGameLayout* InLayoutWidget);
+	void Deinitialize();
+
+	virtual void OnInitialized();
+	virtual void OnDeinitialized();
 
 	virtual UWorld* GetWorld() const override;
 

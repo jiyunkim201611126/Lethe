@@ -78,6 +78,12 @@ struct FLetheGameplayTags
 	FGameplayTag UI_Layer_GameMenu;
 	FGameplayTag UI_Layer_Modal;
 	//~ End of UI Layer
+	
+	//~ Begin UIFeature
+	FGameplayTag UI_Feature_DeckEditing;
+	FGameplayTag UI_Feature_Attribute;
+	FGameplayTag UI_Feature_CardPanel;
+	//~ End of UIFeature
 
 private:
 	static FLetheGameplayTags GameplayTags;

@@ -73,7 +73,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSoftClassPtr<UAttributeUIFeature> AttributeUIFeatureClass;
 };

@@ -14,19 +14,49 @@
 #include "Lethe/Manager/LetheTextManager.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void ULetheCardAbility::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const
+void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+	Context.OutSelectCandidateTiles.Reset();
+	Context.OutTargetTileResults.Reset();
+	if (!Context.PlayerController)
 	{
-		EffectTargetTileSelectorPtr->GetCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles, OutTargetResults);
+		return;
+	}
+	
+	if (const UTileManagerSubsystem* TileManagerSubsystem = Context.PlayerController->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		Context.TileManagerSubsystem = TileManagerSubsystem;
+		if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
+		{
+			Context.CurrentTile = CurrentTile;
+			if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+			{
+				EffectTargetTileSelectorPtr->GetCandidateTiles(Context);
+			}
+		}
 	}
 }
 
-void ULetheCardAbility::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
+void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+	Context.OutSelectCandidateTiles.Reset();
+	Context.OutTargetTileResults.Reset();
+	if (!Context.PlayerController)
 	{
-		EffectTargetTileSelectorPtr->GetTargetTiles(AvatarActor, PlayerController, OutResults);
+		return;
+	}
+	
+	if (const UTileManagerSubsystem* TileManagerSubsystem = Context.PlayerController->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	{
+		Context.TileManagerSubsystem = TileManagerSubsystem;
+		if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
+		{
+			Context.CurrentTile = CurrentTile;
+			if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+			{
+				EffectTargetTileSelectorPtr->GetTargetTiles(Context);
+			}
+		}
 	}
 }
 

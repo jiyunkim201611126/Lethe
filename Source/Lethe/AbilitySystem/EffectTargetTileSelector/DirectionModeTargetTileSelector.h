@@ -20,6 +20,13 @@ enum class EAdditionalRangeType : uint8
 	Penetration,
 };
 
+struct FResolvedPrimaryTargetTile
+{
+	ATile* Tile = nullptr;
+	int32 Direction = 0;
+	int32 Distance = 0;
+};
+
 /**
  * 방향을 기반으로 선택하는 Selector입니다.
  * 반시계 방향으로 회전하며 인덱스를 채워나갑니다.
@@ -29,16 +36,18 @@ struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSele
 {
 	GENERATED_BODY()
 
-	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const override;
-	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const override;
+	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
 
 protected:
-	virtual void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const override;
-	virtual void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const override;
+	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 
 private:
-	void HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const;
-	void HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const;
+	void HandleMeleeAndParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleStraightRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+
+	void HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedTargetTiles) const;
 	
 	int32 NormalizeHexDirection(int32 Direction) const;
 	

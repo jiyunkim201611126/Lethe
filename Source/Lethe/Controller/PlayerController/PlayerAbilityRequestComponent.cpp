@@ -710,10 +710,15 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 	{
 		return false;
 	}
+	
+	FEffectTargetTileSelectorContext Context;
+	Context.AvatarActor = OwnerASC->GetAvatarActor();
+	Context.PlayerController = PlayerController;
+	CardAbility->GetTargetTiles(Context);
 
 	FAbilityActivationData AbilityActivationData;
-	CardAbility->GetTargetTiles(OwnerASC->GetAvatarActor(), PlayerController, AbilityActivationData.TargetTileResults);
-
+	AbilityActivationData.TargetTileResults = MoveTemp(Context.OutTargetTileResults);
+	
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem)
 	{

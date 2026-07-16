@@ -6,51 +6,36 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void FDirectionModeTargetTileSelector::GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const
+void FDirectionModeTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	OutSelectCandidateTiles.Reset();
-	OutTargetResults.Reset();
-	
-	if (!AvatarActor || !PlayerController)
+	if (!Context.IsValid())
 	{
 		return;
 	}
 
-	GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
-	GetTargetCandidateTiles(AvatarActor, PlayerController, OutTargetResults);
+	GetSelectCandidateTiles(Context);
+	GetTargetCandidateTiles(Context);
 }
 
-void FDirectionModeTargetTileSelector::GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
+void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	OutResults.Reset();
-	
-	if (!AvatarActor || !PlayerController)
+	if (!Context.IsValid())
 	{
 		return;
 	}
 	
-	GetTargetCandidateTiles(AvatarActor, PlayerController, OutResults);
+	// TargetTile 계산 시 SelectCandidateTile이 필요하므로 여기서 호출합니다.
+	GetSelectCandidateTiles(Context);
+	GetTargetCandidateTiles(Context);
 }
 
-void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const
+void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-
-	const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-	if (!CurrentTile)
-	{
-		return;
-	}
-
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(CurrentTile, PlayerController, SelectedDirections);
+	GetSelectedDirections(Context.CurrentTile, Context.PlayerController, SelectedDirections);
 
-	const FCubeCoord CenterCoord = CurrentTile->GetCubeCoord();
+	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
 	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
 
 	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나가면서 모든 타일을 OutTiles에 추가합니다.
@@ -65,101 +50,94 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const AActor* Ava
 				CenterCoord.S + DirectionOffset.S * Distance);
 
 			// 인덱스가 곧 CurrentTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
-			OutTiles.Add(TileManagerSubsystem->GetTile(TargetCoord));
+			Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(TargetCoord));
 		}
 	}
 }
 
-void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
+void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
+	TArray<FResolvedPrimaryTargetTile> OutData;
 	switch (RangeType)
 	{
 	case ERangeType::Melee:
 	case ERangeType::ParabolaRanged:
-		HandleMeleeAndParabolaRanged(AvatarActor, PlayerController, OutResults);
+		HandleMeleeAndParabolaRanged(Context, OutData);
 		break;
 	case ERangeType::StraightRanged:
-		HandleStraightRanged(AvatarActor, PlayerController, OutResults);
+		HandleStraightRanged(Context, OutData);
 		break;
 	}
+	HandleAdditionalRanges(Context, OutData);
 }
 
-void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
+void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
-	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-
-	const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-	if (!CurrentTile)
-	{
-		return;
-	}
-	
 	FHitResult HitResult;
-	if (PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult))
+	if (Context.PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult))
 	{
 		// AvatarActor가 서있는 타일과 마우스 위치까지의 거리를 계산합니다.
-		const FVector CurrentTileLocation = CurrentTile->GetActorLocation();
+		const FVector CurrentTileLocation = Context.CurrentTile->GetActorLocation();
 		const FVector HitLocation = HitResult.ImpactPoint;
-		const float Distance = FVector::Dist(CurrentTileLocation, HitLocation);
+		const float HitDistance = FVector::Dist(CurrentTileLocation, HitLocation);
 
 		// 타일과 타일 사이의 거리를 가져옵니다.
 		const float TileWidthInterval = FCubeCoord::GetTileWidthInterval();
 
 		// 거리를 타일 기준으로 계산합니다.
-		const int32 TileDistance = FMath::RoundToInt(Distance / TileWidthInterval);
+		const int32 HitTileDistance = FMath::RoundToInt(HitDistance / TileWidthInterval);
 
 		const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
-		if (!(0 <= TileDistance && TileDistance <= MaxRangeDistance))
+		if (!(0 <= HitTileDistance && HitTileDistance <= MaxRangeDistance))
 		{
 			// 사거리를 벗어나 마우스를 둔 경우 얼리리턴합니다.
 			return;
 		}
 		
-		// 선택 후보 타일을 가져옵니다.
-		TArray<ATile*> OutSelectCandidateTiles;
-		GetSelectCandidateTiles(AvatarActor, PlayerController, OutSelectCandidateTiles);
-		
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
+		FTargetTileResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
 		PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 
+		// AdditionalRange 계산을 위해 Direction이 필요하므로, 여기서 다시 가져옵니다.
+		TArray<int32> SelectedDirections;
+		GetSelectedDirections(Context.CurrentTile, Context.PlayerController, SelectedDirections);
+
 		// 거리에 알맞는 타일들만 추가합니다.
-		int32 TileIndex = TileDistance - 1;
-		while (OutSelectCandidateTiles.IsValidIndex(TileIndex))
+		int32 TileIndex = HitTileDistance - 1;
+		while (Context.OutSelectCandidateTiles.IsValidIndex(TileIndex))
 		{
-			PrimaryTargets.TargetTiles.Add(OutSelectCandidateTiles[TileIndex]);
+			const int32 DirectionIndex = TileIndex / MaxRangeDistance;
+			if (!SelectedDirections.IsValidIndex(DirectionIndex))
+			{
+				break;
+			}
+
+			const int32 Direction = SelectedDirections[DirectionIndex];
+
+			ATile* TargetTile = Context.OutSelectCandidateTiles[TileIndex];
+			PrimaryTargets.TargetTiles.Add(TargetTile);
+
+			FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
+			AddedData.Tile = TargetTile;
+			AddedData.Direction = Direction;
+			AddedData.Distance = HitTileDistance;
+			
 			TileIndex += MaxRangeDistance;
 		}
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const
+void FDirectionModeTargetTileSelector::HandleStraightRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
-	const UTileManagerSubsystem* TileManagerSubsystem = AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
-
-	const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-	if (!CurrentTile)
-	{
-		return;
-	}
-	
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(CurrentTile, PlayerController, SelectedDirections);
+	GetSelectedDirections(Context.CurrentTile, Context.PlayerController, SelectedDirections);
 
-	const FCubeCoord CenterCoord = CurrentTile->GetCubeCoord();
+	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
 	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
 		
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetTileResult& PrimaryTargets = OutResults.Emplace_GetRef();
+	FTargetTileResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 	PrimaryTargets.TargetTiles.Reserve(SelectedDirections.Num() * MaxRangeDistance);
 
@@ -174,14 +152,19 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 				CenterCoord.R + DirectionOffset.R * Distance,
 				CenterCoord.S + DirectionOffset.S * Distance);
 
-			if (ATile* Tile = TileManagerSubsystem->GetTile(TargetCoord))
+			if (ATile* Tile = Context.TileManagerSubsystem->GetTile(TargetCoord))
 			{
-				if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
+				if (const AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(Tile))
 				{
 					if (ActorOnTile->Implements<UCombatInterface>())
 					{
 						// 전투 가능한 액터가 올라서있다면 타일을 추가합니다.
 						PrimaryTargets.TargetTiles.Add(Tile);
+
+						FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
+						AddedData.Tile = Tile;
+						AddedData.Direction = Direction;
+						AddedData.Distance = Distance;
 					}
 					else
 					{
@@ -197,6 +180,49 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(const AActor* Avatar
 			
 			// 액터를 마주치기 전에 맵 바깥으로 나가버렸다면, nullptr을 추가하고 다른 방향을 탐색합니다.
 			PrimaryTargets.TargetTiles.Add(nullptr);
+			break;
+		}
+	}
+}
+
+void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedTargetTiles) const
+{
+	if (ResolvedTargetTiles.IsEmpty())
+	{
+		return;
+	}
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	for (const auto& AdditionalRange : AdditionalRanges)
+	{
+		switch (AdditionalRange.Key)
+		{
+		case EAdditionalRangeType::Penetration:
+			{
+				FTargetTileResult& PenetrationTarget = Context.OutTargetTileResults.AddDefaulted_GetRef();
+				PenetrationTarget.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Penetration;
+				for (const FResolvedPrimaryTargetTile& TargetTile : ResolvedTargetTiles)
+				{
+					if (!TargetTile.Tile)
+					{
+						continue;
+					}
+					
+					const FCubeCoord DirectionCoord = FCubeCoord::GetDirection(TargetTile.Direction);
+					FCubeCoord PenetrationCoord = TargetTile.Tile->GetCubeCoord();
+
+					for (int32 Count = 0; Count < AdditionalRange.Value; ++Count)
+					{
+						PenetrationCoord = PenetrationCoord + DirectionCoord;
+						if (ATile* PenetrationTile = Context.TileManagerSubsystem->GetTile(PenetrationCoord))
+						{
+							PenetrationTarget.TargetTiles.Add(PenetrationTile);
+						}
+					}
+				}
+			}
+			break;
+		default:
 			break;
 		}
 	}

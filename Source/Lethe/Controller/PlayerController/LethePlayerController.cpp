@@ -344,12 +344,13 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		if (AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor())
 		{
 			// 선택 가능한 타일과 타겟 후보 타일을 모두 가져옵니다.
-			TArray<ATile*> OutSelectCandidateTiles;
-			TArray<FTargetTileResult> OutTargetResults;
-			SelectedCardAbility->GetCandidateTiles(CardOwner, this, OutSelectCandidateTiles, OutTargetResults);
+			FEffectTargetTileSelectorContext Context;
+			Context.AvatarActor = CardOwner;
+			Context.PlayerController = this;
+			SelectedCardAbility->GetCandidateTiles(Context);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetTileResult& Result : OutTargetResults)
+			for (const FTargetTileResult& Result : Context.OutTargetTileResults)
 			{
 				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + Result.TargetTiles.Num());
 				for (const auto& TargetTile : Result.TargetTiles)
@@ -362,19 +363,19 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			if (!TargetCandidateTiles.IsEmpty() && bMouseOnWorldSection)
 			{
 				// 선택 가능 타일 중 타겟 후보 타일을 제거합니다.
-				OutSelectCandidateTiles.RemoveAll([&TargetCandidateTiles](const ATile* Tile)
+				Context.OutSelectCandidateTiles.RemoveAll([&TargetCandidateTiles](const ATile* Tile)
 				{
 					return TargetCandidateTiles.Contains(Tile);
 				});
 
 				// 각각 역할에 맞게 하이라이팅합니다.
-				ActorSelector->HighlightActorsByAbility(OutSelectCandidateTiles, CardOwner);
+				ActorSelector->HighlightActorsByAbility(Context.OutSelectCandidateTiles, CardOwner);
 				ActorSelector->HighlightTilesByMouse(TargetCandidateTiles);
 				return;
 			}
 
 			// 사용 범위를 벗어난 경우 선택 후보만 하이라이팅하고 프리뷰 및 Arrow를 비활성화합니다.
-			ActorSelector->HighlightActorsByAbility(OutSelectCandidateTiles, CardOwner);
+			ActorSelector->HighlightActorsByAbility(Context.OutSelectCandidateTiles, CardOwner);
 			PreviewCoordinatorComponent->StopAllPreview();
 			ArrowRenderer->DeactivateCardPreviewArrow();
 		}
@@ -402,14 +403,16 @@ void ALethePlayerController::OnOtherTileDetected() const
 	{
 		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 		{
-			TArray<FTargetTileResult> OutTargetTileResults;
-			SelectedCardAbility->GetTargetTiles(SelectedCardOwnerActor, this, OutTargetTileResults);
+			FEffectTargetTileSelectorContext Context;
+			Context.AvatarActor = SelectedCardOwnerActor;
+			Context.PlayerController = this;
+			SelectedCardAbility->GetTargetTiles(Context);
 
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 			{
 				TArray<FTargetActorResult> TargetActorResults;
 				TArray<AActor*> TargetActors;
-				for (const FTargetTileResult& Result : OutTargetTileResults)
+				for (const FTargetTileResult& Result : Context.OutTargetTileResults)
 				{
 					FTargetActorResult& TargetActorResult = TargetActorResults.Emplace_GetRef();
 					TargetActorResult.TargetGroupTag = Result.TargetGroupTag;

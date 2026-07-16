@@ -6,8 +6,25 @@
 #include "Lethe/Data/Stage/TileData.h"
 #include "EffectTargetTileSelector.generated.h"
 
+class UTileManagerSubsystem;
 class APlayerController;
 struct FTargetTileResult;
+
+struct FEffectTargetTileSelectorContext
+{
+	const AActor* AvatarActor = nullptr;
+	const APlayerController* PlayerController = nullptr;
+	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
+	const ATile* CurrentTile = nullptr;
+
+	TArray<ATile*> OutSelectCandidateTiles;
+	TArray<FTargetTileResult> OutTargetTileResults;
+
+	bool IsValid() const
+	{
+		return AvatarActor && PlayerController && TileManagerSubsystem && CurrentTile;
+	}
+};
 
 /**
  * Ability 발동 시 Effect를 적용할 대상이 밟고 있는 타일을 가져옵니다.
@@ -21,15 +38,15 @@ struct LETHE_API FEffectTargetTileSelector
 
 	virtual ~FEffectTargetTileSelector() = default;
 
-	virtual void GetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutSelectCandidateTiles, TArray<FTargetTileResult>& OutTargetResults) const;
+	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
 	/** 시전 시 적용될 대상이 존재하는 타일들을 모두 Out 인자로 반환합니다. */
-	virtual void GetTargetTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const;
+	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
 
 protected:
 	/** 시전 가능 범위에 해당하는 타일들을 Out 인자로 반환합니다. */
-	virtual void GetSelectCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<ATile*>& OutTiles) const;
+	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
 	/** 시전 시 적용 범위에 해당하는 타일들을 모두 Out 인자로 반환합니다. */
-	virtual void GetTargetCandidateTiles(const AActor* AvatarActor, const APlayerController* PlayerController, TArray<FTargetTileResult>& OutResults) const;
+	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 };

@@ -42,55 +42,8 @@ void FTileModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContex
 		return;
 	}
 	
-	const ICombatInterface* InstigatorCombatInterface = Cast<ICombatInterface>(Context.AvatarActor);
-	if (!InstigatorCombatInterface)
-	{
-		return;
-	}
-	
 	GetTargetCandidateTiles(Context);
-	if (Context.OutTargetTileResults.IsEmpty())
-	{
-		return;
-	}
-
-	// 조건에 맞지 않는 TargetTile도 들어있으므로 걸러줘야 합니다. 일단 모두 꺼내옵니다.
-	TArray<TWeakObjectPtr<ATile>> TargetCandidateTiles = MoveTemp(Context.OutTargetTileResults[0].TargetTiles);
-
-	const ETeamSide InstigatorTeamSide = InstigatorCombatInterface->GetTeamSide();
-	for (const auto& Tile : TargetCandidateTiles)
-	{
-		const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(Context.TileManagerSubsystem->GetActorOnTile(Tile.Get()));
-		if (!TargetCombatInterface)
-		{
-			// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-			Context.OutTargetTileResults[0].TargetTiles.Add(nullptr);
-			continue;
-		}
-
-		const ETeamSide TargetTeamSide = TargetCombatInterface->GetTeamSide();
-		switch (TargetTeamRelation)
-		{
-		case ETargetTeamRelation::AllSides:
-			Context.OutTargetTileResults[0].TargetTiles.Add(Tile);
-			break;
-		case ETargetTeamRelation::SameTeam:
-			if (InstigatorTeamSide == TargetTeamSide)
-			{
-				Context.OutTargetTileResults[0].TargetTiles.Add(Tile);
-			}
-			break;
-		case ETargetTeamRelation::OpposingTeam:
-			if (InstigatorTeamSide != TargetTeamSide)
-			{
-				Context.OutTargetTileResults[0].TargetTiles.Add(Tile);
-			}
-			break;
-		default:
-			Context.OutTargetTileResults[0].TargetTiles.Add(nullptr);
-			break;
-		}
-	}
+	FilterTargetTilesByTeamRelation(Context);
 }
 
 void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const

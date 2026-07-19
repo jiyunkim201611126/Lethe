@@ -83,7 +83,11 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 		FName("TargetTileGroup.Primary"), FString(""));
 	GameplayTags.TargetTileGroup_Penetration = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("TargetTileGroup.Penetration"), FString(""));
-
+	GameplayTags.TargetTileGroup_HalfMoon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetTileGroup.HalfMoon"), FString(""));
+	GameplayTags.TargetTileGroup_Spread = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetTileGroup.Spread"), FString(""));
+	
 	GameplayTags.UI_Layer_Game = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("UI.Layer.Game"), FString(""));
 	GameplayTags.UI_Layer_GameMenu = UGameplayTagsManager::Get().AddNativeGameplayTag(

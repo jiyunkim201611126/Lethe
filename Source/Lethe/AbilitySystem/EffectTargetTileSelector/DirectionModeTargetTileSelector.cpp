@@ -27,6 +27,7 @@ void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorC
 	// TargetTile 계산 시 SelectCandidateTile이 필요하므로 여기서 호출합니다.
 	GetSelectCandidateTiles(Context);
 	GetTargetCandidateTiles(Context);
+	FilterTargetTilesByTeamRelation(Context);
 }
 
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
@@ -185,9 +186,9 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(FEffectTargetTileSel
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const
 {
-	if (ResolvedTargetTiles.IsEmpty())
+	if (ResolvedPrimaryTargetTiles.IsEmpty())
 	{
 		return;
 	}
@@ -201,22 +202,87 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 			{
 				FTargetTileResult& PenetrationTarget = Context.OutTargetTileResults.AddDefaulted_GetRef();
 				PenetrationTarget.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Penetration;
-				for (const FResolvedPrimaryTargetTile& TargetTile : ResolvedTargetTiles)
+				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{
-					if (!TargetTile.Tile)
+					if (!PrimaryTargetTile.Tile)
 					{
 						continue;
 					}
 					
-					const FCubeCoord DirectionCoord = FCubeCoord::GetDirection(TargetTile.Direction);
-					FCubeCoord PenetrationCoord = TargetTile.Tile->GetCubeCoord();
+					const FCubeCoord DirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction);
 
-					for (int32 Count = 0; Count < AdditionalRange.Value; ++Count)
+					// Primary 타겟 타일과 같은 방향으로 나아가며 타일을 가져옵니다.
+					FCubeCoord PenetrationCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
 					{
 						PenetrationCoord = PenetrationCoord + DirectionCoord;
 						if (ATile* PenetrationTile = Context.TileManagerSubsystem->GetTile(PenetrationCoord))
 						{
 							PenetrationTarget.TargetTiles.Add(PenetrationTile);
+						}
+					}
+				}
+			}
+			break;
+		case EAdditionalRangeType::HalfMoon:
+			{
+				FTargetTileResult& HalfMoonTarget = Context.OutTargetTileResults.AddDefaulted_GetRef();
+				HalfMoonTarget.TargetGroupTag = LetheGameplayTags.TargetTileGroup_HalfMoon;
+				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
+				{
+					if (!PrimaryTargetTile.Tile)
+					{
+						continue;
+					}
+					
+					// 타겟 타일의 정보를 토대로 시계, 반시계로 확장할 방향을 계산합니다.
+					FCubeCoord ClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					FCubeCoord CounterClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					const FCubeCoord ClockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 2);
+					const FCubeCoord CounterclockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 4);
+					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
+					{
+						ClockwiseTargetTileCoord = ClockwiseTargetTileCoord + ClockwiseDirectionCoord;
+						CounterClockwiseTargetTileCoord = CounterClockwiseTargetTileCoord + CounterclockwiseDirectionCoord;
+						if (ATile* ClockwiseTargetTile = Context.TileManagerSubsystem->GetTile(ClockwiseTargetTileCoord))
+						{
+							HalfMoonTarget.TargetTiles.Add(ClockwiseTargetTile);
+						}
+						if (ATile* CounterclockwiseTargetTile = Context.TileManagerSubsystem->GetTile(CounterClockwiseTargetTileCoord))
+						{
+							HalfMoonTarget.TargetTiles.Add(CounterclockwiseTargetTile);
+						}
+					}
+				}
+			}
+			break;
+		case EAdditionalRangeType::Spread:
+			{
+				FTargetTileResult& SpreadTarget = Context.OutTargetTileResults.AddDefaulted_GetRef();
+				SpreadTarget.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Spread;
+				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
+				{
+					if (!PrimaryTargetTile.Tile)
+					{
+						continue;
+					}
+					
+					// 타겟 타일의 정보를 토대로 퍼져나가며 확장할 방향을 계산합니다.
+					FCubeCoord SpreadLeftTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					FCubeCoord SpreadRightTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					const FCubeCoord LeftDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 1);
+					const FCubeCoord RightDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction - 1);
+					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
+					{
+						SpreadLeftTargetTileCoord = SpreadLeftTargetTileCoord + LeftDirectionCoord;
+						SpreadRightTargetTileCoord = SpreadRightTargetTileCoord + RightDirectionCoord;
+						if (ATile* SpreadLeftTargetTile = Context.TileManagerSubsystem->GetTile(SpreadLeftTargetTileCoord))
+						{
+							SpreadTarget.TargetTiles.Add(SpreadLeftTargetTile);
+						}
+						if (ATile* SpreadRightTargetTile = Context.TileManagerSubsystem->GetTile(SpreadRightTargetTileCoord))
+						{
+							SpreadTarget.TargetTiles.Add(SpreadRightTargetTile);
 						}
 					}
 				}

@@ -18,8 +18,11 @@ UENUM(BlueprintType)
 enum class EAdditionalRangeType : uint8
 {
 	Penetration,
+	HalfMoon,
+	Spread,
 };
 
+/** TargetTileGroup_Primary로 수집된 타일을 설명하는 구조체로, 추가 범위 선택 시 활용됩니다. */
 struct FResolvedPrimaryTargetTile
 {
 	ATile* Tile = nullptr;
@@ -47,7 +50,7 @@ private:
 	void HandleMeleeAndParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 	void HandleStraightRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 
-	void HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedTargetTiles) const;
+	void HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const;
 	
 	int32 NormalizeHexDirection(int32 Direction) const;
 	
@@ -67,6 +70,7 @@ private:
 	void GetSelectedDirections(const ATile* CurrentTile, const APlayerController* PlayerController, TArray<int32>& OutDirections) const;
 	
 protected:
+	/** TargetTileGroup_Primary를 채울 방식입니다.*/
 	UPROPERTY(EditDefaultsOnly)
 	ERangeType RangeType = ERangeType::Melee;
 
@@ -78,7 +82,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int32 RangeDistance = 1;
 
-	/** Value는 EnforceValue입니다. */
+	/** Key는 TargetTileGroup_Primary를 제외한 다른 추가 범위를 의미하며, Value는 EnforceValue입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	TMap<EAdditionalRangeType, int32> AdditionalRanges;
 };

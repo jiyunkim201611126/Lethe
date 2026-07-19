@@ -71,6 +71,8 @@ struct FLetheGameplayTags
 	//~ Begin TargetTileGroup
 	FGameplayTag TargetTileGroup_Primary;
 	FGameplayTag TargetTileGroup_Penetration;
+	FGameplayTag TargetTileGroup_HalfMoon;
+	FGameplayTag TargetTileGroup_Spread;
 	//~ End of TargetTileGroup
 
 	//~ Begin UI Layer

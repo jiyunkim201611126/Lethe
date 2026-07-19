@@ -32,26 +32,43 @@ void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorC
 
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	// 원하는 방향 개수만큼 방향을 선택합니다.
-	TArray<int32> SelectedDirections;
-	GetSelectedDirections(Context.CurrentTile, Context.PlayerController, SelectedDirections);
-
 	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
-	const int32 MaxRangeDistance = RangeType == ERangeType::Melee ? 1 : FMath::Max(1, RangeDistance);
 
-	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나가면서 모든 타일을 OutTiles에 추가합니다.
-	for (const int32 Direction : SelectedDirections)
+	if (RangeType == ERangeType::Melee)
 	{
-		for (int32 Distance = 1; Distance <= MaxRangeDistance; ++Distance)
+		// 근접 타입인 경우 모든 방향 한 칸 앞을 모두 OutTiles에 추가합니다.
+		for (int32 Direction = 1; Direction <= FCubeCoord::HexDirectionCount; ++Direction)
 		{
 			const FCubeCoord DirectionOffset = FCubeCoord::GetDirection(Direction);
-			const FCubeCoord TargetCoord(
-				CenterCoord.Q + DirectionOffset.Q * Distance,
-				CenterCoord.R + DirectionOffset.R * Distance,
-				CenterCoord.S + DirectionOffset.S * Distance);
+			const FCubeCoord SelectCandidateCoord(
+				CenterCoord.Q + DirectionOffset.Q,
+				CenterCoord.R + DirectionOffset.R,
+				CenterCoord.S + DirectionOffset.S);
 
-			// 인덱스가 곧 CurrentTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
-			Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(TargetCoord));
+			Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(SelectCandidateCoord));
+		}
+	}
+	else
+	{
+		// 필요한 방향들을 가져옵니다.
+		TArray<int32> SelectedDirections;
+		GetSelectedDirections(Context.CurrentTile, Context.PlayerController, SelectedDirections);
+		
+		// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나가면서 모든 타일을 OutTiles에 추가합니다.
+		const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
+		for (const int32 Direction : SelectedDirections)
+		{
+			for (int32 Distance = 1; Distance <= MaxRangeDistance; ++Distance)
+			{
+				const FCubeCoord DirectionOffset = FCubeCoord::GetDirection(Direction);
+				const FCubeCoord SelectCandidateCoord(
+					CenterCoord.Q + DirectionOffset.Q * Distance,
+					CenterCoord.R + DirectionOffset.R * Distance,
+					CenterCoord.S + DirectionOffset.S * Distance);
+
+				// 인덱스가 곧 CurrentTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
+				Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(SelectCandidateCoord));
+			}
 		}
 	}
 }
@@ -62,8 +79,10 @@ void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTile
 	switch (RangeType)
 	{
 	case ERangeType::Melee:
+		HandleMeleeRanged(Context, OutData);
+		break;
 	case ERangeType::ParabolaRanged:
-		HandleMeleeAndParabolaRanged(Context, OutData);
+		HandleParabolaRanged(Context, OutData);
 		break;
 	case ERangeType::StraightRanged:
 		HandleStraightRanged(Context, OutData);
@@ -72,7 +91,38 @@ void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTile
 	HandleAdditionalRanges(Context, OutData);
 }
 
-void FDirectionModeTargetTileSelector::HandleMeleeAndParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleMeleeRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
+{
+	FHitResult HitResult;
+	if (Context.PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		ATile* HitTile = Cast<ATile>(HitActor);
+		if (!HitTile)
+		{
+			return;
+		}
+
+		if (Context.OutSelectCandidateTiles.Contains(HitTile))
+		{
+			const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+			FTargetTileResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
+			PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
+			
+			PrimaryTargets.TargetTiles.Add(HitTile);
+
+			const FCubeCoord DirectionCoord = HitTile->GetCubeCoord() - Context.CurrentTile->GetCubeCoord();
+			const int32 Direction = FCubeCoord::GetDirection(DirectionCoord);
+
+			FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
+			AddedData.Tile = HitTile;
+			AddedData.Direction = Direction;
+			AddedData.Distance = 1;
+		}
+	}
+}
+
+void FDirectionModeTargetTileSelector::HandleParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
 	FHitResult HitResult;
 	if (Context.PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult))
@@ -238,8 +288,8 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 					// 타겟 타일의 정보를 토대로 시계, 반시계로 확장할 방향을 계산합니다.
 					FCubeCoord ClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
 					FCubeCoord CounterClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
-					const FCubeCoord ClockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 2);
-					const FCubeCoord CounterclockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 4);
+					const FCubeCoord ClockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 4);
+					const FCubeCoord CounterclockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 2);
 					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
 					{
 						ClockwiseTargetTileCoord = ClockwiseTargetTileCoord + ClockwiseDirectionCoord;
@@ -294,14 +344,9 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 	}
 }
 
-int32 FDirectionModeTargetTileSelector::NormalizeHexDirection(const int32 Direction) const
-{
-	return (Direction % FCubeCoord::HexDirectionCount + FCubeCoord::HexDirectionCount) % FCubeCoord::HexDirectionCount;
-}
-
 FVector2D FDirectionModeTargetTileSelector::GetHexDirectionVector(const int32 Direction) const
 {
-	const FVector DirectionLocation = FCubeCoord::CubeCoordToWorldCoord(FCubeCoord::GetDirection(NormalizeHexDirection(Direction)));
+	const FVector DirectionLocation = FCubeCoord::CubeCoordToWorldCoord(FCubeCoord::GetDirection(Direction));
 	return FVector2D(DirectionLocation.X, DirectionLocation.Y).GetSafeNormal();
 }
 
@@ -367,7 +412,7 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 		const int32 HalfDirectionCount = ClampedDirectionCount / 2;
 		for (int32 Offset = -HalfDirectionCount; Offset <= HalfDirectionCount; ++Offset)
 		{
-			OutDirections.Add(NormalizeHexDirection(CenterDirection + Offset));
+			OutDirections.Add(FCubeCoord::NormalizeHexDirection(CenterDirection + Offset));
 		}
 		return;
 	}
@@ -376,6 +421,6 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 	const int32 HalfDirectionCount = ClampedDirectionCount / 2;
 	for (int32 Offset = -HalfDirectionCount; Offset <= HalfDirectionCount - 1; ++Offset)
 	{
-		OutDirections.Add(NormalizeHexDirection(UpperDirection + Offset));
+		OutDirections.Add(FCubeCoord::NormalizeHexDirection(UpperDirection + Offset));
 	}
 }

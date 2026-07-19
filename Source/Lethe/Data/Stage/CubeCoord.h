@@ -27,11 +27,6 @@ public:
 	
 	static constexpr int32 HexDirectionCount = 6;
 
-	static float GetTileWidthInterval()
-	{
-		return TileWidthInterval;
-	}
-
 	FCubeCoord() : Q(0), R(0), S(0) {}
 	
 	constexpr FCubeCoord(const int32 InQ, const int32 InR)
@@ -44,6 +39,11 @@ public:
 	{
 		return FCubeCoord(Q + Other.Q, R + Other.R, S + Other.S);
 	}
+
+	FCubeCoord operator-(const FCubeCoord& Other) const
+	{
+		return FCubeCoord(Q - Other.Q, R - Other.R, S - Other.S);
+	}
 	
 	bool operator==(const FCubeCoord& Other) const
 	{
@@ -53,16 +53,23 @@ public:
 	//각 방향으로의 오프셋값, ETileDirection과 조합해서 사용
 	static FCubeCoord GetDirection(const int32 DirectionIndex)
 	{
-		static constexpr FCubeCoord DirectionOffsets[HexDirectionCount] =
+		const int32 NormalizedHexDirection = NormalizeHexDirection(DirectionIndex);
+		const FCubeCoord* DirectionOffsets = GetDirectionOffsets();
+		return DirectionOffsets[NormalizedHexDirection];
+	}
+
+	static int32 GetDirection(const FCubeCoord& DirectionCoord)
+	{
+		const FCubeCoord* DirectionOffsets = GetDirectionOffsets();
+		
+		for (int32 Index = 0; Index < HexDirectionCount; Index++)
 		{
-			FCubeCoord(+0, -1), // LeftTop
-			FCubeCoord(-1, +0), // Left
-			FCubeCoord(-1, +1), // LeftBottom
-			FCubeCoord(+0, +1), // RightBottom
-			FCubeCoord(+1, +0), // Right
-			FCubeCoord(+1, -1), // RightTop
-		};
-		return DirectionOffsets[DirectionIndex % HexDirectionCount];
+			if (DirectionCoord == DirectionOffsets[Index])
+			{
+				return Index;
+			}
+		}
+		return INDEX_NONE;
 	}
 
 	//거리 계산
@@ -81,7 +88,32 @@ public:
 
 		return FVector(WorldX, WorldY, WorldZ);
 	}
+
+	static int32 NormalizeHexDirection(const int32 Direction)
+	{
+		return (Direction % HexDirectionCount + HexDirectionCount) % HexDirectionCount;
+	}
+
+	static float GetTileWidthInterval()
+	{
+		return TileWidthInterval;
+	}
 	
+private:
+	static const FCubeCoord* GetDirectionOffsets()
+	{
+		static constexpr FCubeCoord DirectionOffsets[HexDirectionCount] =
+		{
+			FCubeCoord(+0, -1), // LeftTop
+			FCubeCoord(-1, +0), // Left
+			FCubeCoord(-1, +1), // LeftBottom
+			FCubeCoord(+0, +1), // RightBottom
+			FCubeCoord(+1, +0), // Right
+			FCubeCoord(+1, -1), // RightTop
+		};
+		return DirectionOffsets;
+	}
+
 private:
 	//타일과 타일 사이의 간격
 	static constexpr float TileWidthInterval = 173.205f;

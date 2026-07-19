@@ -47,12 +47,11 @@ protected:
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 
 private:
-	void HandleMeleeAndParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleMeleeRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleParabolaRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 	void HandleStraightRanged(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 
 	void HandleAdditionalRanges(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const;
-	
-	int32 NormalizeHexDirection(int32 Direction) const;
 	
 	/** FCubeCoord 기준 Direction을 방향 Vector로 변환해 반환합니다. */
 	FVector2D GetHexDirectionVector(int32 Direction) const;

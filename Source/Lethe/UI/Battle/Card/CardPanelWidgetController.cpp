@@ -35,13 +35,14 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 	}
 }
 
-void UCardPanelWidgetController::OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const
+void UCardPanelWidgetController::OnGiveAbility(const FGrantedCardAbilityInfo& GrantedCardAbilityInfo) const
 {
 	FCardInitParams InitParams;
-	InitParams.OwnerASC = OwnerASC;
-	InitParams.CharacterDefinitionData = CharacterDefinitionData;
-	InitParams.CardDefinition = CardDefinitionData;
-	InitParams.SavedCard = SavedCard;
+	InitParams.OwnerASC = GrantedCardAbilityInfo.OwnerASC;
+	InitParams.CharacterDefinitionData = GrantedCardAbilityInfo.CharacterDefinitionData;
+	InitParams.CardDefinition = GrantedCardAbilityInfo.CardDefinitionData;
+	InitParams.SavedCard = GrantedCardAbilityInfo.SavedCard;
+	InitParams.AbilitySpecHandle = GrantedCardAbilityInfo.AbilitySpecHandle;
 	InitParams.CardViewData = CardViewData;
 	OnAbilityUpdatedDelegate.ExecuteIfBound(InitParams);
 }
@@ -73,7 +74,6 @@ bool UCardPanelWidgetController::RequestTurnEnd() const
 		// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 		if (!LetheGameState->IsResolvingPlayerAbility())
 		{
-			LethePlayerController->OnSelectCardRequested(false);
 			LethePlayerController->ResetSelectedCharacter();
 			LetheGameState->GoEnemyTurnPhase();
 			return true;
@@ -114,11 +114,11 @@ void UCardPanelWidgetController::StartResolvePlayerMoves() const
 	}
 }
 
-void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->OnSelectCardRequested(HandIndex, OwnerASC, CardTag);
+		LethePlayerController->OnSelectCardRequested(HandIndex, OwnerASC, AbilitySpecHandle);
 	}
 }
 
@@ -139,11 +139,11 @@ bool UCardPanelWidgetController::IsCardSelected() const
 	return false;
 }
 
-void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex) const
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->RequestUseCard(OwnerASC, SavedCard, InHandIndex);
+		LethePlayerController->RequestUseCard(OwnerASC, AbilitySpecHandle, CardTag, InHandIndex);
 	}
 }
 

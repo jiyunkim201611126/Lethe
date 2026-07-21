@@ -188,7 +188,7 @@ void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 	}
 }
 
-void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag)
+void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle)
 {
 	if (!ArrowRenderer)
 	{
@@ -198,21 +198,19 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 	// 기존에 선택된 카드가 있을 수 있으므로 먼저 선택을 취소합니다.
 	ResetSelectedCard();
 	
-	if (OwnerASC && CardTag.IsValid())
+	if (OwnerASC && AbilitySpecHandle.IsValid())
 	{
 		// 카드와 캐릭터는 동시에 선택될 수 없으므로 캐릭터 선택은 초기화합니다.
 		ResetSelectedCharacter();
-		
-		TArray<FGameplayAbilitySpec*> AbilitySpecs;
-		const FGameplayTagContainer CardTagContainer = CardTag.GetSingleTagContainer();
-		OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
-		if (AbilitySpecs.IsEmpty())
+
+		const FGameplayAbilitySpec* AbilitySpec = OwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+		if (!AbilitySpec)
 		{
 			return;
 		}
 		
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
-		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpecs[0]->Ability);
+		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability);
 		const AActor* CardOwner = OwnerASC->GetAvatarActor();
 		if (LetheCardAbility && CardOwner)
 		{
@@ -220,7 +218,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 			{
 				// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
 				const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
-				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecs[0]->Handle, PreviewActorInfo);
+				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecHandle, PreviewActorInfo);
 				if (!bCanUse)
 				{
 					if (OnCancelCardSelectCancelDelegate.IsBound())
@@ -452,9 +450,9 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex)
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex)
 {
-	if (!PlayerAbilityRequestComponent->RequestUseCard(this, OwnerASC, SavedCard, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(this, OwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}

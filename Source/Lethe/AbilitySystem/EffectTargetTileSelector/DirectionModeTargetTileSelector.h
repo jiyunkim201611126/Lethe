@@ -39,6 +39,9 @@ struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSele
 {
 	GENERATED_BODY()
 
+public:
+	FDirectionModeTargetTileSelector();
+	
 	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
 

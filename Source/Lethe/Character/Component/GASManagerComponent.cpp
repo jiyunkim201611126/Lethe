@@ -59,7 +59,7 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 	
 	ApplyEffectToSelf(DefaultAttributes, 1.f);
 	
-	AddCharacterAbilities(StartAbilities);
+	GiveAbilities(StartAbilities);
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
@@ -96,16 +96,16 @@ void UGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWidgets)
 	}
 }
 
-void UGASManagerComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const
+void UGASManagerComponent::GiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const
 {
 	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
-	ASC->AddCharacterAbilities(InAbilities);
+	ASC->GiveAbilities(InAbilities);
 }
 
-void UGASManagerComponent::AddCharacterAbilities(const TArray<FSavedCard>& InCards) const
+void UGASManagerComponent::GiveAbilities(const TArray<FSavedCard>& InCards) const
 {
 	ULetheAbilitySystemComponent* ASC = CastChecked<ULetheAbilitySystemComponent>(AbilitySystemComponent);
-	ASC->AddCharacterAbilities(InCards);
+	ASC->GiveAbilities(InCards);
 }
 
 void UGASManagerComponent::OnDied() const

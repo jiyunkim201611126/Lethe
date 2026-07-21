@@ -6,6 +6,11 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
+FDirectionModeTargetTileSelector::FDirectionModeTargetTileSelector()
+{
+	TargetTeamRelation = ETargetTeamRelation::AllSides;
+}
+
 void FDirectionModeTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
 	if (!Context.IsValid())

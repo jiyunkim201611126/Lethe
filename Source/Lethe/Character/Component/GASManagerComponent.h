@@ -38,8 +38,8 @@ public:
 	
 	virtual void InitAbilityActorInfo(const TArray<UUserWidget*>& AttributeWidgets);
 	
-	virtual void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
-	virtual void AddCharacterAbilities(const TArray<FSavedCard>& InCards) const;
+	virtual void GiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities) const;
+	virtual void GiveAbilities(const TArray<FSavedCard>& InCards) const;
 	
 	void OnDied() const;
 	bool IsDead() const;

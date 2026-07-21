@@ -44,6 +44,7 @@ struct LETHE_API FEffectTargetTileSelector
 {
 	GENERATED_BODY()
 
+public:
 	virtual ~FEffectTargetTileSelector() = default;
 
 	/** 선택 가능 타일과 적용될 대상이 될 수 있는 후보 타일을 모두 Out 인자로 반환합니다. */

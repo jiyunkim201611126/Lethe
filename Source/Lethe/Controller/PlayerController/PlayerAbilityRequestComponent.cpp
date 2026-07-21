@@ -665,9 +665,9 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* PlayerController, ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const
+bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* PlayerController, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const
 {
-	if (!ActorSelector.IsValid() || !OwnerASC)
+	if (!ActorSelector.IsValid() || !OwnerASC || !AbilitySpecHandle.IsValid())
 	{
 		return false;
 	}
@@ -680,32 +680,13 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 		return false;
 	}
 
-	// CardTag에 해당하는 AbilitySpec을 모두 가져옵니다.
-	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	const FGameplayTagContainer CardTagContainer = SavedCard.CardTag.GetSingleTagContainer();
-	OwnerASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(CardTagContainer, AbilitySpecs);
-	if (AbilitySpecs.IsEmpty())
-	{
-		return false;
-	}
-
-	// 동일한 레벨의 AbilitySpec을 선택합니다.
-	FGameplayAbilitySpec* SelectedSpec = nullptr;
-	for (FGameplayAbilitySpec* AbilitySpec : AbilitySpecs)
-	{
-		if (AbilitySpec && AbilitySpec->Level == SavedCard.CardLevel)
-		{
-			SelectedSpec = AbilitySpec;
-			break;
-		}
-	}
-
-	if (!SelectedSpec)
+	FGameplayAbilitySpec* AbilitySpec = OwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+	if (!AbilitySpec)
 	{
 		return false;
 	}
 	
-	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(SelectedSpec->Ability);
+	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability);
 	if (!CardAbility)
 	{
 		return false;
@@ -757,8 +738,8 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(const APlayerController* Pla
 	}
 	
 	AbilityActivationData.Index = InHandIndex;
-	AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-	AbilityActivationData.AbilityTag = SavedCard.CardTag;
+	AbilityActivationData.AbilitySpecHandle = AbilitySpecHandle;
+	AbilityActivationData.AbilityTag = CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
 	LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
 	return true;

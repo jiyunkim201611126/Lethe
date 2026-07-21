@@ -66,7 +66,7 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 		if (const FSavedCharacterDeck* CharacterDeck = EquippedDecks.Find(CharacterTag))
 		{
 			// Equipped Deck들을 실제 Ability로 부여합니다.
-			AddCharacterAbilities(CharacterDeck->Deck);
+			GiveAbilities(CharacterDeck->Deck);
 		}
 	}
 }

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "GameFramework/Actor.h"
 #include "Lethe/SaveGame/SavedCardTypes.h"
 #include "CardActor.generated.h"
@@ -83,7 +83,7 @@ public:
 	
 	void MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const;
 
-	FGameplayTag GetCardTag() const;
+	FGameplayAbilitySpecHandle GetAbilitySpecHandle() const;
 	const FSavedCard& GetSavedCard() const;
 	ECardContainer GetCurrentCardContainer() const;
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
@@ -125,6 +125,7 @@ protected:
 private:
 	FText CardNameText;
 	FSavedCard SavedCard;
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
 	FLinearColor CardTypeColor = FLinearColor::White;
 
 	UPROPERTY()

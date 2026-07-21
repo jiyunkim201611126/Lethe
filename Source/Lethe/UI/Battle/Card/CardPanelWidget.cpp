@@ -298,11 +298,11 @@ void UCardPanelWidget::HandleKeyboardEvent(const int32 Number) const
 	}
 }
 
-void UCardPanelWidget::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const
+void UCardPanelWidget::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
 {
 	if (CardPanelWidgetController)
 	{
-		CardPanelWidgetController->OnSelectCardRequested(HandIndex, OwnerASC, CardTag);
+		CardPanelWidgetController->OnSelectCardRequested(HandIndex, OwnerASC, AbilitySpecHandle);
 	}
 }
 
@@ -356,11 +356,11 @@ bool UCardPanelWidget::RequestTurnEnd() const
 	return CardPanelWidgetController && CardPanelWidgetController->RequestTurnEnd();
 }
 
-void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 HandIndex) const
+void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 HandIndex) const
 {
 	if (CardPanelWidgetController)
 	{
-		CardPanelWidgetController->RequestUseCard(OwnerASC, SavedCard, HandIndex);
+		CardPanelWidgetController->RequestUseCard(OwnerASC, AbilitySpecHandle, CardTag, HandIndex);
 	}
 }
 

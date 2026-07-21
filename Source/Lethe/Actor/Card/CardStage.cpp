@@ -202,7 +202,7 @@ bool ACardStage::HandleLeftMouseButtonClickedInWorldSection()
 
 	// 사용 요청된 카드임을 기록하고 콜백 함수를 호출합니다.
 	UseRequestedCards.Add(HandIndex, CurrentSelectedCard);
-	OnUseCardRequested.Execute(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetSavedCard(), HandIndex);
+	OnUseCardRequested.Execute(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetAbilitySpecHandle(), CurrentSelectedCard->GetSavedCard().CardTag, HandIndex);
 	return true;
 }
 
@@ -515,7 +515,7 @@ void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 		return;
 	}
 
-	OnSelectCardRequested.ExecuteIfBound(HandIndex, CardActor->GetOwnerASC(), CardActor->GetCardTag());
+	OnSelectCardRequested.ExecuteIfBound(HandIndex, CardActor->GetOwnerASC(), CardActor->GetAbilitySpecHandle());
 }
 
 void ACardStage::OnDrawPhaseStarted() const

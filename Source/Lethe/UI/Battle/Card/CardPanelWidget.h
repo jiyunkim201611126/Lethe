@@ -13,8 +13,9 @@ class UCanvasPanel;
 class UCardPanelWidgetController;
 class ULetheAbilitySystemComponent;
 class ULetheImage;
-struct FGameplayTag;
 struct FCardInitParams;
+struct FGameplayAbilitySpecHandle;
+struct FGameplayTag;
 struct FSavedCard;
 
 DECLARE_DELEGATE_OneParam(FOnStartViewCardDetail, const ACardActor*);
@@ -58,14 +59,14 @@ private:
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayTag& CardTag) const;
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
 	void OnCardSelected(const int32 HandIndex) const;
 	void OnCancelSelectedCard() const;
 	void OnResolveUseCard(int32 HandIndex, bool bSuccess) const;
 	void StartViewCardDetail(const ACardActor* CardActor) const;
 	void GoPlayerTurnPhase() const;
 	void StartResolvePlayerMoves() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 HandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 HandIndex) const;
 	bool RequestTurnEnd() const;
 
 	UFUNCTION()

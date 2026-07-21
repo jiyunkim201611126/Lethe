@@ -52,6 +52,7 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 {
 	OwnerASC = InitParams.OwnerASC;
 	SavedCard = InitParams.SavedCard;
+	AbilitySpecHandle = InitParams.AbilitySpecHandle;
 
 	if (InitParams.CardDefinition)
 	{
@@ -175,9 +176,9 @@ void ACardActor::MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) 
 	OutContext->CardTypeColor = CardTypeColor;
 }
 
-FGameplayTag ACardActor::GetCardTag() const
+FGameplayAbilitySpecHandle ACardActor::GetAbilitySpecHandle() const
 {
-	return SavedCard.CardTag;
+	return AbilitySpecHandle;
 }
 
 const FSavedCard& ACardActor::GetSavedCard() const

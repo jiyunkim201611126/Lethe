@@ -15,6 +15,7 @@ struct LETHE_API FTileModeTargetTileSelector : public FEffectTargetTileSelector
 {
 	GENERATED_BODY()
 
+public:
 	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
 

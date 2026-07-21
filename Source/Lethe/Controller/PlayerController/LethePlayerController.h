@@ -3,25 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "LethePlayerControllerBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Lethe/Data/PhaseData.h"
 #include "LethePlayerController.generated.h"
 
 class AArrowRenderer;
-class APlayerCharacterBase;
-class ATile;
 class UAbilitySystemComponent;
 class UActorSelectorComponent;
-class UAttributeSet;
 class ULetheAbilitySystemComponent;
 class ULetheCardAbility;
-class UCardPanelUIFeature;
-class ULetheWidgetController;
 class UPlayerAbilityRequestComponent;
 class UPreviewCoordinatorComponent;
-struct FGameplayAbilityActorInfo;
+struct FGameplayAbilitySpecHandle;
+struct FGameplayTag;
 struct FPreviewData;
 struct FSavedCard;
 
@@ -50,10 +45,10 @@ public:
 	void StartResolvePlayerMoves() const;
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag());
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle);
 	void ResetSelectedCard();
 	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, const int32 InHandIndex);
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex);
 
 	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 

@@ -6,7 +6,6 @@
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
 #include "Lethe/Data/PhaseData.h"
-#include "Lethe/SaveGame/SavedCardTypes.h"
 #include "CardStage.generated.h"
 
 enum class ECardAction : uint8;
@@ -17,13 +16,14 @@ class UCardContainerManager;
 class ULetheAbilitySystemComponent;
 class USceneCaptureComponent2D;
 struct FCardInitParams;
+struct FGameplayAbilitySpecHandle;
 struct FKey;
 
 DECLARE_DELEGATE_OneParam(FOnViewCardDetailRequested, const ACardActor*);
-DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandIndex */, ULetheAbilitySystemComponent*, const FGameplayTag&);
+DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandIndex */, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&);
 DECLARE_DELEGATE(FOnGoPlayerTurnPhaseRequested);
 DECLARE_DELEGATE(FOnStartResolvePlayerMovesRequested);
-DECLARE_DELEGATE_ThreeParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FSavedCard&, int32);
+DECLARE_DELEGATE_FourParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&, const FGameplayTag&, int32);
 DECLARE_DELEGATE_RetVal(bool, FOnTurnEndRequested);
 
 UCLASS(Abstract)

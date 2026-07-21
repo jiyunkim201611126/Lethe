@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "Lethe/SaveGame/SavedCardTypes.h"
 #include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
@@ -14,10 +14,7 @@ class ALetheGameState;
 class UCardDefinitionData;
 class UCardViewData;
 class UCharacterDefinitionData;
-class ULetheGameplayAbility;
-struct FGameplayEventData;
-struct FGameplayAbilitySpec;
-struct FGameplayAbilitySpecHandle;
+struct FGrantedCardAbilityInfo;
 struct FSavedCard;
 
 /**
@@ -39,6 +36,8 @@ struct FCardInitParams
 	const UCardDefinitionData* CardDefinition = nullptr;
 
 	FSavedCard SavedCard;
+
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
 	UPROPERTY()
 	UCardViewData* CardViewData = nullptr;
@@ -74,14 +73,14 @@ public:
 	
 	void StartResolvePlayerMoves() const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC = nullptr, const FGameplayTag& CardTag = FGameplayTag()) const;
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
 	void ResetSelectedCard() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, int32 InHandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	
 	bool IsCardSelected() const;
 
 private:
-	void OnGiveAbility(ULetheAbilitySystemComponent* OwnerASC, const UCharacterDefinitionData* CharacterDefinitionData, const UCardDefinitionData* CardDefinitionData, const FSavedCard& SavedCard) const;
+	void OnGiveAbility(const FGrantedCardAbilityInfo& GrantedCardAbilityInfo) const;
 	void OnSelectCard(const int32 HandIndex) const;
 	void OnCancelCardSelect() const;
 	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;

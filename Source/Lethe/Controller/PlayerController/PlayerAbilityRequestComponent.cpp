@@ -688,18 +688,21 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 		return false;
 	}
 
+	FTargetingIntent TargetingIntent;
+	TargetingIntent.HitTile = OutTileHitResult.Tile;
+	TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
+
 	FAbilityActivationData AbilityActivationData;
 	AbilityActivationData.Index = InHandIndex;
 	AbilityActivationData.AbilitySpecHandle = AbilitySpecHandle;
 	AbilityActivationData.AbilityTag = CardTag;
 	AbilityActivationData.AbilityOwnerASC = OwnerASC;
-	AbilityActivationData.TargetingIntent.HitTile = OutTileHitResult.Tile;
-	AbilityActivationData.TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
+	AbilityActivationData.TargetingIntent = TargetingIntent;
 	AbilityActivationData.NoiseTile = OutTileHitResult.Tile;
 
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = CardOwner;
-	Context.TargetingIntent = AbilityActivationData.TargetingIntent;
+	Context.TargetingIntent = TargetingIntent;
 	CardAbility->GetTargetTiles(Context);
 	if (Context.OutTargetTileResults.IsEmpty())
 	{

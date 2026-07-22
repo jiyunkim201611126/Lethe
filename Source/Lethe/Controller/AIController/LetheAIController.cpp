@@ -397,18 +397,21 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 				}
 			}
 
+			FTargetingIntent TargetingIntent;
+			TargetingIntent.HitTile = TargetTile;
+			TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+
 			FAbilityActivationData& ActivationData = CandidateAbilityData.AddDefaulted_GetRef();
 			ActivationData.Index = ControlledEnemy->GetEnemyAbilityPriority();
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.TargetingIntent.HitTile = TargetTile;
-			ActivationData.TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+			ActivationData.TargetingIntent = TargetingIntent;
 			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
 			{
 				FEffectTargetTileSelectorContext Context;
 				Context.AvatarActor = ControlledEnemy;
-				Context.TargetingIntent = ActivationData.TargetingIntent;
+				Context.TargetingIntent = TargetingIntent;
 				CardAbility->GetTargetTiles(Context);
 				ActivationData.TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
 			}

@@ -30,7 +30,7 @@ void FTileModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContex
 	}
 	
 	GetTargetCandidateTiles(Context);
-	FilterTargetTilesByTeamRelation(Context);
+	ResolveTargetActors(Context);
 }
 
 void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
@@ -104,6 +104,5 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 		ATile* TargetTile = Context.TileManagerSubsystem->GetTile(CubeCoord);
 		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
 		TargetSelectResult.TargetTile = TargetTile;
-		TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
 	}
 }

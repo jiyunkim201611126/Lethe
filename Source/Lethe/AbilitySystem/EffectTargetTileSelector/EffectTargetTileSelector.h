@@ -62,7 +62,7 @@ protected:
 	/** 시전 시 적용 범위에 해당하는 타일들을 모두 Out 인자로 반환합니다. */
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
-	void FilterTargetTilesByTeamRelation(FEffectTargetTileSelectorContext& Context) const;
+	void ResolveTargetActors(FEffectTargetTileSelectorContext& Context) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

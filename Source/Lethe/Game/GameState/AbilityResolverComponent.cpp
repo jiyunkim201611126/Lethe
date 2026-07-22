@@ -257,21 +257,6 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	}
 	else
 	{
-		if (ActivationData->TargetSelectResults.IsEmpty() && ActivationData->TargetingIntent.HitTile)
-		{
-			if (const FGameplayAbilitySpec* AbilitySpec = AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationData->AbilitySpecHandle))
-			{
-				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability))
-				{
-					FEffectTargetTileSelectorContext Context;
-					Context.AvatarActor = AbilityOwnerASC->GetAvatarActor();
-					Context.TargetingIntent = ActivationData->TargetingIntent;
-					CardAbility->GetTargetTiles(Context);
-					ActivationData->TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
-				}
-			}
-		}
-
 		bool bHasCombatTarget = false;
 		
 		for (FTargetSelectResult& Result : ActivationData->TargetSelectResults)

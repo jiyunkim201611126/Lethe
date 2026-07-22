@@ -32,7 +32,7 @@ void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorC
 	// TargetTile 계산 시 SelectCandidateTile이 필요하므로 여기서 호출합니다.
 	GetSelectCandidateTiles(Context);
 	GetTargetCandidateTiles(Context);
-	FilterTargetTilesByTeamRelation(Context);
+	ResolveTargetActors(Context);
 }
 
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
@@ -107,7 +107,6 @@ void FDirectionModeTargetTileSelector::HandleMeleeRanged(FEffectTargetTileSelect
 		ATile* TargetTile = Context.TargetingIntent.HitTile;
 		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
 		TargetSelectResult.TargetTile = TargetTile;
-		TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
 
 		const FCubeCoord DirectionCoord = Context.TargetingIntent.HitTile->GetCubeCoord() - Context.CurrentTile->GetCubeCoord();
 		const int32 Direction = FCubeCoord::GetDirection(DirectionCoord);
@@ -162,7 +161,6 @@ void FDirectionModeTargetTileSelector::HandleParabolaRanged(FEffectTargetTileSel
 		ATile* TargetTile = Context.OutSelectCandidateTiles[TileIndex];
 		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
 		TargetSelectResult.TargetTile = TargetTile;
-		TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
 
 		FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
 		AddedData.Tile = TargetTile;
@@ -190,6 +188,8 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(FEffectTargetTileSel
 	// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나갑니다.
 	for (const int32 Direction : SelectedDirections)
 	{
+		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
+		
 		for (int32 Distance = 1; Distance <= MaxRangeDistance; ++Distance)
 		{
 			const FCubeCoord DirectionOffset = FCubeCoord::GetDirection(Direction);
@@ -198,37 +198,31 @@ void FDirectionModeTargetTileSelector::HandleStraightRanged(FEffectTargetTileSel
 				CenterCoord.R + DirectionOffset.R * Distance,
 				CenterCoord.S + DirectionOffset.S * Distance);
 
-			if (ATile* TargetTile = Context.TileManagerSubsystem->GetTile(TargetCoord))
+			// 좌표에 타일이 없다면 범위가 맵 바깥으로 나간 상태이므로, 반복문을 빠져나가 다른 방향을 탐색합니다.
+			ATile* TargetTile = Context.TileManagerSubsystem->GetTile(TargetCoord);
+			if (!TargetTile)
 			{
-				if (const AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile))
-				{
-					if (ActorOnTile->Implements<UCombatInterface>())
-					{
-						// 전투 가능한 액터가 올라서있다면 타일을 추가합니다.
-						FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
-						TargetSelectResult.TargetTile = TargetTile;
-						TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
+				break;
+			}
 
-						FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
-						AddedData.Tile = TargetTile;
-						AddedData.Direction = Direction;
-						AddedData.Distance = Distance;
-					}
-					else
-					{
-						// 전투할 수 없는 액터가 올라서있다면 타일은 유지하고 Actor만 비웁니다.
-						FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
-						TargetSelectResult.TargetTile = TargetTile;
-					}
-					// 일단 액터를 만났다면 다른 방향을 탐색합니다.
-					break;
-				}
-				// 액터를 찾지 못 했다면 이 방향을 계속해서 나아갑니다.
+			// 타일 위에 액터가 없다면 다음 칸으로 나아갑니다.
+			const AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
+			if (!ActorOnTile)
+			{
 				continue;
 			}
 
-			// 액터를 마주치기 전에 맵 바깥으로 나가버렸다면, nullptr을 추가하고 다른 방향을 탐색합니다.
-			PrimaryTargets.Targets.AddDefaulted();
+			// 타일 위에 액터가 있다면 일단 타일을 할당합니다.
+			TargetSelectResult.TargetTile = TargetTile;
+
+			// CombatInterface를 상속받은 경우에만 다른 정보를 추가로 할당합니다.
+			if (ActorOnTile->Implements<UCombatInterface>())
+			{
+				FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
+				AddedData.Tile = TargetTile;
+				AddedData.Direction = Direction;
+				AddedData.Distance = Distance;
+			}
 			break;
 		}
 	}
@@ -266,9 +260,8 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 						PenetrationCoord = PenetrationCoord + DirectionCoord;
 						if (ATile* PenetrationTile = Context.TileManagerSubsystem->GetTile(PenetrationCoord))
 						{
-							FSelectedTarget& TargetSelectResult = PenetrationTargets.Targets.AddDefaulted_GetRef();
-							TargetSelectResult.TargetTile = PenetrationTile;
-							TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(PenetrationTile);
+							FSelectedTarget& TargetSelectTarget = PenetrationTargets.Targets.AddDefaulted_GetRef();
+							TargetSelectTarget.TargetTile = PenetrationTile;
 						}
 					}
 				}
@@ -294,17 +287,15 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 					{
 						ClockwiseTargetTileCoord = ClockwiseTargetTileCoord + ClockwiseDirectionCoord;
 						CounterClockwiseTargetTileCoord = CounterClockwiseTargetTileCoord + CounterclockwiseDirectionCoord;
+						FSelectedTarget& ClockwiseTarget = HalfMoonTargets.Targets.AddDefaulted_GetRef();
 						if (ATile* ClockwiseTargetTile = Context.TileManagerSubsystem->GetTile(ClockwiseTargetTileCoord))
 						{
-							FSelectedTarget& TargetSelectResult = HalfMoonTargets.Targets.AddDefaulted_GetRef();
-							TargetSelectResult.TargetTile = ClockwiseTargetTile;
-							TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(ClockwiseTargetTile);
+							ClockwiseTarget.TargetTile = ClockwiseTargetTile;
 						}
+						FSelectedTarget& CounterclockwiseTarget = HalfMoonTargets.Targets.AddDefaulted_GetRef();
 						if (ATile* CounterclockwiseTargetTile = Context.TileManagerSubsystem->GetTile(CounterClockwiseTargetTileCoord))
 						{
-							FSelectedTarget& TargetSelectResult = HalfMoonTargets.Targets.AddDefaulted_GetRef();
-							TargetSelectResult.TargetTile = CounterclockwiseTargetTile;
-							TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(CounterclockwiseTargetTile);
+							CounterclockwiseTarget.TargetTile = CounterclockwiseTargetTile;
 						}
 					}
 				}
@@ -330,17 +321,15 @@ void FDirectionModeTargetTileSelector::HandleAdditionalRanges(FEffectTargetTileS
 					{
 						SpreadLeftTargetTileCoord = SpreadLeftTargetTileCoord + LeftDirectionCoord;
 						SpreadRightTargetTileCoord = SpreadRightTargetTileCoord + RightDirectionCoord;
+						FSelectedTarget& SpreadLeftTarget = SpreadTargets.Targets.AddDefaulted_GetRef();
 						if (ATile* SpreadLeftTargetTile = Context.TileManagerSubsystem->GetTile(SpreadLeftTargetTileCoord))
 						{
-							FSelectedTarget& TargetSelectResult = SpreadTargets.Targets.AddDefaulted_GetRef();
-							TargetSelectResult.TargetTile = SpreadLeftTargetTile;
-							TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(SpreadLeftTargetTile);
+							SpreadLeftTarget.TargetTile = SpreadLeftTargetTile;
 						}
+						FSelectedTarget& SpreadRightTarget = SpreadTargets.Targets.AddDefaulted_GetRef();
 						if (ATile* SpreadRightTargetTile = Context.TileManagerSubsystem->GetTile(SpreadRightTargetTileCoord))
 						{
-							FSelectedTarget& TargetSelectResult = SpreadTargets.Targets.AddDefaulted_GetRef();
-							TargetSelectResult.TargetTile = SpreadRightTargetTile;
-							TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(SpreadRightTargetTile);
+							SpreadRightTarget.TargetTile = SpreadRightTargetTile;
 						}
 					}
 				}

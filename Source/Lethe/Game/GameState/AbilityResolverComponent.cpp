@@ -1,11 +1,11 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "AbilityResolverComponent.h"
 
 #include "AbilitySystemComponent.h"
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
-#include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
@@ -56,10 +56,10 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 		bIsHandlingAbilityActivation = true;
 		const ETryAbilityActivationResult Result = TryActivateNextPlayerAbility();
 		bIsHandlingAbilityActivation = false;
-		
+
 		HandlePlayerAbilityActivationResult(Result);
 		ProcessPendingAbilityCallbacks();
-		
+
 		return;
 	}
 	OnFinishActivationQueue.ExecuteIfBound();
@@ -79,7 +79,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbil
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
-	
+
 	return TryActivateAbility(ActivationData);
 }
 
@@ -126,11 +126,11 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 	while (true)
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
-		
+
 		bIsHandlingAbilityActivation = true;
 		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
 		bIsHandlingAbilityActivation = false;
-		
+
 		HandleEnemyAbilityActivationResult(Result);
 		if (ProcessPendingAbilityCallbacks())
 		{
@@ -141,7 +141,7 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 		{
 			continue;
 		}
-		
+
 		return;
 	}
 }
@@ -156,7 +156,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 
 	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
 	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
-	
+
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
 	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid())
 	{
@@ -199,7 +199,7 @@ void UAbilityResolverComponent::ResetEnemyActivationData()
 void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide)
 {
 	CurrentActivationCharacterTeamSide = TeamSide;
-	
+
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	bIsHandlingAbilityActivation = true;
 	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
@@ -213,12 +213,11 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& Activati
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData)
 {
-	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *ActivationData->AbilityOwnerASC->GetAvatarActor()->GetName());
 	if (!ActivationData)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
-	
+
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid())
 	{
@@ -227,7 +226,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 
 	UAbilitySystemComponent* AbilityOwnerASC = ActivationData->AbilityOwnerASC.Get();
 	ActivationData->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
-	
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AbilityOwnerASC->GetAvatarActor()->GetName());
+
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	const bool bIsMovementAbility = ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 	if (bIsMovementAbility)
@@ -239,90 +239,96 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		{
 			MovePayload->PathTiles.Add(StartTile);
 		}
-		
-		for (const FTargetTileResult& Result : ActivationData->TargetTileResults)
+
+		for (const auto& PathTile : ActivationData->PathTiles)
 		{
-			for (const auto& TargetTile : Result.TargetTiles)
+			if (PathTile.IsValid())
 			{
-				if (TargetTile.IsValid())
-				{
-					MovePayload->PathTiles.Add(TargetTile.Get());
-				}
+				MovePayload->PathTiles.Add(PathTile.Get());
 			}
 		}
-		
+
 		if (MovePayload->PathTiles.IsEmpty())
 		{
 			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
 		}
-		
+
 		ActivationData->Payload.OptionalObject = MovePayload;
 	}
 	else
 	{
-		if (ActivationData->TargetTileResults.IsEmpty() || ActivationData->TargetTileResults[0].TargetTiles.IsEmpty())
+		if (ActivationData->TargetSelectResults.IsEmpty() && ActivationData->TargetingIntent.HitTile)
 		{
-			return ETryAbilityActivationResult::FailedLogicError;
+			if (const FGameplayAbilitySpec* AbilitySpec = AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationData->AbilitySpecHandle))
+			{
+				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability))
+				{
+					FEffectTargetTileSelectorContext Context;
+					Context.AvatarActor = AbilityOwnerASC->GetAvatarActor();
+					Context.TargetingIntent = ActivationData->TargetingIntent;
+					CardAbility->GetTargetTiles(Context);
+					ActivationData->TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
+				}
+			}
 		}
 
-		int32 AllTargetActorsCount = 0;
+		bool bHasCombatTarget = false;
 		
-		FGameplayAbilityTargetData_TargetActorResults* ActorArrayData = new FGameplayAbilityTargetData_TargetActorResults();
-		for (const FTargetTileResult& Result : ActivationData->TargetTileResults)
+		for (FTargetSelectResult& Result : ActivationData->TargetSelectResults)
 		{
-			TArray<TWeakObjectPtr<AActor>> TargetActors;
-			bool bHasValidTargetForCurrentResult = false;
-			for (const auto& TargetTile : Result.TargetTiles)
+			bool bHasCombatTargetForCurrentResult = false;
+			for (FSelectedTarget& Target : Result.Targets)
 			{
-				if (TargetTile.IsValid())
+				if (Target.ActorOnTile.IsValid())
 				{
-					AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TargetTile.Get());
+					// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
+					bHasCombatTargetForCurrentResult = true;
+					bHasCombatTarget = true;
+					break;
+				}
+			}
 
-					const bool bIsTargetCombat = ActorOnTile && ActorOnTile->Implements<UCombatInterface>();
-					TargetActors.Add(bIsTargetCombat ? ActorOnTile : nullptr);
-				
-					if (bIsTargetCombat)
+			if (!bHasCombatTargetForCurrentResult && CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
+			{
+				// Enemy의 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓습니다.
+				ATile* DummyTargetTile = nullptr;
+				for (const FSelectedTarget& Target : Result.Targets)
+				{
+					if (Target.TargetTile.IsValid())
 					{
-						// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
-						bHasValidTargetForCurrentResult = true;
-						++AllTargetActorsCount;
+						DummyTargetTile = Target.TargetTile.Get();
+						break;
 					}
 				}
-				else
+
+				if (DummyActor && DummyTargetTile)
 				{
-					// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-					TargetActors.Add(nullptr);
+					const FVector DummyActorLocation = DummyTargetTile->GetActorLocation() + FVector(0.f, 0.f, 45.f);
+					DummyActor->SetActorLocation(DummyActorLocation);
+
+					FSelectedTarget& DummyTarget = Result.Targets.AddDefaulted_GetRef();
+					DummyTarget.TargetTile = DummyTargetTile;
+					DummyTarget.ActorOnTile = DummyActor;
 				}
 			}
-
-			if (!bHasValidTargetForCurrentResult && CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
-			{
-				// Enemy의 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓고 발동을 시작합니다.
-				const FVector DummyActorLocation = ActivationData->TargetTileResults[0].TargetTiles[0].Get()->GetActorLocation() + FVector(0.f, 0.f, 45.f);
-				DummyActor->SetActorLocation(DummyActorLocation);
-				TargetActors.Add(DummyActor);
-			}
-			
-			FTargetActorResult& TargetActor = ActorArrayData->TargetActorResults.Emplace_GetRef();
-			TargetActor.TargetGroupTag = Result.TargetGroupTag;
-			TargetActor.TargetActors = MoveTemp(TargetActors);
 		}
 
-		if (AllTargetActorsCount <= 0 && CurrentActivationCharacterTeamSide == ETeamSide::Player)
+		if (!bHasCombatTarget && CurrentActivationCharacterTeamSide == ETeamSide::Player)
 		{
 			// 플레이어의 Ability를 발동하려 했으나, TargetActor의 사망 등의 이유로 유효한 대상이 하나도 없는 경우 얼리리턴합니다.
-			delete ActorArrayData;
 			return ETryAbilityActivationResult::EmptyTile;
 		}
-		
+
+		FGameplayAbilityTargetData_TargetSelectResults* TargetSelectResultsData = new FGameplayAbilityTargetData_TargetSelectResults();
+		TargetSelectResultsData->TargetSelectResults = ActivationData->TargetSelectResults;
 		ActivationData->Payload.OptionalObject = ActivationData->NoiseTile.Get();
-		ActivationData->Payload.TargetData.Add(ActorArrayData);
+		ActivationData->Payload.TargetData.Add(TargetSelectResultsData);
 	}
-	
+
 	// ASC를 캐싱하고 콜백을 붙여둡니다.
 	CurrentActivationASC = AbilityOwnerASC;
 	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
-	
+
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
@@ -331,12 +337,12 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
 			CurrentActivationASC.Reset();
 		}
-		
+
 		if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
 		{
 			return ETryAbilityActivationResult::FailedNotActivated;
 		}
-		
+
 		// Enemy는 코스트나 마나 등의 개념이 없으며, TargetActor가 없더라도 Ability를 발동하기 때문에 Ability 발동에 실패했다면 로직에 문제가 있는 상황입니다.
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
@@ -435,7 +441,7 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 
 	ProcessAbilityFailed();
 }
-	
+
 void UAbilityResolverComponent::ProcessAbilityFailed()
 {
 	switch (CurrentActivationCharacterTeamSide)

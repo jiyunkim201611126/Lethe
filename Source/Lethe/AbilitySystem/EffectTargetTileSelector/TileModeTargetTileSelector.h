@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EffectTargetTileSelector.h"
+#include "Lethe/Data/Stage/TileData.h"
 #include "TileModeTargetTileSelector.generated.h"
 
 /**

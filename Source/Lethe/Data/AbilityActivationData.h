@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
+#include "Lethe/AbilitySystem/EffectTargetTileSelector/TargetTileSelectData.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "AbilityActivationData.generated.h"
 
@@ -19,33 +20,13 @@ public:
 	TArray<TObjectPtr<ATile>> PathTiles;
 };
 
-/** TargetTileSelector의 동작 결과 데이터입니다. */
 USTRUCT()
-struct FTargetTileResult
-{
-	GENERATED_BODY()
-	
-	FGameplayTag TargetGroupTag;
-	TArray<TWeakObjectPtr<ATile>> TargetTiles;
-};
-
-/** 위 TargetTileResult를 Ability가 사용 가능한 형태로 바꾼 데이터입니다. */
-USTRUCT()
-struct FTargetActorResult
-{
-	GENERATED_BODY()
-
-	FGameplayTag TargetGroupTag;
-	TArray<TWeakObjectPtr<AActor>> TargetActors;
-};
-
-USTRUCT()
-struct FGameplayAbilityTargetData_TargetActorResults : public FGameplayAbilityTargetData
+struct FGameplayAbilityTargetData_TargetSelectResults : public FGameplayAbilityTargetData
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<FTargetActorResult> TargetActorResults;
+	TArray<FTargetSelectResult> TargetSelectResults;
 
 	virtual UScriptStruct* GetScriptStruct() const override
 	{
@@ -54,7 +35,7 @@ struct FGameplayAbilityTargetData_TargetActorResults : public FGameplayAbilityTa
 
 	virtual FString ToString() const override
 	{
-		return TEXT("FGameplayAbilityTargetData_TargetActorResults");
+		return TEXT("FGameplayAbilityTargetData_TargetSelectResults");
 	}
 };
 
@@ -65,16 +46,22 @@ struct FAbilityActivationData
 
 	/** Player는 HandIndex로 사용하고, Enemy는 Priority로 사용하는 변수입니다. */
 	int32 Index = INDEX_NONE;
-	
+
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
-	
+
 	FGameplayTag AbilityTag;
 
 	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
-	TArray<FTargetTileResult> TargetTileResults;
+	FTargetingIntent TargetingIntent;
+
+	UPROPERTY()
+	TArray<FTargetSelectResult> TargetSelectResults;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ATile>> PathTiles;
 
 	/** 소음이 발생할 TargetTile입니다. */
 	UPROPERTY()

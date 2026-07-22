@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Lethe/LetheLog.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
@@ -329,11 +330,12 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
 			MoveAbilityActivationData.AbilityOwnerASC = ASC;
-			FTargetTileResult& TargetTileResult = MoveAbilityActivationData.TargetTileResults.Emplace_GetRef();
-			TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
 			for (ATile* PathTile : PathTiles)
 			{
-				TargetTileResult.TargetTiles.Add(PathTile);
+				if (PathTile)
+				{
+					MoveAbilityActivationData.PathTiles.Add(PathTile);
+				}
 			}
 			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
 			
@@ -395,14 +397,21 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 				}
 			}
 
-			FAbilityActivationData& ActivationData = CandidateAbilityData.Emplace_GetRef();
+			FAbilityActivationData& ActivationData = CandidateAbilityData.AddDefaulted_GetRef();
 			ActivationData.Index = ControlledEnemy->GetEnemyAbilityPriority();
 			ActivationData.AbilitySpecHandle = Spec->Handle;
 			ActivationData.AbilityTag = FirstTag;
 			ActivationData.AbilityOwnerASC = ASC;
-			FTargetTileResult& TargetTileResult = ActivationData.TargetTileResults.Emplace_GetRef();
-			TargetTileResult.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
-			TargetTileResult.TargetTiles.Add(TargetTile);
+			ActivationData.TargetingIntent.HitTile = TargetTile;
+			ActivationData.TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
+			{
+				FEffectTargetTileSelectorContext Context;
+				Context.AvatarActor = ControlledEnemy;
+				Context.TargetingIntent = ActivationData.TargetingIntent;
+				CardAbility->GetTargetTiles(Context);
+				ActivationData.TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
+			}
 			ActivationData.NoiseTile = TargetTile;
 			ActivationData.Payload.Instigator = ControlledEnemy;
 		}

@@ -29,43 +29,64 @@ void FEffectTargetTileSelector::FilterTargetTilesByTeamRelation(FEffectTargetTil
 		return;
 	}
 
-	for (FTargetTileResult& TargetTileResult : Context.OutTargetTileResults)
+	for (FTargetSelectResult& TargetTileResult : Context.OutTargetTileResults)
 	{
 		// 일단 모두 꺼내옵니다.
-		TArray<TWeakObjectPtr<ATile>> TargetCandidateTiles = MoveTemp(TargetTileResult.TargetTiles);
+		TArray<FSelectedTarget> TargetCandidates = MoveTemp(TargetTileResult.Targets);
 
 		const ETeamSide InstigatorTeamSide = InstigatorCombatInterface->GetTeamSide();
-		for (const auto& Tile : TargetCandidateTiles)
+		for (FSelectedTarget& Target : TargetCandidates)
 		{
-			const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(Context.TileManagerSubsystem->GetActorOnTile(Tile.Get()));
-			if (!TargetCombatInterface)
+			if (!Target.TargetTile.IsValid())
 			{
-				// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-				TargetTileResult.TargetTiles.Add(nullptr);
+				TargetTileResult.Targets.AddDefaulted();
 				continue;
 			}
+
+			AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(Target.TargetTile.Get());
+			const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(ActorOnTile);
+			if (!TargetCombatInterface)
+			{
+				// EffectTargetMappingPolicies에서 Targets의 인덱스를 기반으로 로직을 수행하기 때문에, 타일은 보존하고 Actor만 비웁니다.
+				Target.ActorOnTile.Reset();
+				TargetTileResult.Targets.Add(Target);
+				continue;
+			}
+
+			Target.ActorOnTile = ActorOnTile;
 
 			// 시전자와 대상 후보의 팀 관계에 따라 타겟 타일에 추가합니다.
 			const ETeamSide TargetTeamSide = TargetCombatInterface->GetTeamSide();
 			switch (TargetTeamRelation)
 			{
 			case ETargetTeamRelation::AllSides:
-				TargetTileResult.TargetTiles.Add(Tile);
+				TargetTileResult.Targets.Add(Target);
 				break;
 			case ETargetTeamRelation::SameTeam:
 				if (InstigatorTeamSide == TargetTeamSide)
 				{
-					TargetTileResult.TargetTiles.Add(Tile);
+					TargetTileResult.Targets.Add(Target);
+				}
+				else
+				{
+					Target.ActorOnTile.Reset();
+					TargetTileResult.Targets.Add(Target);
 				}
 				break;
 			case ETargetTeamRelation::OpposingTeam:
 				if (InstigatorTeamSide != TargetTeamSide)
 				{
-					TargetTileResult.TargetTiles.Add(Tile);
+					TargetTileResult.Targets.Add(Target);
+				}
+				else
+				{
+					Target.ActorOnTile.Reset();
+					TargetTileResult.Targets.Add(Target);
 				}
 				break;
 			default:
-				TargetTileResult.TargetTiles.Add(nullptr);
+				Target.ActorOnTile.Reset();
+				TargetTileResult.Targets.Add(Target);
 				break;
 			}
 		}

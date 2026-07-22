@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LethePlayerController.h"
 
@@ -14,7 +14,6 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
-#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
@@ -42,29 +41,29 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		// 선택된 카드가 있다면 얼리리턴합니다. 카드 사용은 RequestUseCard를 통해 이루어집니다.
 		return;
 	}
-	
+
 	if (CurrentPhaseState != EPhaseState::PlayerMovePhase && CurrentPhaseState != EPhaseState::PlayerTurnPhase)
 	{
 		// 플레이어의 턴이 아니라면 얼리리턴합니다.
 		return;
 	}
 
-	FTileAndActor OutTileAndActor;
-	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-	if (!OutTileAndActor.Tile)
+	FTileHitResult OutTileHitResult;
+	ActorSelector->GetTileHitResult(OutTileHitResult);
+	if (!OutTileHitResult.Tile)
 	{
 		// Tile 검출에 실패했다면 얼리리턴합니다.
 		ResetSelectedCharacter();
 		return;
 	}
-	
-	if (!SelectedCharacter.IsValid() && !OutTileAndActor.Actor)
+
+	if (!SelectedCharacter.IsValid() && !OutTileHitResult.ActorOnTile)
 	{
 		// 캐릭터 미선택 상태에서 빈 타일을 클릭했다면 얼리리턴합니다.
 		return;
 	}
 
-	if (SelectedCharacter.IsValid() && SelectedCharacter == OutTileAndActor.Actor)
+	if (SelectedCharacter.IsValid() && SelectedCharacter == OutTileHitResult.ActorOnTile)
 	{
 		// 선택했던 캐릭터가 서있던 타일을 선택한 경우(제자리 클릭) 들어오는 분기입니다.
 		if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
@@ -80,9 +79,9 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 	const bool bIsSelectingCharacter = !SelectedCharacter.IsValid();
 	if (bIsSelectingCharacter)
 	{
-		if (OutTileAndActor.Actor->Implements<UPlayerCharacterInterface>())
+		if (OutTileHitResult.ActorOnTile->Implements<UPlayerCharacterInterface>())
 		{
-			SelectedCharacter = OutTileAndActor.Actor;
+			SelectedCharacter = OutTileHitResult.ActorOnTile;
 		}
 	}
 
@@ -91,7 +90,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		// 최종적으로 선택된 캐릭터가 없는 경우 얼리리턴합니다.
 		return;
 	}
-	
+
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(SelectedCharacter);
 	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
 	if (!AbilitySystemComponent)
@@ -106,7 +105,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		if (!bIsSelectingCharacter)
 		{
 			// 이동 타일을 예약합니다.
-			PlayerAbilityRequestComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileAndActor.Tile);
+			PlayerAbilityRequestComponent->ReserveMove(SelectedCharacter.Get(), AbilitySystemComponent, OutTileHitResult.Tile);
 			ResetSelectedCharacter();
 			RefreshMovePreview();
 		}
@@ -120,7 +119,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 				ResetSelectedCharacter();
 				break;
 			}
-		
+
 			if (bIsSelectingCharacter)
 			{
 				// 이동 가능 범위를 하이라이팅합니다.
@@ -129,7 +128,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 			else
 			{
 				// 이동을 요청합니다.
-				PlayerAbilityRequestComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileAndActor.Tile);
+				PlayerAbilityRequestComponent->RequestMove(SelectedCharacter.Get(), AbilitySystemComponent, OutMovableTiles, OutTileHitResult.Tile);
 				ResetSelectedCharacter();
 			}
 		}
@@ -162,7 +161,7 @@ void ALethePlayerController::RefreshMovePreview() const
 		ArrowRenderer->DeactivateMovePreviewArrow();
 		return;
 	}
-	
+
 	TMap<APlayerCharacterBase*, TArray<FVector>> MovePathLocations;
 	if (PlayerAbilityRequestComponent->TryGetMovePathLocations(MovePathLocations))
 	{
@@ -197,7 +196,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 
 	// 기존에 선택된 카드가 있을 수 있으므로 먼저 선택을 취소합니다.
 	ResetSelectedCard();
-	
+
 	if (OwnerASC && AbilitySpecHandle.IsValid())
 	{
 		// 카드와 캐릭터는 동시에 선택될 수 없으므로 캐릭터 선택은 초기화합니다.
@@ -208,7 +207,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 		{
 			return;
 		}
-		
+
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability);
 		const AActor* CardOwner = OwnerASC->GetAvatarActor();
@@ -227,7 +226,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 					}
 					return;
 				}
-				
+
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheCardAbility;
 				SelectedCardOwnerASC = OwnerASC;
@@ -279,12 +278,12 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		ActorSelector->OnDetectedOtherTile.Unbind();
 	}
-	
+
 	if (PreviewCoordinatorComponent)
 	{
 		PreviewCoordinatorComponent->OnUpdatePreviewData.RemoveAll(this);
 	}
-	
+
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
@@ -320,17 +319,17 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 void ALethePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-	
-	FTileAndActor OutTileAndActor;
-	ActorSelector->GetTileAndActorUnderCursor(OutTileAndActor);
-	
+
+	FTileHitResult OutTileHitResult;
+	ActorSelector->GetTileHitResult(OutTileHitResult);
+
 	if (SelectedCharacter.IsValid() && bMouseOnWorldSection)
 	{
 		// 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
-		if (OutTileAndActor.Tile)
+		if (OutTileHitResult.Tile)
 		{
 			TArray<ATile*> HighlightTile;
-			HighlightTile.Add(OutTileAndActor.Tile);
+			HighlightTile.Add(OutTileHitResult.Tile);
 			ActorSelector->HighlightTilesByMouse(HighlightTile);
 		}
 		return;
@@ -344,19 +343,20 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			// 선택 가능한 타일과 타겟 후보 타일을 모두 가져옵니다.
 			FEffectTargetTileSelectorContext Context;
 			Context.AvatarActor = CardOwner;
-			Context.PlayerController = this;
+			Context.TargetingIntent.HitTile = OutTileHitResult.Tile;
+			Context.TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
 			SelectedCardAbility->GetCandidateTiles(Context);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetTileResult& Result : Context.OutTargetTileResults)
+			for (const FTargetSelectResult& Result : Context.OutTargetTileResults)
 			{
-				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + Result.TargetTiles.Num());
-				for (const auto& TargetTile : Result.TargetTiles)
+				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + Result.Targets.Num());
+				for (const FSelectedTarget& Target : Result.Targets)
 				{
-					TargetCandidateTiles.Add(TargetTile.Get());
+					TargetCandidateTiles.Add(Target.TargetTile.Get());
 				}
 			}
-		
+
 			// 타겟 후보 타일을 성공적으로 검출해낸 경우 들어가는 분기입니다.
 			if (!TargetCandidateTiles.IsEmpty() && bMouseOnWorldSection)
 			{
@@ -384,7 +384,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
 		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
 		TArray<AActor*> HighlightActors;
-		HighlightActors.Add(OutTileAndActor.Actor);
+		HighlightActors.Add(OutTileHitResult.ActorOnTile);
 		ActorSelector->HighlightActorsByMouse(HighlightActors);
 		return;
 	}
@@ -401,46 +401,36 @@ void ALethePlayerController::OnOtherTileDetected() const
 	{
 		if (const AActor* SelectedCardOwnerActor = SelectedCardOwnerASC->GetAvatarActor())
 		{
+			FTileHitResult OutTileHitResult;
+			ActorSelector->GetTileHitResult(OutTileHitResult);
+
 			FEffectTargetTileSelectorContext Context;
 			Context.AvatarActor = SelectedCardOwnerActor;
-			Context.PlayerController = this;
+			Context.TargetingIntent.HitTile = OutTileHitResult.Tile;
+			Context.TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
+
 			SelectedCardAbility->GetTargetTiles(Context);
 
-			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+			// Arrow 표시 용도의 TargetActors를 생성합니다.
+			TArray<AActor*> TargetActors;
+			for (const FTargetSelectResult& Result : Context.OutTargetTileResults)
 			{
-				TArray<FTargetActorResult> TargetActorResults;
-				TArray<AActor*> TargetActors;
-				for (const FTargetTileResult& Result : Context.OutTargetTileResults)
+				TargetActors.Reserve(TargetActors.Num() + Result.Targets.Num());
+				for (const auto& Target : Result.Targets)
 				{
-					FTargetActorResult& TargetActorResult = TargetActorResults.Emplace_GetRef();
-					TargetActorResult.TargetGroupTag = Result.TargetGroupTag;
-					TargetActorResult.TargetActors.Reserve(Result.TargetTiles.Num());
-					
-					TargetActors.Reserve(TargetActors.Num() + Result.TargetTiles.Num());
-					for (const auto& TargetTile : Result.TargetTiles)
+					if (Target.ActorOnTile.IsValid() && Target.ActorOnTile->Implements<UCombatInterface>())
 					{
-						if (AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile.Get()))
-						{
-							if (TargetActor->Implements<UCombatInterface>())
-							{
-								TargetActors.Add(TargetActor);
-								TargetActorResult.TargetActors.Add(TargetActor);
-								continue;
-							}
-						}
-						// EffectTargetMappingPolicies에서 TargetActors의 인덱스를 기반으로 로직을 수행하기 때문에, nullptr도 추가해야 합니다.
-						TargetActors.Add(nullptr);
-						TargetActorResult.TargetActors.Add(nullptr);
+						TargetActors.Add(Target.ActorOnTile.Get());
 					}
 				}
-				
-				FPreviewContext PreviewContext;
-				PreviewContext.TargetActorResults = TargetActorResults;
-				PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
-				PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
-				PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
-				ArrowRenderer->DrawCardPreviewArrow(SelectedCardOwnerActor, TargetActors);
 			}
+
+			FPreviewContext PreviewContext;
+			PreviewContext.TargetSelectResults = Context.OutTargetTileResults;
+			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
+			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
+			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);
+			ArrowRenderer->DrawCardPreviewArrow(SelectedCardOwnerActor, TargetActors);
 		}
 	}
 }
@@ -452,7 +442,7 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 
 void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex)
 {
-	if (!PlayerAbilityRequestComponent->RequestUseCard(this, OwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}

@@ -15,16 +15,11 @@ struct FBFSRange;
  * 로컬 변수로만 활용하기 때문에 멤버 변수를 Raw 포인터로 사용합니다.
  * Tile은 null인 경우가 거의 없으나, Actor는 해당 Tile 위에 있는 객체기 때문에 null인 경우가 비일비재한 걸 유념하며 사용합니다.
  */ 
-USTRUCT()
-struct FTileAndActor
+struct FTileHitResult
 {
-	GENERATED_BODY()
-
-	UPROPERTY()
 	ATile* Tile = nullptr;
-
-	UPROPERTY()
-	AActor* Actor = nullptr;
+	AActor* ActorOnTile = nullptr;
+	FVector ImpactPoint = FVector::ZeroVector;
 };
 
 enum class ETileRangeQueryType : uint8
@@ -56,7 +51,7 @@ public:
 	void HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner);
 	void UnhighlightActorsByAbility();
 	
-	void GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const;
+	void GetTileHitResult(FTileHitResult& TileHitResult) const;
 	bool TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 	bool TryGetTilesByRangeFromActor(const AActor* Actor, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 

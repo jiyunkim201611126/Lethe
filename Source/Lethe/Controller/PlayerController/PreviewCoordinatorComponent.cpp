@@ -36,7 +36,7 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	
 	// Target들에게 적용되는 Preview 데이터를 추출해 가져옵니다.
 	OutPreviewData.SourcePreviewData.Empty();
-	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, PreviewContext.TargetActorResults, OutPreviewData))
+	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, PreviewContext.TargetSelectResults, OutPreviewData))
 	{
 		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);
 		ConvertAttributeToTag(OutPreviewData.SourcePreviewData, AttributePreviewDelta.AttributePreviewDelta);

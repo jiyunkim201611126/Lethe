@@ -69,7 +69,7 @@ public:
 	ULetheCommonAbility();
 
 	//~ Begin ULetheCardAbility Interface
-	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const override;
+	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const override;
 
 protected:
 	virtual void RegisterAbilityEventTasks() override;
@@ -84,9 +84,9 @@ private:
 	 * Policy를 기반으로 어떤 대상에게 어떤 Effect를 적용할지를 취합합니다.
 	 * MontageEvent에 해당하는 Policy만 따로 집계해야 하므로, 한 번에 뭉탱이로 계산하지 않고 Policy별로 따로 집계합니다.
 	 */
-	void ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FEffectTargetMappingResolveResult& OutResult) const;
+	void ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FEffectTargetMappingResolveResult& OutResult) const;
 
-	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<TWeakObjectPtr<AActor>>& CandidateTargetActors, TArray<AActor*>& OutTargetActors) const;
+	void GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<FSelectedTarget>& CandidateTargets, TArray<AActor*>& OutTargetActors) const;
 	void GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const;
 	
 	template<typename T>

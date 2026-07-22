@@ -14,21 +14,8 @@ void FTileModeTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorCon
 	}
 	
 	GetSelectCandidateTiles(Context);
-	
-	FHitResult HitResult;
-	Context.PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
-	if (!HitResult.IsValidBlockingHit())
-	{
-		return;
-	}
 
-	const ATile* HitTile = Cast<ATile>(HitResult.GetActor());
-	if (!HitTile)
-	{
-		return;
-	}
-
-	if (Context.OutSelectCandidateTiles.Contains(HitTile))
+	if (Context.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
 	{
 		// 마우스를 올린 타일이 선택 후보 타일에 포함되는 경우에만 타겟 후보 타일을 Out 인자에 채워줍니다.
 		GetTargetCandidateTiles(Context);
@@ -80,26 +67,12 @@ void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelec
 
 void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	// 마우스 커서를 기준으로 라인트레이스해서 검출된 타일을 가져옵니다.
-	FHitResult HitResult;
-	Context.PlayerController->GetHitResultUnderCursor(ECC_Tile, false, HitResult);
-	if (!HitResult.IsValidBlockingHit())
-	{
-		return;
-	}
-
-	const ATile* HitTile = Cast<ATile>(HitResult.GetActor());
-	if (!HitTile)
-	{
-		return;
-	}
-
 	// 검출된 타일의 층수를 가져옵니다.
-	const int32 HitTileFloor = Context.TileManagerSubsystem->GetTileFloor(HitTile);
+	const int32 HitTileFloor = Context.TileManagerSubsystem->GetTileFloor(Context.TargetingIntent.HitTile);
 
 	// 조건에 맞는 타일들을 모두 가져옵니다.
 	TSet<FCubeCoord> OutCubeCoords;
-	Context.TileManagerSubsystem->TileBFS(HitTile->GetCubeCoord(), TargetTileRange.Distance, TargetTileRange.BFSType, OutCubeCoords,
+	Context.TileManagerSubsystem->TileBFS(Context.TargetingIntent.HitTile->GetCubeCoord(), TargetTileRange.Distance, TargetTileRange.BFSType, OutCubeCoords,
 		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 		{
 			return true;
@@ -122,12 +95,15 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 
 	// '타겟 후보'를 찾는 중이므로, 조건을 따지지 않고 검출된 모든 타일을 Out 인자에 넣어줍니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetTileResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
+	FTargetSelectResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
-	PrimaryTargets.TargetTiles.Reserve(OutCubeCoords.Num());
+	PrimaryTargets.Targets.Reserve(OutCubeCoords.Num());
 	
 	for (const FCubeCoord& CubeCoord : OutCubeCoords)
 	{
-		PrimaryTargets.TargetTiles.Add(Context.TileManagerSubsystem->GetTile(CubeCoord));
+		ATile* TargetTile = Context.TileManagerSubsystem->GetTile(CubeCoord);
+		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
+		TargetSelectResult.TargetTile = TargetTile;
+		TargetSelectResult.ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(TargetTile);
 	}
 }

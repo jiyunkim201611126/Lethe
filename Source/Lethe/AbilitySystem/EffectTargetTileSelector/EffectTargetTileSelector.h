@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Lethe/Data/Stage/TileData.h"
+#include "TargetTileSelectData.h"
 #include "EffectTargetTileSelector.generated.h"
 
-class UTileManagerSubsystem;
 class APlayerController;
-struct FTargetTileResult;
+class ATile;
+class UTileManagerSubsystem;
+struct FTargetSelectResult;
 
 UENUM(BlueprintType)
 enum class ETargetTeamRelation : uint8
@@ -21,23 +22,24 @@ enum class ETargetTeamRelation : uint8
 struct FEffectTargetTileSelectorContext
 {
 	const AActor* AvatarActor = nullptr;
-	const APlayerController* PlayerController = nullptr;
 	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
 	const ATile* CurrentTile = nullptr;
 
+	FTargetingIntent TargetingIntent;
+
 	TArray<ATile*> OutSelectCandidateTiles;
-	TArray<FTargetTileResult> OutTargetTileResults;
+	TArray<FTargetSelectResult> OutTargetTileResults;
 
 	bool IsValid() const
 	{
-		return AvatarActor && PlayerController && TileManagerSubsystem && CurrentTile;
+		return AvatarActor && TileManagerSubsystem && CurrentTile && TargetingIntent.HitTile;
 	}
 };
 
 /**
- * Ability 발동 시 Effect를 적용할 대상이 밟고 있는 타일을 가져옵니다.
- * 기본적으로 '유효한 대상'이 밟고 있는 타일만 추가하며, 유효하지 않은 대상이 있거나, 아무런 Actor도 없는 타일의 경우 nullptr을 추가합니다.
- * 즉, 최종적으로 TargetTiles 또한 TargetCandidateTiles와 같은 길이의 배열이 되며, 이 중 Effect를 적용하지 않을 대상은 nullptr로 들어갑니다.
+ * Ability 발동 시 Effect가 적용될 수 있는 후보 타일을 모두 Out 인자에 추가합니다.
+ * FSelectedTarget의 TargetTile은 반드시 추가되며, 범위가 맵 바깥을 벗어난 경우 nullptr이 추가됩니다.
+ * FSelectedTarget의 ActorOnTile은 실제로 Effect가 적용될 대상만 추가됩니다.
  */
 USTRUCT(BlueprintType)
 struct LETHE_API FEffectTargetTileSelector

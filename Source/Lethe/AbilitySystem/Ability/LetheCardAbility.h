@@ -45,12 +45,16 @@ public:
 	 */
 	void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
-	/** 시전 시 적용될 대상이 존재하는 타일들을 가져옵니다. */
+	/**
+	 * 시전 시 적용될 대상이 존재하는 타일들을 가져옵니다.
+	 * 외부에서 Combat Target 유무를 판단하는 경우가 있기 때문에, Ability가 직접 해당 함수를 호출해 Target을 수집하는 경우 중복 연산이 발생합니다.
+	 * 따라서 외부에서 Combat Target 유무 판단을 위해 호출한 데이터를 그대로 재활용하는 방식으로 구현되었습니다.
+	 */
 	void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
-	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const;
+	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const;
 
 	//~ Begin UGameplayAbility Interface
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
@@ -95,7 +99,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
-	TArray<FTargetActorResult> CachedTargetActorResults;
+	TArray<FTargetSelectResult> CachedTargetSelectResults;
 	TWeakObjectPtr<const ATile> CachedNoiseTargetTile;
 
 #if WITH_EDITOR

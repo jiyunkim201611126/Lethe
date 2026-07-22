@@ -13,7 +13,7 @@ struct FPreviewContext
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<FTargetActorResult> TargetActorResults;
+	TArray<FTargetSelectResult> TargetSelectResults;
 
 	UPROPERTY()
 	UAbilitySystemComponent* SourceASC = nullptr;

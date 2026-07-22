@@ -18,20 +18,19 @@ void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Cont
 {
 	Context.OutSelectCandidateTiles.Reset();
 	Context.OutTargetTileResults.Reset();
-	if (!Context.PlayerController)
+
+	if (Context.AvatarActor)
 	{
-		return;
-	}
-	
-	if (const UTileManagerSubsystem* TileManagerSubsystem = Context.PlayerController->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-	{
-		Context.TileManagerSubsystem = TileManagerSubsystem;
-		if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
+		if (const UTileManagerSubsystem* TileManagerSubsystem = Context.AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
-			Context.CurrentTile = CurrentTile;
-			if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+			Context.TileManagerSubsystem = TileManagerSubsystem;
+			if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
 			{
-				EffectTargetTileSelectorPtr->GetCandidateTiles(Context);
+				Context.CurrentTile = CurrentTile;
+				if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+				{
+					EffectTargetTileSelectorPtr->GetCandidateTiles(Context);
+				}
 			}
 		}
 	}
@@ -41,20 +40,19 @@ void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context
 {
 	Context.OutSelectCandidateTiles.Reset();
 	Context.OutTargetTileResults.Reset();
-	if (!Context.PlayerController)
-	{
-		return;
-	}
 	
-	if (const UTileManagerSubsystem* TileManagerSubsystem = Context.PlayerController->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	if (Context.AvatarActor)
 	{
-		Context.TileManagerSubsystem = TileManagerSubsystem;
-		if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
+		if (const UTileManagerSubsystem* TileManagerSubsystem = Context.AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
-			Context.CurrentTile = CurrentTile;
-			if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+			Context.TileManagerSubsystem = TileManagerSubsystem;
+			if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
 			{
-				EffectTargetTileSelectorPtr->GetTargetTiles(Context);
+				Context.CurrentTile = CurrentTile;
+				if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
+				{
+					EffectTargetTileSelectorPtr->GetTargetTiles(Context);
+				}
 			}
 		}
 	}
@@ -77,7 +75,7 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 	return false;
 }
 
-bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetActorResult>& TargetActorResults, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
 	return false;
 }
@@ -223,17 +221,16 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		return false;
 	}
 
-	if (TargetData->GetScriptStruct() != FGameplayAbilityTargetData_TargetActorResults::StaticStruct())
+	if (TargetData->GetScriptStruct() != FGameplayAbilityTargetData_TargetSelectResults::StaticStruct())
 	{
 		return false;
 	}
 
-	const FGameplayAbilityTargetData_TargetActorResults* TargetActorResultsData = static_cast<const FGameplayAbilityTargetData_TargetActorResults*>(TargetData);
-
-	CachedTargetActorResults = TargetActorResultsData->TargetActorResults;
+	const FGameplayAbilityTargetData_TargetSelectResults* TargetSelectResultsData = static_cast<const FGameplayAbilityTargetData_TargetSelectResults*>(TargetData);
+	CachedTargetSelectResults = TargetSelectResultsData->TargetSelectResults;
 	CachedNoiseTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
 
-	if (CachedTargetActorResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
+	if (CachedTargetSelectResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
 	{
 		ResetCachedValues();
 		return false;
@@ -248,16 +245,16 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	TArray<const UAbilitySystemComponent*> TargetASCs;
-	for (const auto& TargetActorResult : CachedTargetActorResults)
+	for (const auto& TargetSelectResult : CachedTargetSelectResults)
 	{
-		for (const auto& TargetActor : TargetActorResult.TargetActors)
+		for (const auto& Target : TargetSelectResult.Targets)
 		{
-			if (!TargetActor.IsValid())
+			if (!Target.ActorOnTile.IsValid())
 			{
 				continue;
 			}
 			
-			if (const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor.Get()))
+			if (const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target.ActorOnTile.Get()))
 			{
 				TargetASCs.Add(TargetASC);
 			}
@@ -306,7 +303,7 @@ void ULetheCardAbility::ActiveFailed()
 
 void ULetheCardAbility::ResetCachedValues()
 {
-	CachedTargetActorResults.Empty();
+	CachedTargetSelectResults.Empty();
 	CachedNoiseTargetTile.Reset();
 }
 

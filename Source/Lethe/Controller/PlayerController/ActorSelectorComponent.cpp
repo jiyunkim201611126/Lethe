@@ -146,10 +146,10 @@ void UActorSelectorComponent::UnhighlightActorsByAbility()
 	}
 }
 
-void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndActor) const
+void UActorSelectorComponent::GetTileHitResult(FTileHitResult& TileHitResult) const
 {
-	TileAndActor.Tile = nullptr;
-	TileAndActor.Actor = nullptr;
+	TileHitResult.Tile = nullptr;
+	TileHitResult.ActorOnTile = nullptr;
 	
 	if (const APlayerController* PlayerController = GetOwner<APlayerController>())
 	{
@@ -164,8 +164,9 @@ void UActorSelectorComponent::GetTileAndActorUnderCursor(FTileAndActor& TileAndA
 				ATile* TopTile = HitTile->GetTopTile();
 				if (TileManagerSubsystem && TopTile)
 				{
-					TileAndActor.Tile = TopTile;
-					TileAndActor.Actor = TileManagerSubsystem->GetActorOnTile(TopTile);
+					TileHitResult.Tile = TopTile;
+					TileHitResult.ActorOnTile = TileManagerSubsystem->GetActorOnTile(TopTile);
+					TileHitResult.ImpactPoint = HitResult.ImpactPoint;
 				}
 			}
 		}

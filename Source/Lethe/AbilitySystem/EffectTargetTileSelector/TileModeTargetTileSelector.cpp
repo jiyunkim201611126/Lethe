@@ -47,8 +47,7 @@ void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelec
 		{
 			if (TileData && TileData->TopTile.IsValid())
 			{
-				const ATile* Tile = TileData->TopTile.Get();
-				const int32 CurrentTargetFloor = Context.TileManagerSubsystem->GetTileFloor(Tile);
+				const int32 CurrentTargetFloor = Context.TileManagerSubsystem->GetTileFloor(TileData->TopTile.Get());
 				const int32 FloorGap = CurrentTargetFloor - CurrentTileFloor;
 
 				if (FloorGap <= SelectRange.FloorGap)
@@ -61,7 +60,10 @@ void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelec
 
 	for (const FCubeCoord& CubeCoord : OutCubeCoords)
 	{
-		Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(CubeCoord));
+		if (ATile* SelectCandidateTile = Context.TileManagerSubsystem->GetTile(CubeCoord))
+		{
+			Context.OutSelectCandidateTiles.Add(SelectCandidateTile);
+		}
 	}
 }
 
@@ -81,8 +83,7 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 		{
 			if (TileData && TileData->TopTile.IsValid())
 			{
-				const ATile* Tile = TileData->TopTile.Get();
-				const int32 CurrentTargetFloor = Context.TileManagerSubsystem->GetTileFloor(Tile);
+				const int32 CurrentTargetFloor = Context.TileManagerSubsystem->GetTileFloor(TileData->TopTile.Get());
 				const int32 FloorGap = CurrentTargetFloor - HitTileFloor;
 
 				if (FloorGap <= TargetTileRange.FloorGap)
@@ -95,14 +96,16 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 
 	// '타겟 후보'를 찾는 중이므로, 조건을 따지지 않고 검출된 모든 타일을 Out 인자에 넣어줍니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectResult& PrimaryTargets = Context.OutTargetTileResults.AddDefaulted_GetRef();
-	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetTileGroup_Primary;
+	FTargetSelectionResult& PrimaryTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 	PrimaryTargets.Targets.Reserve(OutCubeCoords.Num());
 	
 	for (const FCubeCoord& CubeCoord : OutCubeCoords)
 	{
-		ATile* TargetTile = Context.TileManagerSubsystem->GetTile(CubeCoord);
-		FSelectedTarget& TargetSelectResult = PrimaryTargets.Targets.AddDefaulted_GetRef();
-		TargetSelectResult.TargetTile = TargetTile;
+		if (ATile* TargetTile = Context.TileManagerSubsystem->GetTile(CubeCoord))
+		{
+			FSelectedTarget& Target = PrimaryTargets.Targets.AddDefaulted_GetRef();
+			Target.TargetTile = TargetTile;
+		}
 	}
 }

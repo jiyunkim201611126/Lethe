@@ -56,9 +56,9 @@ void ALetheGameState::RegisterCombatEnemy(AEnemyCharacterBase* Enemy)
 void ALetheGameState::UnregisterEnemy(AEnemyCharacterBase* Enemy)
 {
 	SpawnedEnemies.Remove(Enemy);
-	ReservedEnemyAbilityActivationData.RemoveAll([Enemy](const FAbilityActivationData& ActivationData)
+	ReservedEnemyAbilityActivationContext.RemoveAll([Enemy](const FAbilityActivationContext& ActivationContext)
 	{
-		return ActivationData.Index == Enemy->GetEnemyAbilityPriority();
+		return ActivationContext.Index == Enemy->GetEnemyAbilityPriority();
 	});
 	CurrentCombatEnemies.Remove(Enemy);
 }
@@ -117,7 +117,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhase)
 	
 	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
-		AbilityResolverComponent->SetEnemyAbilityActivationData(MoveTemp(ReservedEnemyAbilityActivationData));
+		AbilityResolverComponent->SetEnemyAbilityActivationContext(MoveTemp(ReservedEnemyAbilityActivationContext));
 		AbilityResolverComponent->StartActivateEnemyAbility();
 	}
 }
@@ -187,9 +187,9 @@ EPhaseState ALetheGameState::GetPhaseState() const
 	return CurrentPhaseState;
 }
 
-void ALetheGameState::EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately) const
+void ALetheGameState::EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately) const
 {
-	AbilityResolverComponent->EnqueuePlayerAbilityActivationData(MoveTemp(ActivationData), bStartImmediately);
+	AbilityResolverComponent->EnqueuePlayerAbilityActivationContext(MoveTemp(ActivationContext), bStartImmediately);
 }
 
 void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
@@ -211,14 +211,14 @@ void ALetheGameState::StartActivatePlayerMoveAbilities() const
 	AbilityResolverComponent->StartActivatePlayerAbility();
 }
 
-void ALetheGameState::EnqueueEnemyAbilityActivationData(const FAbilityActivationData& ActivationData)
+void ALetheGameState::EnqueueEnemyAbilityActivationContext(const FAbilityActivationContext& ActivationContext)
 {
-	ReservedEnemyAbilityActivationData.Add(ActivationData);
+	ReservedEnemyAbilityActivationContext.Add(ActivationContext);
 }
 
-void ALetheGameState::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const
+void ALetheGameState::ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide) const
 {
-	AbilityResolverComponent->ActivateAbility(ActivationData, TeamSide);
+	AbilityResolverComponent->ActivateAbility(ActivationContext, TeamSide);
 }
 
 void ALetheGameState::OnActivateEnemyAbility(AActor* AbilityInstigator) const

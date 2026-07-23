@@ -42,11 +42,11 @@ public:
 
 	EPhaseState GetPhaseState() const;
 
-	void EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately = true) const;
-	/** PlayerMovePhase에만 사용하는 함수로, 모든 MoveAbility ActivationData를 밀어넣은 후 호출합니다. */
+	void EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately = true) const;
+	/** PlayerMovePhase에만 사용하는 함수로, 모든 MoveAbility ActivationContext를 밀어넣은 후 호출합니다. */
 	void StartActivatePlayerMoveAbilities() const;
-	void EnqueueEnemyAbilityActivationData(const FAbilityActivationData& ActivationData);
-	void ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide) const;
+	void EnqueueEnemyAbilityActivationContext(const FAbilityActivationContext& ActivationContext);
+	void ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide) const;
 
 	void OnActivateEnemyAbility(AActor* AbilityInstigator) const;
 
@@ -125,7 +125,7 @@ private:
 	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
 	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
 	 */
-	TArray<FAbilityActivationData> ReservedEnemyAbilityActivationData;
+	TArray<FAbilityActivationContext> ReservedEnemyAbilityActivationContext;
 	FTimerHandle PlanTimerHandle;
 
 	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다. */

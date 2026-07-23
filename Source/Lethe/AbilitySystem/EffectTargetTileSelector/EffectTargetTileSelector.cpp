@@ -30,9 +30,9 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 	}
 
 	const ETeamSide SourceTeamSide = SourceCombatInterface->GetTeamSide();
-	for (FTargetSelectResult& TargetTileResult : Context.OutTargetTileResults)
+	for (FTargetSelectionResult& TargetResult : Context.OutTargetResults)
 	{
-		for (FSelectedTarget& Target : TargetTileResult.Targets)
+		for (FSelectedTarget& Target : TargetResult.Targets)
 		{
 			Target.ActorOnTile.Reset();
 			if (!Target.TargetTile.IsValid())

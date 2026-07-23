@@ -20,9 +20,9 @@ ULetheCommonAbility::ULetheCommonAbility()
 	EffectDelivery.InitializeAs<FEffectDelivery_Immediately>();
 }
 
-bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
-	if (!SourceASC || TargetSelectResults.IsEmpty())
+	if (!SourceASC || TargetSelectionResults.IsEmpty())
 	{
 		return false;
 	}
@@ -30,7 +30,7 @@ bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySys
 	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
 	{
 		FEffectTargetMappingResolveResult OutResolveResult;
-		ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetSelectResults, OutResolveResult);
+		ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, TargetSelectionResults, OutResolveResult);
 
 		TryGetGameplayEffectPreviewData(SourceASC, OutResolveResult.SourceSpecHandles, OutPreviewData.SourcePreviewData);
 
@@ -109,7 +109,7 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 		{
 			// 수신한 이벤트 태그와 EffectTargetMappingPolicy의 이벤트 태그가 일치하는 경우 들어오는 분기입니다.
 			FEffectTargetMappingResolveResult OutResolveResult;
-			ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, CachedTargetSelectResults, OutResolveResult);
+			ResolveEffectTargetMappingPolicy(EffectTargetMappingPolicy, SourceASC, CachedTargetSelectionResults, OutResolveResult);
 
 			for (const FGameplayEffectSpecHandle& SourceSpecHandle : OutResolveResult.SourceSpecHandles)
 			{
@@ -137,24 +137,30 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 	}
 }
 
-void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FEffectTargetMappingResolveResult& OutResult) const
+void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FEffectTargetMappingResolveResult& OutResult) const
 {
 	OutResult.SourceSpecHandles.Reset();
 	OutResult.TargetSpecHandlesByActor.Reset();
 
-	const bool bHasValidTargetGroupPolicy = EffectTargetMappingPolicy.bApplyToAllTargetActors || !EffectTargetMappingPolicy.TargetGroupTags.IsEmpty();
+	const bool bHasValidTargetGroupPolicy = EffectTargetMappingPolicy.bApplyToAllTargets || !EffectTargetMappingPolicy.TargetGroupTags.IsEmpty();
 	if (!ensure(bHasValidTargetGroupPolicy) || !SourceASC)
 	{
 		return;
 	}
 
 	// Policy에 해당하는 TargetActors를 가져옵니다.
-	TArray<AActor*> OutTargetActors;
-	for (const FTargetSelectResult& TargetActorResult : TargetSelectResults)
+	TArray<AActor*> TargetActors;
+	for (const FTargetSelectionResult& TargetResult : TargetSelectionResults)
 	{
-		if (EffectTargetMappingPolicy.bApplyToAllTargetActors || EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(TargetActorResult.TargetGroupTag))
+		if (EffectTargetMappingPolicy.bApplyToAllTargets || EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(TargetResult.TargetGroupTag))
 		{
-			GetTargetActorsByPolicy(EffectTargetMappingPolicy, TargetActorResult.Targets, OutTargetActors);
+			for (const auto& Target : TargetResult.Targets)
+			{
+				if (Target.ActorOnTile.IsValid())
+				{
+					TargetActors.AddUnique(Target.ActorOnTile.Get());
+				}
+			}
 		}
 	}
 
@@ -162,7 +168,7 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
 	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
 
-	if (OutTargetActors.IsEmpty() || OutEffectSpecBuilders.IsEmpty())
+	if (TargetActors.IsEmpty() || OutEffectSpecBuilders.IsEmpty())
 	{
 		return;
 	}
@@ -179,7 +185,7 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 			OutResult.SourceSpecHandles.Append(SourceSpecHandles);
 		}
 
-		for (AActor* TargetActor : OutTargetActors)
+		for (AActor* TargetActor : TargetActors)
 		{
 			// TargetActor별로 Context를 세팅합니다.
 			FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
@@ -197,31 +203,6 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 					TargetSpecHandles.Append(TargetSpecHandlesForActor);
 				}
 			}
-		}
-	}
-}
-
-void ULetheCommonAbility::GetTargetActorsByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, const TArray<FSelectedTarget>& CandidateTargets, TArray<AActor*>& OutTargetActors) const
-{
-	if (EffectTargetMappingPolicy.bApplyToAllTargetActors || EffectTargetMappingPolicy.TargetActorIndices.Contains(FEffectTargetMappingPolicy::AllIndices))
-	{
-		// 모든 TargetActor를 대상으로 하고 있거나, 그룹 내의 모든 TargetActor에게 Effect를 적용해야 하는 경우 들어오는 분기입니다.
-		for (const auto& Target : CandidateTargets)
-		{
-			if (Target.ActorOnTile.IsValid())
-			{
-				OutTargetActors.AddUnique(Target.ActorOnTile.Get());
-			}
-		}
-		return;
-	}
-
-	// TargetActorIndex번째 TargetActor에게 Effect를 적용하는 정책인 경우, SourceTargetActors에서 가져와 Out배열에 추가합니다.
-	for (const int32 TargetActorIndex : EffectTargetMappingPolicy.TargetActorIndices)
-	{
-		if (CandidateTargets.IsValidIndex(TargetActorIndex) && CandidateTargets[TargetActorIndex].ActorOnTile.IsValid())
-		{
-			OutTargetActors.AddUnique(CandidateTargets[TargetActorIndex].ActorOnTile.Get());
 		}
 	}
 }

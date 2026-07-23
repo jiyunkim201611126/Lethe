@@ -326,22 +326,22 @@ void ALetheAIController::ActivateMoveAbility(const TArray<ATile*>& PathTiles)
 		ASC->GetActivatableGameplayAbilitySpecsByAllMatchingTags(MoveTagContainer, AbilitySpecs);
 		if (!AbilitySpecs.IsEmpty())
 		{
-			FAbilityActivationData MoveAbilityActivationData;
-			MoveAbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-			MoveAbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-			MoveAbilityActivationData.AbilityOwnerASC = ASC;
+			FAbilityActivationContext MoveAbilityActivationContext;
+			MoveAbilityActivationContext.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+			MoveAbilityActivationContext.AbilityTag = LetheGameplayTags.Ability_Move;
+			MoveAbilityActivationContext.AbilityOwnerASC = ASC;
 			for (ATile* PathTile : PathTiles)
 			{
 				if (PathTile)
 				{
-					MoveAbilityActivationData.PathTiles.Add(PathTile);
+					MoveAbilityActivationContext.PathTiles.Add(PathTile);
 				}
 			}
-			MoveAbilityActivationData.Payload.Instigator = ControlledPawn;
+			MoveAbilityActivationContext.Payload.Instigator = ControlledPawn;
 			
 			if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
-				LetheGameState->ActivateAbility(MoveAbilityActivationData, ETeamSide::Enemy);
+				LetheGameState->ActivateAbility(MoveAbilityActivationContext, ETeamSide::Enemy);
 			}
 		}
 	}
@@ -369,8 +369,8 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 		ASC->GetAllAbilities(AbilitySpecHandles);
 
-		TArray<FAbilityActivationData> CandidateAbilityData;
-		CandidateAbilityData.Reserve(AbilitySpecHandles.Num());
+		TArray<FAbilityActivationContext> CandidateAbilityContexts;
+		CandidateAbilityContexts.Reserve(AbilitySpecHandles.Num());
 
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 		for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
@@ -397,34 +397,34 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 				}
 			}
 
-			FTargetingIntent TargetingIntent;
-			TargetingIntent.HitTile = TargetTile;
-			TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
-
-			FAbilityActivationData& ActivationData = CandidateAbilityData.AddDefaulted_GetRef();
-			ActivationData.Index = ControlledEnemy->GetEnemyAbilityPriority();
-			ActivationData.AbilitySpecHandle = Spec->Handle;
-			ActivationData.AbilityTag = FirstTag;
-			ActivationData.AbilityOwnerASC = ASC;
-			ActivationData.TargetingIntent = TargetingIntent;
 			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
 			{
+				FTargetingIntent TargetingIntent;
+				TargetingIntent.HitTile = TargetTile;
+				TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+
 				FEffectTargetTileSelectorContext Context;
 				Context.AvatarActor = ControlledEnemy;
 				Context.TargetingIntent = TargetingIntent;
 				CardAbility->GetTargetTiles(Context);
-				ActivationData.TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
+				
+				FAbilityActivationContext& ActivationContext = CandidateAbilityContexts.AddDefaulted_GetRef();
+				ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
+				ActivationContext.AbilitySpecHandle = Spec->Handle;
+				ActivationContext.AbilityTag = FirstTag;
+				ActivationContext.AbilityOwnerASC = ASC;
+				ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+				ActivationContext.NoiseTile = TargetTile;
+				ActivationContext.Payload.Instigator = ControlledEnemy;
 			}
-			ActivationData.NoiseTile = TargetTile;
-			ActivationData.Payload.Instigator = ControlledEnemy;
 		}
 
-		if (!CandidateAbilityData.IsEmpty())
+		if (!CandidateAbilityContexts.IsEmpty())
 		{
-			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityData.Num() - 1);
+			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityContexts.Num() - 1);
 			if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 			{
-				LetheGameState->EnqueueEnemyAbilityActivationData(CandidateAbilityData[RandomIndex]);
+				LetheGameState->EnqueueEnemyAbilityActivationContext(CandidateAbilityContexts[RandomIndex]);
 			}
 			
 			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())

@@ -142,7 +142,7 @@ void UPlayerAbilityRequestComponent::RemoveReservedMove(const AActor* SelectedCh
 	}
 }
 
-bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationData()
+bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationContext()
 {
 	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!LetheGameState)
@@ -215,22 +215,22 @@ bool UPlayerAbilityRequestComponent::TryEnqueueNextReservedMoveActivationData()
 		// 여기까지 내려온 경우, 이 캐릭터의 이동을 시작합니다.
 		ReservedMove.State = EReservedMoveState::Moving;
 
-		FAbilityActivationData AbilityActivationData;
-		AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+		FAbilityActivationContext AbilityActivationContext;
+		AbilityActivationContext.AbilitySpecHandle = AbilitySpecs[0]->Handle;
 		if (ReachType == EMoveActionType::MoveAbility)
 		{
-			AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
+			AbilityActivationContext.AbilityTag = LetheGameplayTags.Ability_Move;
 		}
 		else if (ReachType == EMoveActionType::SwapAbility)
 		{
-			AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Swap;
-			AbilityActivationData.Payload.OptionalObject2 = OutSwapTargetReservedMove->PlayerCharacter.Get();
+			AbilityActivationContext.AbilityTag = LetheGameplayTags.Ability_Swap;
+			AbilityActivationContext.Payload.OptionalObject2 = OutSwapTargetReservedMove->PlayerCharacter.Get();
 		}
-		AbilityActivationData.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
+		AbilityActivationContext.AbilityOwnerASC = ReservedMove.AbilitySystemComponent;
 
-		AbilityActivationData.PathTiles = PathTiles;
+		AbilityActivationContext.PathTiles = PathTiles;
 		
-		LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData), false);
+		LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext), false);
 		
 		bIsActivationDataAdded = true;
 		break;
@@ -370,7 +370,7 @@ void UPlayerAbilityRequestComponent::StartResolveMoves()
 		return;
 	}
 
-	if (TryEnqueueNextReservedMoveActivationData())
+	if (TryEnqueueNextReservedMoveActivationContext())
 	{
 		LetheGameState->StartActivatePlayerMoveAbilities();
 	}
@@ -412,7 +412,7 @@ void UPlayerAbilityRequestComponent::OnPlayerReservedMoveResolved(AActor* MovedC
 		}
 	}
 
-	TryEnqueueNextReservedMoveActivationData();
+	TryEnqueueNextReservedMoveActivationContext();
 }
 
 void UPlayerAbilityRequestComponent::RefreshReservedMoveData(FPlayerCharacterReservedMove* ReservedMove) const
@@ -590,19 +590,19 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 				TArray<ATile*> OutPathTiles;
 				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, SelectedCombatInterface->GetMoveRange(), OutPathTiles, false))
 				{
-					FAbilityActivationData AbilityActivationData;
-					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Move;
-					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					FAbilityActivationContext AbilityActivationContext;
+					AbilityActivationContext.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationContext.AbilityTag = LetheGameplayTags.Ability_Move;
+					AbilityActivationContext.AbilityOwnerASC = AbilitySystemComponent;
 					
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
 						{
-							AbilityActivationData.PathTiles.Add(PathTile);
+							AbilityActivationContext.PathTiles.Add(PathTile);
 						}
 					}
-					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
+					LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext));
 				}
 			}
 			else
@@ -639,20 +639,20 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 				TArray<ATile*> OutPathTiles;
 				if (TileManagerSubsystem->FindPrioritizedPathTiles(StartTile, TargetTile, TargetCombatInterface->GetMoveRange(), OutPathTiles, true))
 				{
-					FAbilityActivationData AbilityActivationData;
-					AbilityActivationData.AbilitySpecHandle = AbilitySpecs[0]->Handle;
-					AbilityActivationData.AbilityTag = LetheGameplayTags.Ability_Swap;
-					AbilityActivationData.Payload.OptionalObject2 = SwapTargetActor;
-					AbilityActivationData.AbilityOwnerASC = AbilitySystemComponent;
+					FAbilityActivationContext AbilityActivationContext;
+					AbilityActivationContext.AbilitySpecHandle = AbilitySpecs[0]->Handle;
+					AbilityActivationContext.AbilityTag = LetheGameplayTags.Ability_Swap;
+					AbilityActivationContext.Payload.OptionalObject2 = SwapTargetActor;
+					AbilityActivationContext.AbilityOwnerASC = AbilitySystemComponent;
 					
 					for (ATile* PathTile : OutPathTiles)
 					{
 						if (PathTile)
 						{
-							AbilityActivationData.PathTiles.Add(PathTile);
+							AbilityActivationContext.PathTiles.Add(PathTile);
 						}
 					}
-					LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
+					LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext));
 				}
 			}
 		}
@@ -692,25 +692,24 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	TargetingIntent.HitTile = OutTileHitResult.Tile;
 	TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
 
-	FAbilityActivationData AbilityActivationData;
-	AbilityActivationData.Index = InHandIndex;
-	AbilityActivationData.AbilitySpecHandle = AbilitySpecHandle;
-	AbilityActivationData.AbilityTag = CardTag;
-	AbilityActivationData.AbilityOwnerASC = OwnerASC;
-	AbilityActivationData.TargetingIntent = TargetingIntent;
-	AbilityActivationData.NoiseTile = OutTileHitResult.Tile;
+	FAbilityActivationContext AbilityActivationContext;
+	AbilityActivationContext.Index = InHandIndex;
+	AbilityActivationContext.AbilitySpecHandle = AbilitySpecHandle;
+	AbilityActivationContext.AbilityTag = CardTag;
+	AbilityActivationContext.AbilityOwnerASC = OwnerASC;
+	AbilityActivationContext.NoiseTile = OutTileHitResult.Tile;
 
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = CardOwner;
 	Context.TargetingIntent = TargetingIntent;
 	CardAbility->GetTargetTiles(Context);
-	if (Context.OutTargetTileResults.IsEmpty())
+	if (Context.OutTargetResults.IsEmpty())
 	{
 		return false;
 	}
 
-	AbilityActivationData.TargetSelectResults = MoveTemp(Context.OutTargetTileResults);
-	LetheGameState->EnqueuePlayerAbilityActivationData(MoveTemp(AbilityActivationData));
+	AbilityActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+	LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext));
 	return true;
 }
 

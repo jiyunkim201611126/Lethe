@@ -17,7 +17,7 @@
 void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
 	Context.OutSelectCandidateTiles.Reset();
-	Context.OutTargetTileResults.Reset();
+	Context.OutTargetResults.Reset();
 
 	if (Context.AvatarActor)
 	{
@@ -39,7 +39,7 @@ void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Cont
 void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
 {
 	Context.OutSelectCandidateTiles.Reset();
-	Context.OutTargetTileResults.Reset();
+	Context.OutTargetResults.Reset();
 	
 	if (Context.AvatarActor)
 	{
@@ -75,7 +75,7 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 	return false;
 }
 
-bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
 	return false;
 }
@@ -221,16 +221,16 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 		return false;
 	}
 
-	if (TargetData->GetScriptStruct() != FGameplayAbilityTargetData_TargetSelectResults::StaticStruct())
+	if (TargetData->GetScriptStruct() != FGameplayAbilityTargetData_TargetSelectionResults::StaticStruct())
 	{
 		return false;
 	}
 
-	const FGameplayAbilityTargetData_TargetSelectResults* TargetSelectResultsData = static_cast<const FGameplayAbilityTargetData_TargetSelectResults*>(TargetData);
-	CachedTargetSelectResults = TargetSelectResultsData->TargetSelectResults;
+	const FGameplayAbilityTargetData_TargetSelectionResults* TargetSelectionResultsData = static_cast<const FGameplayAbilityTargetData_TargetSelectionResults*>(TargetData);
+	CachedTargetSelectionResults = TargetSelectionResultsData->TargetSelectionResults;
 	CachedNoiseTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
 
-	if (CachedTargetSelectResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
+	if (CachedTargetSelectionResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
 	{
 		ResetCachedValues();
 		return false;
@@ -245,9 +245,9 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	TArray<const UAbilitySystemComponent*> TargetASCs;
-	for (const auto& TargetSelectResult : CachedTargetSelectResults)
+	for (const FTargetSelectionResult& TargetResult : CachedTargetSelectionResults)
 	{
-		for (const auto& Target : TargetSelectResult.Targets)
+		for (const FSelectedTarget& Target : TargetResult.Targets)
 		{
 			if (!Target.ActorOnTile.IsValid())
 			{
@@ -303,7 +303,7 @@ void ULetheCardAbility::ActiveFailed()
 
 void ULetheCardAbility::ResetCachedValues()
 {
-	CachedTargetSelectResults.Empty();
+	CachedTargetSelectionResults.Empty();
 	CachedNoiseTargetTile.Reset();
 }
 

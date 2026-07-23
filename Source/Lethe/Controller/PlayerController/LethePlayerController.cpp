@@ -348,7 +348,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			SelectedCardAbility->GetCandidateTiles(Context);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetSelectResult& Result : Context.OutTargetTileResults)
+			for (const FTargetSelectionResult& Result : Context.OutTargetResults)
 			{
 				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + Result.Targets.Num());
 				for (const FSelectedTarget& Target : Result.Targets)
@@ -413,7 +413,7 @@ void ALethePlayerController::OnOtherTileDetected() const
 
 			// Arrow 표시 용도의 TargetActors를 생성합니다.
 			TArray<AActor*> TargetActors;
-			for (const FTargetSelectResult& Result : Context.OutTargetTileResults)
+			for (const FTargetSelectionResult& Result : Context.OutTargetResults)
 			{
 				TargetActors.Reserve(TargetActors.Num() + Result.Targets.Num());
 				for (const auto& Target : Result.Targets)
@@ -426,7 +426,7 @@ void ALethePlayerController::OnOtherTileDetected() const
 			}
 
 			FPreviewContext PreviewContext;
-			PreviewContext.TargetSelectResults = Context.OutTargetTileResults;
+			PreviewContext.TargetSelectionResults = Context.OutTargetResults;
 			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);

@@ -41,7 +41,7 @@ public:
 	
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
-	 * 여기서 Context의 OutTargetTileResults는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
+	 * 여기서 Context의 OutTargetResults는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
 	 */
 	void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
@@ -54,7 +54,7 @@ public:
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
-	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectResult>& TargetSelectResults, FGameplayEffectPreviewData& OutPreviewData) const;
+	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const;
 
 	//~ Begin UGameplayAbility Interface
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
@@ -99,7 +99,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ExcludeBaseStruct))
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
-	TArray<FTargetSelectResult> CachedTargetSelectResults;
+	TArray<FTargetSelectionResult> CachedTargetSelectionResults;
 	TWeakObjectPtr<const ATile> CachedNoiseTargetTile;
 
 #if WITH_EDITOR

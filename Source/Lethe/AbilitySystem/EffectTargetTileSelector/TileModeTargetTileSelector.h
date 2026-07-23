@@ -9,7 +9,7 @@
 
 /**
  * FBFSRange 기반으로 타일을 선택하는 Selector입니다.
- * TargetTiles는 중심 타일부터 출발해 좌상단, 반시계방향을 반복해 인덱스를 채워나갑니다.
+ * TargetTiles는 중심 타일부터 출발해 선정하지만, 인덱스 순서가 보장되지 않습니다.
  */
 USTRUCT(BlueprintType)
 struct LETHE_API FTileModeTargetTileSelector : public FEffectTargetTileSelector

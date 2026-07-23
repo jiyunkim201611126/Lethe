@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "TargetTileSelectData.generated.h"
+#include "TargetSelectionData.generated.h"
 
 class ATile;
 
@@ -34,7 +34,7 @@ struct FSelectedTarget
 };
 
 USTRUCT()
-struct FTargetSelectResult
+struct FTargetSelectionResult
 {
 	GENERATED_BODY()
 

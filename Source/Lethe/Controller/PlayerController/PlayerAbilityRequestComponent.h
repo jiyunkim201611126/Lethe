@@ -114,7 +114,7 @@ private:
 	 * 다음 예약 이동을 Ability 큐에 추가합니다.
 	 * OnPlayerMoveResolved를 통해 들어온 경우 AbilityResolverComponent의 StartActivatePlayerAbility가 호출되기 직전 타이밍입니다.
 	 */
-	bool TryEnqueueNextReservedMoveActivationData();
+	bool TryEnqueueNextReservedMoveActivationContext();
 	
 	/** 내부적으로 GetActionType을 호출해 어떤 방식으로 도달할 수 있는지 반환하며, Swap을 통해 도달할 수 있는 경우 Out 인자들이 채워집니다. */
 	EMoveActionType ResolveActionType(const FPlayerCharacterReservedMove* SourceReservedMove, TArray<TWeakObjectPtr<ATile>>& OutPathTiles, FPlayerCharacterReservedMove*& OutSwapTargetReservedMove);

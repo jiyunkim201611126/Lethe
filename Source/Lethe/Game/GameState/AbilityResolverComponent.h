@@ -46,22 +46,22 @@ public:
 
 	void SetDummyActor(AActor* InDummyActor);
 
-	void EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately);
+	void EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately);
 	void StartActivatePlayerAbility();
 	void HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result);
 	void ProcessAllPlayerAbilitiesFailed();
 	
-	void SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData);
+	void SetEnemyAbilityActivationContext(TArray<FAbilityActivationContext>&& ActivationContext);
 	void StartActivateEnemyAbility();
 	void HandleEnemyAbilityActivationResult(const ETryAbilityActivationResult Result);
-	void ResetEnemyActivationData();
+	void ResetEnemyActivationContext();
 
 	/**
 	 * Queue와 관계없이 Ability를 즉시 발동할 때 사용합니다.
 	 * 여러 번의 BFS를 수행해야 하는 EnemyPlanPhase 특성상, 모든 AI가 한 번에 예약을 걸면 프레임 드랍이 발생할 확률이 높습니다.
 	 * 때문에 EnemyPlanPhase는 AI마다 시간차를 두어 로직이 수행되고, 이는 예약하는 방식으로는 구현이 까다로워 즉시 발동 API를 하나 추가했습니다.
 	 */
-	void ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide);
+	void ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide);
 	
 	void OnAbilityActivationFailed();
 
@@ -70,7 +70,7 @@ public:
 private:
 	ETryAbilityActivationResult TryActivateNextPlayerAbility();
 	ETryAbilityActivationResult TryActivateNextEnemyAbility();
-	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationData* ActivationData);
+	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationContext* ActivationContext);
 
 	/** Activation 처리 중 보류했던 Ability 종료/실패 콜백을 처리하는 함수입니다. */
 	bool ProcessPendingAbilityCallbacks();
@@ -93,8 +93,8 @@ private:
 	 * Array지만 사실상 Queue의 작동 방식을 갖습니다.
 	 * TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	 */
-	TArray<FAbilityActivationData> PlayerAbilityActivationData;
-	TArray<FAbilityActivationData> EnemyAbilityActivationData;
+	TArray<FAbilityActivationContext> PlayerAbilityActivationContext;
+	TArray<FAbilityActivationContext> EnemyAbilityActivationContext;
 	
 	/** PlayerAbilityQueue가 작동 중인지를 표현하는 변수입니다. */
 	uint8 bIsResolvingPlayerAbility : 1 = false;

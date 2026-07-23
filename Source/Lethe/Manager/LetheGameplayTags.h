@@ -68,12 +68,12 @@ struct FLetheGameplayTags
 	FGameplayTag Event_Montage_EndAbility;
 	//~ End of Montage Event
 
-	//~ Begin TargetTileGroup
-	FGameplayTag TargetTileGroup_Primary;
-	FGameplayTag TargetTileGroup_Penetration;
-	FGameplayTag TargetTileGroup_HalfMoon;
-	FGameplayTag TargetTileGroup_Spread;
-	//~ End of TargetTileGroup
+	//~ Begin TargetGroup
+	FGameplayTag TargetGroup_Primary;
+	FGameplayTag TargetGroup_Penetration;
+	FGameplayTag TargetGroup_HalfMoon;
+	FGameplayTag TargetGroup_Spread;
+	//~ End of TargetGroup
 
 	//~ Begin UI Layer
 	FGameplayTag UI_Layer_Game;

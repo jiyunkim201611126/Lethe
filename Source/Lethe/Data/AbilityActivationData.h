@@ -6,7 +6,7 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
-#include "Lethe/AbilitySystem/EffectTargetTileSelector/TargetTileSelectData.h"
+#include "Lethe/AbilitySystem/EffectTargetTileSelector/TargetSelectionData.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "AbilityActivationData.generated.h"
 
@@ -21,12 +21,12 @@ public:
 };
 
 USTRUCT()
-struct FGameplayAbilityTargetData_TargetSelectResults : public FGameplayAbilityTargetData
+struct FGameplayAbilityTargetData_TargetSelectionResults : public FGameplayAbilityTargetData
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TArray<FTargetSelectResult> TargetSelectResults;
+	TArray<FTargetSelectionResult> TargetSelectionResults;
 
 	virtual UScriptStruct* GetScriptStruct() const override
 	{
@@ -35,12 +35,12 @@ struct FGameplayAbilityTargetData_TargetSelectResults : public FGameplayAbilityT
 
 	virtual FString ToString() const override
 	{
-		return TEXT("FGameplayAbilityTargetData_TargetSelectResults");
+		return TEXT("FGameplayAbilityTargetData_TargetSelectionResults");
 	}
 };
 
 USTRUCT()
-struct FAbilityActivationData
+struct FAbilityActivationContext
 {
 	GENERATED_BODY()
 
@@ -55,10 +55,7 @@ struct FAbilityActivationData
 	TWeakObjectPtr<UAbilitySystemComponent> AbilityOwnerASC;
 
 	UPROPERTY()
-	FTargetingIntent TargetingIntent;
-
-	UPROPERTY()
-	TArray<FTargetSelectResult> TargetSelectResults;
+	TArray<FTargetSelectionResult> TargetSelectionResults;
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<ATile>> PathTiles;

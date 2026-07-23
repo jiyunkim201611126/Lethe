@@ -79,14 +79,14 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Event_Montage_EndAbility = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.Montage.EndAbility"), FString(""));
 	
-	GameplayTags.TargetTileGroup_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("TargetTileGroup.Primary"), FString(""));
-	GameplayTags.TargetTileGroup_Penetration = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("TargetTileGroup.Penetration"), FString(""));
-	GameplayTags.TargetTileGroup_HalfMoon = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("TargetTileGroup.HalfMoon"), FString(""));
-	GameplayTags.TargetTileGroup_Spread = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("TargetTileGroup.Spread"), FString(""));
+	GameplayTags.TargetGroup_Primary = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetGroup.Primary"), FString(""));
+	GameplayTags.TargetGroup_Penetration = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetGroup.Penetration"), FString(""));
+	GameplayTags.TargetGroup_HalfMoon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetGroup.HalfMoon"), FString(""));
+	GameplayTags.TargetGroup_Spread = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("TargetGroup.Spread"), FString(""));
 	
 	GameplayTags.UI_Layer_Game = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("UI.Layer.Game"), FString(""));

@@ -13,7 +13,7 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	PlayerAbilityActivationData.Reserve(MAX_HAND_COUNT);
+	PlayerAbilityActivationContext.Reserve(MAX_HAND_COUNT);
 }
 
 void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
@@ -21,23 +21,23 @@ void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
 	DummyActor = InDummyActor;
 }
 
-void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(FAbilityActivationData&& ActivationData, const bool bStartImmediately)
+void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately)
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const bool bIsMovementAbility = ActivationData.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+	const bool bIsMovementAbility = ActivationContext.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationContext.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 	if (!bIsMovementAbility)
 	{
 		// Movement Ability가 아닌 경우 들어오는 분기입니다.
-		for (const FAbilityActivationData& RegisteredActivationData : PlayerAbilityActivationData)
+		for (const FAbilityActivationContext& RegisteredActivationContext : PlayerAbilityActivationContext)
 		{
-			if (RegisteredActivationData.Index == ActivationData.Index)
+			if (RegisteredActivationContext.Index == ActivationContext.Index)
 			{
 				// 이미 사용 대기 중인 카드인 경우 얼리리턴합니다.
 				return;
 			}
 		}
 	}
-	PlayerAbilityActivationData.Add(MoveTemp(ActivationData));
+	PlayerAbilityActivationContext.Add(MoveTemp(ActivationContext));
 
 	if (bStartImmediately && !IsResolvingPlayerAbility())
 	{
@@ -48,7 +48,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationData(FAbilityActiv
 
 void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
-	while (!PlayerAbilityActivationData.IsEmpty())
+	while (!PlayerAbilityActivationContext.IsEmpty())
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
 
@@ -67,20 +67,20 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbility()
 {
-	if (PlayerAbilityActivationData.IsEmpty())
+	if (PlayerAbilityActivationContext.IsEmpty())
 	{
 		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
 	// 아직 사용되지 않은 Ability 중 가장 먼저 사용한 Ability의 사용을 시작합니다.
-	FAbilityActivationData* ActivationData = &PlayerAbilityActivationData[0];
-	if (!ActivationData)
+	FAbilityActivationContext* ActivationContext = &PlayerAbilityActivationContext[0];
+	if (!ActivationContext)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
-	return TryActivateAbility(ActivationData);
+	return TryActivateAbility(ActivationContext);
 }
 
 void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAbilityActivationResult Result)
@@ -106,19 +106,19 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 
 void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 {
-	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationData를 정리합니다.
-	for (const FAbilityActivationData& WaitingCardData : PlayerAbilityActivationData)
+	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationContext를 정리합니다.
+	for (const FAbilityActivationContext& WaitingCardContext : PlayerAbilityActivationContext)
 	{
-		OnResolveUseCard.ExecuteIfBound(WaitingCardData.Index, false);
+		OnResolveUseCard.ExecuteIfBound(WaitingCardContext.Index, false);
 	}
-	PlayerAbilityActivationData.Reset();
+	PlayerAbilityActivationContext.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 	bIsResolvingPlayerAbility = false;
 }
 
-void UAbilityResolverComponent::SetEnemyAbilityActivationData(TArray<FAbilityActivationData>&& ActivationData)
+void UAbilityResolverComponent::SetEnemyAbilityActivationContext(TArray<FAbilityActivationContext>&& ActivationContext)
 {
-	EnemyAbilityActivationData = MoveTemp(ActivationData);
+	EnemyAbilityActivationContext = MoveTemp(ActivationContext);
 }
 
 void UAbilityResolverComponent::StartActivateEnemyAbility()
@@ -148,21 +148,21 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbility()
 {
-	if (EnemyAbilityActivationData.IsEmpty())
+	if (EnemyAbilityActivationContext.IsEmpty())
 	{
 		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
 	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
-	FAbilityActivationData* ActivationData = &EnemyAbilityActivationData[0];
+	FAbilityActivationContext* ActivationContext = &EnemyAbilityActivationContext[0];
 
-	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationData);
-	if (ActivationData && ActivationData->AbilityOwnerASC.IsValid())
+	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationContext);
+	if (ActivationContext && ActivationContext->AbilityOwnerASC.IsValid())
 	{
-		OnActivateEnemyAbility.ExecuteIfBound(ActivationData->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnActivateEnemyAbility.ExecuteIfBound(ActivationContext->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
-	EnemyAbilityActivationData.RemoveAt(0);
+	EnemyAbilityActivationContext.RemoveAt(0);
 	return Result;
 }
 
@@ -185,24 +185,24 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 		OnAbilityActivationFailed();
 		break;
 	default:
-		ResetEnemyActivationData();
+		ResetEnemyActivationContext();
 		break;
 	}
 }
 
-void UAbilityResolverComponent::ResetEnemyActivationData()
+void UAbilityResolverComponent::ResetEnemyActivationContext()
 {
-	EnemyAbilityActivationData.Reset();
+	EnemyAbilityActivationContext.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 }
 
-void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& ActivationData, const ETeamSide TeamSide)
+void UAbilityResolverComponent::ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide)
 {
 	CurrentActivationCharacterTeamSide = TeamSide;
 
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	bIsHandlingAbilityActivation = true;
-	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationData);
+	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationContext);
 	LETHE_LOG(LogAbilityResolver, Log, "Ability Activate Result: %s", *LogHelper::EnumToString(Result));
 	bIsHandlingAbilityActivation = false;
 	if (Result == ETryAbilityActivationResult::FailedLogicError)
@@ -211,25 +211,25 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationData& Activati
 	}
 }
 
-ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationData* ActivationData)
+ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbilityActivationContext* ActivationContext)
 {
-	if (!ActivationData)
+	if (!ActivationContext)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
 	}
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem || !ActivationData->AbilityOwnerASC.IsValid())
+	if (!TileManagerSubsystem || !ActivationContext->AbilityOwnerASC.IsValid())
 	{
 		return ETryAbilityActivationResult::FailedFatal;
 	}
 
-	UAbilitySystemComponent* AbilityOwnerASC = ActivationData->AbilityOwnerASC.Get();
-	ActivationData->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
+	UAbilitySystemComponent* AbilityOwnerASC = ActivationContext->AbilityOwnerASC.Get();
+	ActivationContext->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
 	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AbilityOwnerASC->GetAvatarActor()->GetName());
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const bool bIsMovementAbility = ActivationData->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationData->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+	const bool bIsMovementAbility = ActivationContext->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationContext->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 	if (bIsMovementAbility)
 	{
 		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
@@ -240,7 +240,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			MovePayload->PathTiles.Add(StartTile);
 		}
 
-		for (const auto& PathTile : ActivationData->PathTiles)
+		for (const auto& PathTile : ActivationContext->PathTiles)
 		{
 			if (PathTile.IsValid())
 			{
@@ -253,13 +253,13 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
 		}
 
-		ActivationData->Payload.OptionalObject = MovePayload;
+		ActivationContext->Payload.OptionalObject = MovePayload;
 	}
 	else
 	{
 		bool bHasCombatTarget = false;
 		
-		for (FTargetSelectResult& Result : ActivationData->TargetSelectResults)
+		for (FTargetSelectionResult& Result : ActivationContext->TargetSelectionResults)
 		{
 			bool bHasCombatTargetForCurrentResult = false;
 			for (FSelectedTarget& Target : Result.Targets)
@@ -304,17 +304,17 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			return ETryAbilityActivationResult::EmptyTile;
 		}
 
-		FGameplayAbilityTargetData_TargetSelectResults* TargetSelectResultsData = new FGameplayAbilityTargetData_TargetSelectResults();
-		TargetSelectResultsData->TargetSelectResults = ActivationData->TargetSelectResults;
-		ActivationData->Payload.OptionalObject = ActivationData->NoiseTile.Get();
-		ActivationData->Payload.TargetData.Add(TargetSelectResultsData);
+		FGameplayAbilityTargetData_TargetSelectionResults* TargetSelectionResultsData = new FGameplayAbilityTargetData_TargetSelectionResults();
+		TargetSelectionResultsData->TargetSelectionResults = ActivationContext->TargetSelectionResults;
+		ActivationContext->Payload.OptionalObject = ActivationContext->NoiseTile.Get();
+		ActivationContext->Payload.TargetData.Add(TargetSelectionResultsData);
 	}
 
 	// ASC를 캐싱하고 콜백을 붙여둡니다.
 	CurrentActivationASC = AbilityOwnerASC;
 	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
 
-	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationData->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationData->AbilityTag, &ActivationData->Payload, *AbilityOwnerASC);
+	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationContext->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationContext->AbilityTag, &ActivationContext->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
 		if (CurrentActivationASC.IsValid())
@@ -386,17 +386,17 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 	{
 	case ETeamSide::Player:
 		{
-			if (PlayerAbilityActivationData.IsValidIndex(0))
+			if (PlayerAbilityActivationContext.IsValidIndex(0))
 			{
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				const bool bIsMovementAbility = PlayerAbilityActivationData[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationData[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+				const bool bIsMovementAbility = PlayerAbilityActivationContext[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationContext[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 				if (!bIsMovementAbility)
 				{
-					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationData[0].Index, true);
+					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContext[0].Index, true);
 				}
-				PlayerAbilityActivationData.RemoveAt(0, EAllowShrinking::No);
+				PlayerAbilityActivationContext.RemoveAt(0, EAllowShrinking::No);
 			}
-			bIsResolvingPlayerAbility = !PlayerAbilityActivationData.IsEmpty();
+			bIsResolvingPlayerAbility = !PlayerAbilityActivationContext.IsEmpty();
 			StartActivatePlayerAbility();
 		}
 		break;

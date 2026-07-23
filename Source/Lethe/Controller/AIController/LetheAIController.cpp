@@ -2,11 +2,10 @@
 
 #include "LetheAIController.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Lethe/LetheLog.h"
-#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
@@ -362,76 +361,74 @@ void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const 
 void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) const
 {
 	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
-	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(ControlledEnemy);
-	UAbilitySystemComponent* ASC = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
-	if (ASC)
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(ControlledEnemy);
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	if (!ASC || !TileManagerSubsystem)
 	{
-		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
-		ASC->GetAllAbilities(AbilitySpecHandles);
+		return;
+	}
+	
+	AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile);
+	if (!TargetActor)
+	{
+		return;
+	}
+	
+	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
+	ASC->GetAllAbilities(AbilitySpecHandles);
 
-		TArray<FAbilityActivationContext> CandidateAbilityContexts;
-		CandidateAbilityContexts.Reserve(AbilitySpecHandles.Num());
+	TArray<FAbilityActivationContext> CandidateAbilityContexts;
+	CandidateAbilityContexts.Reserve(AbilitySpecHandles.Num());
 
-		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
+	{
+		const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
+		if (!Spec || !Spec->Ability)
 		{
-			const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
-			if (!Spec || !Spec->Ability)
-			{
-				continue;
-			}
+			continue;
+		}
 
-			const FGameplayTagContainer AssetTags = Spec->Ability->GetAssetTags();
-			if (AssetTags.HasTagExact(LetheGameplayTags.Ability_Move))
-			{
-				continue;
-			}
+		const FGameplayTagContainer AssetTags = Spec->Ability->GetAssetTags();
+		if (AssetTags.HasTagExact(LetheGameplayTags.Ability_Move))
+		{
+			continue;
+		}
 
-			FGameplayTag FirstTag;
-			for (const FGameplayTag& Tag : AssetTags)
+		FGameplayTag FirstTag;
+		for (const FGameplayTag& Tag : AssetTags)
+		{
+			if (Tag.IsValid())
 			{
-				if (Tag.IsValid())
-				{
-					FirstTag = Tag;
-					break;
-				}
-			}
-
-			if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
-			{
-				FTargetingIntent TargetingIntent;
-				TargetingIntent.HitTile = TargetTile;
-				TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
-
-				FEffectTargetTileSelectorContext Context;
-				Context.AvatarActor = ControlledEnemy;
-				Context.TargetingIntent = TargetingIntent;
-				CardAbility->GetTargetTiles(Context);
-				
-				FAbilityActivationContext& ActivationContext = CandidateAbilityContexts.AddDefaulted_GetRef();
-				ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
-				ActivationContext.AbilitySpecHandle = Spec->Handle;
-				ActivationContext.AbilityTag = FirstTag;
-				ActivationContext.AbilityOwnerASC = ASC;
-				ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
-				ActivationContext.NoiseTile = TargetTile;
-				ActivationContext.Payload.Instigator = ControlledEnemy;
+				FirstTag = Tag;
+				break;
 			}
 		}
 
-		if (!CandidateAbilityContexts.IsEmpty())
+		FAbilityActivationContext& ActivationContext = CandidateAbilityContexts.AddDefaulted_GetRef();
+		ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
+		ActivationContext.AbilitySpecHandle = Spec->Handle;
+		ActivationContext.AbilityTag = FirstTag;
+		ActivationContext.AbilityOwnerASC = ASC;
+		ActivationContext.Payload.Instigator = ControlledEnemy;
+		
+		FTargetSelectionResult& TargetSelectionResult = ActivationContext.TargetSelectionResults.AddDefaulted_GetRef();
+		TargetSelectionResult.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
+		
+		FSelectedTarget& Target = TargetSelectionResult.Targets.AddDefaulted_GetRef();
+		Target.TargetTile = TargetTile;
+		Target.ActorOnTile = TargetActor;
+	}
+
+	if (!CandidateAbilityContexts.IsEmpty())
+	{
+		const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityContexts.Num() - 1);
+		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityContexts.Num() - 1);
-			if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-			{
-				LetheGameState->EnqueueEnemyAbilityActivationContext(CandidateAbilityContexts[RandomIndex]);
-			}
-			
-			if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
-			{
-				ArrowRenderer->DrawCardPreviewArrow(ControlledEnemy, { TileManagerSubsystem->GetActorOnTile(TargetTile) });
-			}
+			LetheGameState->EnqueueEnemyAbilityActivationContext(CandidateAbilityContexts[RandomIndex]);
 		}
+		
+		ArrowRenderer->DrawCardPreviewArrow(ControlledEnemy, { TargetActor });
 	}
 }
 

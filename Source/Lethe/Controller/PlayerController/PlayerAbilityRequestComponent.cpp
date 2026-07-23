@@ -697,7 +697,6 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	AbilityActivationContext.AbilitySpecHandle = AbilitySpecHandle;
 	AbilityActivationContext.AbilityTag = CardTag;
 	AbilityActivationContext.AbilityOwnerASC = OwnerASC;
-	AbilityActivationContext.NoiseTile = OutTileHitResult.Tile;
 
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = CardOwner;

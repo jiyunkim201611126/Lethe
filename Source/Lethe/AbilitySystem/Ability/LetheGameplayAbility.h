@@ -39,7 +39,7 @@ class LETHE_API ULetheGameplayAbility : public UGameplayAbility
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	void ActivateNoise(const ATile* StandingTile, const ATile* TargetTile);
+	void ActivateNoise(ATile* StandingTile, const TArray<ATile*>& TargetTiles);
 
 	/** GameplayCue 재생 시 필요한 매개변수를 받아, Cue 용도로만 사용할 EffectContext를 만들어 Handle을 반환합니다. */
 	UFUNCTION(BlueprintCallable)

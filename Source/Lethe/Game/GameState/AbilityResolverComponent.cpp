@@ -306,7 +306,6 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 
 		FGameplayAbilityTargetData_TargetSelectionResults* TargetSelectionResultsData = new FGameplayAbilityTargetData_TargetSelectionResults();
 		TargetSelectionResultsData->TargetSelectionResults = ActivationContext->TargetSelectionResults;
-		ActivationContext->Payload.OptionalObject = ActivationContext->NoiseTile.Get();
 		ActivationContext->Payload.TargetData.Add(TargetSelectionResultsData);
 	}
 

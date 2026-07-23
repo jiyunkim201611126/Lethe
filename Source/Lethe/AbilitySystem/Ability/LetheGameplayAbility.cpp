@@ -8,25 +8,25 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile* TargetTile)
+void ULetheGameplayAbility::ActivateNoise(ATile* StandingTile, const TArray<ATile*>& TargetTiles)
 {
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		for (const FNoisePolicy& NoisePolicy : NoisePolicies)
 		{
 			// 소음이 시작될 타일을 선택합니다.
-			const ATile* NoiseStartTile = nullptr;
+			TArray<ATile*> NoiseStartTiles;
 			switch (NoisePolicy.NoiseStartTile)
 			{
 			case ENoiseStartTile::StandingTile:
-				NoiseStartTile = StandingTile;
+				NoiseStartTiles.Add(StandingTile);
 				break;
 			case ENoiseStartTile::TargetTile:
-				NoiseStartTile = TargetTile;
+				NoiseStartTiles = TargetTiles;
 				break;
 			}
 
-			if (NoiseStartTile)
+			for (const ATile* NoiseStartTile : NoiseStartTiles)
 			{
 				// 소음 범위 내의 모든 적을 가져옵니다.
 				TSet<FCubeCoord> EnemyTileCoords;
@@ -40,6 +40,7 @@ void ULetheGameplayAbility::ActivateNoise(const ATile* StandingTile, const ATile
 					{
 						if (TileData && TileData->TopTile.IsValid())
 						{
+							TileData->TopTile->Debug_Noise();
 							if (AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(TileData->TopTile.Get()))
 							{
 								if (AEnemyCharacterBase* Enemy = Cast<AEnemyCharacterBase>(ActorOnTile))

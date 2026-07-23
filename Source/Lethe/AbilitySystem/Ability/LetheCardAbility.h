@@ -100,7 +100,6 @@ protected:
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
 	TArray<FTargetSelectionResult> CachedTargetSelectionResults;
-	TWeakObjectPtr<const ATile> CachedNoiseTargetTile;
 
 #if WITH_EDITOR
 public:

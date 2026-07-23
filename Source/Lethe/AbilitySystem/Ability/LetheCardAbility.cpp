@@ -150,8 +150,16 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
-			const ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
-			ActivateNoise(StandingTile, CachedNoiseTargetTile.Get());
+			ATile* StandingTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor);
+			TArray<ATile*> NoiseTiles;
+			for (const FTargetSelectionResult& TargetResult : CachedTargetSelectionResults)
+			{
+				for (const FSelectedTarget& Target : TargetResult.Targets)
+				{
+					NoiseTiles.Add(Target.TargetTile.Get());
+				}
+			}
+			ActivateNoise(StandingTile, NoiseTiles);
 		}
 	}
 
@@ -228,9 +236,8 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 
 	const FGameplayAbilityTargetData_TargetSelectionResults* TargetSelectionResultsData = static_cast<const FGameplayAbilityTargetData_TargetSelectionResults*>(TargetData);
 	CachedTargetSelectionResults = TargetSelectionResultsData->TargetSelectionResults;
-	CachedNoiseTargetTile = Cast<const ATile>(TriggerEventData->OptionalObject);
 
-	if (CachedTargetSelectionResults.IsEmpty() || !CachedNoiseTargetTile.IsValid())
+	if (CachedTargetSelectionResults.IsEmpty())
 	{
 		ResetCachedValues();
 		return false;
@@ -304,7 +311,6 @@ void ULetheCardAbility::ActiveFailed()
 void ULetheCardAbility::ResetCachedValues()
 {
 	CachedTargetSelectionResults.Empty();
-	CachedNoiseTargetTile.Reset();
 }
 
 void ULetheCardAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

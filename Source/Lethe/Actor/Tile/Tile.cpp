@@ -223,3 +223,12 @@ void ATile::SetTileTraceIgnore(const bool bIgnore) const
 		}
 	}
 }
+
+void ATile::Debug_Noise() const
+{
+#if WITH_EDITOR
+	FVector DebugBoxLocation = GetActorLocation();
+	DebugBoxLocation.Z += 30.f;
+	DrawDebugBox(GetWorld(), DebugBoxLocation, FVector(10.f), FColor::Red, false, 3.f);
+#endif
+}

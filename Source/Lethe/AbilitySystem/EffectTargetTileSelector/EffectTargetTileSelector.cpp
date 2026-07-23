@@ -32,11 +32,14 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 	const ETeamSide SourceTeamSide = SourceCombatInterface->GetTeamSide();
 	for (FTargetSelectionResult& TargetResult : Context.OutTargetResults)
 	{
-		for (FSelectedTarget& Target : TargetResult.Targets)
+		for (auto TargetIt = TargetResult.Targets.CreateIterator(); TargetIt; ++TargetIt)
 		{
+			FSelectedTarget& Target = *TargetIt;
+			
 			Target.ActorOnTile.Reset();
 			if (!Target.TargetTile.IsValid())
 			{
+				TargetIt.RemoveCurrentSwap();
 				continue;
 			}
 
@@ -44,6 +47,7 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 			const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(ActorOnTile);
 			if (!TargetCombatInterface)
 			{
+				TargetIt.RemoveCurrentSwap();
 				continue;
 			}
 
@@ -65,10 +69,13 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 				break;
 			}
 
-			if (bCanTarget)
+			if (!bCanTarget)
 			{
-				Target.ActorOnTile = ActorOnTile;
+				TargetIt.RemoveCurrentSwap();
+				continue;
 			}
+			
+			Target.ActorOnTile = ActorOnTile;
 		}
 	}
 }

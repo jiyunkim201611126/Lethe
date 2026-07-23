@@ -60,10 +60,6 @@ struct FAbilityActivationContext
 	UPROPERTY()
 	TArray<TWeakObjectPtr<ATile>> PathTiles;
 
-	/** 소음이 발생할 TargetTile입니다. */
-	UPROPERTY()
-	TWeakObjectPtr<ATile> NoiseTile;
-
 	UPROPERTY()
 	FGameplayEventData Payload;
 };

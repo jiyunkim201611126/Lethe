@@ -99,4 +99,7 @@ private:
 	int32 OccupiedCount = 0;
 
 	ETileVisionState TileVisionState = ETileVisionState::None;
+
+public:
+	void Debug_Noise() const;
 };

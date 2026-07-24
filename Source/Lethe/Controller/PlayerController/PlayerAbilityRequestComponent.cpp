@@ -136,7 +136,15 @@ void UPlayerAbilityRequestComponent::RemoveReservedMove(const AActor* SelectedCh
 	{
 		if (ReservedMove.PlayerCharacter == SelectedCharacter)
 		{
+			for (const auto& Tile : ReservedMove.PathTiles)
+			{
+				if (Tile.IsValid())
+				{
+					Tile->SubtractOccupiedCount();
+				}
+			}
 			ReservedMove.PathTiles.Reset();
+			ReservedMove.State = EReservedMoveState::Finished;
 			break;
 		}
 	}
@@ -425,7 +433,7 @@ void UPlayerAbilityRequestComponent::RefreshReservedMoveData(FPlayerCharacterRes
 	
 	if (ReservedMove->IsValid())
 	{
-		// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거합니다.
+		// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거 및 점유 카운트를 제거합니다.
 		ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove->PlayerCharacter.Get());
 		if (!CurrentTile)
 		{

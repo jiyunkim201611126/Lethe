@@ -13,7 +13,7 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	PlayerAbilityActivationContext.Reserve(MAX_HAND_COUNT);
+	PlayerAbilityActivationContexts.Reserve(MAX_HAND_COUNT);
 }
 
 void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
@@ -28,16 +28,16 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityAc
 	if (!bIsMovementAbility)
 	{
 		// Movement Ability가 아닌 경우 들어오는 분기입니다.
-		for (const FAbilityActivationContext& RegisteredActivationContext : PlayerAbilityActivationContext)
+		for (const FAbilityActivationContext& PlayerAbilityActivationContext : PlayerAbilityActivationContexts)
 		{
-			if (RegisteredActivationContext.Index == ActivationContext.Index)
+			if (PlayerAbilityActivationContext.Index == ActivationContext.Index)
 			{
 				// 이미 사용 대기 중인 카드인 경우 얼리리턴합니다.
 				return;
 			}
 		}
 	}
-	PlayerAbilityActivationContext.Add(MoveTemp(ActivationContext));
+	PlayerAbilityActivationContexts.Add(MoveTemp(ActivationContext));
 
 	if (bStartImmediately && !IsResolvingPlayerAbility())
 	{
@@ -48,7 +48,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityAc
 
 void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
-	while (!PlayerAbilityActivationContext.IsEmpty())
+	while (!PlayerAbilityActivationContexts.IsEmpty())
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
 
@@ -67,14 +67,14 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbility()
 {
-	if (PlayerAbilityActivationContext.IsEmpty())
+	if (PlayerAbilityActivationContexts.IsEmpty())
 	{
 		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
 	// 아직 사용되지 않은 Ability 중 가장 먼저 사용한 Ability의 사용을 시작합니다.
-	FAbilityActivationContext* ActivationContext = &PlayerAbilityActivationContext[0];
+	FAbilityActivationContext* ActivationContext = &PlayerAbilityActivationContexts[0];
 	if (!ActivationContext)
 	{
 		return ETryAbilityActivationResult::FailedLogicError;
@@ -107,18 +107,21 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 {
 	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationContext를 정리합니다.
-	for (const FAbilityActivationContext& WaitingCardContext : PlayerAbilityActivationContext)
+	for (const FAbilityActivationContext& PlayerAbilityActivationContext : PlayerAbilityActivationContexts)
 	{
-		OnResolveUseCard.ExecuteIfBound(WaitingCardContext.Index, false);
+		if (PlayerAbilityActivationContext.Index != INDEX_NONE)
+		{
+			OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContext.Index, false);
+		}
 	}
-	PlayerAbilityActivationContext.Reset();
+	PlayerAbilityActivationContexts.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 	bIsResolvingPlayerAbility = false;
 }
 
 void UAbilityResolverComponent::SetEnemyAbilityActivationContext(TArray<FAbilityActivationContext>&& ActivationContext)
 {
-	EnemyAbilityActivationContext = MoveTemp(ActivationContext);
+	EnemyAbilityActivationContexts = MoveTemp(ActivationContext);
 }
 
 void UAbilityResolverComponent::StartActivateEnemyAbility()
@@ -148,21 +151,21 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 
 ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbility()
 {
-	if (EnemyAbilityActivationContext.IsEmpty())
+	if (EnemyAbilityActivationContexts.IsEmpty())
 	{
 		// 모든 Ability를 사용한 경우 들어오는 분기입니다.
 		return ETryAbilityActivationResult::AllAbilityUsed;
 	}
 
 	// 아직 사용되지 않은 Ability 중 가장 높은 우선순위를 가진 Enemy Ability의 사용을 시작합니다.
-	FAbilityActivationContext* ActivationContext = &EnemyAbilityActivationContext[0];
+	FAbilityActivationContext* ActivationContext = &EnemyAbilityActivationContexts[0];
 
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationContext);
 	if (ActivationContext && ActivationContext->AbilityOwnerASC.IsValid())
 	{
-		OnActivateEnemyAbility.ExecuteIfBound(ActivationContext->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnAttemptEnemyAbility.ExecuteIfBound(ActivationContext->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
-	EnemyAbilityActivationContext.RemoveAt(0);
+	EnemyAbilityActivationContexts.RemoveAt(0);
 	return Result;
 }
 
@@ -192,7 +195,7 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 
 void UAbilityResolverComponent::ResetEnemyActivationContext()
 {
-	EnemyAbilityActivationContext.Reset();
+	EnemyAbilityActivationContexts.Reset();
 	CurrentActivationCharacterTeamSide = ETeamSide::None;
 }
 
@@ -225,8 +228,13 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	}
 
 	UAbilitySystemComponent* AbilityOwnerASC = ActivationContext->AbilityOwnerASC.Get();
-	ActivationContext->Payload.Instigator = AbilityOwnerASC->GetAvatarActor();
-	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AbilityOwnerASC->GetAvatarActor()->GetName());
+	const AActor* AvatarActor = AbilityOwnerASC->GetAvatarActor();
+	if (!AvatarActor)
+	{
+		return ETryAbilityActivationResult::FailedFatal;
+	}
+	ActivationContext->Payload.Instigator = AvatarActor;
+	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AvatarActor->GetName());
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	const bool bIsMovementAbility = ActivationContext->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationContext->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
@@ -248,7 +256,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			}
 		}
 
-		if (MovePayload->PathTiles.IsEmpty())
+		// 시작 타일과 목적지 타일까지 해서 최소 2개의 타일이 배열 내에 들어있어야 합니다.
+		if (MovePayload->PathTiles.Num() < 2)
 		{
 			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
 		}
@@ -385,17 +394,17 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 	{
 	case ETeamSide::Player:
 		{
-			if (PlayerAbilityActivationContext.IsValidIndex(0))
+			if (PlayerAbilityActivationContexts.IsValidIndex(0))
 			{
 				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				const bool bIsMovementAbility = PlayerAbilityActivationContext[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationContext[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
+				const bool bIsMovementAbility = PlayerAbilityActivationContexts[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationContexts[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
 				if (!bIsMovementAbility)
 				{
-					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContext[0].Index, true);
+					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContexts[0].Index, true);
 				}
-				PlayerAbilityActivationContext.RemoveAt(0, EAllowShrinking::No);
+				PlayerAbilityActivationContexts.RemoveAt(0, EAllowShrinking::No);
 			}
-			bIsResolvingPlayerAbility = !PlayerAbilityActivationContext.IsEmpty();
+			bIsResolvingPlayerAbility = !PlayerAbilityActivationContexts.IsEmpty();
 			StartActivatePlayerAbility();
 		}
 		break;
@@ -409,7 +418,7 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 
 void UAbilityResolverComponent::OnAbilityActivationFailed()
 {
-	// Ability를 발동했으나, 내부 로직에 의해 실패한 경우(층 수 차이, 코스트 부족 등) 이곳으로 들어옵니다.
+	// Ability를 발동했으나, 내부 로직에 의해 실패한 경우(코스트 부족 등) 이곳으로 들어옵니다.
 	if (CurrentActivationASC.IsValid())
 	{
 		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);

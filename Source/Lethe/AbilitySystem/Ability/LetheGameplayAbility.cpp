@@ -28,6 +28,11 @@ void ULetheGameplayAbility::ActivateNoise(ATile* StandingTile, const TArray<ATil
 
 			for (const ATile* NoiseStartTile : NoiseStartTiles)
 			{
+				if (!NoiseStartTile)
+				{
+					continue;
+				}
+				
 				// 소음 범위 내의 모든 적을 가져옵니다.
 				TSet<FCubeCoord> EnemyTileCoords;
 				TArray<AEnemyCharacterBase*> CombatStartingEnemies;
@@ -45,7 +50,7 @@ void ULetheGameplayAbility::ActivateNoise(ATile* StandingTile, const TArray<ATil
 							{
 								if (AEnemyCharacterBase* Enemy = Cast<AEnemyCharacterBase>(ActorOnTile))
 								{
-									CombatStartingEnemies.Add(Enemy);
+									CombatStartingEnemies.AddUnique(Enemy);
 									return true;
 								}
 							}

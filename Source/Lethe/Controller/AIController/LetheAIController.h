@@ -60,7 +60,7 @@ protected:
 	//~ End of AAIController Interface
 
 private:
-	void OnAbilityActivated(AActor* AbilityInstigator) const;
+	void OnAbilityAttempt(AActor* AbilityInstigator) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
@@ -76,5 +76,5 @@ protected:
 	bool bIsCombating = false;
 
 private:
-	FDelegateHandle OnAbilityActivatedDelegateHandle;
+	FDelegateHandle OnAbilityAttemptDelegateHandle;
 };

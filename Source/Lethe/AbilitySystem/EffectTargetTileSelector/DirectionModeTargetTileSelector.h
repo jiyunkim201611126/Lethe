@@ -22,7 +22,7 @@ enum class EAdditionalRangeType : uint8
 	Spread,
 };
 
-/** TargetTileGroup_Primary로 수집된 타일을 설명하는 구조체로, 추가 범위 선택 시 활용됩니다. */
+/** TargetGroup_Primary로 수집된 타일을 설명하는 구조체로, 추가 범위 선택 시 활용됩니다. */
 struct FResolvedPrimaryTargetTile
 {
 	ATile* Tile = nullptr;
@@ -32,7 +32,6 @@ struct FResolvedPrimaryTargetTile
 
 /**
  * 방향을 기반으로 선택하는 Selector입니다.
- * 반시계 방향으로 회전하며 인덱스를 채워나갑니다.
  */
 USTRUCT(BlueprintType)
 struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSelector
@@ -72,7 +71,7 @@ private:
 	void GetSelectedDirections(const ATile* CurrentTile, const FTargetingIntent& TargetingIntent, TArray<int32>& OutDirections) const;
 	
 protected:
-	/** TargetTileGroup_Primary를 채울 방식입니다.*/
+	/** TargetGroup_Primary를 채울 방식입니다.*/
 	UPROPERTY(EditDefaultsOnly)
 	ERangeType RangeType = ERangeType::Melee;
 
@@ -84,7 +83,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int32 RangeDistance = 1;
 
-	/** Key는 TargetTileGroup_Primary를 제외한 다른 추가 범위를 의미하며, Value는 EnforceValue입니다. */
+	/** Key는 TargetGroup_Primary를 제외한 다른 추가 범위를 의미하며, Value는 EnforceValue입니다. */
 	UPROPERTY(EditDefaultsOnly)
 	TMap<EAdditionalRangeType, int32> AdditionalRanges;
 };

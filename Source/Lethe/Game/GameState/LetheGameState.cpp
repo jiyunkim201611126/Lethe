@@ -21,7 +21,7 @@ void ALetheGameState::BeginPlay()
 		AbilityResolverComponent->SetDummyActor(DummyActor);
 	}
 	
-	AbilityResolverComponent->OnActivateEnemyAbility.BindUObject(this, &ThisClass::OnActivateEnemyAbility);
+	AbilityResolverComponent->OnAttemptEnemyAbility.BindUObject(this, &ThisClass::OnAttemptEnemyAbility);
 	AbilityResolverComponent->OnFinishActivationQueue.BindUObject(this, &ThisClass::OnFinishActivationQueue);
 	AbilityResolverComponent->OnResolveUseCard.BindUObject(this, &ThisClass::OnResolveUseCard);
 }
@@ -29,7 +29,7 @@ void ALetheGameState::BeginPlay()
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	AbilityResolverComponent->SetDummyActor(nullptr);
-	AbilityResolverComponent->OnActivateEnemyAbility.Unbind();
+	AbilityResolverComponent->OnAttemptEnemyAbility.Unbind();
 	AbilityResolverComponent->OnFinishActivationQueue.Unbind();
 	
 	Super::EndPlay(EndPlayReason);
@@ -221,9 +221,9 @@ void ALetheGameState::ActivateAbility(FAbilityActivationContext& ActivationConte
 	AbilityResolverComponent->ActivateAbility(ActivationContext, TeamSide);
 }
 
-void ALetheGameState::OnActivateEnemyAbility(AActor* AbilityInstigator) const
+void ALetheGameState::OnAttemptEnemyAbility(AActor* AbilityInstigator) const
 {
-	OnEnemyAbilityActivated.Broadcast(AbilityInstigator);
+	OnEnemyAbilityAttempt.Broadcast(AbilityInstigator);
 }
 
 void ALetheGameState::OnAbilityActivationFailed() const

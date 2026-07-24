@@ -277,7 +277,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 			return ASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead);
 		});
 
-		// 위 두 조건을 거친 후, 공격 가능한 Target이 남아있지 않다면 false를 반환합니다.
+		// 공격 가능한 Target이 남아있지 않다면 false를 반환합니다.
 		if (TargetASCs.IsEmpty())
 		{
 			ResetCachedValues();
@@ -356,6 +356,7 @@ FText ULetheCardAbility::GetWeightDescription(const int32 Weight) const
 	return FLetheTextManager::GetText(EStringTableType::CardDescription, WeightDescriptionKey, Weight);
 }
 
+#if WITH_EDITOR
 void ULetheCardAbility::PostInitProperties()
 {
 	Super::PostInitProperties();
@@ -368,3 +369,4 @@ void ULetheCardAbility::PostInitProperties()
 		ActivationRequiredTags.AddTag(LetheGameplayTags.State_Character_CanAct);
 	}
 }
+#endif

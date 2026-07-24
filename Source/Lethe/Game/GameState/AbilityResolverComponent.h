@@ -33,7 +33,7 @@ enum class ETryAbilityActivationResult : uint8
 };
 
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCard, const int32 /* HandIndex */, const bool /* bSuccess */);
-DECLARE_DELEGATE_OneParam(FOnActivateEnemyAbility, AActor* /* Instigator */);
+DECLARE_DELEGATE_OneParam(FOnAttemptEnemyAbility, AActor* /* Instigator */);
 DECLARE_DELEGATE(FOnFinishActivationQueue);
 
 UCLASS()
@@ -82,7 +82,7 @@ private:
 
 public:
 	FOnResolveUseCard OnResolveUseCard;
-	FOnActivateEnemyAbility OnActivateEnemyAbility;
+	FOnAttemptEnemyAbility OnAttemptEnemyAbility;
 	FOnFinishActivationQueue OnFinishActivationQueue;
 
 private:
@@ -93,8 +93,8 @@ private:
 	 * Array지만 사실상 Queue의 작동 방식을 갖습니다.
 	 * TQueue는 Dequeue할 때마다 값복사가 발생하기 때문에 TArray로 구현합니다.
 	 */
-	TArray<FAbilityActivationContext> PlayerAbilityActivationContext;
-	TArray<FAbilityActivationContext> EnemyAbilityActivationContext;
+	TArray<FAbilityActivationContext> PlayerAbilityActivationContexts;
+	TArray<FAbilityActivationContext> EnemyAbilityActivationContexts;
 	
 	/** PlayerAbilityQueue가 작동 중인지를 표현하는 변수입니다. */
 	uint8 bIsResolvingPlayerAbility : 1 = false;

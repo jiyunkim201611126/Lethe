@@ -112,7 +112,7 @@ public:
 private:
 	/**
 	 * 다음 예약 이동을 Ability 큐에 추가합니다.
-	 * OnPlayerMoveResolved를 통해 들어온 경우 AbilityResolverComponent의 StartActivatePlayerAbility가 호출되기 직전 타이밍입니다.
+	 * OnPlayerReservedMoveResolved를 통해 들어온 경우 AbilityResolverComponent의 StartActivatePlayerAbility가 호출되기 직전 타이밍입니다.
 	 */
 	bool TryEnqueueNextReservedMoveActivationContext();
 	

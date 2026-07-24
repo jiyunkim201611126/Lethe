@@ -12,7 +12,7 @@ FEffectTargetMappingPolicy::FEffectTargetMappingPolicy()
 {
 	MontageEventTag = FGameplayTag::RequestGameplayTag(FName("Event.Montage.1"));
 	EffectSpecBuilderTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Event.EffectSpecBuilder.1"), false));
-	TargetGroupTags.AddTag(FGameplayTag::RequestGameplayTag(FName("TargetTileGroup.Primary"), false));
+	TargetGroupTags.AddTag(FGameplayTag::RequestGameplayTag(FName("TargetGroup.Primary"), false));
 }
 
 ULetheCommonAbility::ULetheCommonAbility()

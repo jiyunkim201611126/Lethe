@@ -35,7 +35,7 @@ void ALetheAIController::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		OnAbilityActivatedDelegateHandle = LetheGameState->OnEnemyAbilityActivated.AddUObject(this, &ThisClass::OnAbilityActivated);
+		OnAbilityAttemptDelegateHandle = LetheGameState->OnEnemyAbilityAttempt.AddUObject(this, &ThisClass::OnAbilityAttempt);
 	}
 }
 
@@ -43,7 +43,7 @@ void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnEnemyAbilityActivated.Remove(OnAbilityActivatedDelegateHandle);
+		LetheGameState->OnEnemyAbilityAttempt.Remove(OnAbilityAttemptDelegateHandle);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -92,7 +92,7 @@ void ALetheAIController::DeactivateArrow() const
 	ArrowRenderer->DeactivateCardPreviewArrow();
 }
 
-void ALetheAIController::OnAbilityActivated(AActor* AbilityInstigator) const
+void ALetheAIController::OnAbilityAttempt(AActor* AbilityInstigator) const
 {
 	if (AbilityInstigator == GetPawn())
 	{

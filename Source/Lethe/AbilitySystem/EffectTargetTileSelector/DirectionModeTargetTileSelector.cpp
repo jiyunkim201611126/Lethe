@@ -180,7 +180,7 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 
 void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
-	// AvatarActor가 서있는 타일과 마우스 위치까지의 거리를 계산합니다.
+	// CurrentTile(AvatarActor가 서있는 타일)과 마우스 위치까지의 거리를 계산합니다.
 	const FVector CurrentTileLocation = Context.CurrentTile->GetActorLocation();
 	const FVector HitLocation = Context.TargetingIntent.ImpactPoint;
 	const float HitDistance = FVector::Dist(CurrentTileLocation, HitLocation);
@@ -192,7 +192,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 	const int32 HitTileDistance = FMath::RoundToInt(HitDistance / TileWidthInterval);
 
 	const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
-	if (!(0 <= HitTileDistance && HitTileDistance <= MaxRangeDistance))
+	if (!(1 <= HitTileDistance && HitTileDistance <= MaxRangeDistance))
 	{
 		// 사거리를 벗어나 마우스를 둔 경우 얼리리턴합니다.
 		return;
@@ -227,9 +227,8 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 			AddedData.Tile = TargetTile;
 			AddedData.Direction = Direction;
 			AddedData.Distance = HitTileDistance;
-
-			TileIndex += MaxRangeDistance;
 		}
+		TileIndex += MaxRangeDistance;
 	}
 }
 
@@ -260,7 +259,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 
 					// Primary 타겟 타일과 같은 방향으로 나아가며 타일을 가져옵니다.
 					FCubeCoord PenetrationCoord = PrimaryTargetTile.Tile->GetCubeCoord();
-					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
+					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
 					{
 						PenetrationCoord = PenetrationCoord + DirectionCoord;
 						if (ATile* PenetrationTile = Context.TileManagerSubsystem->GetTile(PenetrationCoord))
@@ -285,19 +284,19 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 
 					// 타겟 타일의 정보를 토대로 시계, 반시계로 확장할 방향을 계산합니다.
 					FCubeCoord ClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
-					FCubeCoord CounterClockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
+					FCubeCoord CounterclockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
 					const FCubeCoord ClockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 4);
 					const FCubeCoord CounterclockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 2);
-					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
+					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
 					{
 						ClockwiseTargetTileCoord = ClockwiseTargetTileCoord + ClockwiseDirectionCoord;
-						CounterClockwiseTargetTileCoord = CounterClockwiseTargetTileCoord + CounterclockwiseDirectionCoord;
+						CounterclockwiseTargetTileCoord = CounterclockwiseTargetTileCoord + CounterclockwiseDirectionCoord;
 						if (ATile* ClockwiseTargetTile = Context.TileManagerSubsystem->GetTile(ClockwiseTargetTileCoord))
 						{
 							FSelectedTarget& ClockwiseTarget = HalfMoonTargets.Targets.AddDefaulted_GetRef();
 							ClockwiseTarget.TargetTile = ClockwiseTargetTile;
 						}
-						if (ATile* CounterclockwiseTargetTile = Context.TileManagerSubsystem->GetTile(CounterClockwiseTargetTileCoord))
+						if (ATile* CounterclockwiseTargetTile = Context.TileManagerSubsystem->GetTile(CounterclockwiseTargetTileCoord))
 						{
 							FSelectedTarget& CounterclockwiseTarget = HalfMoonTargets.Targets.AddDefaulted_GetRef();
 							CounterclockwiseTarget.TargetTile = CounterclockwiseTargetTile;
@@ -322,7 +321,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 					FCubeCoord SpreadRightTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
 					const FCubeCoord LeftDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 1);
 					const FCubeCoord RightDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction - 1);
-					for (int32 EnforceCount = 0; EnforceCount < AdditionalRange.Value; ++EnforceCount)
+					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
 					{
 						SpreadLeftTargetTileCoord = SpreadLeftTargetTileCoord + LeftDirectionCoord;
 						SpreadRightTargetTileCoord = SpreadRightTargetTileCoord + RightDirectionCoord;

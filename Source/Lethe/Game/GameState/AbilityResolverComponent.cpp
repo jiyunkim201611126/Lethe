@@ -282,9 +282,9 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 				}
 			}
 
-			if (!bHasCombatTargetForCurrentResult && CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
+			if (CurrentActivationCharacterTeamSide == ETeamSide::Enemy && !bHasCombatTargetForCurrentResult)
 			{
-				// Enemy의 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓습니다.
+				// Enemy가 사용한 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓습니다.
 				ATile* DummyTargetTile = nullptr;
 				for (const FSelectedTarget& Target : Result.Targets)
 				{
@@ -307,9 +307,9 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			}
 		}
 
-		if (!bHasCombatTarget && CurrentActivationCharacterTeamSide == ETeamSide::Player)
+		if (CurrentActivationCharacterTeamSide == ETeamSide::Player && !bHasCombatTarget && !ActivationContext->bCanUseOnTile)
 		{
-			// 플레이어의 Ability를 발동하려 했으나, TargetActor의 사망 등의 이유로 유효한 대상이 하나도 없는 경우 얼리리턴합니다.
+			// Player가 사용한 Ability이고, 유효한 대상이 하나도 없으며, Ability가 대상 없이 발동 불가능한 경우 얼리리턴합니다.
 			return ETryAbilityActivationResult::EmptyTile;
 		}
 

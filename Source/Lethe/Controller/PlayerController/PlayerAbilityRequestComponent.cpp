@@ -703,6 +703,7 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	FAbilityActivationContext AbilityActivationContext;
 	AbilityActivationContext.Index = InHandIndex;
 	AbilityActivationContext.AbilitySpecHandle = AbilitySpecHandle;
+	AbilityActivationContext.bCanUseOnTile = CardAbility->CanUseOnTile();
 	AbilityActivationContext.AbilityTag = CardTag;
 	AbilityActivationContext.AbilityOwnerASC = OwnerASC;
 
@@ -710,7 +711,9 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	Context.AvatarActor = CardOwner;
 	Context.TargetingIntent = TargetingIntent;
 	CardAbility->GetTargetTiles(Context);
-	if (Context.OutTargetResults.IsEmpty())
+
+	// 대상이 없고, 대상 없이 발동 불가능한 Ability인 경우 실패 처리합니다.
+	if (!CardAbility->CanUseOnTile() && Context.OutTargetResults.IsEmpty())
 	{
 		return false;
 	}

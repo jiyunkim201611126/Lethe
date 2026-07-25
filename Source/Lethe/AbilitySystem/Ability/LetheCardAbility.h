@@ -60,6 +60,8 @@ public:
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual bool CommitAbilityCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
 
+	bool CanUseOnTile() const;
+
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
@@ -100,6 +102,10 @@ protected:
 	TInstancedStruct<FEffectTargetTileSelector> EffectTargetTileSelector;
 
 	TArray<FTargetSelectionResult> CachedTargetSelectionResults;
+
+	/** 타일에 사용 가능(대상 없이 사용 가능) 여부이며, Player가 발동한 Ability에만 해당됩니다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	bool bCanUseOnTile = true;
 
 #if WITH_EDITOR
 public:

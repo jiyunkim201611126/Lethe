@@ -49,6 +49,9 @@ struct FAbilityActivationContext
 
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
+	/** Player가 카드를 사용하는 시점에만 할당 및 사용되며, 대상 없이도 발동 가능한지 여부를 판단합니다. */
+	bool bCanUseOnTile = false;
+
 	FGameplayTag AbilityTag;
 
 	UPROPERTY()

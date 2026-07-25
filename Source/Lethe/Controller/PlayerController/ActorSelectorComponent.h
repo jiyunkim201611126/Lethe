@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ActorSelectorComponent.generated.h"
 
+enum class EHighlightReason : uint8;
 class ATile;
 class IHighlightInterface;
 struct FCubeCoord;
@@ -28,8 +29,6 @@ enum class ETileRangeQueryType : uint8
 	PlayerMove,
 };
 
-DECLARE_DELEGATE(FOnDetectedOtherTile);
-
 /**
  * 타일, 캐릭터 선택과 하이라이팅을 담당하는 클래스입니다.
  */
@@ -41,33 +40,15 @@ class LETHE_API UActorSelectorComponent : public UActorComponent
 public:
 	UActorSelectorComponent();
 
-	/**
-	 * 캐릭터 선택 중, 혹은 카드 선택 후 마우스로 하이라이팅합니다.
-	 * 매개변수로 들어오는 Actor는 캐릭터와 타일이 뒤섞이지 않으며, 반드시 한 종류의 액터만 들어옵니다.
-	 */
-	void HighlightActorsByMouse(const TArray<AActor*>& Actors, const bool bIsTile = false);
-	void HighlightTilesByMouse(const TArray<ATile*>& Tiles);
-	void UnhighlightActorByMouse();
-	void HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner);
-	void UnhighlightActorsByAbility();
+	bool SetHighlightedActors(const EHighlightReason Reason, const TArray<AActor*>& InActors);
+	bool SetHighlightedTiles(const EHighlightReason Reason, const TArray<ATile*>& InTiles);
+	void ClearHighlightedActors(const EHighlightReason Reason);
+	void ClearAllHighlightedActors();
 	
 	void GetTileHitResult(FTileHitResult& TileHitResult) const;
 	bool TryGetTilesByRangeFromTile(const ATile* Tile, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 	bool TryGetTilesByRangeFromActor(const AActor* Actor, const FBFSRange& InRange, const ETileRangeQueryType QueryType, TArray<ATile*>& OutTiles) const;
 
-public:
-	FOnDetectedOtherTile OnDetectedOtherTile;
-
 private:
-	TArray<TScriptInterface<IHighlightInterface>> LastMouseHoveredActors;
-	TArray<TScriptInterface<IHighlightInterface>> CurrentMouseHoveredActors;
-
-	/**
-	 * 현재 하이라이팅된 타일과 캐릭터를 추적하는 변수입니다.
-	 * 3 * Depth * (Depth + 1) + 1 개만큼의 배열 길이를 가지므로, Depth에 2차 함수로 비례해서 메모리를 잡아먹게 됩니다.
-	 * 그러나 메모리 개선을 하기 위해선 이전에 선택됐던 카드의 범위를 다시 한 번 탐색해 Unhighlight를 수행하는 과정이 필요합니다.
-	 * CPU 부담을 키우지 않기 위해 메모리 사용을 감수합니다.
-	 */
-	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedTilesByAbility;
-	TScriptInterface<IHighlightInterface> CurrentHighlightedCharacterByAbility;
+	TMap<EHighlightReason, TArray<TScriptInterface<IHighlightInterface>>> CurrentHighlightedActorsByReason;
 };

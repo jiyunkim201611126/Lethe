@@ -6,10 +6,13 @@
 #include "AbilitySystemComponent.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Lethe/LetheLog.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
+#include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
+#include "Lethe/Controller/PlayerController/ActorSelectorComponent.h"
 #include "Lethe/Data/AbilityActivationData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
@@ -22,6 +25,7 @@ ALetheAIController::ALetheAIController()
 	PrimaryActorTick.bCanEverTick = false;
 
 	StateTreeAIComponent = CreateDefaultSubobject<UStateTreeAIComponent>(TEXT("StateTreeAIComponent"));
+	ActorSelector = CreateDefaultSubobject<UActorSelectorComponent>(TEXT("ActorSelector"));
 }
 
 void ALetheAIController::BeginPlay()
@@ -97,6 +101,7 @@ void ALetheAIController::OnAbilityAttempt(AActor* AbilityInstigator) const
 	if (AbilityInstigator == GetPawn())
 	{
 		DeactivateArrow();
+		ActorSelector->ClearHighlightedActors(EHighlightReason::TargetedByAI);
 	}
 }
 
@@ -362,73 +367,85 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 {
 	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(ControlledEnemy);
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!ASC || !TileManagerSubsystem)
+	if (!ASC)
 	{
 		return;
 	}
-	
-	AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile);
-	if (!TargetActor)
-	{
-		return;
-	}
-	
+
+	// 부여된 CardAbility를 모두 가져옵니다.
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 	ASC->GetAllAbilities(AbilitySpecHandles);
 
-	TArray<FAbilityActivationContext> CandidateAbilityContexts;
-	CandidateAbilityContexts.Reserve(AbilitySpecHandles.Num());
-
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	TArray<const FGameplayAbilitySpec*> CandidateAbilitySpecs;
 	for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
 	{
 		const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
-		if (!Spec || !Spec->Ability)
+		if (!Spec)
 		{
 			continue;
 		}
 
-		const FGameplayTagContainer AssetTags = Spec->Ability->GetAssetTags();
-		if (AssetTags.HasTagExact(LetheGameplayTags.Ability_Move))
+		const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability);
+		if (CardAbility)
 		{
-			continue;
+			CandidateAbilitySpecs.Add(Spec);
 		}
-
-		FGameplayTag FirstTag;
-		for (const FGameplayTag& Tag : AssetTags)
-		{
-			if (Tag.IsValid())
-			{
-				FirstTag = Tag;
-				break;
-			}
-		}
-
-		FAbilityActivationContext& ActivationContext = CandidateAbilityContexts.AddDefaulted_GetRef();
-		ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
-		ActivationContext.AbilitySpecHandle = Spec->Handle;
-		ActivationContext.AbilityTag = FirstTag;
-		ActivationContext.AbilityOwnerASC = ASC;
-		ActivationContext.Payload.Instigator = ControlledEnemy;
-		
-		FTargetSelectionResult& TargetSelectionResult = ActivationContext.TargetSelectionResults.AddDefaulted_GetRef();
-		TargetSelectionResult.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
-		
-		FSelectedTarget& Target = TargetSelectionResult.Targets.AddDefaulted_GetRef();
-		Target.TargetTile = TargetTile;
-		Target.ActorOnTile = TargetActor;
 	}
 
-	if (!CandidateAbilityContexts.IsEmpty())
+	if (CandidateAbilitySpecs.IsEmpty())
 	{
-		const int32 RandomIndex = FMath::RandRange(0, CandidateAbilityContexts.Num() - 1);
-		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+		return;
+	}
+
+	// CardAbility 중 랜덤으로 하나 선택합니다.
+	const int32 RandomIndex = FMath::RandRange(0, CandidateAbilitySpecs.Num() - 1);
+	const FGameplayAbilitySpec* SelectedAbilitySpec = CandidateAbilitySpecs[RandomIndex];
+	const ULetheCardAbility* SelectedCardAbility = Cast<ULetheCardAbility>(SelectedAbilitySpec->Ability);
+	
+	const FGameplayTagContainer AssetTags = SelectedCardAbility->GetAssetTags();
+	FGameplayTag FirstTag;
+	for (const FGameplayTag& Tag : AssetTags)
+	{
+		if (Tag.IsValid())
 		{
-			LetheGameState->EnqueueEnemyAbilityActivationContext(CandidateAbilityContexts[RandomIndex]);
+			FirstTag = Tag;
+			break;
 		}
-		
-		ArrowRenderer->DrawCardPreviewArrow(ControlledEnemy, { TargetActor });
+	}
+
+	FTargetingIntent TargetingIntent;
+	TargetingIntent.HitTile = TargetTile;
+	TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+
+	FEffectTargetTileSelectorContext ContextForTileHighlight;
+	ContextForTileHighlight.AvatarActor = ControlledEnemy;
+	ContextForTileHighlight.TargetingIntent = TargetingIntent;
+	SelectedCardAbility->GetCandidateTiles(ContextForTileHighlight);
+	
+	TArray<ATile*> HighlightTiles;
+	for (const FTargetSelectionResult& TargetResult : ContextForTileHighlight.OutTargetResults)
+	{
+		HighlightTiles.Append(TargetResult.GetTargetTiles());
+	}
+	ActorSelector->SetHighlightedTiles(EHighlightReason::TargetedByAI, HighlightTiles);
+
+	FEffectTargetTileSelectorContext Context;
+	Context.AvatarActor = ControlledEnemy;
+	Context.TargetingIntent = TargetingIntent;
+	SelectedCardAbility->GetTargetTiles(Context);
+
+	FAbilityActivationContext ActivationContext;
+	ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
+	ActivationContext.AbilitySpecHandle = SelectedAbilitySpec->Handle;
+	ActivationContext.TargetingIntent = TargetingIntent;
+	ActivationContext.AbilityTag = FirstTag;
+	ActivationContext.AbilityOwnerASC = ASC;
+	ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+	ActivationContext.Payload.Instigator = ControlledEnemy;
+	
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->EnqueueEnemyAbilityActivationContext(ActivationContext);
 	}
 }
 

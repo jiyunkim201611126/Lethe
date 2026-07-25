@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/TextRenderComponent.h"
-#include "Lethe/Lethe.h"
 #include "Lethe/Data/Stage/CubeCoord.h"
 #include "Lethe/Interface/HighlightInterface.h"
 #include "Tile.generated.h"
@@ -45,10 +44,8 @@ public:
 	ATile* GetTopTile();
 
 	//~ Begin IHighlightInterface
-	virtual void HighlightActorByMouse_Implementation() override;
-	virtual void UnhighlightActorByMouse_Implementation() override;
-	virtual void HighlightActorByAbility_Implementation(const int32 InOutlineColor) override;
-	virtual void UnhighlightActorByAbility_Implementation() override;
+	virtual void Highlight_Implementation(const EHighlightReason Reason) override;
+	virtual void Unhighlight_Implementation(const EHighlightReason Reason) override;
 	//~ End of IHighlightInterface
 
 	void SetTileVisionState(const ETileVisionState VisionState);
@@ -70,6 +67,9 @@ private:
 	void SetTileMesh(const TArray<UStaticMesh*>& Meshes, const TArray<ETileConnectionState>& UVOffsetType) const;
 	void SetTileTraceIgnore(const bool bIgnore) const;
 	
+	void RefreshHighlight() const;
+	int32 ResolveHighlightStencilValue() const;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UTextRenderComponent> TextRender;
@@ -91,14 +91,14 @@ private:
 	/** TopTile 변수의 값이 nullptr이면, 해당 객체가 가장 윗단에 위치한 TopTile입니다. */
 	TWeakObjectPtr<ATile> TopTile;
 
-	int32 OutlineColorByMouse = CUSTOM_DEPTH_RED;
-	int32 OutlineColorByCard = 0;
-
 	/** PlayerMovePhase에 사용되는 값으로, 플레이어 캐릭터가 경로 예약 시 해당 타일을 지나치는 경우 1씩 늘어납니다. */
 	UPROPERTY(VisibleInstanceOnly)
 	int32 OccupiedCount = 0;
 
 	ETileVisionState TileVisionState = ETileVisionState::None;
+
+	/** 여러 객체가  */
+	TMap<EHighlightReason, int32> HighlightReasonCounts;
 
 public:
 	void Debug_Noise() const;

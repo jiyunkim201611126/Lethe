@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "ActorSelectorComponent.h"
 
@@ -13,136 +13,77 @@ UActorSelectorComponent::UActorSelectorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UActorSelectorComponent::HighlightActorsByMouse(const TArray<AActor*>& Actors, const bool bIsTile)
+bool UActorSelectorComponent::SetHighlightedActors(const EHighlightReason Reason, const TArray<AActor*>& InActors)
 {
-	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
-	if (!TileManagerSubsystem)
-	{
-		return;
-	}
+	TArray<TScriptInterface<IHighlightInterface>> LastHighlightedActors = CurrentHighlightedActorsByReason.FindRef(Reason);
+	TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedActors;
+	CurrentHighlightedActors.Reserve(InActors.Num());
 	
-	LastMouseHoveredActors = CurrentMouseHoveredActors;
-	CurrentMouseHoveredActors.Reset();
-	for (AActor* Actor : Actors)
+	for (AActor* Actor : InActors)
 	{
 		if (Actor && Actor->Implements<UHighlightInterface>())
 		{
-			CurrentMouseHoveredActors.Add(Actor);
+			CurrentHighlightedActors.AddUnique(Actor);
 		}
 	}
 
-	bool bMayHaveDetectedOtherTile = false;
+	bool bChanged = false;
 
-	for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
+	for (const auto& LastHighlightedActor : LastHighlightedActors)
 	{
-		if (!LastMouseHoveredActor)
+		if (LastHighlightedActor && !CurrentHighlightedActors.Contains(LastHighlightedActor))
 		{
-			continue;
-		}
-		
-		if (!CurrentMouseHoveredActors.Contains(LastMouseHoveredActor))
-		{
-			bMayHaveDetectedOtherTile = true;
-			
-			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+			bChanged = true;
+			IHighlightInterface::Execute_Unhighlight(LastHighlightedActor.GetObject(), Reason);
 		}
 	}
 
-	for (auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
+	for (const auto& CurrentHighlightedActor : CurrentHighlightedActors)
 	{
-		if (!CurrentMouseHoveredActor)
+		if (CurrentHighlightedActor && !LastHighlightedActors.Contains(CurrentHighlightedActor))
 		{
-			continue;
-		}
-		
-		if (!LastMouseHoveredActors.Contains(CurrentMouseHoveredActor))
-		{
-			bMayHaveDetectedOtherTile = true;
-			
-			IHighlightInterface::Execute_HighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
+			bChanged = true;
+			IHighlightInterface::Execute_Highlight(CurrentHighlightedActor.GetObject(), Reason);
 		}
 	}
-	
-	if (bIsTile && bMayHaveDetectedOtherTile)
-	{
-		OnDetectedOtherTile.ExecuteIfBound();
-	}
+
+	CurrentHighlightedActorsByReason.Add(Reason, MoveTemp(CurrentHighlightedActors));
+
+	return bChanged;
 }
 
-void UActorSelectorComponent::HighlightTilesByMouse(const TArray<ATile*>& Tiles)
+bool UActorSelectorComponent::SetHighlightedTiles(const EHighlightReason Reason, const TArray<ATile*>& InTiles)
 {
 	TArray<AActor*> Actors;
-	Actors.Append(Tiles);
-	HighlightActorsByMouse(Actors, true);
+	Actors.Reserve(InTiles.Num());
+	for (ATile* Tile : InTiles)
+	{
+		Actors.Add(Tile);
+	}
+
+	return SetHighlightedActors(Reason, Actors);
 }
 
-void UActorSelectorComponent::UnhighlightActorByMouse()
+void UActorSelectorComponent::ClearHighlightedActors(const EHighlightReason Reason)
 {
-	for (const auto& LastMouseHoveredActor : LastMouseHoveredActors)
+	const TArray<TScriptInterface<IHighlightInterface>> CurrentHighlightedActors = CurrentHighlightedActorsByReason.FindRef(Reason);
+	for (const auto& CurrentHighlightedActor : CurrentHighlightedActors)
 	{
-		if (LastMouseHoveredActor)
+		if (CurrentHighlightedActor)
 		{
-			IHighlightInterface::Execute_UnhighlightActorByMouse(LastMouseHoveredActor.GetObject());
+			IHighlightInterface::Execute_Unhighlight(CurrentHighlightedActor.GetObject(), Reason);
 		}
 	}
-	LastMouseHoveredActors.Reset();
-	for (const auto& CurrentMouseHoveredActor : CurrentMouseHoveredActors)
-	{
-		if (CurrentMouseHoveredActor)
-		{
-			IHighlightInterface::Execute_UnhighlightActorByMouse(CurrentMouseHoveredActor.GetObject());
-		}
-	}
-	CurrentMouseHoveredActors.Reset();
+	CurrentHighlightedActorsByReason.Remove(Reason);
 }
 
-void UActorSelectorComponent::HighlightActorsByAbility(const TArray<ATile*>& Tiles, AActor* AbilityOwner)
+void UActorSelectorComponent::ClearAllHighlightedActors()
 {
-	UnhighlightActorsByAbility();
-	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+	TArray<EHighlightReason> HighlightReasons;
+	CurrentHighlightedActorsByReason.GetKeys(HighlightReasons);
+	for (const EHighlightReason HighlightReason : HighlightReasons)
 	{
-		for (ATile* Tile : Tiles)
-		{
-			if (!Tile)
-			{
-				continue;
-			}
-			
-			// 타일 위에 카드 주인이 있다면 검은색, 다른 게 있다면 초록색으로, 아무것도 없다면 파란색으로 아웃라인을 표시합니다.
-			int32 OutlineColor;
-			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
-			{
-				OutlineColor = ActorOnTile == AbilityOwner ? CUSTOM_DEPTH_BLACK : CUSTOM_DEPTH_GREEN;
-			}
-			else
-			{
-				OutlineColor = CUSTOM_DEPTH_BLUE;
-			}
-
-			IHighlightInterface::Execute_HighlightActorByAbility(Tile, OutlineColor);
-			CurrentHighlightedTilesByAbility.Add(Tile);
-		}
-	}
-	
-	CurrentHighlightedCharacterByAbility = AbilityOwner;
-	IHighlightInterface::Execute_HighlightActorByAbility(CurrentHighlightedCharacterByAbility.GetObject(), INDEX_NONE);
-}
-
-void UActorSelectorComponent::UnhighlightActorsByAbility()
-{
-	for (const auto& HighlightedTile : CurrentHighlightedTilesByAbility)
-	{
-		if (HighlightedTile)
-		{
-			IHighlightInterface::Execute_UnhighlightActorByAbility(HighlightedTile.GetObject());
-		}
-	}
-	CurrentHighlightedTilesByAbility.Reset();
-	
-	if (CurrentHighlightedCharacterByAbility)
-	{
-		IHighlightInterface::Execute_UnhighlightActorByAbility(CurrentHighlightedCharacterByAbility.GetObject());
-		CurrentHighlightedCharacterByAbility = nullptr;
+		ClearHighlightedActors(HighlightReason);
 	}
 }
 

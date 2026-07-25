@@ -8,6 +8,7 @@
 #include "Lethe/Data/PhaseData.h"
 #include "LethePlayerController.generated.h"
 
+class ATile;
 class AArrowRenderer;
 class UAbilitySystemComponent;
 class UActorSelectorComponent;
@@ -70,6 +71,9 @@ private:
 	void OnUpdatePreviewData(const FPreviewData& PreviewData) const;
 	
 	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
+
+	/** 액터 아래에 있는 타일을 하이라이팅 하고자 할 때 사용하는 헬퍼용 함수입니다. */
+	void GetTileUnderActorAsArray(const UWorld* World, const AActor* Actor, TArray<ATile*>& OutTiles) const;
 
 public:
 	FOnSelectCardSignature OnSelectCardDelegate;

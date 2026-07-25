@@ -218,26 +218,21 @@ void ALetheCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ALetheCharacterBase::HighlightActorByMouse_Implementation()
+void ALetheCharacterBase::Highlight_Implementation(const EHighlightReason Flag)
 {
-	GetMesh()->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
+	if (USkeletalMeshComponent* MeshComponent = GetMesh())
+	{
+		MeshComponent->SetRenderCustomDepth(true);
+		MeshComponent->SetCustomDepthStencilValue(CUSTOM_DEPTH_YELLOW);
+	}
 }
 
-void ALetheCharacterBase::UnhighlightActorByMouse_Implementation()
+void ALetheCharacterBase::Unhighlight_Implementation(const EHighlightReason Flag)
 {
-	GetMesh()->SetRenderCustomDepth(false);
-}
-
-void ALetheCharacterBase::HighlightActorByAbility_Implementation(const int32 InOutlineColor)
-{
-	GetMesh()->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(OutlineColor);
-}
-
-void ALetheCharacterBase::UnhighlightActorByAbility_Implementation()
-{
-	GetMesh()->SetRenderCustomDepth(false);
+	if (USkeletalMeshComponent* MeshComponent = GetMesh())
+	{
+		MeshComponent->SetRenderCustomDepth(false);
+	}
 }
 
 void ALetheCharacterBase::InitAbilityActorInfo() const

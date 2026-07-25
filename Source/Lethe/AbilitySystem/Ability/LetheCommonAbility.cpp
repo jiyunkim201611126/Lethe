@@ -119,19 +119,19 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 				}
 			}
 
-			TArray<AActor*> EffectedTargetActors;
+			TArray<AActor*> AffectedTargetActors;
 			for (const auto& Pair : OutResolveResult.TargetSpecHandlesByActor)
 			{
 				if (Pair.Key)
 				{
-					EffectedTargetActors.Add(Pair.Key);
+					AffectedTargetActors.Add(Pair.Key);
 					StartDeliveryEffects(Pair.Key, Pair.Value);
 				}
 			}
 
-			if (!EffectedTargetActors.IsEmpty())
+			if (!AffectedTargetActors.IsEmpty())
 			{
-				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, EffectedTargetActors);
+				OnEffectTriggered(EffectTargetMappingPolicy.MontageEventTag, AffectedTargetActors);
 			}
 		}
 	}

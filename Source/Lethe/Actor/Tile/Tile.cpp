@@ -4,6 +4,9 @@
 
 #include "Tile.h"
 
+#include "Lethe/Lethe.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
+
 ATile::ATile(const FObjectInitializer& ObjectInitializer)
 {
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -46,67 +49,6 @@ ATile* ATile::GetTopTile()
 	}
 
 	return this;
-}
-
-void ATile::HighlightActorByMouse_Implementation()
-{
-	if (IsTopTile())
-	{
-		// 이 타일이 꼭대기 타일인 경우 들어오는 분기입니다.
-		MainTile->SetRenderCustomDepth(true);
-		MainTile->SetCustomDepthStencilValue(OutlineColorByMouse);
-	}
-	else
-	{
-		Execute_HighlightActorByMouse(GetTopTile());
-	}
-}
-
-void ATile::UnhighlightActorByMouse_Implementation()
-{
-	if (IsTopTile())
-	{
-		if (OutlineColorByCard != 0)
-		{
-			// 기존에 카드에 의해 하이라이팅 되고 있었다면 그 색깔로 되돌립니다.
-			MainTile->SetCustomDepthStencilValue(OutlineColorByCard);
-		}
-		else
-		{
-			MainTile->SetRenderCustomDepth(false);
-		}
-	}
-	else
-	{
-		Execute_UnhighlightActorByMouse(GetTopTile());
-	}
-}
-
-void ATile::HighlightActorByAbility_Implementation(const int32 InOutlineColor)
-{
-	if (IsTopTile())
-	{
-		OutlineColorByCard = InOutlineColor;
-		MainTile->SetRenderCustomDepth(true);
-		MainTile->SetCustomDepthStencilValue(OutlineColorByCard);
-	}
-	else
-	{
-		Execute_HighlightActorByAbility(GetTopTile(), InOutlineColor);
-	}
-}
-
-void ATile::UnhighlightActorByAbility_Implementation()
-{
-	if (IsTopTile())
-	{
-		OutlineColorByCard = 0;
-		MainTile->SetRenderCustomDepth(false);
-	}
-	else
-	{
-		Execute_UnhighlightActorByAbility(GetTopTile());
-	}
 }
 
 void ATile::SetTileVisionState(const ETileVisionState VisionState)
@@ -222,6 +164,92 @@ void ATile::SetTileTraceIgnore(const bool bIgnore) const
 			Component->SetCollisionResponseToChannel(ECC_Tile, bIgnore ? ECR_Ignore : ECR_Block);
 		}
 	}
+}
+
+void ATile::Highlight_Implementation(const EHighlightReason Reason)
+{
+	if (IsTopTile())
+	{
+		int32& Count = HighlightReasonCounts.FindOrAdd(Reason);
+		++Count;
+		RefreshHighlight();
+	}
+	else
+	{
+		Execute_Highlight(GetTopTile(), Reason);
+	}
+}
+
+void ATile::Unhighlight_Implementation(const EHighlightReason Reason)
+{
+	if (IsTopTile())
+	{
+		int32& Count = HighlightReasonCounts.FindOrAdd(Reason);
+		--Count;
+		if (Count <= 0)
+		{
+			HighlightReasonCounts.Remove(Reason);
+		}
+		RefreshHighlight();
+	}
+	else
+	{
+		Execute_Unhighlight(GetTopTile(), Reason);
+	}
+}
+
+void ATile::RefreshHighlight() const
+{
+	const int32 StencilValue = ResolveHighlightStencilValue();
+	if (StencilValue == INDEX_NONE)
+	{
+		MainTile->SetRenderCustomDepth(false);
+		return;
+	}
+
+	MainTile->SetRenderCustomDepth(true);
+	MainTile->SetCustomDepthStencilValue(StencilValue);
+}
+
+int32 ATile::ResolveHighlightStencilValue() const
+{
+	EHighlightReason ActiveHighlightFlags = EHighlightReason::None;
+	for (const auto& Pair : HighlightReasonCounts)
+	{
+		if (Pair.Value > 0)
+		{
+			ActiveHighlightFlags |= Pair.Key;
+		}
+	}
+	
+	if (EnumHasAnyFlags(ActiveHighlightFlags, EHighlightReason::TargetCandidate))
+	{
+		return CUSTOM_DEPTH_RED;
+	}
+
+	if (EnumHasAnyFlags(ActiveHighlightFlags, EHighlightReason::Source))
+	{
+		return CUSTOM_DEPTH_BLACK;
+	}
+
+	if (EnumHasAnyFlags(ActiveHighlightFlags, EHighlightReason::SelectCandidate))
+	{
+		if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
+		{
+			if (TileManagerSubsystem->GetActorOnTile(this))
+			{
+				return CUSTOM_DEPTH_GREEN;
+			}
+		}
+		return CUSTOM_DEPTH_BLUE;
+	}
+
+	if (EnumHasAnyFlags(ActiveHighlightFlags, EHighlightReason::TargetedByAI))
+	{
+		return CUSTOM_DEPTH_PURPLE;
+	}
+
+	return INDEX_NONE;
 }
 
 void ATile::Debug_Noise() const

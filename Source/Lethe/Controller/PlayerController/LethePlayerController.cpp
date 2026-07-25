@@ -6,6 +6,7 @@
 #include "ActorSelectorComponent.h"
 #include "PlayerAbilityRequestComponent.h"
 #include "PreviewCoordinatorComponent.h"
+#include "Engine/World.h"
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
@@ -13,17 +14,18 @@
 #include "Lethe/Data/PreviewData.h"
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/CombatInterface.h"
+#include "Lethe/Interface/HighlightInterface.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
+#include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 ALethePlayerController::ALethePlayerController()
 {
-	ActorSelector = CreateDefaultSubobject<UActorSelectorComponent>("ActorSelector");
-	ActorSelector->OnDetectedOtherTile.BindUObject(this, &ThisClass::OnOtherTileDetected);
+	ActorSelector = CreateDefaultSubobject<UActorSelectorComponent>(TEXT("ActorSelector"));
 
-	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>("PreviewCoordinatorComponent");
+	PreviewCoordinatorComponent = CreateDefaultSubobject<UPreviewCoordinatorComponent>(TEXT("PreviewCoordinatorComponent"));
 	PreviewCoordinatorComponent->OnUpdatePreviewData.AddUObject(this, &ThisClass::OnUpdatePreviewData);
 
-	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>("PlayerAbilityRequestComponent");
+	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>(TEXT("PlayerAbilityRequestComponent"));
 }
 
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
@@ -90,6 +92,8 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		// 최종적으로 선택된 캐릭터가 없는 경우 얼리리턴합니다.
 		return;
 	}
+	
+	ActorSelector->SetHighlightedActors(EHighlightReason::SelectedCharacter, { SelectedCharacter.Get() });
 
 	const IAbilitySystemInterface* AbilitySystemInterface = Cast<IAbilitySystemInterface>(SelectedCharacter);
 	UAbilitySystemComponent* AbilitySystemComponent = AbilitySystemInterface ? AbilitySystemInterface->GetAbilitySystemComponent() : nullptr;
@@ -122,8 +126,8 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 
 			if (bIsSelectingCharacter)
 			{
-				// 이동 가능 범위를 하이라이팅합니다.
-				ActorSelector->HighlightActorsByAbility(OutMovableTiles, SelectedCharacter.Get());
+				// 선택된 캐릭터와 이동 가능 범위를 하이라이팅합니다.
+				ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, OutMovableTiles);
 			}
 			else
 			{
@@ -143,7 +147,9 @@ void ALethePlayerController::ResetSelectedCharacter()
 {
 	if (SelectedCharacter.IsValid())
 	{
-		ActorSelector->UnhighlightActorsByAbility();
+		ActorSelector->ClearHighlightedActors(EHighlightReason::SelectedCharacter);
+		ActorSelector->ClearHighlightedActors(EHighlightReason::SelectCandidate);
+		ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
 		SelectedCharacter.Reset();
 	}
 }
@@ -230,6 +236,10 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheCardAbility;
 				SelectedCardOwnerASC = OwnerASC;
+
+				TArray<ATile*> SourceTiles;
+				GetTileUnderActorAsArray(GetWorld(), CardOwner, SourceTiles);
+				ActorSelector->SetHighlightedTiles(EHighlightReason::Source, SourceTiles);
 			}
 		}
 
@@ -241,8 +251,9 @@ void ALethePlayerController::ResetSelectedCard()
 {
 	SelectedCardAbility.Reset();
 	SelectedCardOwnerASC.Reset();
-	ActorSelector->UnhighlightActorsByAbility();
-	ActorSelector->UnhighlightActorByMouse();
+	ActorSelector->ClearHighlightedActors(EHighlightReason::SelectCandidate);
+	ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
+	ActorSelector->ClearHighlightedActors(EHighlightReason::Source);
 	ArrowRenderer->DeactivateCardPreviewArrow();
 	if (OnCancelCardSelectCancelDelegate.IsBound())
 	{
@@ -274,11 +285,6 @@ void ALethePlayerController::BeginPlay()
 
 void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ActorSelector)
-	{
-		ActorSelector->OnDetectedOtherTile.Unbind();
-	}
-
 	if (PreviewCoordinatorComponent)
 	{
 		PreviewCoordinatorComponent->OnUpdatePreviewData.RemoveAll(this);
@@ -323,22 +329,23 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 	FTileHitResult OutTileHitResult;
 	ActorSelector->GetTileHitResult(OutTileHitResult);
 
-	if (SelectedCharacter.IsValid() && bMouseOnWorldSection)
+	// 선택된 캐릭터가 있는 경우 들어가는 분기입니다.
+	if (SelectedCharacter.IsValid())
 	{
-		// 선택된 캐릭터가 있는 경우 들어오는 분기입니다.
-		if (OutTileHitResult.Tile)
+		// 마우스가 올려져있는 타일을 하이라이팅합니다.
+		TArray<ATile*> MouseHoverTileArray;
+		if (bMouseOnWorldSection && OutTileHitResult.Tile)
 		{
-			TArray<ATile*> HighlightTile;
-			HighlightTile.Add(OutTileHitResult.Tile);
-			ActorSelector->HighlightTilesByMouse(HighlightTile);
+			MouseHoverTileArray.Add(OutTileHitResult.Tile);
 		}
+		ActorSelector->SetHighlightedTiles(EHighlightReason::TargetCandidate, MouseHoverTileArray);
 		return;
 	}
 
 	// 선택된 카드가 있는 경우 들어가는 분기입니다.
 	if (SelectedCardAbility.IsValid() && SelectedCardOwnerASC.IsValid())
 	{
-		if (AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor())
+		if (const AActor* CardOwner = SelectedCardOwnerASC->GetAvatarActor())
 		{
 			// 선택 가능한 타일과 타겟 후보 타일을 모두 가져옵니다.
 			FEffectTargetTileSelectorContext Context;
@@ -348,48 +355,50 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			SelectedCardAbility->GetCandidateTiles(Context);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetSelectionResult& Result : Context.OutTargetResults)
+			for (const FTargetSelectionResult& TargetResult : Context.OutTargetResults)
 			{
-				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + Result.Targets.Num());
-				for (const FSelectedTarget& Target : Result.Targets)
+				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + TargetResult.Targets.Num());
+				for (const FSelectedTarget& Target : TargetResult.Targets)
 				{
 					TargetCandidateTiles.Add(Target.TargetTile.Get());
 				}
 			}
 
+			TArray<ATile*> SourceTiles;
+			GetTileUnderActorAsArray(GetWorld(), CardOwner, SourceTiles);
+
 			// 타겟 후보 타일을 성공적으로 검출해낸 경우 들어가는 분기입니다.
 			if (!TargetCandidateTiles.IsEmpty() && bMouseOnWorldSection)
 			{
-				// 선택 가능 타일 중 타겟 후보 타일을 제거합니다.
-				Context.OutSelectCandidateTiles.RemoveAll([&TargetCandidateTiles](const ATile* Tile)
-				{
-					return TargetCandidateTiles.Contains(Tile);
-				});
-
 				// 각각 역할에 맞게 하이라이팅합니다.
-				ActorSelector->HighlightActorsByAbility(Context.OutSelectCandidateTiles, CardOwner);
-				ActorSelector->HighlightTilesByMouse(TargetCandidateTiles);
+				ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Context.OutSelectCandidateTiles);
+				ActorSelector->SetHighlightedTiles(EHighlightReason::Source, SourceTiles);
+				const bool bTargetCandidateChanged = ActorSelector->SetHighlightedTiles(EHighlightReason::TargetCandidate, TargetCandidateTiles);
+				if (bTargetCandidateChanged)
+				{
+					OnOtherTileDetected();
+				}
 				return;
 			}
 
 			// 사용 범위를 벗어난 경우 선택 후보만 하이라이팅하고 프리뷰 및 Arrow를 비활성화합니다.
-			ActorSelector->HighlightActorsByAbility(Context.OutSelectCandidateTiles, CardOwner);
+			ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Context.OutSelectCandidateTiles);
+			ActorSelector->SetHighlightedTiles(EHighlightReason::Source, SourceTiles);
+			ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
 			PreviewCoordinatorComponent->StopAllPreview();
 			ArrowRenderer->DeactivateCardPreviewArrow();
+			return;
 		}
 	}
 
 	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnWorldSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
-		// 이 경우 nullptr여도 이전 하이라이팅을 지워야 하기 때문에, null 체크 없이 호출합니다.
-		TArray<AActor*> HighlightActors;
-		HighlightActors.Add(OutTileHitResult.ActorOnTile);
-		ActorSelector->HighlightActorsByMouse(HighlightActors);
+		ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
 		return;
 	}
 
-	ActorSelector->UnhighlightActorByMouse();
+	ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
 }
 
 void ALethePlayerController::OnOtherTileDetected() const
@@ -413,10 +422,10 @@ void ALethePlayerController::OnOtherTileDetected() const
 
 			// Arrow 표시 용도의 TargetActors를 생성합니다.
 			TArray<AActor*> TargetActors;
-			for (const FTargetSelectionResult& Result : Context.OutTargetResults)
+			for (const FTargetSelectionResult& TargetResult : Context.OutTargetResults)
 			{
-				TargetActors.Reserve(TargetActors.Num() + Result.Targets.Num());
-				for (const auto& Target : Result.Targets)
+				TargetActors.Reserve(TargetActors.Num() + TargetResult.Targets.Num());
+				for (const auto& Target : TargetResult.Targets)
 				{
 					if (Target.ActorOnTile.IsValid() && Target.ActorOnTile->Implements<UCombatInterface>())
 					{
@@ -463,4 +472,20 @@ void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemCom
 bool ALethePlayerController::IsCardSelected() const
 {
 	return SelectedCardAbility.IsValid();
+}
+
+void ALethePlayerController::GetTileUnderActorAsArray(const UWorld* World, const AActor* Actor, TArray<ATile*>& OutTiles) const
+{
+	OutTiles.Reset();
+
+	const UTileManagerSubsystem* TileManagerSubsystem = World ? World->GetSubsystem<UTileManagerSubsystem>() : nullptr;
+	if (!TileManagerSubsystem)
+	{
+		return;
+	}
+
+	if (ATile* Tile = TileManagerSubsystem->GetTileUnderActor(Actor))
+	{
+		OutTiles.Add(Tile);
+	}
 }

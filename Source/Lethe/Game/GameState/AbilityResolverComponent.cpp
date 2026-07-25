@@ -3,6 +3,7 @@
 #include "AbilityResolverComponent.h"
 
 #include "AbilitySystemComponent.h"
+#include "Lethe/Lethe.h"
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
@@ -268,10 +269,28 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	{
 		bool bHasCombatTarget = false;
 		
-		for (FTargetSelectionResult& Result : ActivationContext->TargetSelectionResults)
+		if (CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
+		{
+			// Enemy가 사용한 경우, 시전 직전에 TargetTiles를 갱신합니다.
+			if (const FGameplayAbilitySpec* Spec = ActivationContext->AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationContext->AbilitySpecHandle))
+			{
+				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
+				{
+					FEffectTargetTileSelectorContext Context;
+					Context.AvatarActor = AbilityOwnerASC->GetAvatarActor();
+					Context.TargetingIntent = ActivationContext->TargetingIntent;
+
+					CardAbility->GetTargetTiles(Context);
+
+					ActivationContext->TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+				}
+			}
+		}
+		
+		for (FTargetSelectionResult& TargetResult : ActivationContext->TargetSelectionResults)
 		{
 			bool bHasCombatTargetForCurrentResult = false;
-			for (FSelectedTarget& Target : Result.Targets)
+			for (FSelectedTarget& Target : TargetResult.Targets)
 			{
 				if (Target.ActorOnTile.IsValid())
 				{
@@ -286,7 +305,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			{
 				// Enemy가 사용한 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓습니다.
 				ATile* DummyTargetTile = nullptr;
-				for (const FSelectedTarget& Target : Result.Targets)
+				for (const FSelectedTarget& Target : TargetResult.Targets)
 				{
 					if (Target.TargetTile.IsValid())
 					{
@@ -300,7 +319,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 					const FVector DummyActorLocation = DummyTargetTile->GetActorLocation() + FVector(0.f, 0.f, 45.f);
 					DummyActor->SetActorLocation(DummyActorLocation);
 
-					FSelectedTarget& DummyTarget = Result.Targets.AddDefaulted_GetRef();
+					FSelectedTarget& DummyTarget = TargetResult.Targets.AddDefaulted_GetRef();
 					DummyTarget.TargetTile = DummyTargetTile;
 					DummyTarget.ActorOnTile = DummyActor;
 				}

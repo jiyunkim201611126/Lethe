@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
-#include "Lethe/Lethe.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Interface/HighlightInterface.h"
 #include "LetheCharacterBase.generated.h"
@@ -47,10 +46,8 @@ public:
 	//~ End of AActor Interface
 
 	//~ Begin IHighlightInterface
-	virtual void HighlightActorByMouse_Implementation() override;
-	virtual void UnhighlightActorByMouse_Implementation() override;
-	virtual void HighlightActorByAbility_Implementation(const int32 InOutlineColor) override;
-	virtual void UnhighlightActorByAbility_Implementation() override;
+	virtual void Highlight_Implementation(const EHighlightReason Flag) override;
+	virtual void Unhighlight_Implementation(const EHighlightReason Flag) override;
 	//~ End of IHighlightInterface
 	
 	FGameplayTag GetCharacterTag();
@@ -102,8 +99,6 @@ protected:
 	ETeamSide TeamSide;
 
 private:
-	int32 OutlineColor = CUSTOM_DEPTH_YELLOW;
-
 	UPROPERTY()
 	TArray<TObjectPtr<UWidgetComponent>> AttributeWidgetComponents;
 

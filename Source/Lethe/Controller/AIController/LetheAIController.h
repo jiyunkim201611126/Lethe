@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "LetheAIController.generated.h"
 
+class UActorSelectorComponent;
 enum class EBFSType : uint8;
 enum class EPhaseState : uint8;
 class AArrowRenderer;
@@ -65,6 +66,9 @@ private:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	TObjectPtr<UStateTreeAIComponent> StateTreeAIComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UActorSelectorComponent> ActorSelector;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ArrowRenderer")
 	TSubclassOf<AArrowRenderer> ArrowRendererClass;

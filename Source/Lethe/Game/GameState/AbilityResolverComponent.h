@@ -72,6 +72,8 @@ private:
 	ETryAbilityActivationResult TryActivateNextEnemyAbility();
 	ETryAbilityActivationResult TryActivateAbility(FAbilityActivationContext* ActivationContext);
 
+	bool IsMovementAbility(const FGameplayTag& AbilityTag) const;
+
 	/** Activation 처리 중 보류했던 Ability 종료/실패 콜백을 처리하는 함수입니다. */
 	bool ProcessPendingAbilityCallbacks();
 	

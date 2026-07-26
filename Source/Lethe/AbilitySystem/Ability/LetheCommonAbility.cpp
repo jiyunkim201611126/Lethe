@@ -22,6 +22,8 @@ ULetheCommonAbility::ULetheCommonAbility()
 
 bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
+	OutPreviewData.SourcePreviewData.Reset();
+	OutPreviewData.TargetPreviewData.Reset();
 	if (!SourceASC || TargetSelectionResults.IsEmpty())
 	{
 		return false;

@@ -25,7 +25,6 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	FPreviewData PreviewData;
 	
 	TMap<FGameplayAttribute, float> OutCostPreviewData;
-	FGameplayEffectPreviewData OutPreviewData;
 	
 	// Target과 관계 없이 CostEffect에 의해 Source에게 적용되는 Preview 데이터를 추출해 가져옵니다.
 	if (PreviewContext.SelectedCardAbility->TryGetCostEffectPreviewData(PreviewContext.SourceASC, OutCostPreviewData))
@@ -35,7 +34,7 @@ void UPreviewCoordinatorComponent::StartCalculatingPreviewData(const FPreviewCon
 	}
 	
 	// Target들에게 적용되는 Preview 데이터를 추출해 가져옵니다.
-	OutPreviewData.SourcePreviewData.Empty();
+	FGameplayEffectPreviewData OutPreviewData;
 	if (PreviewContext.SelectedCardAbility->TryGetEffectsForSourceAndTargetPreviewData(PreviewContext.SourceASC, PreviewContext.TargetSelectionResults, OutPreviewData))
 	{
 		FAttributePreviewDelta& AttributePreviewDelta = PreviewData.ASCToPreviewData.FindOrAdd(PreviewContext.SourceASC);

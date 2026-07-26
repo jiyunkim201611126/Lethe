@@ -725,6 +725,7 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 
 void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
+	OutText = FText::GetEmpty();
 	if (!OwnerASC)
 	{
 		return;

@@ -58,8 +58,9 @@ void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context
 	}
 }
 
-bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
+bool ULetheCardAbility::TryGetCostEffectPreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const
 {
+	OutCostPreviewData.Reset();
 	if (CostGameplayEffectClass && SourceASC)
 	{
 		// Ability Cost는 Ability가 소유자이므로, EffectSpec을 직접 만들어서 Preview Data를 추출합니다.
@@ -70,18 +71,24 @@ bool ULetheCardAbility::TryGetCostEffectPreviewData(const UAbilitySystemComponen
 		TArray<FGameplayEffectSpecHandle> CostEffectSpecHandleArray;
 		CostEffectSpecHandleArray.Add(CostEffectSpecHandle);
 
-		return TryGetGameplayEffectPreviewData(nullptr, CostEffectSpecHandleArray, OutCostPreviewData);
+		return TryGetGameplayEffectPreviewData(SourceASC, CostEffectSpecHandleArray, OutCostPreviewData);
 	}
 	return false;
 }
 
 bool ULetheCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
+	// Preview가 불필요한 Ability도 존재할 수 있으므로 기본 구현은 false를 반환합니다.
 	return false;
 }
 
 bool ULetheCardAbility::TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const
 {
+	if (!PreviewTargetASC)
+	{
+		return false;
+	}
+	
 	// GameplayEffect가 적용됐을 때 어떤 변화값이 있는지 가져와서 OutData에 채워줍니다.
 	for (auto& SpecHandle : SpecHandles)
 	{

@@ -24,9 +24,7 @@ void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
 
 void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately)
 {
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const bool bIsMovementAbility = ActivationContext.AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationContext.AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
-	if (!bIsMovementAbility)
+	if (!IsMovementAbility(ActivationContext.AbilityTag))
 	{
 		// Movement Ability가 아닌 경우 들어오는 분기입니다.
 		for (const FAbilityActivationContext& PlayerAbilityActivationContext : PlayerAbilityActivationContexts)
@@ -49,7 +47,7 @@ void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityAc
 
 void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
-	while (!PlayerAbilityActivationContexts.IsEmpty())
+	if (!PlayerAbilityActivationContexts.IsEmpty())
 	{
 		CurrentActivationCharacterTeamSide = ETeamSide::Player;
 
@@ -76,11 +74,6 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextPlayerAbil
 
 	// 아직 사용되지 않은 Ability 중 가장 먼저 사용한 Ability의 사용을 시작합니다.
 	FAbilityActivationContext* ActivationContext = &PlayerAbilityActivationContexts[0];
-	if (!ActivationContext)
-	{
-		return ETryAbilityActivationResult::FailedLogicError;
-	}
-
 	return TryActivateAbility(ActivationContext);
 }
 
@@ -110,7 +103,7 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 	// 카드 사용 실패 시 모든 카드에 대해 사용 실패를 콜백하고 ActivationContext를 정리합니다.
 	for (const FAbilityActivationContext& PlayerAbilityActivationContext : PlayerAbilityActivationContexts)
 	{
-		if (PlayerAbilityActivationContext.Index != INDEX_NONE)
+		if (!IsMovementAbility(PlayerAbilityActivationContext.AbilityTag))
 		{
 			OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContext.Index, false);
 		}
@@ -237,9 +230,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	ActivationContext->Payload.Instigator = AvatarActor;
 	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AvatarActor->GetName());
 
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	const bool bIsMovementAbility = ActivationContext->AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || ActivationContext->AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
-	if (bIsMovementAbility)
+	if (IsMovementAbility(ActivationContext->AbilityTag))
 	{
 		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
 
@@ -362,6 +353,12 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	return ETryAbilityActivationResult::Success;
 }
 
+bool UAbilityResolverComponent::IsMovementAbility(const FGameplayTag& AbilityTag) const
+{
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	return AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Swap);
+}
+
 void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityEndedData)
 {
 	LETHE_LOG(LogAbilityResolver, Log, "Ability Ended");
@@ -415,9 +412,7 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 		{
 			if (PlayerAbilityActivationContexts.IsValidIndex(0))
 			{
-				const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-				const bool bIsMovementAbility = PlayerAbilityActivationContexts[0].AbilityTag.MatchesTagExact(LetheGameplayTags.Ability_Move) || PlayerAbilityActivationContexts[0].AbilityTag.MatchesTag(LetheGameplayTags.Ability_Swap);
-				if (!bIsMovementAbility)
+				if (!IsMovementAbility(PlayerAbilityActivationContexts[0].AbilityTag))
 				{
 					OnResolveUseCard.ExecuteIfBound(PlayerAbilityActivationContexts[0].Index, true);
 				}

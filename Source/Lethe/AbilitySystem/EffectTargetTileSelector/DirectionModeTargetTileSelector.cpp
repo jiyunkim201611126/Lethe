@@ -35,6 +35,103 @@ void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorC
 	ResolveTargetActors(Context);
 }
 
+void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
+{
+	if (!Context.IsValid())
+	{
+		return;
+	}
+
+	// 방향 개수가 홀수면 보정 없이 GetTargetTiles를 그대로 사용합니다.
+	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
+	if (ClampedDirectionCount % 2 == 1)
+	{
+		GetTargetTiles(Context);
+		return;
+	}
+
+	// AI가 서있는 타일에서 목표 타일까지의 2D 방향과 거리를 계산합니다.
+	const FVector CurrentLocation = Context.CurrentTile->GetActorLocation();
+	const FVector TargetLocation = Context.TargetingIntent.HitTile->GetActorLocation();
+	const FVector2D DesiredDirection(TargetLocation.X - CurrentLocation.X, TargetLocation.Y - CurrentLocation.Y);
+	if (DesiredDirection.IsNearlyZero())
+	{
+		GetTargetTiles(Context);
+		return;
+	}
+
+	const int32 TargetDirection = FindClosestHexDirection(DesiredDirection);
+	const float TargetDistance = FVector::Dist(CurrentLocation, TargetLocation);
+
+	TArray<int32> UpperDirectionCandidates;
+	UpperDirectionCandidates.Reserve(2);
+	UpperDirectionCandidates.Add(TargetDirection);
+	UpperDirectionCandidates.Add(FCubeCoord::NormalizeHexDirection(TargetDirection + 1));
+
+	// 목표를 포함하면서도 가장 많은 적을 공격하도록 선택합니다.
+	FEffectTargetTileSelectorContext BestContext = Context;
+	int32 BestScore = INDEX_NONE;
+	for (const int32 UpperDirection : UpperDirectionCandidates)
+	{
+		FEffectTargetTileSelectorContext CandidateContext = Context;
+		CandidateContext.OutSelectCandidateTiles.Reset();
+		CandidateContext.OutTargetResults.Reset();
+
+		// AI가 사용할 조준점과 AI의 현재 타일 위치를 기준으로 ImpactPoint를 계산합니다.
+		const FVector AimPoint = MakeAIAimPointForEvenDirectionCount(Context.CurrentTile, UpperDirection);
+		const FVector AimDirection = (AimPoint - CurrentLocation).GetSafeNormal();
+		CandidateContext.TargetingIntent.ImpactPoint = CurrentLocation + AimDirection * TargetDistance;
+
+		GetTargetTiles(CandidateContext);
+
+		int32 TargetCount = 0;
+		bool bContainsIntentTile = false;
+		for (const FTargetSelectionResult& TargetResult : CandidateContext.OutTargetResults)
+		{
+			for (const FSelectedTarget& Target : TargetResult.Targets)
+			{
+				if (Target.TargetTile.Get() == Context.TargetingIntent.HitTile)
+				{
+					bContainsIntentTile = true;
+				}
+
+				if (Target.ActorOnTile.IsValid())
+				{
+					++TargetCount;
+				}
+			}
+		}
+
+		const int32 Score = TargetCount + (bContainsIntentTile ? 10000 : 0);
+		if (BestScore < Score)
+		{
+			BestScore = Score;
+			BestContext = MoveTemp(CandidateContext);
+		}
+	}
+
+	Context = MoveTemp(BestContext);
+}
+
+FVector FDirectionModeTargetTileSelector::MakeAIAimPointForEvenDirectionCount(const ATile* SourceTile, const int32 UpperDirection) const
+{
+	if (!SourceTile)
+	{
+		return FVector::ZeroVector;
+	}
+
+	// 경계 방향이 들어왔으므로, 그 숫자와 1을 뺀 숫자로 두 방향 벡터를 계산합니다.
+	const FVector2D UpperDirectionVector = GetHexDirectionVector(UpperDirection);
+	const FVector2D LowerDirectionVector = GetHexDirectionVector(UpperDirection - 1);
+
+	// 경계 방향 벡터를 계산합니다.
+	const FVector2D BoundaryDirection = (UpperDirectionVector + LowerDirectionVector).GetSafeNormal();
+
+	// AI가 사용할 조준 위치를 계산해 반환합니다.
+	const FVector SourceLocation = SourceTile->GetActorLocation();
+	return SourceLocation + FVector(BoundaryDirection.X, BoundaryDirection.Y, 0.f) * FCubeCoord::GetTileWidthInterval();
+}
+
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
 	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
@@ -396,7 +493,7 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 		return;
 	}
 
-	// 6개의 방향 중 가장 가까운 방향으로 스냅, 그 방향을 중심으로 해 반시계 방향으로 회전하며 선택합니다.
+	// 6개의 방향 중 가장 가까운 방향으로 스냅, 그 방향을 중심으로 반시계 방향으로 회전하며 선택합니다.
 	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
 	OutDirections.Reserve(ClampedDirectionCount);
 
@@ -411,6 +508,7 @@ void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* Curren
 		return;
 	}
 
+	// 방향 개수가 짝수인 경우, 가장 가까운 '경계 방향'으로 스냅해, 그 방향을 증심으로 반시계 방향으로 회전하며 선택합니다.
 	const int32 UpperDirection = FindClosestHexDirectionBoundary(DesiredDirection);
 	const int32 HalfDirectionCount = ClampedDirectionCount / 2;
 	for (int32 Offset = -HalfDirectionCount; Offset <= HalfDirectionCount - 1; ++Offset)

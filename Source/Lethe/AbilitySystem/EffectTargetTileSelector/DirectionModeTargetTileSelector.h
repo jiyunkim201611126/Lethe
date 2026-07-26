@@ -32,6 +32,9 @@ struct FResolvedPrimaryTargetTile
 
 /**
  * 방향을 기반으로 선택하는 Selector입니다.
+ * 방향 개수가 홀수일 땐 FCubeCoord에서 사용하는 Direction(0~5)의 의미를 그대로 사용합니다.
+ * 짝수인 경우, ImpactPoint를 타일의 '경계'로 스냅해서 사용하기 때문에, 의미가 약간 달라져 'UpperDirection'이라는 이름으로 사용합니다.
+ * UpperDirection이 D이면, 선택되는 방향은 (D - 1, D) Direction입니다.
  */
 USTRUCT(BlueprintType)
 struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSelector
@@ -43,12 +46,16 @@ public:
 	
 	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const override;
 
 protected:
 	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
 
 private:
+	/** 방향 개수가 짝수일 때, AI가 타일 중심이 아니라 두 방향 사이의 경계선쪽으로 조준하도록 그 위치 벡터를 반환합니다. */
+	FVector MakeAIAimPointForEvenDirectionCount(const ATile* SourceTile, int32 UpperDirection) const;
+	
 	void HandleMeleeTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 	void HandleStraightTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 	void HandleParabolaTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;

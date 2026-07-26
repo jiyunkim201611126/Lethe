@@ -18,7 +18,7 @@ public:
 	int32 GetEnemyAbilityPriority() const;
 
 	void ProcessPlanPhase() const;
-	void ProcessTelegraphPlan() const;
+	void ProcessCommitPlan() const;
 	
 	//~ Begin ICombatInterface
 	virtual void UpdateHiddenByTile_Implementation(const ATile* Tile) override;
@@ -32,12 +32,6 @@ public:
 
 protected:
 	virtual void OnMoveTileChanged(ATile* OldTile, ATile* NewTile) override;
-
-protected:
-	/** 캐릭터의 사정거리입니다. */
-	// TODO: 현재로선 간단하게 구현하기 위해 이곳에 선언되었으나, 추후 Ability에 선언된 AbilityRange를 사용하도록 구현할 필요가 있습니다.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status")
-	FBFSRange AbilityRange;
 
 private:
 	int32 AbilityPriority = INT_MAX;

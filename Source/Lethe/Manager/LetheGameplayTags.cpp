@@ -73,8 +73,8 @@ void FLetheGameplayTags::InitializeNativeGameplayTags()
 	
 	GameplayTags.Event_StateTree_PlanPhaseStarted = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.StateTree.PlanPhaseStarted"), FString(""));
-	GameplayTags.Event_StateTree_TelegraphPlan = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Event.StateTree.TelegraphPlan"), FString(""));
+	GameplayTags.Event_StateTree_CommitPlan = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Event.StateTree.CommitPlan"), FString(""));
 	
 	GameplayTags.Event_Montage_EndAbility = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Event.Montage.EndAbility"), FString(""));

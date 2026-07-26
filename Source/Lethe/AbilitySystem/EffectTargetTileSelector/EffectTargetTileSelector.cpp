@@ -13,6 +13,11 @@ void FEffectTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContext&
 {
 }
 
+void FEffectTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
+{
+	GetTargetTiles(Context);
+}
+
 void FEffectTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
 }

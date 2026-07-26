@@ -25,11 +25,11 @@ void AEnemyCharacterBase::ProcessPlanPhase() const
 	}
 }
 
-void AEnemyCharacterBase::ProcessTelegraphPlan() const
+void AEnemyCharacterBase::ProcessCommitPlan() const
 {
 	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
 	{
-		AIController->ProcessTelegraphPlan();
+		AIController->ProcessCommitPlan();
 	}
 }
 
@@ -123,9 +123,4 @@ void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile)
 	{
 		RoomManagerSubsystem->NotifyCharacterTileChanged(this, OldTile, NewTile);
 	}
-}
-
-const FBFSRange& AEnemyCharacterBase::GetAbilityRange() const
-{
-	return AbilityRange;
 }

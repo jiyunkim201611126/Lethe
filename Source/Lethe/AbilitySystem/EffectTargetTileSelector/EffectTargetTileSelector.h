@@ -19,13 +19,17 @@ enum class ETargetTeamRelation : uint8
 	OpposingTeam,
 };
 
+/**
+ * CandidateTiles나 TargetTiles가 필요한 경우 CardAbility의 함수를 호출하며 사용하는 구조체입니다.
+ * 외부에서는 AvatarActor와 TargetingIntent만 채워서 호출하면 나머지는 CardAbility와 TargetTileSelector가 채워줍니다.
+ */
 struct FEffectTargetTileSelectorContext
 {
 	const AActor* AvatarActor = nullptr;
+	FTargetingIntent TargetingIntent;
+
 	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
 	const ATile* CurrentTile = nullptr;
-
-	FTargetingIntent TargetingIntent;
 
 	TArray<ATile*> OutSelectCandidateTiles;
 	TArray<FTargetSelectionResult> OutTargetResults;
@@ -53,6 +57,12 @@ public:
 
 	/** 시전 결과에 포함되는 타일과 유효한 대상 Actor를 Out 인자로 반환합니다. */
 	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
+
+	/**
+	 * 기본 구현은 GetTargetTiles를 그대로 호출합니다.
+	 * 필요에 따라 하위 구조체가 오버라이드해 AI가 Player를 공격하기 위해 어떤 타일이 필요한지 계산합니다.
+	 */
+	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const;
 
 protected:
 	/** 시전 가능 범위에 해당하는 타일들을 Out 인자로 반환합니다. */

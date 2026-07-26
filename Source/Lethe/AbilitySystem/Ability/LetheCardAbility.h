@@ -52,6 +52,9 @@ public:
 	 */
 	void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
 
+	/** AI가 TargetTileSelector를 활용할 때 사용하는 함수입니다. */
+	void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const;
+
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const;
@@ -93,6 +96,8 @@ private:
 	
 	UFUNCTION(BlueprintPure, Category = "Effect")
 	FText GetWeightDescription(const int32 Weight) const;
+
+	void FillTileSelectorContext(FEffectTargetTileSelectorContext& Context) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")

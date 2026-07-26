@@ -61,7 +61,7 @@ struct FLetheGameplayTags
 
 	//~ Begin StateTree Event
 	FGameplayTag Event_StateTree_PlanPhaseStarted;
-	FGameplayTag Event_StateTree_TelegraphPlan;
+	FGameplayTag Event_StateTree_CommitPlan;
 	//~ End of StateTree Event
 
 	//~ Begin Montage Event

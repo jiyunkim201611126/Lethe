@@ -82,12 +82,12 @@ void ALetheAIController::ProcessPlanPhase() const
 	StateTreeAIComponent->SendStateTreeEvent(Event);
 }
 
-void ALetheAIController::ProcessTelegraphPlan() const
+void ALetheAIController::ProcessCommitPlan() const
 {
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	
 	FStateTreeEvent Event;
-	Event.Tag = LetheGameplayTags.Event_StateTree_TelegraphPlan;
+	Event.Tag = LetheGameplayTags.Event_StateTree_CommitPlan;
 	StateTreeAIComponent->SendStateTreeEvent(Event);
 }
 
@@ -105,10 +105,10 @@ void ALetheAIController::OnAbilityAttempt(AActor* AbilityInstigator) const
 	}
 }
 
-int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutNearestTiles)
+int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutTiles)
 {
 	int32 Distance = INDEX_NONE;
-	OutNearestTiles.Reset();
+	OutTiles.Reset();
 	if (const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 	{
 		if (const ATile* Tile = TileManagerSubsystem->GetTileUnderActor(GetPawn()))
@@ -120,7 +120,7 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 				{
 					return PlayerCharacterTileCoords.IsEmpty();
 				},
-				[TileManagerSubsystem, &Distance, &OutNearestTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+				[TileManagerSubsystem, &Distance, &OutTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 				{
 					if (TileData && TileData->TopTile.IsValid())
 					{
@@ -128,13 +128,13 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 						{
 							if (ActorOnTile->Implements<UPlayerCharacterInterface>())
 							{
-								if (OutNearestTiles.IsEmpty() || Distance == Depth)
+								if (OutTiles.IsEmpty() || Distance == Depth)
 								{
 									Distance = Depth;
-									OutNearestTiles.Add(TileData->TopTile.Get());
+									OutTiles.Add(TileData->TopTile.Get());
 									return true;
 								}
-								if (!OutNearestTiles.IsEmpty() && Distance != Depth)
+								if (!OutTiles.IsEmpty() && Distance != Depth)
 								{
 									return false;
 								}
@@ -148,46 +148,97 @@ int32 ALetheAIController::FindNearestPlayerCharacterTiles(const EBFSType BFSType
 	return Distance;
 }
 
-ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
+bool ALetheAIController::GetRandomAbility(FGameplayAbilitySpecHandle& OutAbilitySpecHandle)
+{
+	APawn* ControlledEnemy = GetPawn();
+	const UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(ControlledEnemy);
+	if (!ASC)
+	{
+		return false;
+	}
+
+	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
+	ASC->GetAllAbilities(AbilitySpecHandles);
+
+	TArray<const FGameplayAbilitySpecHandle> CandidateAbilitySpecHandles;
+	for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
+	{
+		const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
+		if (!Spec)
+		{
+			continue;
+		}
+
+		if (Cast<ULetheCardAbility>(Spec->Ability))
+		{
+			CandidateAbilitySpecHandles.Add(Handle);
+		}
+	}
+
+	if (CandidateAbilitySpecHandles.IsEmpty())
+	{
+		return false;
+	}
+
+	const int32 RandomIndex = FMath::RandRange(0, CandidateAbilitySpecHandles.Num() - 1);
+	OutAbilitySpecHandle = CandidateAbilitySpecHandles[RandomIndex];
+	return OutAbilitySpecHandle.IsValid();
+}
+
+bool ALetheAIController::GetAttackableTiles(const FGameplayAbilitySpecHandle AbilitySpecHandle, const ATile* TargetTile, TArray<ATile*>& OutAttackableTiles)
+{
+	OutAttackableTiles.Reset();
+
+	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
+	APawn* ControlledEnemy = GetPawn();
+	const UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(ControlledEnemy);
+	if (!AbilitySpecHandle.IsValid() || !TargetTile || !TileManagerSubsystem || !ControlledEnemy || !ASC)
+	{
+		return false;
+	}
+
+	const FGameplayAbilitySpec* AbilitySpec = ASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+	const ULetheCardAbility* CardAbility = AbilitySpec ? Cast<ULetheCardAbility>(AbilitySpec->Ability) : nullptr;
+	ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
+	const AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile);
+	if (!CardAbility || !CurrentTile || !TargetActor)
+	{
+		return false;
+	}
+
+	// 기본적으로 타일 A에서 타일 B를 어떤 Ability로 공격 가능하다면, 타일 B에서 타일 A를 동일한 Ability로 공격할 수 있습니다.
+	// 그 점을 이용해, TargetActor가 서있는 타일을 기준으로 GetCandidateTiles를 호출, 공격할 수 있는 타일을 가져옵니다.
+	FTargetingIntent TargetingIntent;
+	TargetingIntent.HitTile = CurrentTile;
+	TargetingIntent.ImpactPoint = CurrentTile->GetActorLocation();
+
+	FEffectTargetTileSelectorContext Context;
+	Context.AvatarActor = TargetActor;
+	Context.CurrentTile = TargetTile;
+	Context.TargetingIntent = TargetingIntent;
+	CardAbility->GetCandidateTiles(Context);
+
+	for (ATile* CandidateTile : Context.OutSelectCandidateTiles)
+	{
+		if (!CandidateTile || CandidateTile == TargetTile)
+		{
+			continue;
+		}
+
+		if (CandidateTile == CurrentTile || TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
+		{
+			OutAttackableTiles.AddUnique(CandidateTile);
+		}
+	}
+
+	return !OutAttackableTiles.IsEmpty();
+}
+
+ATile* ALetheAIController::GetBestAttackableTile(const TArray<ATile*>& AttackableTiles)
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	const AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
-	if (!TargetTile || !TileManagerSubsystem || !ControlledEnemy)
-	{
-		return nullptr;
-	}
-
-	// TargetTile을 공격할 수 있는 위치의 타일을 모두 가져옵니다.
-	TArray<ATile*> AttackableTiles;
-	const FBFSRange& AbilityRange = ControlledEnemy->GetAbilityRange();
-
-	TSet<FCubeCoord> OutCubeCoord;
-	TileManagerSubsystem->TileBFS(TargetTile->GetCubeCoord(), AbilityRange.Distance, AbilityRange.BFSType, OutCubeCoord,
-		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
-		{
-			return true;
-		},
-		[TileManagerSubsystem, TargetTile, &AbilityRange, &AttackableTiles](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
-		{
-			if (TileData)
-			{
-				if (ATile* CandidateTile = TileData->TopTile.Get())
-				{
-					if (CandidateTile != TargetTile)
-					{
-						const int32 FloorGap = TileManagerSubsystem->GetTileFloor(TargetTile) - TileManagerSubsystem->GetTileFloor(CandidateTile);
-						if (FMath::Abs(FloorGap) <= AbilityRange.FloorGap && TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
-						{
-							AttackableTiles.Add(CandidateTile);
-						}
-					}
-				}
-			}
-			return true;
-		});
-
-	// 공격 가능한 타일이 아무것도 없다면 nullptr를 반환합니다.
-	if (AttackableTiles.IsEmpty())
+	if (!TileManagerSubsystem || !ControlledEnemy || AttackableTiles.IsEmpty())
 	{
 		return nullptr;
 	}
@@ -197,6 +248,10 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		if (const ATile* ControlledCharacterTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
 		{
 			const int32 Distance = TileManagerSubsystem->GetTileDistance(ControlledCharacterTile, CandidateTile, EBFSType::Connection);
+			if (Distance == INDEX_NONE)
+			{
+				return -10000;
+			}
 			if (Distance <= ControlledEnemy->GetMoveRange())
 			{
 				// 이번 턴에 도달 가능한 경우 아주 높은 점수를 반환합니다.
@@ -206,38 +261,6 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 			return -Distance * 5;
 		}
 		return -10000;
-	};
-	
-	// TargetTile의 주변 타일을 가져옵니다.
-	TArray<ATile*> OutAroundTiles;
-	TileManagerSubsystem->GetAroundTiles(TargetTile, 5, OutAroundTiles);
-
-	// 다른 적들과의 타일 좌표상 거리에 따라 점수를 매깁니다.
-	const auto CalculateDistanceFromOtherEnemiesScore = [TileManagerSubsystem, OutAroundTiles, ControlledEnemy](const ATile* CandidateTile)
-	{
-		// Enemy가 서있는 타일만 필터링합니다.
-		TArray<ATile*> AroundEnemyTiles = OutAroundTiles.FilterByPredicate([TileManagerSubsystem, ControlledEnemy](const ATile* Tile)
-		{
-			if (const AActor* ActorOnTile = TileManagerSubsystem->GetActorOnTile(Tile))
-			{
-				// ControlledPawn은 제외합니다.
-				return ActorOnTile->IsA<AEnemyCharacterBase>() && ActorOnTile != ControlledEnemy;
-			}
-			return false;
-		});
-		
-		int32 DistanceSumFromOtherEnemies = 0;
-		for (const ATile* EnemyTile : AroundEnemyTiles)
-		{
-			if (!EnemyTile)
-			{
-				continue;
-			}
-			
-			// 멀수록 더 높은 점수를 갖습니다.
-			DistanceSumFromOtherEnemies += FCubeCoord::Distance(CandidateTile->GetCubeCoord(), EnemyTile->GetCubeCoord());
-		}
-		return DistanceSumFromOtherEnemies;
 	};
 
 	// 해당 컨트롤러의 전술 상태에 따라 점수를 매깁니다.(미구현)
@@ -256,9 +279,9 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 		}
 
 		const int32 DistanceScore = CalculateDistanceScore(AttackableTile);
-		const int32 FromOtherEnemiesScore = CalculateDistanceFromOtherEnemiesScore(AttackableTile);
+		//const int32 TacticalScore = CalculateTacticalScore(AttackableTile);
 
-		const int32 Score = DistanceScore + FromOtherEnemiesScore;
+		const int32 Score = DistanceScore;// + TacticalScore;
 		if (BestScore < Score)
 		{
 			BestScore = Score;
@@ -267,6 +290,12 @@ ATile* ALetheAIController::GetBestAttackableTile(const ATile* TargetTile)
 	}
 
 	return BestTile;
+}
+
+void ALetheAIController::SetPlannedData(const FGameplayAbilitySpecHandle SelectedAbilitySpecHandle, ATile* TargetTile)
+{
+	PlannedAbilitySpecHandle = SelectedAbilitySpecHandle;
+	PlannedTargetTile = TargetTile;
 }
 
 bool ALetheAIController::GetRandomMovePath(const EBFSType BFSType, const int32 MaxDepth, TArray<ATile*>& OutRandomMovePath)
@@ -363,59 +392,35 @@ void ALetheAIController::GetPrioritizedMoveTiles(const ATile* TargetTile, const 
 	}
 }
 
-void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) const
+void ALetheAIController::CommitPlan()
 {
 	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(ControlledEnemy);
-	if (!ASC)
+	if (!PlannedAbilitySpecHandle.IsValid() || !PlannedTargetTile.IsValid() || !ControlledEnemy || !ASC)
 	{
 		return;
 	}
 
-	// 부여된 CardAbility를 모두 가져옵니다.
-	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
-	ASC->GetAllAbilities(AbilitySpecHandles);
-
-	TArray<const FGameplayAbilitySpec*> CandidateAbilitySpecs;
-	for (const FGameplayAbilitySpecHandle& Handle : AbilitySpecHandles)
-	{
-		const FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle);
-		if (!Spec)
-		{
-			continue;
-		}
-
-		const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability);
-		if (CardAbility)
-		{
-			CandidateAbilitySpecs.Add(Spec);
-		}
-	}
-
-	if (CandidateAbilitySpecs.IsEmpty())
+	const FGameplayAbilitySpec* SelectedAbilitySpec = ASC->FindAbilitySpecFromHandle(PlannedAbilitySpecHandle);
+	const ULetheCardAbility* SelectedCardAbility = SelectedAbilitySpec ? Cast<ULetheCardAbility>(SelectedAbilitySpec->Ability) : nullptr;
+	if (!SelectedCardAbility)
 	{
 		return;
 	}
 
-	// CardAbility 중 랜덤으로 하나 선택합니다.
-	const int32 RandomIndex = FMath::RandRange(0, CandidateAbilitySpecs.Num() - 1);
-	const FGameplayAbilitySpec* SelectedAbilitySpec = CandidateAbilitySpecs[RandomIndex];
-	const ULetheCardAbility* SelectedCardAbility = Cast<ULetheCardAbility>(SelectedAbilitySpec->Ability);
-	
+	FGameplayTag AbilityTag = FGameplayTag::EmptyTag;
 	const FGameplayTagContainer AssetTags = SelectedCardAbility->GetAssetTags();
-	FGameplayTag FirstTag;
 	for (const FGameplayTag& Tag : AssetTags)
 	{
 		if (Tag.IsValid())
 		{
-			FirstTag = Tag;
-			break;
+			AbilityTag = Tag;
 		}
 	}
 
 	FTargetingIntent TargetingIntent;
-	TargetingIntent.HitTile = TargetTile;
-	TargetingIntent.ImpactPoint = TargetTile->GetActorLocation();
+	TargetingIntent.HitTile = PlannedTargetTile.Get();
+	TargetingIntent.ImpactPoint = PlannedTargetTile->GetActorLocation();
 
 	FEffectTargetTileSelectorContext ContextForTileHighlight;
 	ContextForTileHighlight.AvatarActor = ControlledEnemy;
@@ -432,13 +437,17 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = ControlledEnemy;
 	Context.TargetingIntent = TargetingIntent;
-	SelectedCardAbility->GetTargetTiles(Context);
+	SelectedCardAbility->GetTargetTilesForAI(Context);
+	if (Context.OutTargetResults.IsEmpty())
+	{
+		return;
+	}
 
 	FAbilityActivationContext ActivationContext;
 	ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
-	ActivationContext.AbilitySpecHandle = SelectedAbilitySpec->Handle;
-	ActivationContext.TargetingIntent = TargetingIntent;
-	ActivationContext.AbilityTag = FirstTag;
+	ActivationContext.AbilitySpecHandle = PlannedAbilitySpecHandle;
+	ActivationContext.TargetingIntent = Context.TargetingIntent;
+	ActivationContext.AbilityTag = AbilityTag;
 	ActivationContext.AbilityOwnerASC = ASC;
 	ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
 	ActivationContext.Payload.Instigator = ControlledEnemy;
@@ -447,6 +456,8 @@ void ALetheAIController::SelectAndTelegraphRandomAbility(ATile* TargetTile) cons
 	{
 		LetheGameState->EnqueueEnemyAbilityActivationContext(ActivationContext);
 	}
+	PlannedAbilitySpecHandle = FGameplayAbilitySpecHandle();
+	PlannedTargetTile.Reset();
 }
 
 void ALetheAIController::StartCombat()

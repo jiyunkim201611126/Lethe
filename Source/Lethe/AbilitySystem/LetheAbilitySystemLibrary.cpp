@@ -7,8 +7,6 @@
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-class UTileManagerSubsystem;
-
 bool ULetheAbilitySystemLibrary::CanUseAbilityByTileAndFloorGap(const ATile* SourceTile, const ATile* TargetTile, const int32 MaxFloorGap)
 {
 	if (SourceTile && TargetTile)

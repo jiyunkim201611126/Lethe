@@ -244,7 +244,7 @@ void ALetheGameState::NotifyEnemyPlanMoveResolved()
 		const TWeakObjectPtr<AEnemyCharacterBase>& AbilityProcessedEnemy = SpawnedEnemies[CurrentEnemyAbilityProcessIndex];
 		if (AbilityProcessedEnemy.IsValid())
 		{
-			AbilityProcessedEnemy->ProcessTelegraphPlan();
+			AbilityProcessedEnemy->ProcessCommitPlan();
 		}
 	}
 

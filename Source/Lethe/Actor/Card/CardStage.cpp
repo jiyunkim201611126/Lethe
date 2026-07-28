@@ -248,7 +248,7 @@ void ACardStage::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseSta
 			CardContainerManager->StopPreviewDeck();
 			CurrentSelectedDeckBox.Reset();
 			
-			CardContainerManager->AddAllHandsToGrave();
+			CardContainerManager->AddAllHandsToGraves();
 			CardContainerManager->RefillDeck();
 			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
@@ -275,7 +275,7 @@ void ACardStage::OnCancelSelectedCard()
 {
 	if (CurrentSelectedCard)
 	{
-		CurrentSelectedCard->SetCardContainer(ECardContainer::Hand);
+		CurrentSelectedCard->SetCardContainer(ECardContainer::Hands);
 		CurrentSelectedCard = nullptr;
 	}
 }
@@ -298,13 +298,13 @@ void ACardStage::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 		{
 			if (CardContainerManager)
 			{
-				CardContainerManager->AddCardToGrave(CardActor);
+				CardContainerManager->AddCardToGraves(CardActor);
 			}
 			UpdateAllCardLocations();
 		}
 		else
 		{
-			CardActor->SetCardContainer(ECardContainer::Hand);
+			CardActor->SetCardContainer(ECardContainer::Hands);
 		}
 	}
 
@@ -333,7 +333,7 @@ void ACardStage::OnTurnEndButtonClicked() const
 		{
 			if (CardContainerManager)
 			{
-				CardContainerManager->AddAllHandsToGrave();
+				CardContainerManager->AddAllHandsToGraves();
 			}
 			UpdateAllCardLocations();
 
@@ -454,8 +454,7 @@ void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number) const
 	const TArray<TObjectPtr<ACardActor>>& CurrentHands = CardContainerManager->GetCurrentHands();
 	if (CurrentHands.IsValidIndex(Number))
 	{
-		ACardActor* SelectingCard = CurrentHands[Number];
-		if (SelectingCard)
+		if (ACardActor* SelectingCard = CurrentHands[Number])
 		{
 			RequestSelectCard(SelectingCard);
 		}
@@ -510,7 +509,7 @@ void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 		return;
 	}
 
-	if (CardActor->GetCurrentCardContainer() == ECardContainer::Grave || CardActor->GetCurrentCardContainer() == ECardContainer::Selected)
+	if (CardActor->GetCurrentCardContainer() == ECardContainer::Graves || CardActor->GetCurrentCardContainer() == ECardContainer::Selected)
 	{
 		return;
 	}

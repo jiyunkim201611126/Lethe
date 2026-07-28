@@ -38,20 +38,11 @@ bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySys
 
 		for (const auto& Pair : OutResolveResult.TargetSpecHandlesByActor)
 		{
-			if (!Pair.Key)
+			if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pair.Key))
 			{
-				continue;
+				TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
+				TryGetGameplayEffectPreviewData(TargetASC, Pair.Value, OutPreviewDataForTarget);
 			}
-
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pair.Key);
-			if (!TargetASC)
-			{
-				continue;
-			}
-
-			TMap<FGameplayAttribute, float>& OutPreviewDataForTarget = OutPreviewData.TargetPreviewData.FindOrAdd(TargetASC);
-
-			TryGetGameplayEffectPreviewData(TargetASC, Pair.Value, OutPreviewDataForTarget);
 		}
 	}
 
@@ -150,7 +141,17 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 		return;
 	}
 
+	// Policy에 해당하는 EffectSpecBuilder를 가져옵니다.
+	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
+	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
+
+	if (OutEffectSpecBuilders.IsEmpty())
+	{
+		return;
+	}
+
 	// Policy에 해당하는 TargetActors를 가져옵니다.
+	// TargetActors가 없더라도, '자기 자신에게 사용'하는 카드일 수 있으므로 얼리리턴하지 않습니다.
 	TArray<AActor*> TargetActors;
 	for (const FTargetSelectionResult& TargetResult : TargetSelectionResults)
 	{
@@ -164,15 +165,6 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 				}
 			}
 		}
-	}
-
-	// Policy에 해당하는 EffectSpecBuilder를 가져옵니다.
-	TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
-	GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
-
-	if (TargetActors.IsEmpty() || OutEffectSpecBuilders.IsEmpty())
-	{
-		return;
 	}
 
 	// Source와 Target에게 적용할 모든 Spec을 Out 인자에 추가합니다.

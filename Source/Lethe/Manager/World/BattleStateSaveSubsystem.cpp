@@ -19,9 +19,6 @@ void UBattleStateSaveSubsystem::SaveBattleState(const FBattleStateSaveContext& C
 	}
 
 	UGameplayStatics::SaveGameToSlot(BattleStateSaveGameObject, SlotName, 0);
-
-	// 세이브를 완료했으므로, 일관된 작동 보장을 위해 한 번 로드합니다.
-	LoadBattleState(Context);
 }
 
 void UBattleStateSaveSubsystem::LoadBattleState(const FBattleStateSaveContext& Context) const

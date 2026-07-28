@@ -282,12 +282,6 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	// SourceActor가 플레이어 캐릭터인 경우 들어가는 분기입니다.
 	if (SourceActor->Implements<UPlayerCharacterInterface>())
 	{
-		// 이미 사망한 캐릭터는 Target에서 제외하며, 이 과정에서 대상이 남지 않더라도 외부에서 CanUseOnTile 여부를 판단하고 발동했기 때문에 그대로 진행합니다.
-		TargetASCs.RemoveAll([LetheGameplayTags](const UAbilitySystemComponent* ASC)
-		{
-			return ASC->HasMatchingGameplayTag(LetheGameplayTags.State_Character_Dead);
-		});
-
 		// 플레이어 캐릭터인 경우에만 Cost 관련 로직을 수행합니다.
 		if (!CommitAbilityCost(Handle, ActorInfo, ActivationInfo))
 		{

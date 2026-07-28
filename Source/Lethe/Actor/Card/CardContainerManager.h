@@ -27,6 +27,7 @@ struct FCharacterCards
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Deck;
 
+	/** 드로우한 카드 배열로, 카드 사용 시 해당 카드가 무덤으로 이동하며 그 위치에는 nullptr가 들어갑니다. */
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Hands;
 
@@ -57,8 +58,8 @@ public:
 	ACardActor* GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const;
 	bool AddCardToHand(ULetheAbilitySystemComponent* OwnerASC);
 
-	void AddCardToGrave(ACardActor* CardActor);
-	void AddAllHandsToGrave();
+	void AddCardToGraves(ACardActor* CardActor);
+	void AddAllHandsToGraves();
 
 	void RefillDeck();
 

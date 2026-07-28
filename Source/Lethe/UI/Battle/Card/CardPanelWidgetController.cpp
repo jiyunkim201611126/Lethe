@@ -69,12 +69,11 @@ void UCardPanelWidgetController::GoPlayerTurnPhase() const
 
 bool UCardPanelWidgetController::RequestTurnEnd() const
 {
-	if (LetheGameState.IsValid() && LethePlayerController)
+	if (LetheGameState.IsValid())
 	{
 		// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
 		if (!LetheGameState->IsResolvingPlayerAbility())
 		{
-			LethePlayerController->ResetSelectedCharacter();
 			LetheGameState->GoEnemyTurnPhase();
 			return true;
 		}

@@ -70,14 +70,23 @@ void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 
 void ACardActor::CreateDynamicMaterialInstances()
 {
-	if (CardMesh && CardMesh->GetMaterial(0))
+	if (CardMesh)
 	{
-		IllustrationMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(2));
-		CardMesh->SetMaterial(2, IllustrationMaterialInstance);
-		LeftTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(4));
-		CardMesh->SetMaterial(4, LeftTagMaterialInstance);
-		RightTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, CardMesh->GetMaterial(5));
-		CardMesh->SetMaterial(5, RightTagMaterialInstance);
+		if (UMaterialInterface* MaterialInterface = CardMesh->GetMaterial(2))
+		{
+			IllustrationMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, MaterialInterface);
+			CardMesh->SetMaterial(2, IllustrationMaterialInstance);
+		}
+		if (UMaterialInterface* MaterialInterface = CardMesh->GetMaterial(4))
+		{
+			LeftTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, MaterialInterface);
+			CardMesh->SetMaterial(4, LeftTagMaterialInstance);
+		}
+		if (UMaterialInterface* MaterialInterface = CardMesh->GetMaterial(5))
+		{
+			RightTagMaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, MaterialInterface);
+			CardMesh->SetMaterial(5, RightTagMaterialInstance);
+		}
 	}
 }
 
@@ -106,12 +115,12 @@ void ACardActor::SetCardContainer(const ECardContainer InCardContainer)
 	{
 	case ECardContainer::Deck:
 		break;
-	case ECardContainer::Hand:
+	case ECardContainer::Hands:
 		break;
 	case ECardContainer::Selected:
 		ToggleHighlightOutline(true);
 		break;
-	case ECardContainer::Grave:
+	case ECardContainer::Graves:
 		break;
 	}
 }
@@ -132,7 +141,7 @@ ECardAction ACardActor::GetCardActionForMouseEvent(const ECardMouseEvent InMouse
 	{
 	case ECardContainer::Deck:
 		return GetCardActionWhenDeckState(InMouseEvent);
-	case ECardContainer::Hand:
+	case ECardContainer::Hands:
 		return GetCardActionWhenHandState(InMouseEvent);
 	default:
 		break;

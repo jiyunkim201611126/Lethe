@@ -410,11 +410,13 @@ void ALetheAIController::CommitPlan()
 
 	FGameplayTag AbilityTag = FGameplayTag::EmptyTag;
 	const FGameplayTagContainer AssetTags = SelectedCardAbility->GetAssetTags();
+	const FGameplayTag CardRootTag = FGameplayTag::RequestGameplayTag(TEXT("Card"));
 	for (const FGameplayTag& Tag : AssetTags)
 	{
-		if (Tag.IsValid())
+		if (Tag.MatchesTag(CardRootTag))
 		{
 			AbilityTag = Tag;
+			break;
 		}
 	}
 

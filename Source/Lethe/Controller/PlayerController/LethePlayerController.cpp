@@ -303,6 +303,9 @@ void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, con
 {
 	CurrentPhaseState = NewState;
 
+	ResetSelectedCharacter();
+	ResetSelectedCard();
+	
 	switch (CurrentPhaseState)
 	{
 	case EPhaseState::EnemyPlanningPhase:

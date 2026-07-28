@@ -76,7 +76,7 @@ bool UCardContainerManager::AddCardToHand(ULetheAbilitySystemComponent* OwnerASC
 			if (ACardActor* DrawnCard = CharacterCards->Deck.Pop(EAllowShrinking::No))
 			{
 				CharacterCards->Hands.Add(DrawnCard);
-				DrawnCard->SetCardContainer(ECardContainer::Hand);
+				DrawnCard->SetCardContainer(ECardContainer::Hands);
 				return true;
 			}
 		}
@@ -84,28 +84,33 @@ bool UCardContainerManager::AddCardToHand(ULetheAbilitySystemComponent* OwnerASC
 	return false;
 }
 
-void UCardContainerManager::AddCardToGrave(ACardActor* CardActor)
+void UCardContainerManager::AddCardToGraves(ACardActor* CardActor)
 {
-	if (CardActor && CardActor->GetCurrentCardContainer() != ECardContainer::Grave)
+	if (CardActor && CardActor->GetCurrentCardContainer() != ECardContainer::Graves)
 	{
 		if (const ULetheAbilitySystemComponent* LetheASC = CardActor->GetOwnerASC())
 		{
 			if (FCharacterCards* CharacterCards = ASCToCards.Find(LetheASC))
 			{
 				CharacterCards->Graves.AddUnique(CardActor);
+				const int32 HandIndex = CharacterCards->Hands.IndexOfByKey(CardActor);
+				if (HandIndex != INDEX_NONE)
+				{
+					CharacterCards->Hands[HandIndex] = nullptr;
+				}
 			}
-			CardActor->SetCardContainer(ECardContainer::Grave);
+			CardActor->SetCardContainer(ECardContainer::Graves);
 		}
 	}
 }
 
-void UCardContainerManager::AddAllHandsToGrave()
+void UCardContainerManager::AddAllHandsToGraves()
 {
 	for (auto& Cards : ASCToCards)
 	{
 		for (ACardActor* Hand : Cards.Value.Hands)
 		{
-			AddCardToGrave(Hand);
+			AddCardToGraves(Hand);
 		}
 		Cards.Value.Hands.Reset();
 	}
@@ -153,28 +158,38 @@ void UCardContainerManager::MoveAllCards()
 		FVector DeckCardLocation = DeckLocation + DeckFirstCardLocation;
 		for (ACardActor* CardInDeck : CharacterCards->Deck)
 		{
-			DeckCardLocation += FVector(DeckCardXOffset, 0.f, 0.f);
-			CardInDeck->SetActorLocation(DeckCardLocation);
-			CardInDeck->SetActorRotation(FRotator(0.f, -90.f, 0.f));
+			if (CardInDeck)
+			{
+				DeckCardLocation += FVector(DeckCardXOffset, 0.f, 0.f);
+				CardInDeck->SetActorLocation(DeckCardLocation);
+				CardInDeck->SetActorRotation(FRotator(0.f, -90.f, 0.f));
+			}
 		}
 
 		FVector HandCardLocation = DeckLocation + HandFirstCardLocation;
 		TArray<ACardActor*> SelectedHands = CharacterCards->PreviewHands.IsEmpty() ? CharacterCards->Hands : CharacterCards->PreviewHands;
 		for (ACardActor* CardInHand : SelectedHands)
 		{
+			// 카드 사용 시 해당 위치가 nullptr로 대체되기 때문에, nullptr도 배열에 넣어주고 위치 벡터도 더해줍니다. 
 			CurrentHands.Add(CardInHand);
-
 			HandCardLocation += FVector(HandCardXOffset, 0.f, 0.f);
-			CardInHand->SetActorLocation(HandCardLocation);
-			CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+			
+			if (CardInHand)
+			{
+				CardInHand->SetActorLocation(HandCardLocation);
+				CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+			}
 		}
 
 		FVector GravesCardLocation = DeckLocation + GravesFirstCardLocation;
-		for (ACardActor* CardInGrave : CharacterCards->Graves)
+		for (ACardActor* CardInGraves : CharacterCards->Graves)
 		{
-			GravesCardLocation += GravesCardOffset;
-			CardInGrave->SetActorLocation(GravesCardLocation);
-			CardInGrave->SetActorRotation(FRotator(0.f, 180.f, -60.f));
+			if (CardInGraves)
+			{
+				GravesCardLocation += GravesCardOffset;
+				CardInGraves->SetActorLocation(GravesCardLocation);
+				CardInGraves->SetActorRotation(FRotator(0.f, 180.f, -60.f));
+			}
 		}
 	}
 }

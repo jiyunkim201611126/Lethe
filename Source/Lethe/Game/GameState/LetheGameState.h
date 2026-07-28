@@ -14,7 +14,7 @@ class ATile;
 class ICombatInterface;
 class UAbilityResolverComponent;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldState */, const EPhaseState /* NewState */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldPhaseState */, const EPhaseState /* NewPhaseState */);
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
 DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityAttempt, AActor* /* Instigator */);
@@ -84,7 +84,7 @@ protected:
 	//~ End of AActor Interface
 
 private:
-	void SetPhase(const EPhaseState NewPhase);
+	void SetPhase(const EPhaseState NewPhaseState);
 
 	void ProcessCurrentEnemyPlan();
 	void OnFinishActivationQueue();

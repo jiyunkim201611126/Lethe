@@ -22,7 +22,7 @@ public:
 protected:
 	virtual void InitUI(const TArray<UUserWidget*>& AttributeWidgets) override;
 
-	virtual void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const override;
+	virtual void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const override;
 
 private:
 	void ApplyTurnStartRecovery() const;

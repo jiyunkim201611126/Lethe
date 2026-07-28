@@ -75,7 +75,7 @@ private:
 	int32 FindClosestHexDirectionBoundary(const FVector2D& DesiredDirection) const;
 
 	/** 원하는 개수만큼의 방향을 Out 인자로 반환합니다. */
-	void GetSelectedDirections(const ATile* CurrentTile, const FTargetingIntent& TargetingIntent, TArray<int32>& OutDirections) const;
+	void GetSelectedDirections(const ATile* SourceTile, const FTargetingIntent& TargetingIntent, TArray<int32>& OutDirections) const;
 	
 protected:
 	/** TargetGroup_Primary를 채울 방식입니다.*/

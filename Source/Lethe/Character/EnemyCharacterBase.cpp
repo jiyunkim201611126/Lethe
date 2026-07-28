@@ -79,7 +79,7 @@ void AEnemyCharacterBase::UpdateHiddenByTile_Implementation(const ATile* Tile)
 	}
 
 	// 전투 중인 경우 밟은 Tile에 관계 없이 항상 적을 렌더링합니다.
-	if (AIController->IsCombating())
+	if (AIController->IsInCombat())
 	{
 		SetActorHiddenInGame(false);
 		return;
@@ -114,7 +114,7 @@ void AEnemyCharacterBase::OnMoveTileChanged(ATile* OldTile, ATile* NewTile)
 	}
 	
 	// 전투 중이 아니라면 시야를 갱신할 필요가 없습니다.
-	if (!AIController->IsCombating())
+	if (!AIController->IsInCombat())
 	{
 		return;
 	}

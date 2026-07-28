@@ -33,7 +33,7 @@ private:
 	void BroadcastCostChanged() const;
 	
 	void OnMoveRangeChanged(const FOnAttributeChangeData& AttributeData);
-	void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase);
+	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
 	void BroadcastMarkerVisibilityChanged() const;
 
 public:

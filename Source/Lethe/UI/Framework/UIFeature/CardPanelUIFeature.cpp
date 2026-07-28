@@ -30,7 +30,7 @@ void UCardPanelUIFeature::InitializePlayerCardUI(APlayerController* PC, UAbility
 {
 	const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
 
-	ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
+	ULetheAbilitySystemComponent* CardOwnerASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
 	ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
 	UPlayerAttributeSet* PlayerAS = CastChecked<UPlayerAttributeSet>(PAS);
 
@@ -40,21 +40,21 @@ void UCardPanelUIFeature::InitializePlayerCardUI(APlayerController* PC, UAbility
 	if (OverlayWidgetController)
 	{
 		OverlayWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		OverlayWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+		OverlayWidgetController->BindCallbacks(CardOwnerASC, LetheAS, PlayerAS);
 	}
 	
 	GetOrCreateCardPanelWidgetController();
 	if (CardPanelWidgetController)
 	{
 		CardPanelWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		CardPanelWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+		CardPanelWidgetController->BindCallbacks(CardOwnerASC, LetheAS, PlayerAS);
 	}
 
 	GetOrCreateViewCardDetailWidgetController();
 	if (ViewCardDetailWidgetController)
 	{
 		ViewCardDetailWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-		ViewCardDetailWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+		ViewCardDetailWidgetController->BindCallbacks(CardOwnerASC, LetheAS, PlayerAS);
 	}
 
 	if (!OverlayWidgetController || !CardPanelWidgetController || !ViewCardDetailWidgetController)

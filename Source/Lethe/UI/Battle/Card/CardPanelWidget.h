@@ -59,14 +59,14 @@ private:
 
 	void CreateCard(const FCardInitParams& CardInitParams) const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
 	void OnCardSelected(const int32 HandIndex) const;
 	void OnCancelSelectedCard() const;
 	void OnResolveUseCard(int32 HandIndex, bool bSuccess) const;
 	void StartViewCardDetail(const ACardActor* CardActor) const;
 	void GoPlayerTurnPhase() const;
 	void StartResolvePlayerMoves() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 HandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 HandIndex) const;
 	bool RequestTurnEnd() const;
 
 	UFUNCTION()

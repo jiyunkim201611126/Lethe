@@ -150,24 +150,24 @@ bool ACardStage::HandleLeftMouseButtonClickedInCardStageSection(const FVector2D&
 
 	if (UBoxComponent* ClickedDeckBox = GetDeckBoxCollisionAtUV(TargetUV))
 	{
-		const int32 DeckIndex = DeckBoxes->GetDeckIndex(ClickedDeckBox);
-		if (DeckIndex == INDEX_NONE || !AbilitySystemComponents.IsValidIndex(DeckIndex))
+		const int32 ClickedDeckIndex = DeckBoxes->GetDeckIndex(ClickedDeckBox);
+		if (ClickedDeckIndex == INDEX_NONE || !AbilitySystemComponents.IsValidIndex(ClickedDeckIndex))
 		{
 			return false;
 		}
 
-		ULetheAbilitySystemComponent* DeckOwnerASC = AbilitySystemComponents[DeckIndex].Get();
+		ULetheAbilitySystemComponent* ClickedDeckOwnerASC = AbilitySystemComponents[ClickedDeckIndex].Get();
 		
 		if (CurrentPhaseState == EPhaseState::DrawPhase)
 		{
-			TryDraw(DeckOwnerASC);
+			TryDraw(ClickedDeckOwnerASC);
 		}
 		else if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
 		{
 			// 비전투 중 덱 박스를 클릭했다면, 안에 있는 모든 카드를 밖으로 꺼내 보여줍니다.
 			CardContainerManager->StopPreviewDeck(false);
 			DeckBoxes->SetOpenReason(ClickedDeckBox, EDeckBoxOpenReason::Pinned, true);
-			CardContainerManager->PreviewDeck(DeckOwnerASC);
+			CardContainerManager->PreviewDeck(ClickedDeckOwnerASC);
 		}
 
 		CurrentSelectedDeckBox = ClickedDeckBox;
@@ -222,9 +222,9 @@ void ACardStage::HandleKeyboardEvent(const int32 Number) const
 	}
 }
 
-void ACardStage::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
 {
-	CurrentPhaseState = NewState;
+	CurrentPhaseState = NewPhaseState;
 
 	if (CurrentPhaseState == EPhaseState::DrawPhase)
 	{
@@ -248,7 +248,7 @@ void ACardStage::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseSta
 			CardContainerManager->StopPreviewDeck();
 			CurrentSelectedDeckBox.Reset();
 			
-			CardContainerManager->AddAllHandsToGraves();
+			CardContainerManager->AddAllHandsToGraveyard();
 			CardContainerManager->RefillDeck();
 			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
@@ -298,7 +298,7 @@ void ACardStage::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 		{
 			if (CardContainerManager)
 			{
-				CardContainerManager->AddCardToGraves(CardActor);
+				CardContainerManager->AddCardToGraveyard(CardActor);
 			}
 			UpdateAllCardLocations();
 		}
@@ -333,7 +333,7 @@ void ACardStage::OnTurnEndButtonClicked() const
 		{
 			if (CardContainerManager)
 			{
-				CardContainerManager->AddAllHandsToGraves();
+				CardContainerManager->AddAllHandsToGraveyard();
 			}
 			UpdateAllCardLocations();
 
@@ -469,14 +469,14 @@ void ACardStage::UpdateAllCardLocations() const
 	}
 }
 
-void ACardStage::TryDraw(ULetheAbilitySystemComponent* OwnerASC) const
+void ACardStage::TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const
 {
-	if (!CardContainerManager || !OwnerASC)
+	if (!CardContainerManager || !DeckOwnerASC)
 	{
 		return;
 	}
 
-	if (CardContainerManager->AddCardToHand(OwnerASC))
+	if (CardContainerManager->AddCardToHand(DeckOwnerASC))
 	{
 		UpdateAllCardLocations();
 
@@ -509,7 +509,7 @@ void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 		return;
 	}
 
-	if (CardActor->GetCurrentCardContainer() == ECardContainer::Graves || CardActor->GetCurrentCardContainer() == ECardContainer::Selected)
+	if (CardActor->GetCurrentCardContainer() == ECardContainer::Graveyard || CardActor->GetCurrentCardContainer() == ECardContainer::Selected)
 	{
 		return;
 	}

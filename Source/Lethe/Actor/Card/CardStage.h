@@ -69,9 +69,9 @@ private:
 
 	void UpdateAllCardLocations() const;
 
-	void TryDraw(ULetheAbilitySystemComponent* OwnerASC) const;
+	void TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const;
 	void RequestSelectCard(ACardActor* CardActor) const;
-	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
+	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
 	void OnDrawPhaseStarted() const;
 
 public:

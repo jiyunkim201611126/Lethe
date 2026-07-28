@@ -193,7 +193,7 @@ void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 	}
 }
 
-void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle)
+void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle)
 {
 	if (!ArrowRenderer)
 	{
@@ -203,12 +203,12 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 	// 기존에 선택된 카드가 있을 수 있으므로 먼저 선택을 취소합니다.
 	ResetSelectedCard();
 
-	if (OwnerASC && AbilitySpecHandle.IsValid())
+	if (CardOwnerASC && AbilitySpecHandle.IsValid())
 	{
 		// 카드와 캐릭터는 동시에 선택될 수 없으므로 캐릭터 선택은 초기화합니다.
 		ResetSelectedCharacter();
 
-		const FGameplayAbilitySpec* AbilitySpec = OwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+		const FGameplayAbilitySpec* AbilitySpec = CardOwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
 		if (!AbilitySpec)
 		{
 			return;
@@ -216,13 +216,13 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 
 		// 선택된 카드의 범위에 해당하는 타일을 하이라이팅합니다.
 		ULetheCardAbility* LetheCardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability);
-		const AActor* CardOwner = OwnerASC->GetAvatarActor();
+		const AActor* CardOwner = CardOwnerASC->GetAvatarActor();
 		if (LetheCardAbility && CardOwner)
 		{
-			if (OwnerASC->AbilityActorInfo.IsValid())
+			if (CardOwnerASC->AbilityActorInfo.IsValid())
 			{
 				// TODO: 사용 못 할 경우 기준 필요함, 현재는 Cost 부족하면 바로 취소되도록 해놨음
-				const FGameplayAbilityActorInfo* PreviewActorInfo = OwnerASC->AbilityActorInfo.Get();
+				const FGameplayAbilityActorInfo* PreviewActorInfo = CardOwnerASC->AbilityActorInfo.Get();
 				const bool bCanUse = LetheCardAbility->CheckCost(AbilitySpecHandle, PreviewActorInfo);
 				if (!bCanUse)
 				{
@@ -235,7 +235,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 
 				// 마우스 Hovered 시 Preview 구현을 위해 카드의 Ability를 캐싱해둡니다.
 				SelectedCardAbility = LetheCardAbility;
-				SelectedCardOwnerASC = OwnerASC;
+				SelectedCardOwnerASC = CardOwnerASC;
 
 				TArray<ATile*> SourceTiles;
 				GetTileUnderActorAsArray(GetWorld(), CardOwner, SourceTiles);
@@ -299,9 +299,9 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState)
+void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
 {
-	CurrentPhaseState = NewState;
+	CurrentPhaseState = NewPhaseState;
 
 	ResetSelectedCharacter();
 	ResetSelectedCard();
@@ -452,9 +452,9 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex)
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex)
 {
-	if (!PlayerAbilityRequestComponent->RequestUseCard(OwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
 	{
 		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
 	}
@@ -467,9 +467,9 @@ void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool
 	OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
 }
 
-void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
+void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
-	PlayerAbilityRequestComponent->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
+	PlayerAbilityRequestComponent->GetCardDescriptionText(CardOwnerASC, SavedCard, OutText);
 }
 
 bool ALethePlayerController::IsCardSelected() const

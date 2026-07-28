@@ -37,7 +37,7 @@ class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
 
 public:
 	UFUNCTION(BlueprintImplementableEvent)
-	FText GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, const int32 InWeight) const;
+	FText GetCardDescription(const UAbilitySystemComponent* CardOwnerASC, const int32 InLevel, const int32 InWeight) const;
 	
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
@@ -83,7 +83,7 @@ protected:
 	virtual void HandleAbilityEvent(const FGameplayEventData& InPayload);
 	
 	UFUNCTION()
-	void ActiveFailed();
+	void HandleActivationFailed();
 	
 	void ResetCachedValues();
 

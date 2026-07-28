@@ -50,7 +50,7 @@ void ACardActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ACardActor::SetCardInfo(const FCardInitParams& InitParams)
 {
-	OwnerASC = InitParams.OwnerASC;
+	OwnerASC = InitParams.CardOwnerASC;
 	SavedCard = InitParams.SavedCard;
 	AbilitySpecHandle = InitParams.AbilitySpecHandle;
 
@@ -120,7 +120,7 @@ void ACardActor::SetCardContainer(const ECardContainer InCardContainer)
 	case ECardContainer::Selected:
 		ToggleHighlightOutline(true);
 		break;
-	case ECardContainer::Graves:
+	case ECardContainer::Graveyard:
 		break;
 	}
 }
@@ -177,7 +177,7 @@ ECardAction ACardActor::GetCardActionWhenHandState(const ECardMouseEvent InMouse
 	return ECardAction::None;
 }
 
-void ACardActor::MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const
+void ACardActor::FillCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const
 {
 	OutContext->CardNameText = CardNameText;
 	OutContext->SavedCard = SavedCard;

@@ -51,11 +51,11 @@ void ULetheCardAbility::FillTileSelectorContext(FEffectTargetTileSelectorContext
 		if (const UTileManagerSubsystem* TileManagerSubsystem = Context.AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())
 		{
 			Context.TileManagerSubsystem = TileManagerSubsystem;
-			if (!Context.CurrentTile)
+			if (!Context.SourceTile)
 			{
-				if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
+				if (const ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(Context.AvatarActor))
 				{
-					Context.CurrentTile = CurrentTile;
+					Context.SourceTile = SourceTile;
 				}
 			}
 		}
@@ -151,7 +151,7 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (!TryValidateAndCommitActivation(Handle, ActorInfo, ActivationInfo, TriggerEventData))
 	{
-		ActiveFailed();
+		HandleActivationFailed();
 		return;
 	}
 
@@ -199,8 +199,8 @@ void ULetheCardAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		NAME_None,
 		false,
 		1.f);
-	PlayMontageAndWaitTask->OnCancelled.AddDynamic(this, &ThisClass::ActiveFailed);
-	PlayMontageAndWaitTask->OnInterrupted.AddDynamic(this, &ThisClass::ActiveFailed);
+	PlayMontageAndWaitTask->OnCancelled.AddDynamic(this, &ThisClass::HandleActivationFailed);
+	PlayMontageAndWaitTask->OnInterrupted.AddDynamic(this, &ThisClass::HandleActivationFailed);
 	PlayMontageAndWaitTask->ReadyForActivation();
 }
 
@@ -297,7 +297,7 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	return true;
 }
 
-void ULetheCardAbility::ActiveFailed()
+void ULetheCardAbility::HandleActivationFailed()
 {
 	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{

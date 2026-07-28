@@ -47,7 +47,7 @@ void ULetheAbilitySystemComponent::OnAllCardsLoaded(const FGameplayTag& Characte
 			if (CardInfo.CardDefinition && CardInfo.CardDefinition->AbilityClass)
 			{
 				FGrantedCardAbilityInfo GrantedCardAbilityInfo;
-				GrantedCardAbilityInfo.OwnerASC = this;
+				GrantedCardAbilityInfo.CardOwnerASC = this;
 				GrantedCardAbilityInfo.CharacterDefinitionData = LoadedCardInfo.CharacterDefinition;
 				GrantedCardAbilityInfo.CardDefinitionData = CardInfo.CardDefinition;
 				GrantedCardAbilityInfo.SavedCard = CardInfo.SavedCard;

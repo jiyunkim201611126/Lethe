@@ -29,14 +29,14 @@ struct FEffectTargetTileSelectorContext
 	FTargetingIntent TargetingIntent;
 
 	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
-	const ATile* CurrentTile = nullptr;
+	const ATile* SourceTile = nullptr;
 
 	TArray<ATile*> OutSelectCandidateTiles;
 	TArray<FTargetSelectionResult> OutTargetResults;
 
 	bool IsValid() const
 	{
-		return AvatarActor && TileManagerSubsystem && CurrentTile && TargetingIntent.HitTile;
+		return AvatarActor && TileManagerSubsystem && SourceTile && TargetingIntent.HitTile;
 	}
 };
 

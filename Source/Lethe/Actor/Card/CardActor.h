@@ -29,7 +29,7 @@ enum class ECardContainer : uint8
 	Deck,
 	Hands,
 	Selected,
-	Graves,
+	Graveyard,
 };
 
 /** 카드 View가 입력을 Action으로 변환할 때 사용하는 원본 마우스 이벤트입니다. */
@@ -81,7 +81,7 @@ public:
 	
 	ECardAction GetCardActionForMouseEvent(ECardMouseEvent InMouseEvent) const;
 	
-	void MakeCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const;
+	void FillCardWidgetInitContext(UCardWidgetInitContext*& OutContext) const;
 
 	FGameplayAbilitySpecHandle GetAbilitySpecHandle() const;
 	const FSavedCard& GetSavedCard() const;

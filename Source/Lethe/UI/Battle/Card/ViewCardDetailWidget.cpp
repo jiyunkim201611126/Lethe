@@ -35,7 +35,7 @@ void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 		DeactivateWidget();
 	}
 	
-	InCardActor->MakeCardWidgetInitContext(ContextObject);
+	InCardActor->FillCardWidgetInitContext(ContextObject);
 	DetailCardWidget->InitCardView(ContextObject);
 
 	FText OutDescriptionText;

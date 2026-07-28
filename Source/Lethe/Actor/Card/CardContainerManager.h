@@ -20,8 +20,8 @@ struct FCharacterCards
 	{
 		Deck.Reserve(10);
 		Hands.Reserve(8);
-		PreviewHands.Reserve(10);
-		Graves.Reserve(10);
+		DeckPreviewHands.Reserve(10);
+		Graveyard.Reserve(10);
 	}
 
 	UPROPERTY()
@@ -33,12 +33,12 @@ struct FCharacterCards
 
 	/** 비전투 중 덱 열람 시 사용됩니다. */
 	UPROPERTY()
-	TArray<TObjectPtr<ACardActor>> PreviewHands;
+	TArray<TObjectPtr<ACardActor>> DeckPreviewHands;
 
 	UPROPERTY()
-	TArray<TObjectPtr<ACardActor>> Graves;
+	TArray<TObjectPtr<ACardActor>> Graveyard;
 
-	void SortPreviewHands();
+	void SortDeckPreviewHands();
 };
 
 /**
@@ -58,8 +58,8 @@ public:
 	ACardActor* GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const;
 	bool AddCardToHand(ULetheAbilitySystemComponent* OwnerASC);
 
-	void AddCardToGraves(ACardActor* CardActor);
-	void AddAllHandsToGraves();
+	void AddCardToGraveyard(ACardActor* CardActor);
+	void AddAllHandsToGraveyard();
 
 	void RefillDeck();
 
@@ -76,7 +76,7 @@ public:
 	int32 FindCurrentHandIndex(ACardActor* CardActor) const;
 
 private:
-	void GetCurrentHandCounts(TArray<int32>& HandCounts);
+	void GetCurrentHandCounts(TArray<int32>& OutHandCounts);
 
 private:
 	/** CardStage와 마찬가지로, 캐릭터 순서대로 접근하기 위해 AbilitySystemComponent 배열을 캐싱해둡니다. */
@@ -94,6 +94,6 @@ private:
 	FVector HandFirstCardLocation = FVector(1.f, -2.80185f, 3.8543f);
 	float HandCardXOffset = 8.f;
 
-	FVector GravesFirstCardLocation = FVector(0.f, -2.8f, 5.58038f);
-	FVector GravesCardOffset = FVector(0.f, -0.3f, 0.51962f);
+	FVector GraveyardFirstCardLocation = FVector(0.f, -2.8f, 5.58038f);
+	FVector GraveyardCardOffset = FVector(0.f, -0.3f, 0.51962f);
 };

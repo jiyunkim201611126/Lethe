@@ -32,7 +32,7 @@ public:
 	ADeckBoxes();
 
 	void UpdateLocations(const TArray<int32>& HandCounts);
-	void GetDeckLocations(TArray<FVector>& DeckLocations) const;
+	void GetDeckLocations(TArray<FVector>& OutDeckLocations) const;
 	FVector GetDeckLocation(const int32 DeckIndex) const;
 	int32 GetDeckIndex(const UBoxComponent* InDeckBoxCollision) const;
 

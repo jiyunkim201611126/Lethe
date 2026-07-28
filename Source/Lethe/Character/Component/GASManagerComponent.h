@@ -49,7 +49,7 @@ protected:
 	
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
 	
-	virtual void OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const;
+	virtual void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const;
 	
 	void OnPlanPhaseStarted() const;
 

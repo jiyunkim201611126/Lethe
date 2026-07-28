@@ -88,17 +88,17 @@ void ALetheGameState::GoEnemyTurnPhase()
 	SetPhase(EPhaseState::EnemyTurnPhase);
 }
 
-void ALetheGameState::SetPhase(const EPhaseState NewPhase)
+void ALetheGameState::SetPhase(const EPhaseState NewPhaseState)
 {
-	const EPhaseState OldPhase = CurrentPhaseState;
-	if (OldPhase == NewPhase)
+	const EPhaseState OldPhaseState = CurrentPhaseState;
+	if (OldPhaseState == NewPhaseState)
 	{
 		return;
 	}
 	
-	CurrentPhaseState = NewPhase;
+	CurrentPhaseState = NewPhaseState;
 	
-	OnChangePhaseState.Broadcast(OldPhase, CurrentPhaseState);
+	OnChangePhaseState.Broadcast(OldPhaseState, CurrentPhaseState);
 
 	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
 	{

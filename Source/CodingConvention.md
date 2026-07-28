@@ -72,12 +72,12 @@ Data.Value = 0;
 만약 '범위 검사'라는 느낌이 강하다면 기준값도 오름차순 정렬에 포함시킵니다.
 
 ```c++
-//~ 틀린 예시
+// 틀린 예시
 0 < MyValue
 MyValue1 >= MyValue2
 MyValue > 0 && MyValue < 10
 
-//~ 옳은 예시
+// 옳은 예시
 MyValue > 0
 MyValue1 <= MyValue2
 0 < MyValue && MyValue < 10
@@ -96,3 +96,25 @@ MyValue1 <= MyValue2
 반드시 있어야 하는 것은 아닙니다.
 public 함수와 protected 함수를 모두 오버라이드하는 경우가 있다면 접근 지정자를 포함해 묶게 되므로,
 가독성을 오히려 저하시킬 수 있어 이 경우는 주의해서 사용합니다.
+
+---
+
+## 변수명
+
+자료형을 그대로 적기보다는 역할을 명시합니다.
+
+```c++
+// 틀린 예시
+ULetheAbilitySystemComponent* LetheASC = Card->GetOwnerASC();
+
+// 옳은 예시
+ULetheAbilitySystemComponent* CardOwnerASC = Card->GetOwnerASC();
+ULetheAbilitySystemComponent* SourceASC = MyCharacter->GetASC();
+```
+
+함수 구현을 통해 내부가 채워져서 나오는 인자는 앞에 Out을 붙여줍니다.
+
+```c++
+TArray<int32> OutMyValues;
+FillMyValues(OutMyValues);
+```

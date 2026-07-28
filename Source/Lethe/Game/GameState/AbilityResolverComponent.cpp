@@ -49,7 +49,7 @@ void UAbilityResolverComponent::StartActivatePlayerAbility()
 {
 	if (!PlayerAbilityActivationContexts.IsEmpty())
 	{
-		CurrentActivationCharacterTeamSide = ETeamSide::Player;
+		CurrentActivatorTeamSide = ETeamSide::Player;
 
 		// Ability 발동 처리 중임을 기록하고, 발동 시도가 끝나면 다시 false로 되돌립니다.
 		bIsHandlingAbilityActivation = true;
@@ -85,7 +85,7 @@ void UAbilityResolverComponent::HandlePlayerAbilityActivationResult(const ETryAb
 		bIsResolvingPlayerAbility = true;
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		CurrentActivationCharacterTeamSide = ETeamSide::None;
+		CurrentActivatorTeamSide = ETeamSide::None;
 		bIsResolvingPlayerAbility = false;
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
@@ -109,7 +109,7 @@ void UAbilityResolverComponent::ProcessAllPlayerAbilitiesFailed()
 		}
 	}
 	PlayerAbilityActivationContexts.Reset();
-	CurrentActivationCharacterTeamSide = ETeamSide::None;
+	CurrentActivatorTeamSide = ETeamSide::None;
 	bIsResolvingPlayerAbility = false;
 }
 
@@ -122,7 +122,7 @@ void UAbilityResolverComponent::StartActivateEnemyAbility()
 {
 	while (true)
 	{
-		CurrentActivationCharacterTeamSide = ETeamSide::Enemy;
+		CurrentActivatorTeamSide = ETeamSide::Enemy;
 
 		bIsHandlingAbilityActivation = true;
 		const ETryAbilityActivationResult Result = TryActivateNextEnemyAbility();
@@ -170,14 +170,14 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 	case ETryAbilityActivationResult::Success:
 		break;
 	case ETryAbilityActivationResult::AllAbilityUsed:
-		CurrentActivationCharacterTeamSide = ETeamSide::None;
+		CurrentActivatorTeamSide = ETeamSide::None;
 		OnFinishActivationQueue.ExecuteIfBound();
 		break;
 	case ETryAbilityActivationResult::FailedLogicError:
 		ensureAlwaysMsgf(false, TEXT("이곳에 절대로 들어와선 안 됩니다. 일단 진행은 합니다."));
 		break;
 	case ETryAbilityActivationResult::FailedNotActivated:
-	case ETryAbilityActivationResult::FailedNoneTargetTileToMove:
+	case ETryAbilityActivationResult::FailedNoMoveDestination:
 		// 모종의 이유로 Ability 발동에 실패하면 Ended가 호출되지 않으므로 여기서 명시적으로 호출합니다.
 		OnAbilityActivationFailed();
 		break;
@@ -190,12 +190,12 @@ void UAbilityResolverComponent::HandleEnemyAbilityActivationResult(const ETryAbi
 void UAbilityResolverComponent::ResetEnemyActivationContext()
 {
 	EnemyAbilityActivationContexts.Reset();
-	CurrentActivationCharacterTeamSide = ETeamSide::None;
+	CurrentActivatorTeamSide = ETeamSide::None;
 }
 
 void UAbilityResolverComponent::ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide)
 {
-	CurrentActivationCharacterTeamSide = TeamSide;
+	CurrentActivatorTeamSide = TeamSide;
 
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	bIsHandlingAbilityActivation = true;
@@ -251,7 +251,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		// 시작 타일과 목적지 타일까지 해서 최소 2개의 타일이 배열 내에 들어있어야 합니다.
 		if (MovePayload->PathTiles.Num() < 2)
 		{
-			return ETryAbilityActivationResult::FailedNoneTargetTileToMove;
+			return ETryAbilityActivationResult::FailedNoMoveDestination;
 		}
 
 		ActivationContext->Payload.OptionalObject = MovePayload;
@@ -260,7 +260,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	{
 		bool bHasCombatTarget = false;
 		
-		if (CurrentActivationCharacterTeamSide == ETeamSide::Enemy)
+		if (CurrentActivatorTeamSide == ETeamSide::Enemy)
 		{
 			// Enemy가 사용한 경우, 시전 직전에 TargetTiles를 갱신합니다.
 			if (const FGameplayAbilitySpec* Spec = ActivationContext->AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationContext->AbilitySpecHandle))
@@ -292,7 +292,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 				}
 			}
 
-			if (CurrentActivationCharacterTeamSide == ETeamSide::Enemy && !bHasCombatTargetForCurrentResult)
+			if (CurrentActivatorTeamSide == ETeamSide::Enemy && !bHasCombatTargetForCurrentResult)
 			{
 				// Enemy가 사용한 Ability이고, 이번 Result에 유효한 대상이 하나도 없는 경우, TargetTile 위치에 DummyActor를 놓습니다.
 				ATile* DummyTargetTile = nullptr;
@@ -317,7 +317,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			}
 		}
 
-		if (CurrentActivationCharacterTeamSide == ETeamSide::Player && !bHasCombatTarget && !ActivationContext->bCanUseOnTile)
+		if (CurrentActivatorTeamSide == ETeamSide::Player && !bHasCombatTarget && !ActivationContext->bCanUseOnTile)
 		{
 			// Player가 사용한 Ability이고, 유효한 대상이 하나도 없으며, Ability가 대상 없이 발동 불가능한 경우 얼리리턴합니다.
 			return ETryAbilityActivationResult::EmptyTile;
@@ -329,19 +329,19 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	}
 
 	// ASC를 캐싱하고 콜백을 붙여둡니다.
-	CurrentActivationASC = AbilityOwnerASC;
+	CurrentActivatorASC = AbilityOwnerASC;
 	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
 
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationContext->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationContext->AbilityTag, &ActivationContext->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
-		if (CurrentActivationASC.IsValid())
+		if (CurrentActivatorASC.IsValid())
 		{
-			CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
-			CurrentActivationASC.Reset();
+			CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+			CurrentActivatorASC.Reset();
 		}
 
-		if (CurrentActivationCharacterTeamSide == ETeamSide::Player)
+		if (CurrentActivatorTeamSide == ETeamSide::Player)
 		{
 			return ETryAbilityActivationResult::FailedNotActivated;
 		}
@@ -364,10 +364,10 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 	LETHE_LOG(LogAbilityResolver, Log, "Ability Ended");
 	// Ability를 성공적으로 발동해 EndAbility까지 호출됐을 때 콜백을 통해 이곳으로 들어옵니다.
 	// 턴제 게임인 프로젝트 특성상 Ability 발동 도중 Cancel되는 경우는 존재하지 않습니다.
-	if (CurrentActivationASC.IsValid())
+	if (CurrentActivatorASC.IsValid())
 	{
-		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
-		CurrentActivationASC.Reset();
+		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivatorASC.Reset();
 	}
 
 	if (bIsHandlingAbilityActivation)
@@ -406,7 +406,7 @@ bool UAbilityResolverComponent::ProcessPendingAbilityCallbacks()
 void UAbilityResolverComponent::ProcessAbilitySucceeded()
 {
 	// Player와 Enemy에 따라 필요한 처리를 하고 다음 Ability 발동을 시도합니다.
-	switch (CurrentActivationCharacterTeamSide)
+	switch (CurrentActivatorTeamSide)
 	{
 	case ETeamSide::Player:
 		{
@@ -433,10 +433,10 @@ void UAbilityResolverComponent::ProcessAbilitySucceeded()
 void UAbilityResolverComponent::OnAbilityActivationFailed()
 {
 	// Ability를 발동했으나, 내부 로직에 의해 실패한 경우(코스트 부족 등) 이곳으로 들어옵니다.
-	if (CurrentActivationASC.IsValid())
+	if (CurrentActivatorASC.IsValid())
 	{
-		CurrentActivationASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
-		CurrentActivationASC.Reset();
+		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivatorASC.Reset();
 	}
 
 	if (bIsHandlingAbilityActivation)
@@ -451,7 +451,7 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 
 void UAbilityResolverComponent::ProcessAbilityFailed()
 {
-	switch (CurrentActivationCharacterTeamSide)
+	switch (CurrentActivatorTeamSide)
 	{
 	case ETeamSide::Player:
 		// 등록되어 있던 모든 Ability 발동을 취소합니다.

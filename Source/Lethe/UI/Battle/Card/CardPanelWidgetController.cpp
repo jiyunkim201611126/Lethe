@@ -38,7 +38,7 @@ void UCardPanelWidgetController::BindCallbacks(ULetheAbilitySystemComponent* ASC
 void UCardPanelWidgetController::OnGiveAbility(const FGrantedCardAbilityInfo& GrantedCardAbilityInfo) const
 {
 	FCardInitParams InitParams;
-	InitParams.OwnerASC = GrantedCardAbilityInfo.OwnerASC;
+	InitParams.CardOwnerASC = GrantedCardAbilityInfo.CardOwnerASC;
 	InitParams.CharacterDefinitionData = GrantedCardAbilityInfo.CharacterDefinitionData;
 	InitParams.CardDefinition = GrantedCardAbilityInfo.CardDefinitionData;
 	InitParams.SavedCard = GrantedCardAbilityInfo.SavedCard;
@@ -113,11 +113,11 @@ void UCardPanelWidgetController::StartResolvePlayerMoves() const
 	}
 }
 
-void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
+void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->OnSelectCardRequested(HandIndex, OwnerASC, AbilitySpecHandle);
+		LethePlayerController->OnSelectCardRequested(HandIndex, CardOwnerASC, AbilitySpecHandle);
 	}
 }
 
@@ -138,11 +138,11 @@ bool UCardPanelWidgetController::IsCardSelected() const
 	return false;
 }
 
-void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex) const
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->RequestUseCard(OwnerASC, AbilitySpecHandle, CardTag, InHandIndex);
+		LethePlayerController->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandIndex);
 	}
 }
 

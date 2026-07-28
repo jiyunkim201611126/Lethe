@@ -106,13 +106,13 @@ void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
 	Middle->SetRelativeLocation(MiddleCapLocation);
 }
 
-void ADeckBoxes::GetDeckLocations(TArray<FVector>& DeckLocations) const
+void ADeckBoxes::GetDeckLocations(TArray<FVector>& OutDeckLocations) const
 {
 	for (const auto& DeckBoxCollision : DeckBoxCollisions)
 	{
 		if (DeckBoxCollision)
 		{
-			DeckLocations.Add(DeckBoxCollision->GetComponentLocation());
+			OutDeckLocations.Add(DeckBoxCollision->GetComponentLocation());
 		}
 	}
 }

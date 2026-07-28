@@ -51,7 +51,7 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 	}
 
 	// AI가 서있는 타일에서 목표 타일까지의 2D 방향과 거리를 계산합니다.
-	const FVector CurrentLocation = Context.CurrentTile->GetActorLocation();
+	const FVector CurrentLocation = Context.SourceTile->GetActorLocation();
 	const FVector TargetLocation = Context.TargetingIntent.HitTile->GetActorLocation();
 	const FVector2D DesiredDirection(TargetLocation.X - CurrentLocation.X, TargetLocation.Y - CurrentLocation.Y);
 	if (DesiredDirection.IsNearlyZero())
@@ -78,7 +78,7 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 		CandidateContext.OutTargetResults.Reset();
 
 		// AI가 사용할 조준점과 AI의 현재 타일 위치를 기준으로 ImpactPoint를 계산합니다.
-		const FVector AimPoint = MakeAIAimPointForEvenDirectionCount(Context.CurrentTile, UpperDirection);
+		const FVector AimPoint = MakeAIAimPointForEvenDirectionCount(Context.SourceTile, UpperDirection);
 		const FVector AimDirection = (AimPoint - CurrentLocation).GetSafeNormal();
 		CandidateContext.TargetingIntent.ImpactPoint = CurrentLocation + AimDirection * TargetDistance;
 
@@ -134,7 +134,7 @@ FVector FDirectionModeTargetTileSelector::MakeAIAimPointForEvenDirectionCount(co
 
 void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
+	const FCubeCoord CenterCoord = Context.SourceTile->GetCubeCoord();
 
 	if (RangeType == ERangeType::Melee)
 	{
@@ -157,7 +157,7 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTile
 	{
 		// 필요한 방향들을 가져옵니다.
 		TArray<int32> SelectedDirections;
-		GetSelectedDirections(Context.CurrentTile, Context.TargetingIntent, SelectedDirections);
+		GetSelectedDirections(Context.SourceTile, Context.TargetingIntent, SelectedDirections);
 
 		// 지정된 방향을 모두 순회하며, 해당 방향으로 1칸씩 뻗어나가면서 모든 타일을 OutTiles에 추가합니다.
 		const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
@@ -171,7 +171,7 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTile
 					CenterCoord.R + DirectionOffset.R * Distance,
 					CenterCoord.S + DirectionOffset.S * Distance);
 
-				// 인덱스가 곧 CurrentTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
+				// 인덱스가 곧 SourceTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
 				Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(SelectCandidateCoord));
 			}
 		}
@@ -209,7 +209,7 @@ void FDirectionModeTargetTileSelector::HandleMeleeTargets(FEffectTargetTileSelec
 			FSelectedTarget& Target = PrimaryTargets.Targets.AddDefaulted_GetRef();
 			Target.TargetTile = TargetTile;
 
-			const FCubeCoord DirectionCoord = Context.TargetingIntent.HitTile->GetCubeCoord() - Context.CurrentTile->GetCubeCoord();
+			const FCubeCoord DirectionCoord = Context.TargetingIntent.HitTile->GetCubeCoord() - Context.SourceTile->GetCubeCoord();
 			const int32 Direction = FCubeCoord::GetDirection(DirectionCoord);
 
 			FResolvedPrimaryTargetTile& AddedData = OutTargetTiles.AddDefaulted_GetRef();
@@ -224,9 +224,9 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 {
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(Context.CurrentTile, Context.TargetingIntent, SelectedDirections);
+	GetSelectedDirections(Context.SourceTile, Context.TargetingIntent, SelectedDirections);
 
-	const FCubeCoord CenterCoord = Context.CurrentTile->GetCubeCoord();
+	const FCubeCoord CenterCoord = Context.SourceTile->GetCubeCoord();
 	const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
@@ -277,10 +277,10 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 
 void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
-	// CurrentTile(AvatarActor가 서있는 타일)과 마우스 위치까지의 거리를 계산합니다.
-	const FVector CurrentTileLocation = Context.CurrentTile->GetActorLocation();
+	// SourceTile(AvatarActor가 서있는 타일)과 마우스 위치까지의 거리를 계산합니다.
+	const FVector SourceTileLocation = Context.SourceTile->GetActorLocation();
 	const FVector HitLocation = Context.TargetingIntent.ImpactPoint;
-	const float HitDistance = FVector::Dist(CurrentTileLocation, HitLocation);
+	const float HitDistance = FVector::Dist(SourceTileLocation, HitLocation);
 
 	// 타일과 타일 사이의 거리를 가져옵니다.
 	const float TileWidthInterval = FCubeCoord::GetTileWidthInterval();
@@ -301,7 +301,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 
 	// AdditionalRange 계산을 위해 Direction이 필요하므로, 여기서 다시 가져옵니다.
 	TArray<int32> SelectedDirections;
-	GetSelectedDirections(Context.CurrentTile, Context.TargetingIntent, SelectedDirections);
+	GetSelectedDirections(Context.SourceTile, Context.TargetingIntent, SelectedDirections);
 
 	// 거리에 알맞는 타일들만 추가합니다.
 	int32 TileIndex = HitTileDistance - 1;
@@ -481,13 +481,13 @@ int32 FDirectionModeTargetTileSelector::FindClosestHexDirectionBoundary(const FV
 	return ClosestUpperDirection;
 }
 
-void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* CurrentTile, const FTargetingIntent& TargetingIntent, TArray<int32>& OutDirections) const
+void FDirectionModeTargetTileSelector::GetSelectedDirections(const ATile* SourceTile, const FTargetingIntent& TargetingIntent, TArray<int32>& OutDirections) const
 {
 	OutDirections.Reset();
 
 	// 현재 서있는 위치와 마우스에서 라인트레이스를 통해 가져온 위치에서 Z축을 빼고 방향 벡터를 계산합니다.
-	const FVector CurrentLocation = CurrentTile->GetActorLocation();
-	const FVector2D DesiredDirection(TargetingIntent.ImpactPoint.X - CurrentLocation.X, TargetingIntent.ImpactPoint.Y - CurrentLocation.Y);
+	const FVector SourceLocation = SourceTile->GetActorLocation();
+	const FVector2D DesiredDirection(TargetingIntent.ImpactPoint.X - SourceLocation.X, TargetingIntent.ImpactPoint.Y - SourceLocation.Y);
 	if (DesiredDirection.IsNearlyZero())
 	{
 		return;

@@ -87,9 +87,9 @@ void UPlayerAttributeWidgetController::OnMoveRangeChanged(const FOnAttributeChan
 	BroadcastMarkerVisibilityChanged();
 }
 
-void UPlayerAttributeWidgetController::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase)
+void UPlayerAttributeWidgetController::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
 {
-	CurrentPhaseState = NewPhase;
+	CurrentPhaseState = NewPhaseState;
 	BroadcastMarkerVisibilityChanged();
 }
 

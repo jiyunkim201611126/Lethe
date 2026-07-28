@@ -319,8 +319,8 @@ EMoveActionType UPlayerAbilityRequestComponent::GetActionType(const FPlayerChara
 	// TargetTile 위에 액터가 있는 경우 들어가는 분기입니다.
 	if (const AActor* ActorOnTargetTile = TileManagerSubsystem->GetActorOnTile(TargetTile))
 	{
-		const ATile* SourceCurrentTile = TileManagerSubsystem->GetTileUnderActor(SourceReservedMove->PlayerCharacter.Get());
-		if (!SourceCurrentTile)
+		const ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(SourceReservedMove->PlayerCharacter.Get());
+		if (!SourceTile)
 		{
 			return EMoveActionType::CantReach;
 		}
@@ -331,7 +331,7 @@ EMoveActionType UPlayerAbilityRequestComponent::GetActionType(const FPlayerChara
 			// TargetTile 위에 존재하는 액터가 이동을 예약한 캐릭터인 경우 들어가는 분기입니다.
 			if (ActorOnTargetTile == TargetReservedMove.PlayerCharacter)
 			{
-				if (CanReachReservedTile(&TargetReservedMove, SourceCurrentTile))
+				if (CanReachReservedTile(&TargetReservedMove, SourceTile))
 				{
 					// Target 캐릭터가 Source의 타일로 도달 가능한 상태면 Swap을 반환합니다.
 					OutSwapTargetReservedMove = &TargetReservedMove;
@@ -434,13 +434,13 @@ void UPlayerAbilityRequestComponent::RefreshReservedMoveData(FPlayerCharacterRes
 	if (ReservedMove->IsValid())
 	{
 		// 이동 후, 캐싱된 경로에서 도달한 타일까지 제거 및 점유 카운트를 제거합니다.
-		ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove->PlayerCharacter.Get());
-		if (!CurrentTile)
+		ATile* CurrentReachedTile = TileManagerSubsystem->GetTileUnderActor(ReservedMove->PlayerCharacter.Get());
+		if (!CurrentReachedTile)
 		{
 			return;
 		}
 
-		const int32 ReachedIndex = ReservedMove->PathTiles.IndexOfByKey(CurrentTile);
+		const int32 ReachedIndex = ReservedMove->PathTiles.IndexOfByKey(CurrentReachedTile);
 		if (ReachedIndex != INDEX_NONE)
 		{
 			const int32 RemoveCount = ReachedIndex + 1;
@@ -667,9 +667,9 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const
+bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const
 {
-	if (!ActorSelector.IsValid() || !OwnerASC || !AbilitySpecHandle.IsValid())
+	if (!ActorSelector.IsValid() || !CardOwnerASC || !AbilitySpecHandle.IsValid())
 	{
 		return false;
 	}
@@ -688,9 +688,9 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 		return false;
 	}
 
-	const FGameplayAbilitySpec* AbilitySpec = OwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+	const FGameplayAbilitySpec* AbilitySpec = CardOwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
 	const ULetheCardAbility* CardAbility = AbilitySpec ? Cast<ULetheCardAbility>(AbilitySpec->Ability) : nullptr;
-	const AActor* CardOwner = OwnerASC->GetAvatarActor();
+	const AActor* CardOwner = CardOwnerASC->GetAvatarActor();
 	if (!CardAbility || !CardOwner)
 	{
 		return false;
@@ -705,7 +705,7 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	AbilityActivationContext.AbilitySpecHandle = AbilitySpecHandle;
 	AbilityActivationContext.bCanUseOnTile = CardAbility->CanUseOnTile();
 	AbilityActivationContext.AbilityTag = CardTag;
-	AbilityActivationContext.AbilityOwnerASC = OwnerASC;
+	AbilityActivationContext.AbilityOwnerASC = CardOwnerASC;
 
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = CardOwner;
@@ -723,19 +723,19 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	return true;
 }
 
-void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
+void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const
 {
 	OutText = FText::GetEmpty();
-	if (!OwnerASC)
+	if (!CardOwnerASC)
 	{
 		return;
 	}
 
 	TArray<FGameplayAbilitySpecHandle> OutAbilityHandles;
-	OwnerASC->GetAllAbilities(OutAbilityHandles);
+	CardOwnerASC->GetAllAbilities(OutAbilityHandles);
 	for (const FGameplayAbilitySpecHandle& Handle : OutAbilityHandles)
 	{
-		const FGameplayAbilitySpec* Spec = OwnerASC->FindAbilitySpecFromHandle(Handle);
+		const FGameplayAbilitySpec* Spec = CardOwnerASC->FindAbilitySpecFromHandle(Handle);
 		if (!Spec || !Spec->Ability)
 		{
 			continue;
@@ -750,7 +750,7 @@ void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilityS
 		
 		if (CardDefinitionData->CardId == SavedCard.CardId)
 		{
-			OutText = CardAbility->GetCardDescription(OwnerASC, SavedCard.CardLevel, CardDefinitionData->GetWeight(SavedCard.CardLevel));
+			OutText = CardAbility->GetCardDescription(CardOwnerASC, SavedCard.CardLevel, CardDefinitionData->GetWeight(SavedCard.CardLevel));
 			return;
 		}
 	}

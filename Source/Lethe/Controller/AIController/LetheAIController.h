@@ -33,10 +33,10 @@ public:
 	bool GetRandomAbility(FGameplayAbilitySpecHandle& OutAbilitySpecHandle);
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "Ability로 TargetActor을 공격할 수 있는 타일들을 반환합니다."))
-	bool GetAttackableTiles(const FGameplayAbilitySpecHandle AbilitySpecHandle, const ATile* TargetTile, TArray<ATile*>& OutAttackableTiles);
+	bool GetAttackOriginTiles(const FGameplayAbilitySpecHandle AbilitySpecHandle, const ATile* TargetTile, TArray<ATile*>& OutAttackOriginTiles);
 
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "공격 가능한 타일 중에서 가장 공격하기 좋은 타일을 반환합니다."))
-	ATile* GetBestAttackableTile(const TArray<ATile*>& AttackableTiles);
+	ATile* SelectBestAttackOriginTile(const TArray<ATile*>& AttackOriginTiles);
 	
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "이번 턴에 사용할 AbilitySpecHandle과 대상 타일을 세팅합니다."))
 	void SetPlannedData(const FGameplayAbilitySpecHandle SelectedAbilitySpecHandle, ATile* TargetTile);
@@ -56,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StartCombat();
 
-	bool IsCombating() const;
+	bool IsInCombat() const;
 
 protected:
 	//~ Begin AActor Interface
@@ -86,7 +86,7 @@ protected:
 	TObjectPtr<AArrowRenderer> ArrowRenderer;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	bool bIsCombating = false;
+	bool bIsInCombat = false;
 
 private:
 	FDelegateHandle OnAbilityAttemptDelegateHandle;

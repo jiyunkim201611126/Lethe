@@ -18,7 +18,7 @@ struct FGrantedCardAbilityInfo
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ULetheAbilitySystemComponent* OwnerASC = nullptr;
+	ULetheAbilitySystemComponent* CardOwnerASC = nullptr;
 
 	UPROPERTY()
 	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;

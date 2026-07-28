@@ -17,11 +17,11 @@ ULetheWidgetController* UAttributeUIFeature::CreatePlayerAttributeWidgetControll
 		if (AttributeWidgetController)
 		{
 			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, PAS);
-			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
-			UPlayerAttributeSet* PlayerAS = Cast<UPlayerAttributeSet>(PAS);
+			ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(ASC);
+			ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(AS);
+			UPlayerAttributeSet* PlayerAttributeSet = Cast<UPlayerAttributeSet>(PAS);
 			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, PlayerAS);
+			AttributeWidgetController->BindCallbacks(AbilitySystemComponent, AttributeSet, PlayerAttributeSet);
 			return AttributeWidgetController;
 		}
 	}
@@ -37,10 +37,10 @@ ULetheWidgetController* UAttributeUIFeature::CreateEnemyAttributeWidgetControlle
 		if (AttributeWidgetController)
 		{
 			const FWidgetControllerParams WidgetControllerParams(PC, ASC, AS, nullptr);
-			ULetheAbilitySystemComponent* LetheASC = CastChecked<ULetheAbilitySystemComponent>(ASC);
-			ULetheAttributeSet* LetheAS = CastChecked<ULetheAttributeSet>(AS);
+			ULetheAbilitySystemComponent* AbilitySystemComponent = CastChecked<ULetheAbilitySystemComponent>(ASC);
+			ULetheAttributeSet* AttributeSet = CastChecked<ULetheAttributeSet>(AS);
 			AttributeWidgetController->SetWidgetControllerParams(WidgetControllerParams);
-			AttributeWidgetController->BindCallbacks(LetheASC, LetheAS, nullptr);
+			AttributeWidgetController->BindCallbacks(AbilitySystemComponent, AttributeSet, nullptr);
 			return AttributeWidgetController;
 		}
 	}

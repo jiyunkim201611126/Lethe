@@ -185,9 +185,9 @@ bool ALetheAIController::GetRandomAbility(FGameplayAbilitySpecHandle& OutAbility
 	return OutAbilitySpecHandle.IsValid();
 }
 
-bool ALetheAIController::GetAttackableTiles(const FGameplayAbilitySpecHandle AbilitySpecHandle, const ATile* TargetTile, TArray<ATile*>& OutAttackableTiles)
+bool ALetheAIController::GetAttackOriginTiles(const FGameplayAbilitySpecHandle AbilitySpecHandle, const ATile* TargetTile, TArray<ATile*>& OutAttackOriginTiles)
 {
-	OutAttackableTiles.Reset();
+	OutAttackOriginTiles.Reset();
 
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	APawn* ControlledEnemy = GetPawn();
@@ -199,9 +199,9 @@ bool ALetheAIController::GetAttackableTiles(const FGameplayAbilitySpecHandle Abi
 
 	const FGameplayAbilitySpec* AbilitySpec = ASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
 	const ULetheCardAbility* CardAbility = AbilitySpec ? Cast<ULetheCardAbility>(AbilitySpec->Ability) : nullptr;
-	ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
+	ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy);
 	const AActor* TargetActor = TileManagerSubsystem->GetActorOnTile(TargetTile);
-	if (!CardAbility || !CurrentTile || !TargetActor)
+	if (!CardAbility || !SourceTile || !TargetActor)
 	{
 		return false;
 	}
@@ -209,12 +209,12 @@ bool ALetheAIController::GetAttackableTiles(const FGameplayAbilitySpecHandle Abi
 	// 기본적으로 타일 A에서 타일 B를 어떤 Ability로 공격 가능하다면, 타일 B에서 타일 A를 동일한 Ability로 공격할 수 있습니다.
 	// 그 점을 이용해, TargetActor가 서있는 타일을 기준으로 GetCandidateTiles를 호출, 공격할 수 있는 타일을 가져옵니다.
 	FTargetingIntent TargetingIntent;
-	TargetingIntent.HitTile = CurrentTile;
-	TargetingIntent.ImpactPoint = CurrentTile->GetActorLocation();
+	TargetingIntent.HitTile = SourceTile;
+	TargetingIntent.ImpactPoint = SourceTile->GetActorLocation();
 
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = TargetActor;
-	Context.CurrentTile = TargetTile;
+	Context.SourceTile = TargetTile;
 	Context.TargetingIntent = TargetingIntent;
 	CardAbility->GetCandidateTiles(Context);
 
@@ -225,20 +225,20 @@ bool ALetheAIController::GetAttackableTiles(const FGameplayAbilitySpecHandle Abi
 			continue;
 		}
 
-		if (CandidateTile == CurrentTile || TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
+		if (CandidateTile == SourceTile || TileManagerSubsystem->CanEnemyAIMoveToTile(CandidateTile))
 		{
-			OutAttackableTiles.AddUnique(CandidateTile);
+			OutAttackOriginTiles.AddUnique(CandidateTile);
 		}
 	}
 
-	return !OutAttackableTiles.IsEmpty();
+	return !OutAttackOriginTiles.IsEmpty();
 }
 
-ATile* ALetheAIController::GetBestAttackableTile(const TArray<ATile*>& AttackableTiles)
+ATile* ALetheAIController::SelectBestAttackOriginTile(const TArray<ATile*>& AttackOriginTiles)
 {
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	const AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
-	if (!TileManagerSubsystem || !ControlledEnemy || AttackableTiles.IsEmpty())
+	if (!TileManagerSubsystem || !ControlledEnemy || AttackOriginTiles.IsEmpty())
 	{
 		return nullptr;
 	}
@@ -271,7 +271,7 @@ ATile* ALetheAIController::GetBestAttackableTile(const TArray<ATile*>& Attackabl
 
 	ATile* BestTile = nullptr;
 	int32 BestScore = MIN_int32;
-	for (ATile* AttackableTile : AttackableTiles)
+	for (ATile* AttackableTile : AttackOriginTiles)
 	{
 		if (!AttackableTile)
 		{
@@ -473,17 +473,17 @@ void ALetheAIController::StartCombat()
 		return;
 	}
 	
-	bIsCombating = true;
+	bIsInCombat = true;
 	
-	if (const ATile* CurrentTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
+	if (const ATile* SourceTile = TileManagerSubsystem->GetTileUnderActor(ControlledEnemy))
 	{
-		RoomManagerSubsystem->RevealEnemyTile(CurrentTile);
-		ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ControlledEnemy, CurrentTile);
+		RoomManagerSubsystem->RevealEnemyTile(SourceTile);
+		ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(ControlledEnemy, SourceTile);
 	}
 	LetheGameState->RegisterCombatEnemy(GetPawn<AEnemyCharacterBase>());
 }
 
-bool ALetheAIController::IsCombating() const
+bool ALetheAIController::IsInCombat() const
 {
-	return bIsCombating;
+	return bIsInCombat;
 }

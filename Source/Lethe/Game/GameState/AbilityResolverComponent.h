@@ -29,7 +29,7 @@ enum class ETryAbilityActivationResult : uint8
 	FailedNotActivated,
 	
 	/** Enemy의 MoveAbility 사용 시 TargetTile이 없는 경우 반환받게 됩니다. */
-	FailedNoneTargetTileToMove,
+	FailedNoMoveDestination,
 };
 
 DECLARE_DELEGATE_TwoParams(FOnResolveUseCard, const int32 /* HandIndex */, const bool /* bSuccess */);
@@ -101,9 +101,9 @@ private:
 	/** PlayerAbilityQueue가 작동 중인지를 표현하는 변수입니다. */
 	uint8 bIsResolvingPlayerAbility : 1 = false;
 
-	ETeamSide CurrentActivationCharacterTeamSide = ETeamSide::None;
+	ETeamSide CurrentActivatorTeamSide = ETeamSide::None;
 	
-	TWeakObjectPtr<UAbilitySystemComponent> CurrentActivationASC;
+	TWeakObjectPtr<UAbilitySystemComponent> CurrentActivatorASC;
 	uint8 bIsHandlingAbilityActivation : 1 = false;
 	uint8 bPendingAbilitySucceeded : 1 = false;
 	uint8 bPendingAbilityFailed : 1 = false;

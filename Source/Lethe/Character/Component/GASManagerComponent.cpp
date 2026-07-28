@@ -132,9 +132,9 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
 {
-	if (NewPhase == EPhaseState::EnemyPlanningPhase)
+	if (NewPhaseState == EPhaseState::EnemyPlanningPhase)
 	{
 		OnPlanPhaseStarted();
 	}
@@ -142,7 +142,7 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
 	
-	if (NewPhase == EPhaseState::EnemyTurnPhase)
+	if (NewPhaseState == EPhaseState::EnemyTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

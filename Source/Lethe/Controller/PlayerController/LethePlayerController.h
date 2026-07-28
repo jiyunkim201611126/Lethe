@@ -46,12 +46,12 @@ public:
 	void StartResolvePlayerMoves() const;
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle);
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle);
 	void ResetSelectedCard();
 	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex);
+	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex);
 
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
 
 	bool IsCardSelected() const;
 
@@ -63,7 +63,7 @@ protected:
 	//~ End of AActor Interface
 
 private:
-	void OnPhaseStateChanged(const EPhaseState OldState, const EPhaseState NewState);
+	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
 	
 	/** 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다. */
 	void OnOtherTileDetected() const;

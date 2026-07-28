@@ -35,20 +35,20 @@ void FTileModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContex
 
 void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
 {
-	const int32 CurrentTileFloor = Context.TileManagerSubsystem->GetTileFloor(Context.CurrentTile);
+	const int32 SourceTileFloor = Context.TileManagerSubsystem->GetTileFloor(Context.SourceTile);
 	
 	TSet<FCubeCoord> OutCubeCoords;
-	Context.TileManagerSubsystem->TileBFS(Context.CurrentTile->GetCubeCoord(), SelectRange.Distance, SelectRange.BFSType, OutCubeCoords,
+	Context.TileManagerSubsystem->TileBFS(Context.SourceTile->GetCubeCoord(), SelectRange.Distance, SelectRange.BFSType, OutCubeCoords,
 		[](const FTileData* CurrentTileData, const FTileData* NextTileData)
 		{
 			return true;
 		},
-		[this, Context, CurrentTileFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
+		[this, Context, SourceTileFloor](const FCubeCoord& CurrentCoord, const FTileData* TileData, const int32 Depth)
 		{
 			if (TileData && TileData->TopTile.IsValid())
 			{
 				const int32 CurrentTargetFloor = Context.TileManagerSubsystem->GetTileFloor(TileData->TopTile.Get());
-				const int32 FloorGap = CurrentTargetFloor - CurrentTileFloor;
+				const int32 FloorGap = CurrentTargetFloor - SourceTileFloor;
 
 				if (FloorGap <= SelectRange.FloorGap)
 				{

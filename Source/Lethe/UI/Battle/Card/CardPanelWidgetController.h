@@ -27,7 +27,7 @@ struct FCardInitParams
 	GENERATED_BODY()
 
 	UPROPERTY()
-	ULetheAbilitySystemComponent* OwnerASC = nullptr;
+	ULetheAbilitySystemComponent* CardOwnerASC = nullptr;
 
 	UPROPERTY()
 	const UCharacterDefinitionData* CharacterDefinitionData = nullptr;
@@ -73,9 +73,9 @@ public:
 	
 	void StartResolvePlayerMoves() const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
+	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
 	void ResetSelectedCard() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const;
 	
 	bool IsCardSelected() const;
 

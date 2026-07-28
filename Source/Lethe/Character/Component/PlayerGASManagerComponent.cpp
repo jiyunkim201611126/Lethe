@@ -71,15 +71,15 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 	}
 }
 
-void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase, const EPhaseState NewPhase) const
+void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
 {
-	if (NewPhase == EPhaseState::EnemyPlanningPhase)
+	if (NewPhaseState == EPhaseState::EnemyPlanningPhase)
 	{
 		OnPlanPhaseStarted();
 		ApplyTurnStartRecovery();
 	}
 
-	if (NewPhase == EPhaseState::DrawPhase)
+	if (NewPhaseState == EPhaseState::DrawPhase)
 	{
 		ApplyTurnStartRecovery();
 	}
@@ -87,7 +87,7 @@ void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhase,
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
 	
-	if (NewPhase == EPhaseState::PlayerMovePhase || NewPhase == EPhaseState::PlayerTurnPhase)
+	if (NewPhaseState == EPhaseState::PlayerMovePhase || NewPhaseState == EPhaseState::PlayerTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

@@ -71,6 +71,7 @@ protected:
 	/** 시전 시 적용 범위에 해당하는 타일들을 모두 Out 인자로 반환합니다. */
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
+	/** 수집된 Target들 중 중복 대상을 제거하고 TargetTeamRelation 규칙에 일치하는 대상만 남도록 걸러냅니다. */
 	void ResolveTargetActors(FEffectTargetTileSelectorContext& Context) const;
 
 protected:

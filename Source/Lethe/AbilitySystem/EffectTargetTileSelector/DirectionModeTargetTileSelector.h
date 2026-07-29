@@ -90,7 +90,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	int32 RangeDistance = 1;
 
-	/** Key는 TargetGroup_Primary를 제외한 다른 추가 범위를 의미하며, Value는 EnforceValue입니다. */
+	/** 추가 범위입니다. */
 	UPROPERTY(EditDefaultsOnly)
-	TMap<EAdditionalRangeType, int32> AdditionalRanges;
+	TSet<EAdditionalRangeType> AdditionalRanges;
+	
+	/** 추가 범위에 대한 확장 카운트입니다. */
+	UPROPERTY(EditDefaultsOnly)
+	int32 ExtendCount = 0;
 };

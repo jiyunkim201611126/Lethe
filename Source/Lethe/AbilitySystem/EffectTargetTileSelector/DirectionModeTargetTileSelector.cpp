@@ -337,9 +337,9 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 	}
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	for (const auto& AdditionalRange : AdditionalRanges)
+	for (const EAdditionalRangeType AdditionalRange : AdditionalRanges)
 	{
-		switch (AdditionalRange.Key)
+		switch (AdditionalRange)
 		{
 		case EAdditionalRangeType::Penetration:
 			{
@@ -356,7 +356,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 
 					// Primary 타겟 타일과 같은 방향으로 나아가며 타일을 가져옵니다.
 					FCubeCoord PenetrationCoord = PrimaryTargetTile.Tile->GetCubeCoord();
-					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
+					for (int32 Count = 0; Count <= ExtendCount; ++Count)
 					{
 						PenetrationCoord = PenetrationCoord + DirectionCoord;
 						if (ATile* PenetrationTile = Context.TileManagerSubsystem->GetTile(PenetrationCoord))
@@ -384,7 +384,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 					FCubeCoord CounterclockwiseTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
 					const FCubeCoord ClockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 4);
 					const FCubeCoord CounterclockwiseDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 2);
-					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
+					for (int32 Count = 0; Count <= ExtendCount; ++Count)
 					{
 						ClockwiseTargetTileCoord = ClockwiseTargetTileCoord + ClockwiseDirectionCoord;
 						CounterclockwiseTargetTileCoord = CounterclockwiseTargetTileCoord + CounterclockwiseDirectionCoord;
@@ -418,7 +418,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 					FCubeCoord SpreadRightTargetTileCoord = PrimaryTargetTile.Tile->GetCubeCoord();
 					const FCubeCoord LeftDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction + 1);
 					const FCubeCoord RightDirectionCoord = FCubeCoord::GetDirection(PrimaryTargetTile.Direction - 1);
-					for (int32 EnforceValue = 0; EnforceValue < AdditionalRange.Value; ++EnforceValue)
+					for (int32 Count = 0; Count <= ExtendCount; ++Count)
 					{
 						SpreadLeftTargetTileCoord = SpreadLeftTargetTileCoord + LeftDirectionCoord;
 						SpreadRightTargetTileCoord = SpreadRightTargetTileCoord + RightDirectionCoord;

@@ -63,7 +63,7 @@ public:
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual bool CommitAbilityCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
 
-	bool CanUseOnTile() const;
+	bool CanUseWithoutTarget() const;
 
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
@@ -108,9 +108,12 @@ protected:
 
 	TArray<FTargetSelectionResult> CachedTargetSelectionResults;
 
-	/** 타일에 사용 가능(대상 없이 사용 가능) 여부이며, Player가 발동한 Ability에만 해당됩니다. */
+	/** 
+	 * TargetActor 없이 발동 가능 여부이며, Player가 발동한 Ability에만 해당됩니다.
+	 * 검증 자체는 PlayerAbilityRequestComponent와 AbilityResolverComponent가 수행하며, 발동 성공 시 Ability는 이 값을 신경 쓰지 않습니다.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	bool bCanUseOnTile = true;
+	bool bCanUseWithoutTarget = true;
 
 #if WITH_EDITOR
 public:

@@ -45,6 +45,7 @@ void ULetheCardAbility::FillTileSelectorContext(FEffectTargetTileSelectorContext
 {
 	Context.OutSelectCandidateTiles.Reset();
 	Context.OutTargetResults.Reset();
+	Context.bHasValidActorTarget = false;
 
 	if (Context.AvatarActor)
 	{
@@ -248,35 +249,11 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 	const FGameplayAbilityTargetData_TargetSelectionResults* TargetSelectionResultsData = static_cast<const FGameplayAbilityTargetData_TargetSelectionResults*>(TargetData);
 	CachedTargetSelectionResults = TargetSelectionResultsData->TargetSelectionResults;
 
-	if (CachedTargetSelectionResults.IsEmpty())
-	{
-		ResetCachedValues();
-		return false;
-	}
-
 	const AActor* SourceActor = GetAvatarActorFromActorInfo();
 	if (!SourceActor)
 	{
 		ResetCachedValues();
 		return false;
-	}
-
-	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	TArray<const UAbilitySystemComponent*> TargetASCs;
-	for (const FTargetSelectionResult& TargetResult : CachedTargetSelectionResults)
-	{
-		for (const FSelectedTarget& Target : TargetResult.Targets)
-		{
-			if (!Target.ActorOnTile.IsValid())
-			{
-				continue;
-			}
-			
-			if (const UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target.ActorOnTile.Get()))
-			{
-				TargetASCs.Add(TargetASC);
-			}
-		}
 	}
 
 	// SourceActor가 플레이어 캐릭터인 경우 들어가는 분기입니다.
@@ -288,12 +265,8 @@ bool ULetheCardAbility::TryValidateAndCommitActivation(const FGameplayAbilitySpe
 			ResetCachedValues();
 			return false;
 		}
-
-		return true;
 	}
 
-	// SourceActor가 적 캐릭터인 경우 이곳으로 내려옵니다.
-	// 이 경우 Target Tile 위에 캐릭터가 없더라도, 애니메이션이나 나이아가라를 재생하기 위해 더미 액터를 올려두어 진행하기 때문에 true를 반환합니다.
 	return true;
 }
 
@@ -348,9 +321,9 @@ bool ULetheCardAbility::CommitAbilityCost(const FGameplayAbilitySpecHandle Handl
 	return true;
 }
 
-bool ULetheCardAbility::CanUseOnTile() const
+bool ULetheCardAbility::CanUseWithoutTarget() const
 {
-	return bCanUseOnTile;
+	return bCanUseWithoutTarget;
 }
 
 FText ULetheCardAbility::GetWeightDescription(const int32 Weight) const

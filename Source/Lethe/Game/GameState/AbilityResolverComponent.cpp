@@ -235,7 +235,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		UMoveAbilityPayload* MovePayload = NewObject<UMoveAbilityPayload>(this);
 
 		// 모든 경로 생성 함수들은 StartTile을 제외하고 생성하므로, 여기서 직접 추가합니다.
-		if (ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(AbilityOwnerASC->GetAvatarActor()))
+		if (ATile* StartTile = TileManagerSubsystem->GetTileUnderActor(AvatarActor))
 		{
 			MovePayload->PathTiles.Add(StartTile);
 		}
@@ -258,26 +258,27 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 	}
 	else
 	{
-		bool bHasCombatTarget = false;
+		// MoveAbility 계열이 아닌 경우 들어오는 분기입니다.
+		const FGameplayAbilitySpec* Spec = AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationContext->AbilitySpecHandle);
+		const ULetheCardAbility* CardAbility = Spec ? Cast<ULetheCardAbility>(Spec->Ability) : nullptr;
+		if (!CardAbility)
+		{
+			return ETryAbilityActivationResult::FailedFatal;
+		}
 		
 		if (CurrentActivatorTeamSide == ETeamSide::Enemy)
 		{
-			// Enemy가 사용한 경우, 시전 직전에 TargetTiles를 갱신합니다.
-			if (const FGameplayAbilitySpec* Spec = ActivationContext->AbilityOwnerASC->FindAbilitySpecFromHandle(ActivationContext->AbilitySpecHandle))
-			{
-				if (const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability))
-				{
-					FEffectTargetTileSelectorContext Context;
-					Context.AvatarActor = AbilityOwnerASC->GetAvatarActor();
-					Context.TargetingIntent = ActivationContext->TargetingIntent;
+			// Enemy가 사용한 경우, 플레이어가 조작으로 시전 범위를 벗어났을 수 있으므로 TargetTiles를 갱신합니다.
+			FEffectTargetTileSelectorContext Context;
+			Context.AvatarActor = AvatarActor;
+			Context.TargetingIntent = ActivationContext->TargetingIntent;
 
-					CardAbility->GetTargetTiles(Context);
+			CardAbility->GetTargetTiles(Context);
 
-					ActivationContext->TargetSelectionResults = MoveTemp(Context.OutTargetResults);
-				}
-			}
+			ActivationContext->TargetSelectionResults = MoveTemp(Context.OutTargetResults);
 		}
 		
+		bool bHasCombatTarget = false;
 		for (FTargetSelectionResult& TargetResult : ActivationContext->TargetSelectionResults)
 		{
 			bool bHasCombatTargetForCurrentResult = false;
@@ -286,8 +287,8 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 				if (Target.ActorOnTile.IsValid())
 				{
 					// 유효한 대상이 하나라도 있는 경우 이를 기록합니다.
-					bHasCombatTargetForCurrentResult = true;
 					bHasCombatTarget = true;
+					bHasCombatTargetForCurrentResult = true;
 					break;
 				}
 			}
@@ -317,7 +318,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			}
 		}
 
-		if (CurrentActivatorTeamSide == ETeamSide::Player && !bHasCombatTarget && !ActivationContext->bCanUseOnTile)
+		if (CurrentActivatorTeamSide == ETeamSide::Player && !bHasCombatTarget && !CardAbility->CanUseWithoutTarget())
 		{
 			// Player가 사용한 Ability이고, 유효한 대상이 하나도 없으며, Ability가 대상 없이 발동 불가능한 경우 얼리리턴합니다.
 			return ETryAbilityActivationResult::EmptyTile;

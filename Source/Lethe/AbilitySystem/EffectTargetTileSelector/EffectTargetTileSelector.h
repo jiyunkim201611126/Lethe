@@ -33,6 +33,9 @@ struct FEffectTargetTileSelectorContext
 
 	TArray<ATile*> OutSelectCandidateTiles;
 	TArray<FTargetSelectionResult> OutTargetResults;
+	
+	/** 유효한 타겟이 하나라도 있다면 true로 할당됩니다. */
+	bool bHasValidActorTarget = false;
 
 	bool IsValid() const
 	{
@@ -71,7 +74,10 @@ protected:
 	/** 시전 시 적용 범위에 해당하는 타일들을 모두 Out 인자로 반환합니다. */
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
-	/** 수집된 Target들 중 중복 대상을 제거하고 TargetTeamRelation 규칙에 일치하는 대상만 남도록 걸러냅니다. */
+	/** 
+	 * 수집된 Target들 중 중복 대상을 제거하고 TargetTeamRelation 규칙에 일치하는 대상만 남도록 걸러냅니다.
+	 * 타일 위에 Actor가 없으면 제거하며, 동일 타일이 수집된 경우는 Primary를 우선으로 남기며 제거합니다.
+	 */
 	void ResolveTargetActors(FEffectTargetTileSelectorContext& Context) const;
 
 protected:

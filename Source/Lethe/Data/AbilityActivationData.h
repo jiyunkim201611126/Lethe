@@ -49,9 +49,6 @@ struct FAbilityActivationContext
 
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
-	/** Player가 카드를 사용하는 시점에만 할당 및 사용되며, 대상 없이도 발동 가능한지 여부를 판단합니다. */
-	bool bCanUseOnTile = false;
-
 	/** Enemy가 카드를 사용하는 시점에만 할당 및 사용되며, 시전 직전에 TargetTiles를 갱신하기 위해 사용합니다. */
 	FTargetingIntent TargetingIntent;
 

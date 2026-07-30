@@ -82,6 +82,7 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 			}
 			
 			Target.ActorOnTile = ActorOnTile;
+			Context.bHasValidActorTarget = true;
 		}
 	}
 	

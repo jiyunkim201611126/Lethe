@@ -10,6 +10,15 @@
 #include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 
+void UOverlayWidget::SetBattleWidgetControllers(ULetheWidgetController* InCardPanelWidgetController, ULetheWidgetController* InViewCardDetailWidgetController)
+{
+	if (ensure(InCardPanelWidgetController) && ensure(InViewCardDetailWidgetController))
+	{
+		CardPanel->SetWidgetController(InCardPanelWidgetController);
+		ViewCardDetailWidgetController = InViewCardDetailWidgetController;
+	}
+}
+
 void UOverlayWidget::NativeOnActivated()
 {
 	Super::NativeOnActivated();
@@ -35,15 +44,6 @@ TOptional<FUIInputConfig> UOverlayWidget::GetDesiredInputConfig() const
 	Config.bIgnoreLookInput = false;
 
 	return Config;
-}
-
-void UOverlayWidget::SetBattleWidgetControllers(ULetheWidgetController* InCardPanelWidgetController, ULetheWidgetController* InViewCardDetailWidgetController)
-{
-	if (ensure(InCardPanelWidgetController) && ensure(InViewCardDetailWidgetController))
-	{
-		CardPanel->SetWidgetController(InCardPanelWidgetController);
-		ViewCardDetailWidgetController = InViewCardDetailWidgetController;
-	}
 }
 
 void UOverlayWidget::OnStartViewCardDetail(const ACardActor* CardActor) const

@@ -18,12 +18,10 @@ class LETHE_API UOverlayWidget : public ULetheActivatableWidget
 
 public:
 	void SetBattleWidgetControllers(ULetheWidgetController* InCardPanelWidgetController, ULetheWidgetController* InViewCardDetailWidgetController);
+	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
 
 protected:
-	//~ Begin UCommonActivatableWidget Interface
 	virtual void NativeOnActivated() override;
-	virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
-	//~ End of UCommonActivatableWidget Interface
 
 private:
 	void OnStartViewCardDetail(const ACardActor* CardActor) const;

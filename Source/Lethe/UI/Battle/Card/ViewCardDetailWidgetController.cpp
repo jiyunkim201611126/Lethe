@@ -2,19 +2,37 @@
 
 #include "ViewCardDetailWidgetController.h"
 
-#include "Lethe/Controller/PlayerController/LethePlayerController.h"
+#include "GameplayAbilitySpecHandle.h"
+#include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
+#include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
+#include "Lethe/Data/Card/CardDefinitionData.h"
+#include "Lethe/Manager/LetheTextManager.h"
 
-void UViewCardDetailWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams)
+void UViewCardDetailWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle AbilitySpecHandle, FText& OutDescription) const
 {
-	Super::SetWidgetControllerParams(WidgetControllerParams);
-
-	LethePlayerController = CastChecked<ALethePlayerController>(PlayerController);
-}
-
-void UViewCardDetailWidgetController::GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const
-{
-	if (LethePlayerController)
+	if (!OwnerASC)
 	{
-		LethePlayerController->GetCardDescriptionText(OwnerASC, SavedCard, OutText);
+		return;
 	}
+
+	const FGameplayAbilitySpec* AbilitySpec = OwnerASC->FindAbilitySpecFromHandle(AbilitySpecHandle);
+	if (!AbilitySpec)
+	{
+		return;
+	}
+
+	const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(AbilitySpec->Ability);
+	const UCardDefinitionData* CardDefinitionData = Cast<UCardDefinitionData>(AbilitySpec->SourceObject);
+	if (!CardAbility || !CardDefinitionData)
+	{
+		return;
+	}
+	
+	FText OutCardDescription;
+	CardAbility->GetCardDescription(OwnerASC, AbilitySpec->Level, OutCardDescription);
+	
+	const FString WeightDescriptionKey = TEXT("Weight");
+	const FText CardWeightDescription = FLetheTextManager::GetText(EStringTableType::CardDescription, WeightDescriptionKey, CardDefinitionData->CardWeight);
+	
+	OutDescription = FText::Join(INVTEXT("\n"), OutCardDescription, CardWeightDescription);
 }

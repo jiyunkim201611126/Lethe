@@ -12,7 +12,6 @@
 #include "Lethe/Interface/CombatInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
-#include "Lethe/SaveGame/SavedCardTypes.h"
 
 UPlayerAbilityRequestComponent::UPlayerAbilityRequestComponent()
 {
@@ -720,37 +719,4 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	AbilityActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
 	LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext));
 	return true;
-}
-
-void UPlayerAbilityRequestComponent::GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const
-{
-	OutText = FText::GetEmpty();
-	if (!CardOwnerASC)
-	{
-		return;
-	}
-
-	TArray<FGameplayAbilitySpecHandle> OutAbilityHandles;
-	CardOwnerASC->GetAllAbilities(OutAbilityHandles);
-	for (const FGameplayAbilitySpecHandle& Handle : OutAbilityHandles)
-	{
-		const FGameplayAbilitySpec* Spec = CardOwnerASC->FindAbilitySpecFromHandle(Handle);
-		if (!Spec || !Spec->Ability)
-		{
-			continue;
-		}
-
-		const ULetheCardAbility* CardAbility = Cast<ULetheCardAbility>(Spec->Ability);
-		const UCardDefinitionData* CardDefinitionData = Cast<UCardDefinitionData>(Spec->SourceObject);
-		if (!CardAbility || !CardDefinitionData)
-		{
-			continue;
-		}
-		
-		if (CardDefinitionData->CardId == SavedCard.CardId)
-		{
-			OutText = CardAbility->GetCardDescription(CardOwnerASC, SavedCard.CardLevel, CardDefinitionData->GetWeight(SavedCard.CardLevel));
-			return;
-		}
-	}
 }

@@ -55,13 +55,12 @@ class LETHE_API ULetheCommonAbility : public ULetheCardAbility
 public:
 	ULetheCommonAbility();
 
-	//~ Begin ULetheCardAbility Interface
 	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const override;
-
+	virtual void GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const override;
+	
 protected:
 	virtual void RegisterAbilityEventTasks() override;
 	virtual void HandleAbilityEvent(const FGameplayEventData& InPayload) override;
-	//~ End of ULetheCardAbility Interface
 
 private:
 	/** Effect를 지정된 방식으로 TargetActor에게 전달을 시작합니다. */

@@ -36,9 +36,6 @@ class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	FText GetCardDescription(const UAbilitySystemComponent* CardOwnerASC, const int32 InLevel, const int32 InWeight) const;
-	
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
 	 * 여기서 Context의 OutTargetResults는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
@@ -59,16 +56,17 @@ public:
 	bool TryGetCostEffectPreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;
 	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const;
 
-	//~ Begin UGameplayAbility Interface
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual bool CommitAbilityCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FGameplayTagContainer* OptionalRelevantTags = nullptr) override;
-
+	
 	bool CanUseWithoutTarget() const;
+	
+	/** 대상에게 효과를 적용한다는 텍스트들을 줄바꿈된 상태로 Out인자에 채워줍니다. */
+	virtual void GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const PURE_VIRTUAL(ULetheCardAbs::GetCardDescription, );
 
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End of UGameplayAbility Interface
 
 	/** EffectSpec으로부터 미리보기 데이터를 추출합니다. */
 	bool TryGetGameplayEffectPreviewData(UAbilitySystemComponent* PreviewTargetASC, const TArray<FGameplayEffectSpecHandle>& SpecHandles, TMap<FGameplayAttribute, float>& OutPreviewData) const;
@@ -93,9 +91,6 @@ protected:
 private:
 	/** 발동 가능한 상태인지 검증합니다. */
 	bool TryValidateAndCommitActivation(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
-	
-	UFUNCTION(BlueprintPure, Category = "Effect")
-	FText GetWeightDescription(const int32 Weight) const;
 
 	void FillTileSelectorContext(FEffectTargetTileSelectorContext& Context) const;
 

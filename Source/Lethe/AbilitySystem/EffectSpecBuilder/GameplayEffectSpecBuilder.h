@@ -18,14 +18,18 @@ struct LETHE_API FGameplayEffectSpecBuilder
 {
 	GENERATED_BODY()
 
+public:
 	virtual ~FGameplayEffectSpecBuilder() = default;
 
 	virtual bool TryBuildSourceEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 	virtual bool TryBuildTargetEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const;
 	
-	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
+	virtual void GetDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const;
 	
 	const FGameplayTag& GetEffectSpecBuilderTag() const;
+	
+protected:
+	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

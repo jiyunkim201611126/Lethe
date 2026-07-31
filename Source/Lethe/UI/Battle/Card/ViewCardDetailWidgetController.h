@@ -7,7 +7,7 @@
 #include "ViewCardDetailWidgetController.generated.h"
 
 class ALethePlayerController;
-struct FSavedCard;
+struct FGameplayAbilitySpecHandle;
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UViewCardDetailWidgetController : public ULetheWidgetController
@@ -15,11 +15,7 @@ class LETHE_API UViewCardDetailWidgetController : public ULetheWidgetController
 	GENERATED_BODY()
 
 public:
-	//~ Begin ULetheWidgetController Interface
-	virtual void SetWidgetControllerParams(const FWidgetControllerParams& WidgetControllerParams) override;
-	//~ End of ULetheWidgetController Interface
-	
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
+	void GetCardDescriptionText(const ULetheAbilitySystemComponent* OwnerASC, const FGameplayAbilitySpecHandle AbilitySpecHandle, FText& OutDescription) const;
 
 private:
 	UPROPERTY()

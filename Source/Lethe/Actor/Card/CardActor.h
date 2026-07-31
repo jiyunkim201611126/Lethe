@@ -67,11 +67,6 @@ class LETHE_API ACardActor : public AActor
 public:
 	ACardActor();
 
-	//~ Begin AActor Interface
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//~ End of AActor Interface
-
 	void SetCardInfo(const FCardInitParams& InitParams);
 
 	void SetCardContainer(ECardContainer InCardContainer);
@@ -87,6 +82,12 @@ public:
 	const FSavedCard& GetSavedCard() const;
 	ECardContainer GetCurrentCardContainer() const;
 	ULetheAbilitySystemComponent* GetOwnerASC() const;
+	
+protected:
+	//~ Begin AActor Interface
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//~ End of AActor Interface
 
 private:
 	void CreateDynamicMaterialInstances();

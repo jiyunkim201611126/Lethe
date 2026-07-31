@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/RichTextBlock.h"
+#include "CommonRichTextBlock.h"
 #include "LetheRichTextBlock.generated.h"
 
 UCLASS()
-class LETHE_API ULetheRichTextBlock : public URichTextBlock
+class LETHE_API ULetheRichTextBlock : public UCommonRichTextBlock
 {
 	GENERATED_BODY()
 

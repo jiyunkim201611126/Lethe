@@ -7,6 +7,8 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemLibrary.h"
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/EffectDelivery/EffectDelivery_Immediately.h"
+#include "Lethe/Manager/LetheGameplayTags.h"
+#include "Lethe/Manager/LetheTextManager.h"
 
 FEffectTargetMappingPolicy::FEffectTargetMappingPolicy()
 {
@@ -61,6 +63,57 @@ bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySys
 	}
 
 	return !OutPreviewData.IsEmpty();
+}
+
+void ULetheCommonAbility::GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
+{
+	OutDescription = FText();
+	
+	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
+	TArray<FText> OutTexts;
+	for (const FEffectTargetMappingPolicy& EffectTargetMappingPolicy : EffectTargetMappingPolicies)
+	{
+		FString LocalTextKey;
+		if (EffectTargetMappingPolicy.bApplyToAllTargets)
+		{
+			// 모든 대상에게 적용하는 경우 들어오는 분기입니다.
+			LocalTextKey = TEXT("TargetGroup.All");
+		}
+		else
+		{
+			if (EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(LetheGameplayTags.TargetGroup_Penetration) &&
+				EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(LetheGameplayTags.TargetGroup_HalfMoon) &&
+				EffectTargetMappingPolicy.TargetGroupTags.HasTagExact(LetheGameplayTags.TargetGroup_Spread))
+			{
+				// 모든 추가 선택 대상에게 적용하는 경우 들어오는 분기입니다.
+				LocalTextKey = TEXT("TargetGroup.Extra");
+			}
+			else
+			{
+				// 그 외의 경우에 들어오는 분기입니다.
+				LocalTextKey = EffectTargetMappingPolicy.TargetGroupTags.First().ToString();
+			}
+		}
+		
+		const FText TargetText = FLetheTextManager::GetText(EStringTableType::CardDescription, LocalTextKey);
+		
+		// 한 대상 그룹에게 여러 이펙트를 적용할 수 있으므로, EffectSpecBuilders를 순회하며 TargetText와 합친 텍스트를 생성합니다.
+		TArray<const FGameplayEffectSpecBuilder*> OutEffectSpecBuilders;
+		GetEffectSpecBuildersByPolicy(EffectTargetMappingPolicy, OutEffectSpecBuilders);
+		for (const FGameplayEffectSpecBuilder* EffectSpecBuilder : OutEffectSpecBuilders)
+		{
+			FText EffectText;
+			EffectSpecBuilder->GetDescription(OwnerASC, InLevel, EffectText);
+			
+			if (!EffectText.IsEmpty())
+			{
+				OutTexts.Add(FText::Format(INVTEXT("{0} {1}"), TargetText, EffectText));
+			}
+		}
+	}
+	
+	// 줄바꿈된 형태로 Out 인자에 넣어줍니다.
+	OutDescription = FText::Join(INVTEXT("\n"), OutTexts);
 }
 
 void ULetheCommonAbility::RegisterAbilityEventTasks()

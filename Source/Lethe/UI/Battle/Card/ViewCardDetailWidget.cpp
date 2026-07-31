@@ -41,7 +41,7 @@ void UViewCardDetailWidget::StartViewDetail(const ACardActor* InCardActor)
 	FText OutDescriptionText;
 	if (ViewCardDetailWidgetController)
 	{
-		ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetSavedCard(), OutDescriptionText);
+		ViewCardDetailWidgetController->GetCardDescriptionText(InCardActor->GetOwnerASC(), InCardActor->GetAbilitySpecHandle(), OutDescriptionText);
 	}
 
 	const FText FinalText = FText::Format(FText::FromString(TEXT("{0}\n\n{1}")), ContextObject->CardNameText, OutDescriptionText);

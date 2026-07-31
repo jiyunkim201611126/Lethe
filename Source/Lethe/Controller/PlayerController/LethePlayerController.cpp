@@ -28,6 +28,39 @@ ALethePlayerController::ALethePlayerController()
 	PlayerAbilityRequestComponent = CreateDefaultSubobject<UPlayerAbilityRequestComponent>(TEXT("PlayerAbilityRequestComponent"));
 }
 
+void ALethePlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	check(ArrowRendererClass);
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		OnPhaseStateChangedHandle = LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnPlayerMoveResolved.BindUObject(this, &ThisClass::OnPlayerMovedResolved);
+		LetheGameState->OnCardUseResolved.BindUObject(this, &ThisClass::OnCardUseResolved);
+	}
+}
+
+void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (PreviewCoordinatorComponent)
+	{
+		PreviewCoordinatorComponent->OnUpdatePreviewData.RemoveAll(this);
+	}
+
+	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
+		LetheGameState->OnPlayerMoveResolved.Unbind();
+		LetheGameState->OnCardUseResolved.Unbind();
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALethePlayerController::OnWheeled(const float AttributeWidgetSize) const
 {
 	if (OnCameraHeightChangedDelegate.IsBound())
@@ -266,39 +299,6 @@ void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSe
 	bMouseOnWorldSection = bInMouseOnWorldSection;
 }
 
-void ALethePlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	check(ArrowRendererClass);
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	ArrowRenderer = GetWorld()->SpawnActor<AArrowRenderer>(ArrowRendererClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
-
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-	{
-		OnPhaseStateChangedHandle = LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
-		LetheGameState->OnPlayerMoveResolved.BindUObject(this, &ThisClass::OnPlayerMovedResolved);
-		LetheGameState->OnCardUseResolved.BindUObject(this, &ThisClass::OnCardUseResolved);
-	}
-}
-
-void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	if (PreviewCoordinatorComponent)
-	{
-		PreviewCoordinatorComponent->OnUpdatePreviewData.RemoveAll(this);
-	}
-
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
-	{
-		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
-		LetheGameState->OnPlayerMoveResolved.Unbind();
-		LetheGameState->OnCardUseResolved.Unbind();
-	}
-	Super::EndPlay(EndPlayReason);
-}
-
 void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
 {
 	CurrentPhaseState = NewPhaseState;
@@ -465,11 +465,6 @@ void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* CardOw
 void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const
 {
 	OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
-}
-
-void ALethePlayerController::GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const
-{
-	PlayerAbilityRequestComponent->GetCardDescriptionText(CardOwnerASC, SavedCard, OutText);
 }
 
 bool ALethePlayerController::IsCardSelected() const

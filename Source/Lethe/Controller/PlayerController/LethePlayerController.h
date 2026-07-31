@@ -37,6 +37,11 @@ class LETHE_API ALethePlayerController : public ALethePlayerControllerBase
 
 public:
 	ALethePlayerController();
+	
+	//~ Begin AActor Interface
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void PlayerTick(float DeltaTime) override;
+	//~ End of AActor Interface
 
 	void OnWheeled(const float AttributeWidgetSize) const;
 	void HandleLeftMouseButtonClickedInWorldSection();
@@ -51,15 +56,11 @@ public:
 	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
 	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex);
 
-	void GetCardDescriptionText(const ULetheAbilitySystemComponent* CardOwnerASC, const FSavedCard& SavedCard, FText& OutText) const;
-
 	bool IsCardSelected() const;
 
 protected:
 	//~ Begin AActor Interface
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void PlayerTick(float DeltaTime) override;
 	//~ End of AActor Interface
 
 private:

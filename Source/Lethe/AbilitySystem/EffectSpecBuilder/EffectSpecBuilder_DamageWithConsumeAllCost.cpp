@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
+#include "Lethe/Manager/LetheTextManager.h"
 
 bool FEffectSpecBuilder_DamageWithConsumeAllCost::TryBuildSourceEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
@@ -80,6 +81,17 @@ bool FEffectSpecBuilder_DamageWithConsumeAllCost::TryBuildTargetEffectSpecs(UAbi
 	return !OutSpecHandles.IsEmpty();
 }
 
+void FEffectSpecBuilder_DamageWithConsumeAllCost::GetDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
+{
+	const FString UseAllCostAndChainLocalKey = TEXT("UseAllCostAndChain");
+	const FText UseAllCostAndChainText = FLetheTextManager::GetText(EStringTableType::CardDescription, UseAllCostAndChainLocalKey);
+	
+	FText DamageDescriptionText;
+	Super::GetDescription(OwnerASC, InLevel, DamageDescriptionText);
+	
+	OutDescription = FText::Format(INVTEXT("{0} {1}"), UseAllCostAndChainText, DamageDescriptionText);
+}
+
 int32 FEffectSpecBuilder_DamageWithConsumeAllCost::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	float AllDamage = 0.f;
@@ -87,6 +99,6 @@ int32 FEffectSpecBuilder_DamageWithConsumeAllCost::GetValueForDescription(const 
 	{
 		AllDamage += Pair.Value.GetValueAtLevel(InLevel);
 	}
-	// Preview와 흡사한 상황으로, 설명에 텍스트를 표시하기 위한 값을 가져가는 상황이기 때문에 Cost와 곱해서 반환합니다.
+	// 설명에 텍스트를 표시하기 위한 값을 가져가는 상황이기 때문에 단순하게 데미지를 Cost와 곱해서 반환합니다.
 	return AllDamage * (OwnerASC ? OwnerASC->GetNumericAttribute(UPlayerAttributeSet::GetCostAttribute()) : 1.f);
 }

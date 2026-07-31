@@ -17,6 +17,10 @@ const FGameplayTag& FGameplayEffectSpecBuilder::GetEffectSpecBuilderTag() const
 	return EffectSpecBuilderTag;
 }
 
+void FGameplayEffectSpecBuilder::GetDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
+{
+}
+
 int32 FGameplayEffectSpecBuilder::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const
 {
 	return 0;

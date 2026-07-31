@@ -14,11 +14,13 @@ struct LETHE_API FEffectSpecBuilder_DamageWithConsumeAllCost : public FEffectSpe
 {
 	GENERATED_BODY()
 
-	//~ Begin FGameplayEffectSpecBuilder Interface
+public:
 	virtual bool TryBuildSourceEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
 	virtual bool TryBuildTargetEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const override;
+	virtual void GetDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const override;
+	
+protected:
 	virtual int32 GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const override;
-	//~ End of FGameplayEffectSpecBuilder Interface
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cost")

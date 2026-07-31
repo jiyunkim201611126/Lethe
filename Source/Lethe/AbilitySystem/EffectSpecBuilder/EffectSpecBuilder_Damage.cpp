@@ -4,6 +4,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayEffectUIData_TextOnly.h"
 
 bool FEffectSpecBuilder_Damage::TryBuildTargetEffectSpecs(UAbilitySystemComponent* SourceASC, const FGameplayEffectContextHandle& InContextHandle, TArray<FGameplayEffectSpecHandle>& OutSpecHandles) const
 {
@@ -32,6 +33,29 @@ bool FEffectSpecBuilder_Damage::TryBuildTargetEffectSpecs(UAbilitySystemComponen
 		}
 	}
 	return !OutSpecHandles.IsEmpty();
+}
+
+void FEffectSpecBuilder_Damage::GetDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
+{
+	OutDescription = FText();
+	if (!EffectClass)
+	{
+		return;
+	}
+	
+	const UGameplayEffect* EffectCDO = EffectClass.GetDefaultObject();
+	if (!EffectCDO)
+	{
+		return;
+	}
+	
+	const UGameplayEffectUIData_TextOnly* UIData = EffectCDO->FindComponent<UGameplayEffectUIData_TextOnly>();
+	if (!UIData)
+	{
+		return;
+	}
+	
+	OutDescription = FText::Format(UIData->Description, GetValueForDescription(OwnerASC, InLevel));
 }
 
 int32 FEffectSpecBuilder_Damage::GetValueForDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel) const

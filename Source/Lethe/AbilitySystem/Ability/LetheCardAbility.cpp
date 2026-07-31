@@ -11,7 +11,6 @@
 #include "Lethe/Game/GameState/LetheGameState.h"
 #include "Lethe/Interface/PlayerCharacterInterface.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
-#include "Lethe/Manager/LetheTextManager.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
 void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
@@ -324,12 +323,6 @@ bool ULetheCardAbility::CommitAbilityCost(const FGameplayAbilitySpecHandle Handl
 bool ULetheCardAbility::CanUseWithoutTarget() const
 {
 	return bCanUseWithoutTarget;
-}
-
-FText ULetheCardAbility::GetWeightDescription(const int32 Weight) const
-{
-	const FString WeightDescriptionKey = TEXT("Weight");
-	return FLetheTextManager::GetText(EStringTableType::CardDescription, WeightDescriptionKey, Weight);
 }
 
 #if WITH_EDITOR

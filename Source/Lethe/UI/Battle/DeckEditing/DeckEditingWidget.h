@@ -8,9 +8,9 @@
 #include "DeckEditingWidget.generated.h"
 
 enum class ECardAction : uint8;
-class UButton;
 class UCardViewData;
 class UCardWidgetInitContext;
+class UCommonButtonBase;
 class ULetheGameplayAbility;
 class ULetheTextBlock;
 class UTileView;
@@ -46,19 +46,12 @@ protected:
 private:
 	void StartLoadAllCards();
 	void StartLoadDecks(const TMap<FGameplayTag, FSavedCharacterDeck>& InDecks, bool bEquipped);
-	void OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, bool bEquipped);
+	void OnDeckLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, bool bEquipped);
 	void CheckLoadedCount();
 
-	UFUNCTION()
 	void OnNextPageButtonClicked();
-	
-	UFUNCTION()
 	void OnPreviousPageButtonClicked();
-	
-	UFUNCTION()
 	void OnNextCharacterButtonClicked();
-	
-	UFUNCTION()
 	void OnPreviousCharacterButtonClicked();
 
 	void OnEquippedCardClicked(UObject* InListObject);
@@ -92,23 +85,22 @@ protected:
 	TObjectPtr<UTileView> UnequippedDeckTileView;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> NextPageButton;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> PreviousPageButton;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> NextCharacterButton;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> PreviousCharacterButton;
-	
-	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<ULetheTextBlock> CapacityTextBlock;
-
-	/** 테스트용으로 선언된 버튼입니다. */
+	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> GoToBattleButton;
+	TObjectPtr<UCommonButtonBase> NextPageButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCommonButtonBase> PreviousPageButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCommonButtonBase> NextCharacterButton;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCommonButtonBase> PreviousCharacterButton;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UCommonButtonBase> GoToBattleButton;
 
 private:
 	FDelegateHandle EquippedCardClickedDelegateHandle;

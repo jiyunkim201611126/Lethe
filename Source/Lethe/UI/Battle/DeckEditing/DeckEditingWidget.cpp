@@ -3,7 +3,7 @@
 #include "DeckEditingWidget.h"
 
 #include "CardWidgetInitContext.h"
-#include "Components/Button.h"
+#include "CommonButtonBase.h"
 #include "Components/TileView.h"
 #include "Lethe/Data/CharacterDefinitionData.h"
 #include "Lethe/Data/Card/CardDefinitionData.h"
@@ -54,10 +54,10 @@ void UDeckEditingWidget::NativeConstruct()
 	EquippedCardClickedDelegateHandle = EquippedDeckTileView->OnItemClicked().AddUObject(this, &ThisClass::OnEquippedCardClicked);
 	UnequippedCardClickedDelegateHandle = UnequippedDeckTileView->OnItemClicked().AddUObject(this, &ThisClass::OnUnequippedCardClicked);
 	
-	NextPageButton->OnClicked.AddDynamic(this, &ThisClass::OnNextPageButtonClicked);
-	PreviousPageButton->OnClicked.AddDynamic(this, &ThisClass::OnPreviousPageButtonClicked);
-	NextCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnNextCharacterButtonClicked);
-	PreviousCharacterButton->OnClicked.AddDynamic(this, &ThisClass::OnPreviousCharacterButtonClicked);
+	NextPageButton->OnClicked().AddUObject(this, &ThisClass::OnNextPageButtonClicked);
+	PreviousPageButton->OnClicked().AddUObject(this, &ThisClass::OnPreviousPageButtonClicked);
+	NextCharacterButton->OnClicked().AddUObject(this, &ThisClass::OnNextCharacterButtonClicked);
+	PreviousCharacterButton->OnClicked().AddUObject(this, &ThisClass::OnPreviousCharacterButtonClicked);
 
 	StartLoadAllCards();
 }
@@ -67,11 +67,11 @@ void UDeckEditingWidget::NativeDestruct()
 	EquippedDeckTileView->OnItemClicked().Remove(EquippedCardClickedDelegateHandle);
 	UnequippedDeckTileView->OnItemClicked().Remove(UnequippedCardClickedDelegateHandle);
 
-	GoToBattleButton->OnClicked.RemoveDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
-	NextPageButton->OnClicked.RemoveDynamic(this, &ThisClass::OnNextPageButtonClicked);
-	PreviousPageButton->OnClicked.RemoveDynamic(this, &ThisClass::OnPreviousPageButtonClicked);
-	NextCharacterButton->OnClicked.RemoveDynamic(this, &ThisClass::OnNextCharacterButtonClicked);
-	PreviousCharacterButton->OnClicked.RemoveDynamic(this, &ThisClass::OnPreviousCharacterButtonClicked);
+	GoToBattleButton->OnClicked().RemoveAll(this);
+	NextPageButton->OnClicked().RemoveAll(this);
+	PreviousPageButton->OnClicked().RemoveAll(this);
+	NextCharacterButton->OnClicked().RemoveAll(this);
+	PreviousCharacterButton->OnClicked().RemoveAll(this);
 
 	CharacterTags.Empty();
 	CharacterUnequippedDeckListObjects.Empty();
@@ -107,7 +107,7 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 		UCardDataLoadSubsystem* CardDataLoadSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCardDataLoadSubsystem>();
 		if (CardDataLoadSubsystem)
 		{
-			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &ThisClass::OnAllCardsLoaded);
+			const FOnAllCardDataLoaded OnLoadedCallback = FOnAllCardDataLoaded::CreateUObject(this, &ThisClass::OnDeckLoaded);
 			CardDataLoadSubsystem->LoadCardData(CharacterTag, Deck.Value.Deck, bEquipped, OnLoadedCallback);
 		}
 		else
@@ -119,7 +119,7 @@ void UDeckEditingWidget::StartLoadDecks(const TMap<FGameplayTag, FSavedCharacter
 	}
 }
 
-void UDeckEditingWidget::OnAllCardsLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, const bool bEquipped)
+void UDeckEditingWidget::OnDeckLoaded(const FGameplayTag& CharacterTag, const FLoadedCardInfo& LoadedCardInfos, const bool bEquipped)
 {
 	++LoadCompletedCount;
 	
@@ -172,9 +172,9 @@ void UDeckEditingWidget::CheckLoadedCount()
 		UpdateCardPage(0, 0);
 
 		// 로드가 안 끝났는데 BattleLevel로 넘어가버리는 대참사를 막기 위해 여기서 바인드합니다.
-		if (!GoToBattleButton->OnClicked.IsAlreadyBound(this, &ThisClass::OnGoToBattleButtonClicked))
+		if (!GoToBattleButton->OnClicked().IsBound())
 		{
-			GoToBattleButton->OnClicked.AddDynamic(this, &ThisClass::OnGoToBattleButtonClicked);
+			GoToBattleButton->OnClicked().AddUObject(this, &ThisClass::OnGoToBattleButtonClicked);
 		}
 	}
 }

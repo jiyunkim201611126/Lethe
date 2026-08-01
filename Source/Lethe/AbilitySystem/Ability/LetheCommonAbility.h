@@ -27,7 +27,7 @@ struct FEffectTargetMappingPolicy
 	bool bApplyToAllTargets = true;
 
 	/** 적용할 대상 그룹 태그 모음입니다. */
-	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "!bApplyToAllTargets", EditConditionHides))
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "!bApplyToAllTargets"))
 	FGameplayTagContainer TargetGroupTags;
 };
 

@@ -134,7 +134,7 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 
 void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
 {
-	if (NewPhaseState == EPhaseState::EnemyPlanningPhase)
+	if (NewPhaseState == EPhaseState::EnemyPlanPhase)
 	{
 		OnPlanPhaseStarted();
 	}

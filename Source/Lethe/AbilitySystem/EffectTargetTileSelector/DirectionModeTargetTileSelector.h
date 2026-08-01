@@ -87,7 +87,7 @@ protected:
 	int32 DirectionCount = 1;
 
 	/** 사거리입니다. */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition = "RangeType != ERangeType::Melee"))
 	int32 RangeDistance = 1;
 
 	/** 추가 범위입니다. */

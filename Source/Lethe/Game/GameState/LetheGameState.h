@@ -32,13 +32,13 @@ public:
 	void RegisterCombatEnemy(AEnemyCharacterBase* Enemy);
 	void UnregisterEnemy(AEnemyCharacterBase* Enemy);
 
-	void GoEnemyPlanningPhase();
+	void GoEnemyPlanPhase();
 	void GoPlayerMovePhase();
 	void GoDrawPhase();
 	void GoPlayerTurnPhase();
 	void GoEnemyTurnPhase();
 
-	void TryGoEnemyPlanningPhase();
+	void TryGoEnemyPlanPhase();
 
 	EPhaseState GetPhaseState() const;
 

@@ -73,7 +73,7 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 
 void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
 {
-	if (NewPhaseState == EPhaseState::EnemyPlanningPhase)
+	if (NewPhaseState == EPhaseState::EnemyPlanPhase)
 	{
 		OnPlanPhaseStarted();
 		ApplyTurnStartRecovery();

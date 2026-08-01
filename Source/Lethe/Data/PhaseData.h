@@ -9,7 +9,7 @@ UENUM()
 enum class EPhaseState : uint8
 {
 	None,
-	EnemyPlanningPhase,
+	EnemyPlanPhase,
 
 	/** 비전투 페이즈 */
 	PlayerMovePhase,

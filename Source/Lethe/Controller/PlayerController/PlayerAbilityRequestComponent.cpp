@@ -383,7 +383,7 @@ void UPlayerAbilityRequestComponent::StartResolveMoves()
 	}
 	else
 	{
-		LetheGameState->TryGoEnemyPlanningPhase();
+		LetheGameState->TryGoEnemyPlanPhase();
 	}
 }
 

@@ -63,9 +63,9 @@ void ALetheGameState::UnregisterEnemy(AEnemyCharacterBase* Enemy)
 	CurrentCombatEnemies.Remove(Enemy);
 }
 
-void ALetheGameState::GoEnemyPlanningPhase()
+void ALetheGameState::GoEnemyPlanPhase()
 {
-	SetPhase(EPhaseState::EnemyPlanningPhase);
+	SetPhase(EPhaseState::EnemyPlanPhase);
 }
 
 void ALetheGameState::GoPlayerMovePhase()
@@ -100,7 +100,7 @@ void ALetheGameState::SetPhase(const EPhaseState NewPhaseState)
 	
 	OnChangePhaseState.Broadcast(OldPhaseState, CurrentPhaseState);
 
-	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
+	if (CurrentPhaseState == EPhaseState::EnemyPlanPhase)
 	{
 		SpawnedEnemies.Sort([](const TWeakObjectPtr<AEnemyCharacterBase>& A, const TWeakObjectPtr<AEnemyCharacterBase>& B)
 			{
@@ -158,12 +158,12 @@ void ALetheGameState::OnFinishActivationQueue()
 		}
 
 		bShouldDeferEndPlayerMovePhase = false;
-		GoEnemyPlanningPhase();
+		GoEnemyPlanPhase();
 	}
 	
 	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
 	{
-		GoEnemyPlanningPhase();
+		GoEnemyPlanPhase();
 	}
 }
 
@@ -172,14 +172,14 @@ bool ALetheGameState::HasAnyCombatEnemy() const
 	return !CurrentCombatEnemies.IsEmpty();
 }
 
-void ALetheGameState::TryGoEnemyPlanningPhase()
+void ALetheGameState::TryGoEnemyPlanPhase()
 {
 	if (bShouldDeferEndPlayerMovePhase)
 	{
 		bShouldDeferEndPlayerMovePhase = false;
 		return;
 	}
-	GoEnemyPlanningPhase();
+	GoEnemyPlanPhase();
 }
 
 EPhaseState ALetheGameState::GetPhaseState() const
@@ -289,7 +289,7 @@ TArray<AActor*> ALetheGameState::GetPlayerCharacters() const
 
 bool ALetheGameState::IsBattlePhase() const
 {
-	if (CurrentPhaseState == EPhaseState::EnemyPlanningPhase)
+	if (CurrentPhaseState == EPhaseState::EnemyPlanPhase)
 	{
 		return HasAnyCombatEnemy();
 	}

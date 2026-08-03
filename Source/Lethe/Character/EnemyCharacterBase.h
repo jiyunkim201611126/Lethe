@@ -18,6 +18,8 @@ public:
 	int32 GetEnemyAbilityPriority() const;
 
 	void ProcessPlanPhase() const;
+	
+	UFUNCTION(BlueprintCallable)
 	void ProcessCommitPlan() const;
 	
 	//~ Begin ICombatInterface
@@ -27,8 +29,6 @@ public:
 	//~ End of ICombatInterface
 
 	void NotifyNoiseHeard() const;
-
-	const FBFSRange& GetAbilityRange() const;
 
 protected:
 	virtual void OnMoveTileChanged(ATile* OldTile, ATile* NewTile) override;

@@ -236,17 +236,9 @@ void ALetheGameState::NotifyPlayerMoveResolved(AActor* MovedCharacter) const
 	OnPlayerMoveResolved.ExecuteIfBound(MovedCharacter);
 }
 
-void ALetheGameState::NotifyEnemyPlanMoveResolved()
+void ALetheGameState::NotifyEnemyPlanResolved()
 {
 	LETHE_LOG(LogLetheGameState, Log, "On Enemy Plan Move Resolved");
-	if (SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
-	{
-		const TWeakObjectPtr<AEnemyCharacterBase>& AbilityProcessedEnemy = SpawnedEnemies[CurrentEnemyAbilityProcessIndex];
-		if (AbilityProcessedEnemy.IsValid())
-		{
-			AbilityProcessedEnemy->ProcessCommitPlan();
-		}
-	}
 
 	// Plan 종료 후 다른 Enemy가 너무 빨리 움직이지 않도록 타이머로 딜레이시킵니다.
 	if (PlanTimerHandle.IsValid())

@@ -454,12 +454,13 @@ void ALetheAIController::CommitPlan()
 	ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
 	ActivationContext.Payload.Instigator = ControlledEnemy;
 	
+	PlannedAbilitySpecHandle = FGameplayAbilitySpecHandle();
+	PlannedTargetTile.Reset();
+	
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->EnqueueEnemyAbilityActivationContext(ActivationContext);
 	}
-	PlannedAbilitySpecHandle = FGameplayAbilitySpecHandle();
-	PlannedTargetTile.Reset();
 }
 
 void ALetheAIController::StartCombat()

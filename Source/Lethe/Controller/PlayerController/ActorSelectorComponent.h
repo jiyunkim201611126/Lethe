@@ -39,6 +39,8 @@ class LETHE_API UActorSelectorComponent : public UActorComponent
 
 public:
 	UActorSelectorComponent();
+	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	bool SetHighlightedActors(const EHighlightReason Reason, const TArray<AActor*>& InActors);
 	bool SetHighlightedTiles(const EHighlightReason Reason, const TArray<ATile*>& InTiles);

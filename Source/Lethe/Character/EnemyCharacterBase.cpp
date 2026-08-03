@@ -51,6 +51,7 @@ void AEnemyCharacterBase::Die()
 	{
 		AIController->DeactivateArrow();
 		AIController->UnPossess();
+		AIController->Destroy();
 	}
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())

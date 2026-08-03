@@ -13,6 +13,16 @@ UActorSelectorComponent::UActorSelectorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UActorSelectorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	for (auto It = CurrentHighlightedActorsByReason.CreateConstIterator(); It; ++It)
+	{
+		ClearHighlightedActors(It.Key());
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 bool UActorSelectorComponent::SetHighlightedActors(const EHighlightReason Reason, const TArray<AActor*>& InActors)
 {
 	TArray<TScriptInterface<IHighlightInterface>> LastHighlightedActors = CurrentHighlightedActorsByReason.FindRef(Reason);

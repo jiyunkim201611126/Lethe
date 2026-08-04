@@ -27,8 +27,11 @@ void FEffectTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelecto
 {
 }
 
-void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext& Context) const
 {
+	Context.OutTargetResults.Reset();
+	Context.bHasValidActorTarget = false;
+
 	const ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(Context.AvatarActor);
 	if (!SourceCombatInterface)
 	{
@@ -36,24 +39,28 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 	}
 
 	const ETeamSide SourceTeamSide = SourceCombatInterface->GetTeamSide();
-	for (FTargetSelectionResult& TargetResult : Context.OutTargetResults)
+	TSet<TWeakObjectPtr<AActor>> SelectedActors;
+
+	auto ResolveTargetResult = [&Context, this, SourceTeamSide, &SelectedActors](const FTargetSelectionResult& CandidateResult)
 	{
-		for (auto TargetIt = TargetResult.Targets.CreateIterator(); TargetIt; ++TargetIt)
+		FTargetSelectionResult* ResolvedResult = nullptr;
+		for (const FSelectedTarget& CandidateTarget : CandidateResult.Targets)
 		{
-			FSelectedTarget& Target = *TargetIt;
-			
-			Target.ActorOnTile.Reset();
-			if (!Target.TargetTile.IsValid())
+			if (!CandidateTarget.TargetTile.IsValid())
 			{
-				TargetIt.RemoveCurrentSwap();
 				continue;
 			}
 
-			AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(Target.TargetTile.Get());
+			AActor* ActorOnTile = Context.TileManagerSubsystem->GetActorOnTile(CandidateTarget.TargetTile.Get());
 			const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(ActorOnTile);
 			if (!TargetCombatInterface)
 			{
-				TargetIt.RemoveCurrentSwap();
+				continue;
+			}
+
+			// 이미 선택한 대상이라면 생략합니다.
+			if (SelectedActors.Contains(ActorOnTile))
+			{
 				continue;
 			}
 
@@ -77,57 +84,44 @@ void FEffectTargetTileSelector::ResolveTargetActors(FEffectTargetTileSelectorCon
 
 			if (!bCanTarget)
 			{
-				TargetIt.RemoveCurrentSwap();
 				continue;
 			}
-			
-			Target.ActorOnTile = ActorOnTile;
+
+			if (!ResolvedResult)
+			{
+				ResolvedResult = &Context.OutTargetResults.AddDefaulted_GetRef();
+				ResolvedResult->TargetGroupTag = CandidateResult.TargetGroupTag;
+			}
+
+			FSelectedTarget& ResolvedTarget = ResolvedResult->Targets.AddDefaulted_GetRef();
+			ResolvedTarget.TargetTile = CandidateTarget.TargetTile;
+			ResolvedTarget.ActorOnTile = ActorOnTile;
 			Context.bHasValidActorTarget = true;
+			SelectedActors.Add(ActorOnTile);
 		}
-	}
+	};
 	
-	// 중복으로 선택된 대상 제거를 시작합니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	TSet<TWeakObjectPtr<AActor>> SelectedActors;
-	
-	// Primary Target들은 우선적으로 남겨야 하므로, 먼저 SelectedActors에 채워줍니다.
-	for (FTargetSelectionResult& TargetResult : Context.OutTargetResults)
+
+	// Primary Target들은 우선적으로 남겨야 하므로, 먼저 처리합니다.
+	for (const FTargetSelectionResult& CandidateResult : Context.OutTargetCandidates)
 	{
-		if (!TargetResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
+		if (!CandidateResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
 		{
 			continue;
 		}
-		
-		for (auto TargetIt = TargetResult.Targets.CreateIterator(); TargetIt; ++TargetIt)
-		{
-			// Primary 그룹은 동일한 대상이 수집될 일이 없지만 검증을 위해 확인 후 제거합니다.
-			if (!TargetIt->ActorOnTile.IsValid() || SelectedActors.Contains(TargetIt->ActorOnTile))
-			{
-				TargetIt.RemoveCurrentSwap();
-				continue;
-			}
-			
-			SelectedActors.Add(TargetIt->ActorOnTile);
-		}
+
+		ResolveTargetResult(CandidateResult);
 	}
-	
-	// 나머지 그룹도 동일한 작업을 수행합니다.
-	for (FTargetSelectionResult& TargetResult : Context.OutTargetResults)
+
+	// 나머지 그룹은 Primary에서 선택되지 않은 대상만 처리합니다.
+	for (const FTargetSelectionResult& CandidateResult : Context.OutTargetCandidates)
 	{
-		if (TargetResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
+		if (CandidateResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
 		{
 			continue;
 		}
-		
-		for (auto TargetIt = TargetResult.Targets.CreateIterator(); TargetIt; ++TargetIt)
-		{
-			if (!TargetIt->ActorOnTile.IsValid() || SelectedActors.Contains(TargetIt->ActorOnTile))
-			{
-				TargetIt.RemoveCurrentSwap();
-				continue;
-			}
-			
-			SelectedActors.Add(TargetIt->ActorOnTile);
-		}
+
+		ResolveTargetResult(CandidateResult);
 	}
 }

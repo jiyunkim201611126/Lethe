@@ -43,6 +43,7 @@ void ULetheCardAbility::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Co
 void ULetheCardAbility::FillTileSelectorContext(FEffectTargetTileSelectorContext& Context) const
 {
 	Context.OutSelectCandidateTiles.Reset();
+	Context.OutTargetCandidates.Reset();
 	Context.OutTargetResults.Reset();
 	Context.bHasValidActorTarget = false;
 

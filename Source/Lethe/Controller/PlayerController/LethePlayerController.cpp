@@ -358,7 +358,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			SelectedCardAbility->GetCandidateTiles(Context);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetSelectionResult& TargetResult : Context.OutTargetResults)
+			for (const FTargetSelectionResult& TargetResult : Context.OutTargetCandidates)
 			{
 				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + TargetResult.Targets.Num());
 				for (const FSelectedTarget& Target : TargetResult.Targets)

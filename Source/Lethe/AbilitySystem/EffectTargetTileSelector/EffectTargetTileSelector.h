@@ -20,30 +20,6 @@ enum class ETargetTeamRelation : uint8
 };
 
 /**
- * CandidateTiles나 TargetTiles가 필요한 경우 CardAbility의 함수를 호출하며 사용하는 구조체입니다.
- * 외부에서는 AvatarActor와 TargetingIntent만 채워서 호출하면 나머지는 CardAbility와 TargetTileSelector가 채워줍니다.
- */
-struct FEffectTargetTileSelectorContext
-{
-	const AActor* AvatarActor = nullptr;
-	FTargetingIntent TargetingIntent;
-
-	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
-	const ATile* SourceTile = nullptr;
-
-	TArray<ATile*> OutSelectCandidateTiles;
-	TArray<FTargetSelectionResult> OutTargetResults;
-	
-	/** 유효한 타겟이 하나라도 있다면 true로 할당됩니다. */
-	bool bHasValidActorTarget = false;
-
-	bool IsValid() const
-	{
-		return AvatarActor && TileManagerSubsystem && SourceTile && TargetingIntent.HitTile;
-	}
-};
-
-/**
  * Ability 적용 범위에 포함되는 타일과, 해당 타일에서 Effect를 적용할 수 있는 Actor를 수집합니다.
  * ActorOnTile은 타일이 비어있거나 대상 조건을 만족하지 않으면 유효하지 않습니다.
  */
@@ -75,10 +51,10 @@ protected:
 	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 
 	/** 
-	 * 수집된 Target들 중 중복 대상을 제거하고 TargetTeamRelation 규칙에 일치하는 대상만 남도록 걸러냅니다.
+	 * OutTargetCandidates를 기반으로 Actor를 수집하고, 중복 대상을 제거하며 TargetTeamRelation 규칙에 일치하는 대상만 남깁니다.
 	 * 타일 위에 Actor가 없으면 제거하며, 동일 타일이 수집된 경우는 Primary를 우선으로 남기며 제거합니다.
 	 */
-	void ResolveTargetActors(FEffectTargetTileSelectorContext& Context) const;
+	void ResolveTargets(FEffectTargetTileSelectorContext& Context) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

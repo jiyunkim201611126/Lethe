@@ -38,7 +38,7 @@ class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
 public:
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
-	 * 여기서 Context의 OutTargetResults는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
+	 * 여기서 Context의 OutTargetCandidates는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
 	 */
 	void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
 

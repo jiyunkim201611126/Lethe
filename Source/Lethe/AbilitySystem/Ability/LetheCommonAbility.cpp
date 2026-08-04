@@ -26,7 +26,7 @@ bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySys
 {
 	OutPreviewData.SourcePreviewData.Reset();
 	OutPreviewData.TargetPreviewData.Reset();
-	if (!SourceASC || TargetSelectionResults.IsEmpty())
+	if (!SourceASC)
 	{
 		return false;
 	}

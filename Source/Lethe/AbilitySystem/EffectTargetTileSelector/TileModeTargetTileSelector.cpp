@@ -30,7 +30,7 @@ void FTileModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContex
 	}
 	
 	GetTargetCandidateTiles(Context);
-	ResolveTargetActors(Context);
+	ResolveTargets(Context);
 }
 
 void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
@@ -96,7 +96,7 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 
 	// '타겟 후보'를 찾는 중이므로, 조건을 따지지 않고 검출된 모든 타일을 Out 인자에 넣어줍니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 	PrimaryTargets.Targets.Reserve(OutCubeCoords.Num());
 	

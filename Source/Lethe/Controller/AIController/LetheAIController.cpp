@@ -430,7 +430,7 @@ void ALetheAIController::CommitPlan()
 	SelectedCardAbility->GetCandidateTiles(ContextForTileHighlight);
 	
 	TArray<ATile*> HighlightTiles;
-	for (const FTargetSelectionResult& TargetResult : ContextForTileHighlight.OutTargetResults)
+	for (const FTargetSelectionResult& TargetResult : ContextForTileHighlight.OutTargetCandidates)
 	{
 		HighlightTiles.Append(TargetResult.GetTargetTiles());
 	}
@@ -440,10 +440,6 @@ void ALetheAIController::CommitPlan()
 	Context.AvatarActor = ControlledEnemy;
 	Context.TargetingIntent = TargetingIntent;
 	SelectedCardAbility->GetTargetTilesForAI(Context);
-	if (Context.OutTargetResults.IsEmpty())
-	{
-		return;
-	}
 
 	FAbilityActivationContext ActivationContext;
 	ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();

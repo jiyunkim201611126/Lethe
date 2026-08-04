@@ -32,7 +32,7 @@ void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorC
 	// TargetTile 계산 시 SelectCandidateTile이 필요하므로 여기서 호출합니다.
 	GetSelectCandidateTiles(Context);
 	GetTargetCandidateTiles(Context);
-	ResolveTargetActors(Context);
+	ResolveTargets(Context);
 }
 
 void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
@@ -75,6 +75,7 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 	{
 		FEffectTargetTileSelectorContext CandidateContext = Context;
 		CandidateContext.OutSelectCandidateTiles.Reset();
+		CandidateContext.OutTargetCandidates.Reset();
 		CandidateContext.OutTargetResults.Reset();
 
 		// AI가 사용할 조준점과 AI의 현재 타일 위치를 기준으로 ImpactPoint를 계산합니다.
@@ -201,7 +202,7 @@ void FDirectionModeTargetTileSelector::HandleMeleeTargets(FEffectTargetTileSelec
 	if (Context.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
 	{
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		FTargetSelectionResult& PrimaryTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+		FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 		PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 
 		if (ATile* TargetTile = Context.TargetingIntent.HitTile)
@@ -230,7 +231,7 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 	const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 	PrimaryTargets.Targets.Reserve(SelectedDirections.Num());
 
@@ -296,7 +297,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 	}
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 
 	// AdditionalRange 계산을 위해 Direction이 필요하므로, 여기서 다시 가져옵니다.
@@ -343,7 +344,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 		{
 		case EAdditionalRangeType::Penetration:
 			{
-				FTargetSelectionResult& PenetrationTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+				FTargetSelectionResult& PenetrationTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 				PenetrationTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Penetration;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{
@@ -370,7 +371,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 			break;
 		case EAdditionalRangeType::HalfMoon:
 			{
-				FTargetSelectionResult& HalfMoonTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+				FTargetSelectionResult& HalfMoonTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 				HalfMoonTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_HalfMoon;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{
@@ -404,7 +405,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 			break;
 		case EAdditionalRangeType::Spread:
 			{
-				FTargetSelectionResult& SpreadTargets = Context.OutTargetResults.AddDefaulted_GetRef();
+				FTargetSelectionResult& SpreadTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
 				SpreadTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Spread;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{

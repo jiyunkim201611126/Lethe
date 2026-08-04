@@ -89,22 +89,16 @@ struct FEffectTargetTileSelectorContext
 	const UTileManagerSubsystem* TileManagerSubsystem = nullptr;
 	const ATile* SourceTile = nullptr;
 
-	TArray<ATile*> OutSelectCandidateTiles;
-	
-	/** TargetCandidate 계산 결과로, Actor 검증 전의 그룹별 후보입니다. */
-	TArray<FTargetSelectionResult> OutTargetCandidates;
-	/** TargetCandidate를 Actor/팀 관계 기준으로 검증한 최종 대상입니다. */
-	TArray<FTargetSelectionResult> OutTargetResults;
-
-	/** 유효한 타겟이 하나라도 있다면 true로 할당됩니다. */
-	bool bHasValidActorTarget = false;
-
 	bool IsValid() const
 	{
 		return AvatarActor && TileManagerSubsystem && SourceTile && TargetingIntent.HitTile;
 	}
 };
 
+/**
+ * LetheCardAbility가 제공하는 API의 수행 결과 구조체입니다.
+ * 사용에 따라 내부 배열 중 일부가 비어있을 수 있습니다.
+ */
 struct FEffectTargetTileSelectorResult
 {
 	TArray<ATile*> OutSelectCandidateTiles;
@@ -116,4 +110,12 @@ struct FEffectTargetTileSelectorResult
 
 	/** 유효한 타겟이 하나라도 있다면 true로 할당됩니다. */
 	bool bHasValidActorTarget = false;
+
+	void Reset()
+	{
+		OutSelectCandidateTiles.Reset();
+		OutTargetCandidates.Reset();
+		OutTargetResults.Reset();
+		bHasValidActorTarget = false;
+	}
 };

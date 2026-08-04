@@ -6,31 +6,31 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void FEffectTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 }
 
-void FEffectTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 }
 
-void FEffectTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
-	GetTargetTiles(Context);
+	GetTargetTiles(Context, OutResult);
 }
 
-void FEffectTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
-{
-}
-
-void FEffectTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 }
 
-void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext& Context) const
+void FEffectTargetTileSelector::GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
-	Context.OutTargetResults.Reset();
-	Context.bHasValidActorTarget = false;
+}
+
+void FEffectTargetTileSelector::ResolveTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
+{
+	OutResult.OutTargetResults.Reset();
+	OutResult.bHasValidActorTarget = false;
 
 	const ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(Context.AvatarActor);
 	if (!SourceCombatInterface)
@@ -41,7 +41,7 @@ void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext&
 	const ETeamSide SourceTeamSide = SourceCombatInterface->GetTeamSide();
 	TSet<TWeakObjectPtr<AActor>> SelectedActors;
 
-	auto ResolveTargetResult = [&Context, this, SourceTeamSide, &SelectedActors](const FTargetSelectionResult& CandidateResult)
+	auto ResolveTargetResult = [&Context, &OutResult, this, SourceTeamSide, &SelectedActors](const FTargetSelectionResult& CandidateResult)
 	{
 		FTargetSelectionResult* ResolvedResult = nullptr;
 		for (const FSelectedTarget& CandidateTarget : CandidateResult.Targets)
@@ -89,14 +89,14 @@ void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext&
 
 			if (!ResolvedResult)
 			{
-				ResolvedResult = &Context.OutTargetResults.AddDefaulted_GetRef();
+				ResolvedResult = &OutResult.OutTargetResults.AddDefaulted_GetRef();
 				ResolvedResult->TargetGroupTag = CandidateResult.TargetGroupTag;
 			}
 
 			FSelectedTarget& ResolvedTarget = ResolvedResult->Targets.AddDefaulted_GetRef();
 			ResolvedTarget.TargetTile = CandidateTarget.TargetTile;
 			ResolvedTarget.ActorOnTile = ActorOnTile;
-			Context.bHasValidActorTarget = true;
+			OutResult.bHasValidActorTarget = true;
 			SelectedActors.Add(ActorOnTile);
 		}
 	};
@@ -104,7 +104,7 @@ void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext&
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 
 	// Primary Target들은 우선적으로 남겨야 하므로, 먼저 처리합니다.
-	for (const FTargetSelectionResult& CandidateResult : Context.OutTargetCandidates)
+	for (const FTargetSelectionResult& CandidateResult : OutResult.OutTargetCandidates)
 	{
 		if (!CandidateResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
 		{
@@ -115,7 +115,7 @@ void FEffectTargetTileSelector::ResolveTargets(FEffectTargetTileSelectorContext&
 	}
 
 	// 나머지 그룹은 Primary에서 선택되지 않은 대상만 처리합니다.
-	for (const FTargetSelectionResult& CandidateResult : Context.OutTargetCandidates)
+	for (const FTargetSelectionResult& CandidateResult : OutResult.OutTargetCandidates)
 	{
 		if (CandidateResult.TargetGroupTag.MatchesTagExact(LetheGameplayTags.TargetGroup_Primary))
 		{

@@ -13,40 +13,38 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void ULetheCardAbility::GetCandidateTiles(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	FillTileSelectorContext(Context);
+	OutResult.Reset();
 	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelectorPtr->GetCandidateTiles(Context);
+		EffectTargetTileSelectorPtr->GetCandidateTiles(Context, OutResult);
 	}
 }
 
-void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
+void ULetheCardAbility::GetTargetTiles(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	FillTileSelectorContext(Context);
+	OutResult.Reset();
 	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelectorPtr->GetTargetTiles(Context);
+		EffectTargetTileSelectorPtr->GetTargetTiles(Context, OutResult);
 	}
 }
 
-void ULetheCardAbility::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
+void ULetheCardAbility::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	FillTileSelectorContext(Context);
+	OutResult.Reset();
 	if (const FEffectTargetTileSelector* EffectTargetTileSelectorPtr = EffectTargetTileSelector.GetPtr())
 	{
-		EffectTargetTileSelectorPtr->GetTargetTilesForAI(Context);
+		EffectTargetTileSelectorPtr->GetTargetTilesForAI(Context, OutResult);
 	}
 }
 
 void ULetheCardAbility::FillTileSelectorContext(FEffectTargetTileSelectorContext& Context) const
 {
-	Context.OutSelectCandidateTiles.Reset();
-	Context.OutTargetCandidates.Reset();
-	Context.OutTargetResults.Reset();
-	Context.bHasValidActorTarget = false;
-
 	if (Context.AvatarActor)
 	{
 		if (const UTileManagerSubsystem* TileManagerSubsystem = Context.AvatarActor->GetWorld()->GetSubsystem<UTileManagerSubsystem>())

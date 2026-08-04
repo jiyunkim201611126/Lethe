@@ -273,9 +273,10 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 			Context.AvatarActor = AvatarActor;
 			Context.TargetingIntent = ActivationContext->TargetingIntent;
 
-			CardAbility->GetTargetTiles(Context);
+			FEffectTargetTileSelectorResult Result;
+			CardAbility->GetTargetTiles(Context, Result);
 
-			ActivationContext->TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+			ActivationContext->TargetSelectionResults = MoveTemp(Result.OutTargetResults);
 		}
 		
 		bool bHasCombatTarget = false;

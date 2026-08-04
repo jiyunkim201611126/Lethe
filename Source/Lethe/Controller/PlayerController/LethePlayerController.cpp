@@ -355,10 +355,12 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			Context.AvatarActor = CardOwner;
 			Context.TargetingIntent.HitTile = OutTileHitResult.Tile;
 			Context.TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
-			SelectedCardAbility->GetCandidateTiles(Context);
+
+			FEffectTargetTileSelectorResult Result;
+			SelectedCardAbility->GetCandidateTiles(Context, Result);
 
 			TArray<ATile*> TargetCandidateTiles;
-			for (const FTargetSelectionResult& TargetResult : Context.OutTargetCandidates)
+			for (const FTargetSelectionResult& TargetResult : Result.OutTargetCandidates)
 			{
 				TargetCandidateTiles.Reserve(TargetCandidateTiles.Num() + TargetResult.Targets.Num());
 				for (const FSelectedTarget& Target : TargetResult.Targets)
@@ -374,7 +376,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			if (!TargetCandidateTiles.IsEmpty() && bMouseOnWorldSection)
 			{
 				// 각각 역할에 맞게 하이라이팅합니다.
-				ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Context.OutSelectCandidateTiles);
+				ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Result.OutSelectCandidateTiles);
 				ActorSelector->SetHighlightedTiles(EHighlightReason::Source, SourceTiles);
 				const bool bTargetCandidateChanged = ActorSelector->SetHighlightedTiles(EHighlightReason::TargetCandidate, TargetCandidateTiles);
 				if (bTargetCandidateChanged)
@@ -385,7 +387,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 			}
 
 			// 사용 범위를 벗어난 경우 선택 후보만 하이라이팅하고 프리뷰 및 Arrow를 비활성화합니다.
-			ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Context.OutSelectCandidateTiles);
+			ActorSelector->SetHighlightedTiles(EHighlightReason::SelectCandidate, Result.OutSelectCandidateTiles);
 			ActorSelector->SetHighlightedTiles(EHighlightReason::Source, SourceTiles);
 			ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);
 			PreviewCoordinatorComponent->StopAllPreview();
@@ -421,11 +423,12 @@ void ALethePlayerController::OnOtherTileDetected() const
 			Context.TargetingIntent.HitTile = OutTileHitResult.Tile;
 			Context.TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
 
-			SelectedCardAbility->GetTargetTiles(Context);
+			FEffectTargetTileSelectorResult Result;
+			SelectedCardAbility->GetTargetTiles(Context, Result);
 
 			// Arrow 표시 용도의 TargetActors를 생성합니다.
 			TArray<AActor*> TargetActors;
-			for (const FTargetSelectionResult& TargetResult : Context.OutTargetResults)
+			for (const FTargetSelectionResult& TargetResult : Result.OutTargetResults)
 			{
 				TargetActors.Reserve(TargetActors.Num() + TargetResult.Targets.Num());
 				for (const auto& Target : TargetResult.Targets)
@@ -438,7 +441,7 @@ void ALethePlayerController::OnOtherTileDetected() const
 			}
 
 			FPreviewContext PreviewContext;
-			PreviewContext.TargetSelectionResults = Context.OutTargetResults;
+			PreviewContext.TargetSelectionResults = Result.OutTargetResults;
 			PreviewContext.SourceASC = SelectedCardOwnerASC.Get();
 			PreviewContext.SelectedCardAbility = SelectedCardAbility.Get();
 			PreviewCoordinatorComponent->StartCalculatingPreviewData(PreviewContext);

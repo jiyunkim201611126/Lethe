@@ -44,23 +44,23 @@ struct LETHE_API FDirectionModeTargetTileSelector : public FEffectTargetTileSele
 public:
 	FDirectionModeTargetTileSelector();
 	
-	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
-	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
-	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
+	virtual void GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
+	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
 
 protected:
-	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
-	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
+	virtual void GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
 
 private:
 	/** 방향 개수가 짝수일 때, AI가 타일 중심이 아니라 두 방향 사이의 경계선쪽으로 조준하도록 그 위치 벡터를 반환합니다. */
 	FVector MakeAIAimPointForEvenDirectionCount(const ATile* SourceTile, int32 UpperDirection) const;
 	
-	void HandleMeleeTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
-	void HandleStraightTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
-	void HandleParabolaTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleMeleeTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleStraightTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
+	void HandleParabolaTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const;
 
-	void HandleAdditionalTargets(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const;
+	void HandleAdditionalTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const;
 	
 	/** FCubeCoord 기준 Direction을 방향 Vector로 변환해 반환합니다. */
 	FVector2D GetHexDirectionVector(int32 Direction) const;

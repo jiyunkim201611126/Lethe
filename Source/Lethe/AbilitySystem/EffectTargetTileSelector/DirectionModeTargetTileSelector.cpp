@@ -11,32 +11,35 @@ FDirectionModeTargetTileSelector::FDirectionModeTargetTileSelector()
 	TargetTeamRelation = ETargetTeamRelation::AllSides;
 }
 
-void FDirectionModeTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FDirectionModeTargetTileSelector::GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
+	OutResult.Reset();
 	if (!Context.IsValid())
 	{
 		return;
 	}
 
-	GetSelectCandidateTiles(Context);
-	GetTargetCandidateTiles(Context);
+	GetSelectCandidateTiles(Context, OutResult);
+	GetTargetCandidateTiles(Context, OutResult);
 }
 
-void FDirectionModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
+void FDirectionModeTargetTileSelector::GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
+	OutResult.Reset();
 	if (!Context.IsValid())
 	{
 		return;
 	}
 
 	// TargetTile 계산 시 SelectCandidateTile이 필요하므로 여기서 호출합니다.
-	GetSelectCandidateTiles(Context);
-	GetTargetCandidateTiles(Context);
-	ResolveTargets(Context);
+	GetSelectCandidateTiles(Context, OutResult);
+	GetTargetCandidateTiles(Context, OutResult);
+	ResolveTargets(Context, OutResult);
 }
 
-void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const
+void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
+	OutResult.Reset();
 	if (!Context.IsValid())
 	{
 		return;
@@ -46,7 +49,7 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 	const int32 ClampedDirectionCount = FMath::Clamp(DirectionCount, 1, FCubeCoord::HexDirectionCount);
 	if (ClampedDirectionCount % 2 == 1)
 	{
-		GetTargetTiles(Context);
+		GetTargetTiles(Context, OutResult);
 		return;
 	}
 
@@ -56,7 +59,7 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 	const FVector2D DesiredDirection(TargetLocation.X - CurrentLocation.X, TargetLocation.Y - CurrentLocation.Y);
 	if (DesiredDirection.IsNearlyZero())
 	{
-		GetTargetTiles(Context);
+		GetTargetTiles(Context, OutResult);
 		return;
 	}
 
@@ -70,24 +73,23 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 
 	// 목표를 포함하면서도 가장 많은 적을 공격하도록 선택합니다.
 	FEffectTargetTileSelectorContext BestContext = Context;
+	FEffectTargetTileSelectorResult BestResult;
 	int32 BestScore = INDEX_NONE;
 	for (const int32 UpperDirection : UpperDirectionCandidates)
 	{
 		FEffectTargetTileSelectorContext CandidateContext = Context;
-		CandidateContext.OutSelectCandidateTiles.Reset();
-		CandidateContext.OutTargetCandidates.Reset();
-		CandidateContext.OutTargetResults.Reset();
+		FEffectTargetTileSelectorResult CandidateResult;
 
 		// AI가 사용할 조준점과 AI의 현재 타일 위치를 기준으로 ImpactPoint를 계산합니다.
 		const FVector AimPoint = MakeAIAimPointForEvenDirectionCount(Context.SourceTile, UpperDirection);
 		const FVector AimDirection = (AimPoint - CurrentLocation).GetSafeNormal();
 		CandidateContext.TargetingIntent.ImpactPoint = CurrentLocation + AimDirection * TargetDistance;
 
-		GetTargetTiles(CandidateContext);
+		GetTargetTiles(CandidateContext, CandidateResult);
 
 		int32 TargetCount = 0;
 		bool bContainsIntentTile = false;
-		for (const FTargetSelectionResult& TargetResult : CandidateContext.OutTargetResults)
+		for (const FTargetSelectionResult& TargetResult : CandidateResult.OutTargetResults)
 		{
 			for (const FSelectedTarget& Target : TargetResult.Targets)
 			{
@@ -108,10 +110,12 @@ void FDirectionModeTargetTileSelector::GetTargetTilesForAI(FEffectTargetTileSele
 		{
 			BestScore = Score;
 			BestContext = MoveTemp(CandidateContext);
+			BestResult = MoveTemp(CandidateResult);
 		}
 	}
 
 	Context = MoveTemp(BestContext);
+	OutResult = MoveTemp(BestResult);
 }
 
 FVector FDirectionModeTargetTileSelector::MakeAIAimPointForEvenDirectionCount(const ATile* SourceTile, const int32 UpperDirection) const
@@ -133,7 +137,7 @@ FVector FDirectionModeTargetTileSelector::MakeAIAimPointForEvenDirectionCount(co
 	return SourceLocation + FVector(BoundaryDirection.X, BoundaryDirection.Y, 0.f) * FCubeCoord::GetTileWidthInterval();
 }
 
-void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	const FCubeCoord CenterCoord = Context.SourceTile->GetCubeCoord();
 
@@ -150,7 +154,7 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTile
 
 			if (ATile* SelectCandidateTile = Context.TileManagerSubsystem->GetTile(SelectCandidateCoord))
 			{
-				Context.OutSelectCandidateTiles.Add(SelectCandidateTile);
+				OutResult.OutSelectCandidateTiles.Add(SelectCandidateTile);
 			}
 		}
 	}
@@ -173,36 +177,36 @@ void FDirectionModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTile
 					CenterCoord.S + DirectionOffset.S * Distance);
 
 				// 인덱스가 곧 SourceTile과의 거리를 나타내므로, nullptr이더라도 추가합니다.
-				Context.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(SelectCandidateCoord));
+				OutResult.OutSelectCandidateTiles.Add(Context.TileManagerSubsystem->GetTile(SelectCandidateCoord));
 			}
 		}
 	}
 }
 
-void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FDirectionModeTargetTileSelector::GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	TArray<FResolvedPrimaryTargetTile> OutResolvedPrimaryTargetTiles;
 	switch (RangeType)
 	{
 	case ERangeType::Melee:
-		HandleMeleeTargets(Context, OutResolvedPrimaryTargetTiles);
+		HandleMeleeTargets(Context, OutResult, OutResolvedPrimaryTargetTiles);
 		break;
 	case ERangeType::ParabolaRanged:
-		HandleParabolaTargets(Context, OutResolvedPrimaryTargetTiles);
+		HandleParabolaTargets(Context, OutResult, OutResolvedPrimaryTargetTiles);
 		break;
 	case ERangeType::StraightRanged:
-		HandleStraightTargets(Context, OutResolvedPrimaryTargetTiles);
+		HandleStraightTargets(Context, OutResult, OutResolvedPrimaryTargetTiles);
 		break;
 	}
-	HandleAdditionalTargets(Context, OutResolvedPrimaryTargetTiles);
+	HandleAdditionalTargets(Context, OutResult, OutResolvedPrimaryTargetTiles);
 }
 
-void FDirectionModeTargetTileSelector::HandleMeleeTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleMeleeTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
-	if (Context.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
+	if (OutResult.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
 	{
 		const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-		FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+		FTargetSelectionResult& PrimaryTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 		PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 
 		if (ATile* TargetTile = Context.TargetingIntent.HitTile)
@@ -221,7 +225,7 @@ void FDirectionModeTargetTileSelector::HandleMeleeTargets(FEffectTargetTileSelec
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleStraightTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
 	// 원하는 방향 개수만큼 방향을 선택합니다.
 	TArray<int32> SelectedDirections;
@@ -231,7 +235,7 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 	const int32 MaxRangeDistance = FMath::Max(1, RangeDistance);
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 	PrimaryTargets.Targets.Reserve(SelectedDirections.Num());
 
@@ -276,7 +280,7 @@ void FDirectionModeTargetTileSelector::HandleStraightTargets(FEffectTargetTileSe
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSelectorContext& Context, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleParabolaTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, TArray<FResolvedPrimaryTargetTile>& OutTargetTiles) const
 {
 	// SourceTile(AvatarActor가 서있는 타일)과 마우스 위치까지의 거리를 계산합니다.
 	const FVector SourceTileLocation = Context.SourceTile->GetActorLocation();
@@ -297,7 +301,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 	}
 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 
 	// AdditionalRange 계산을 위해 Direction이 필요하므로, 여기서 다시 가져옵니다.
@@ -306,7 +310,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 
 	// 거리에 알맞는 타일들만 추가합니다.
 	int32 TileIndex = HitTileDistance - 1;
-	while (Context.OutSelectCandidateTiles.IsValidIndex(TileIndex))
+	while (OutResult.OutSelectCandidateTiles.IsValidIndex(TileIndex))
 	{
 		const int32 DirectionIndex = TileIndex / MaxRangeDistance;
 		if (!SelectedDirections.IsValidIndex(DirectionIndex))
@@ -316,7 +320,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 
 		const int32 Direction = SelectedDirections[DirectionIndex];
 
-		if (ATile* TargetTile = Context.OutSelectCandidateTiles[TileIndex])
+		if (ATile* TargetTile = OutResult.OutSelectCandidateTiles[TileIndex])
 		{
 			FSelectedTarget& Target = PrimaryTargets.Targets.AddDefaulted_GetRef();
 			Target.TargetTile = TargetTile;
@@ -330,7 +334,7 @@ void FDirectionModeTargetTileSelector::HandleParabolaTargets(FEffectTargetTileSe
 	}
 }
 
-void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTileSelectorContext& Context, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const
+void FDirectionModeTargetTileSelector::HandleAdditionalTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult, const TArray<FResolvedPrimaryTargetTile>& ResolvedPrimaryTargetTiles) const
 {
 	if (ResolvedPrimaryTargetTiles.IsEmpty())
 	{
@@ -344,7 +348,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 		{
 		case EAdditionalRangeType::Penetration:
 			{
-				FTargetSelectionResult& PenetrationTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+				FTargetSelectionResult& PenetrationTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 				PenetrationTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Penetration;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{
@@ -371,7 +375,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 			break;
 		case EAdditionalRangeType::HalfMoon:
 			{
-				FTargetSelectionResult& HalfMoonTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+				FTargetSelectionResult& HalfMoonTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 				HalfMoonTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_HalfMoon;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{
@@ -405,7 +409,7 @@ void FDirectionModeTargetTileSelector::HandleAdditionalTargets(FEffectTargetTile
 			break;
 		case EAdditionalRangeType::Spread:
 			{
-				FTargetSelectionResult& SpreadTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+				FTargetSelectionResult& SpreadTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 				SpreadTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Spread;
 				for (const FResolvedPrimaryTargetTile& PrimaryTargetTile : ResolvedPrimaryTargetTiles)
 				{

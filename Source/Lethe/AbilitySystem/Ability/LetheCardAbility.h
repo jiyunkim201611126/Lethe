@@ -38,19 +38,19 @@ class LETHE_API ULetheCardAbility : public ULetheGameplayAbility
 public:
 	/**
 	 * 시전 가능 범위에 해당하는 타일과 적용 후보 타일들을 가져옵니다.
-	 * 여기서 Context의 OutTargetCandidates는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
+	 * 여기서 OutResult의 OutTargetCandidates는 마우스 위치가 범위를 벗어난 경우 비어있을 수 있습니다.
 	 */
-	void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
+	void GetCandidateTiles(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 	/**
 	 * 시전 시 적용될 대상이 존재하는 타일들을 가져옵니다.
 	 * 외부에서 Combat Target 유무를 판단하는 경우가 있기 때문에, Ability가 직접 해당 함수를 호출해 Target을 수집하는 경우 중복 연산이 발생합니다.
 	 * 따라서 외부에서 Combat Target 유무 판단을 위해 호출한 데이터를 그대로 재활용하는 방식으로 구현되었습니다.
 	 */
-	void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
+	void GetTargetTiles(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 	/** AI가 TargetTileSelector를 활용할 때 사용하는 함수입니다. */
-	void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const;
+	void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 	/** Ability 발동 시 어떤 효과가 발생하는지 미리보기용 데이터를 가져오는 함수입니다. */
 	bool TryGetCostEffectPreviewData(UAbilitySystemComponent* SourceASC, TMap<FGameplayAttribute, float>& OutCostPreviewData) const;

@@ -6,34 +6,36 @@
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/Manager/Tile/TileManagerSubsystem.h"
 
-void FTileModeTargetTileSelector::GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FTileModeTargetTileSelector::GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
+	OutResult.Reset();
 	if (!Context.IsValid())
 	{
 		return;
 	}
 	
-	GetSelectCandidateTiles(Context);
+	GetSelectCandidateTiles(Context, OutResult);
 
-	if (Context.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
+	if (OutResult.OutSelectCandidateTiles.Contains(Context.TargetingIntent.HitTile))
 	{
 		// 마우스를 올린 타일이 선택 후보 타일에 포함되는 경우에만 타겟 후보 타일을 Out 인자에 채워줍니다.
-		GetTargetCandidateTiles(Context);
+		GetTargetCandidateTiles(Context, OutResult);
 	}
 }
 
-void FTileModeTargetTileSelector::GetTargetTiles(FEffectTargetTileSelectorContext& Context) const
+void FTileModeTargetTileSelector::GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
+	OutResult.Reset();
 	if (!Context.IsValid())
 	{
 		return;
 	}
 	
-	GetTargetCandidateTiles(Context);
-	ResolveTargets(Context);
+	GetTargetCandidateTiles(Context, OutResult);
+	ResolveTargets(Context, OutResult);
 }
 
-void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FTileModeTargetTileSelector::GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	const int32 SourceTileFloor = Context.TileManagerSubsystem->GetTileFloor(Context.SourceTile);
 	
@@ -62,12 +64,12 @@ void FTileModeTargetTileSelector::GetSelectCandidateTiles(FEffectTargetTileSelec
 	{
 		if (ATile* SelectCandidateTile = Context.TileManagerSubsystem->GetTile(CubeCoord))
 		{
-			Context.OutSelectCandidateTiles.Add(SelectCandidateTile);
+			OutResult.OutSelectCandidateTiles.Add(SelectCandidateTile);
 		}
 	}
 }
 
-void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const
+void FTileModeTargetTileSelector::GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const
 {
 	// 검출된 타일의 층수를 가져옵니다.
 	const int32 HitTileFloor = Context.TileManagerSubsystem->GetTileFloor(Context.TargetingIntent.HitTile);
@@ -96,7 +98,7 @@ void FTileModeTargetTileSelector::GetTargetCandidateTiles(FEffectTargetTileSelec
 
 	// '타겟 후보'를 찾는 중이므로, 조건을 따지지 않고 검출된 모든 타일을 Out 인자에 넣어줍니다.
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
-	FTargetSelectionResult& PrimaryTargets = Context.OutTargetCandidates.AddDefaulted_GetRef();
+	FTargetSelectionResult& PrimaryTargets = OutResult.OutTargetCandidates.AddDefaulted_GetRef();
 	PrimaryTargets.TargetGroupTag = LetheGameplayTags.TargetGroup_Primary;
 	PrimaryTargets.Targets.Reserve(OutCubeCoords.Num());
 	

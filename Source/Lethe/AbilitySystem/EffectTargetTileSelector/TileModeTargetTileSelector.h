@@ -17,12 +17,12 @@ struct LETHE_API FTileModeTargetTileSelector : public FEffectTargetTileSelector
 	GENERATED_BODY()
 
 public:
-	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
-	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
+	virtual void GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
 
 protected:
-	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
-	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const override;
+	virtual void GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
+	virtual void GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const override;
 
 protected:
 	/** 타일 선택 가능 범위입니다. */

@@ -708,15 +708,17 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = CardOwner;
 	Context.TargetingIntent = TargetingIntent;
-	CardAbility->GetTargetTiles(Context);
+
+	FEffectTargetTileSelectorResult Result;
+	CardAbility->GetTargetTiles(Context, Result);
 
 	// 대상이 없고, 대상 없이 발동 불가능한 Ability인 경우 실패 처리합니다.
-	if (!Context.bHasValidActorTarget && !CardAbility->CanUseWithoutTarget())
+	if (!Result.bHasValidActorTarget && !CardAbility->CanUseWithoutTarget())
 	{
 		return false;
 	}
 
-	AbilityActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+	AbilityActivationContext.TargetSelectionResults = MoveTemp(Result.OutTargetResults);
 	LetheGameState->EnqueuePlayerAbilityActivationContext(MoveTemp(AbilityActivationContext));
 	return true;
 }

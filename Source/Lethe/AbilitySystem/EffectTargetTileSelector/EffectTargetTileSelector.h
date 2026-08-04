@@ -31,30 +31,30 @@ struct LETHE_API FEffectTargetTileSelector
 public:
 	virtual ~FEffectTargetTileSelector() = default;
 
-	/** 선택 가능 타일과 적용될 대상이 될 수 있는 후보 타일을 모두 Out 인자로 반환합니다. */
-	virtual void GetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
+	/** 선택 가능 타일과 적용될 대상이 될 수 있는 후보 타일을 OutResult에 반환합니다. */
+	virtual void GetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
-	/** 시전 결과에 포함되는 타일과 유효한 대상 Actor를 Out 인자로 반환합니다. */
-	virtual void GetTargetTiles(FEffectTargetTileSelectorContext& Context) const;
+	/** 시전 결과에 포함되는 타일과 유효한 대상 Actor를 OutResult에 반환합니다. */
+	virtual void GetTargetTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 	/**
-	 * 기본 구현은 GetTargetTiles를 그대로 호출합니다.
-	 * 필요에 따라 하위 구조체가 오버라이드해 AI가 Player를 공격하기 위해 어떤 타일이 필요한지 계산합니다.
+	 * 기본 구현은 GetTargetTiles를 호출하며, 필요한 경우 하위 구조체가 오버라이드해 구현합니다.
+	 * Context 내 TargetingIntent를 보정해서 사용하는 경우도 있기 때문에 호출 후 TargetingIntent를 재사용하려는 경우 주의가 필요합니다.
 	 */
-	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context) const;
+	virtual void GetTargetTilesForAI(FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 protected:
-	/** 시전 가능 범위에 해당하는 타일들을 Out 인자로 반환합니다. */
-	virtual void GetSelectCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
+	/** 시전 가능 범위에 해당하는 타일들을 OutResult에 반환합니다. */
+	virtual void GetSelectCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
-	/** 시전 시 적용 범위에 해당하는 타일들을 모두 Out 인자로 반환합니다. */
-	virtual void GetTargetCandidateTiles(FEffectTargetTileSelectorContext& Context) const;
+	/** 시전 시 적용 범위에 해당하는 타일들을 모두 OutResult에 반환합니다. */
+	virtual void GetTargetCandidateTiles(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 	/** 
 	 * OutTargetCandidates를 기반으로 Actor를 수집하고, 중복 대상을 제거하며 TargetTeamRelation 규칙에 일치하는 대상만 남깁니다.
 	 * 타일 위에 Actor가 없으면 제거하며, 동일 타일이 수집된 경우는 Primary를 우선으로 남기며 제거합니다.
 	 */
-	void ResolveTargets(FEffectTargetTileSelectorContext& Context) const;
+	void ResolveTargets(const FEffectTargetTileSelectorContext& Context, FEffectTargetTileSelectorResult& OutResult) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)

@@ -216,9 +216,11 @@ bool ALetheAIController::GetAttackOriginTiles(const FGameplayAbilitySpecHandle A
 	Context.AvatarActor = TargetActor;
 	Context.SourceTile = TargetTile;
 	Context.TargetingIntent = TargetingIntent;
-	CardAbility->GetCandidateTiles(Context);
 
-	for (ATile* CandidateTile : Context.OutSelectCandidateTiles)
+	FEffectTargetTileSelectorResult Result;
+	CardAbility->GetCandidateTiles(Context, Result);
+
+	for (ATile* CandidateTile : Result.OutSelectCandidateTiles)
 	{
 		if (!CandidateTile || CandidateTile == TargetTile)
 		{
@@ -427,10 +429,12 @@ void ALetheAIController::CommitPlan()
 	FEffectTargetTileSelectorContext ContextForTileHighlight;
 	ContextForTileHighlight.AvatarActor = ControlledEnemy;
 	ContextForTileHighlight.TargetingIntent = TargetingIntent;
-	SelectedCardAbility->GetCandidateTiles(ContextForTileHighlight);
+
+	FEffectTargetTileSelectorResult ResultForTileHighlight;
+	SelectedCardAbility->GetCandidateTiles(ContextForTileHighlight, ResultForTileHighlight);
 	
 	TArray<ATile*> HighlightTiles;
-	for (const FTargetSelectionResult& TargetResult : ContextForTileHighlight.OutTargetCandidates)
+	for (const FTargetSelectionResult& TargetResult : ResultForTileHighlight.OutTargetCandidates)
 	{
 		HighlightTiles.Append(TargetResult.GetTargetTiles());
 	}
@@ -439,7 +443,9 @@ void ALetheAIController::CommitPlan()
 	FEffectTargetTileSelectorContext Context;
 	Context.AvatarActor = ControlledEnemy;
 	Context.TargetingIntent = TargetingIntent;
-	SelectedCardAbility->GetTargetTilesForAI(Context);
+
+	FEffectTargetTileSelectorResult Result;
+	SelectedCardAbility->GetTargetTilesForAI(Context, Result);
 
 	FAbilityActivationContext ActivationContext;
 	ActivationContext.Index = ControlledEnemy->GetEnemyAbilityPriority();
@@ -447,7 +453,7 @@ void ALetheAIController::CommitPlan()
 	ActivationContext.TargetingIntent = Context.TargetingIntent;
 	ActivationContext.AbilityTag = AbilityTag;
 	ActivationContext.AbilityOwnerASC = ASC;
-	ActivationContext.TargetSelectionResults = MoveTemp(Context.OutTargetResults);
+	ActivationContext.TargetSelectionResults = MoveTemp(Result.OutTargetResults);
 	ActivationContext.Payload.Instigator = ControlledEnemy;
 	
 	PlannedAbilitySpecHandle = FGameplayAbilitySpecHandle();

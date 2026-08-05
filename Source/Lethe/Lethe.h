@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #define PLAYER_CHARACTER_NUMBER 4
-#define MAX_HAND_COUNT 8
+#define MAX_HAND_SLOT_COUNT 8
 #define MAX_DECK_COUNT 10
 
 #define CUSTOM_DEPTH_YELLOW 248

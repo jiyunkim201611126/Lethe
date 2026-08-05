@@ -21,10 +21,10 @@ struct FGameplayTag;
 struct FPreviewData;
 struct FSavedCard;
 
-DECLARE_DELEGATE_OneParam(FOnSelectCardSignature, const int32 /* HandIndex */);
+DECLARE_DELEGATE_OneParam(FOnSelectCardSignature, const int32 /* HandSlotIndex */);
 DECLARE_MULTICAST_DELEGATE(FOnCancelCardSelectSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreviewDataUpdatedSignature, const FPreviewData&);
-DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_DELEGATE_TwoParams(FOnResolveUseCardSignature, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCameraHeightChangedSignature, const float /* AttributeWidgetSize */);
 
 /**
@@ -51,10 +51,10 @@ public:
 	void StartResolvePlayerMoves() const;
 	void OnPlayerMovedResolved(AActor* MovedCharacter) const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle);
+	void OnSelectCardRequested(const int32 HandSlotIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle);
 	void ResetSelectedCard();
 	void SetMouseOnWorldSection(const bool bInMouseOnWorldSection);
-	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex);
+	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandSlotIndex);
 
 	bool IsCardSelected() const;
 
@@ -71,7 +71,7 @@ private:
 
 	void OnUpdatePreviewData(const FPreviewData& PreviewData) const;
 	
-	void OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const;
+	void OnCardUseResolved(const int32 HandSlotIndex, const bool bSuccess) const;
 
 	/** 액터 아래에 있는 타일을 하이라이팅 하고자 할 때 사용하는 헬퍼용 함수입니다. */
 	void GetTileUnderActorAsArray(const UWorld* World, const AActor* Actor, TArray<ATile*>& OutTiles) const;

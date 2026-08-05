@@ -8,9 +8,9 @@
 #include "Lethe/AbilitySystem/LetheAbilitySystemComponent.h"
 #include "Lethe/Actor/Card/CardActor.h"
 
-void FCharacterCards::SortDeckPreviewHands()
+void FCharacterCards::SortDeckPreviewCards()
 {
-	Algo::Sort(DeckPreviewHands, [](const ACardActor* CardA, const ACardActor* CardB)
+	Algo::Sort(DeckPreviewCards, [](const ACardActor* CardA, const ACardActor* CardB)
 	{
 		if (CardA && CardB)
 		{
@@ -28,7 +28,7 @@ void UCardContainerManager::Initialize(const TArray<TWeakObjectPtr<ULetheAbility
 {
 	AbilitySystemComponents = InAbilitySystemComponents;
 	ASCToCards.Reserve(PLAYER_CHARACTER_NUMBER);
-	CurrentHands.Reserve(10);
+	CurrentHandSlots.Reserve(10);
 	DeckBoxes = InDeckBoxes;
 }
 
@@ -66,7 +66,7 @@ ACardActor* UCardContainerManager::GetTopCardFromDeck(ULetheAbilitySystemCompone
 	return nullptr;
 }
 
-bool UCardContainerManager::AddCardToHand(ULetheAbilitySystemComponent* OwnerASC)
+bool UCardContainerManager::AddCardToHandSlot(ULetheAbilitySystemComponent* OwnerASC)
 {
 	if (OwnerASC)
 	{
@@ -75,7 +75,8 @@ bool UCardContainerManager::AddCardToHand(ULetheAbilitySystemComponent* OwnerASC
 		{
 			if (ACardActor* DrawnCard = CharacterCards->Deck.Pop(EAllowShrinking::No))
 			{
-				CharacterCards->Hands.Add(DrawnCard);
+				FHandSlot& NewHandSlot = CharacterCards->HandSlots.AddDefaulted_GetRef();
+				NewHandSlot.SetCard(DrawnCard);
 				DrawnCard->SetCardContainer(ECardContainer::Hands);
 				return true;
 			}
@@ -93,10 +94,13 @@ void UCardContainerManager::AddCardToGraveyard(ACardActor* CardActor)
 			if (FCharacterCards* CharacterCards = ASCToCards.Find(CardOwnerASC))
 			{
 				CharacterCards->Graveyard.AddUnique(CardActor);
-				const int32 HandIndex = CharacterCards->Hands.IndexOfByKey(CardActor);
-				if (HandIndex != INDEX_NONE)
+				for (FHandSlot& HandSlot : CharacterCards->HandSlots)
 				{
-					CharacterCards->Hands[HandIndex] = nullptr;
+					if (HandSlot.GetCard() == CardActor)
+					{
+						HandSlot.Clear();
+						break;
+					}
 				}
 			}
 			CardActor->SetCardContainer(ECardContainer::Graveyard);
@@ -104,15 +108,15 @@ void UCardContainerManager::AddCardToGraveyard(ACardActor* CardActor)
 	}
 }
 
-void UCardContainerManager::AddAllHandsToGraveyard()
+void UCardContainerManager::AddAllHandSlotsToGraveyard()
 {
 	for (auto& Cards : ASCToCards)
 	{
-		for (ACardActor* Hand : Cards.Value.Hands)
+		for (FHandSlot& HandSlot : Cards.Value.HandSlots)
 		{
-			AddCardToGraveyard(Hand);
+			AddCardToGraveyard(HandSlot.GetCard());
 		}
-		Cards.Value.Hands.Reset();
+		Cards.Value.HandSlots.Reset();
 	}
 }
 
@@ -130,12 +134,12 @@ void UCardContainerManager::RefillDeck()
 
 void UCardContainerManager::MoveAllCards()
 {
-	// 드로우는 캐릭터 순서에 관계 없이 진행되므로, 캐릭터 순서에 맞춰 정렬된 핸드를 얻기 위해 여기서 캐싱 로직을 수행합니다.
-	CurrentHands.Reset();
+	// 드로우는 캐릭터 순서에 관계 없이 진행되므로, 캐릭터 순서에 맞춰 정렬된 핸드 슬롯을 얻기 위해 여기서 캐싱 로직을 수행합니다.
+	CurrentHandSlots.Reset();
 
-	TArray<int32> OutCurrentHandCounts;
-	GetCurrentHandCounts(OutCurrentHandCounts);
-	DeckBoxes->UpdateLocations(OutCurrentHandCounts);
+	TArray<int32> OutCurrentHandSlotCounts;
+	GetCurrentHandSlotCounts(OutCurrentHandSlotCounts);
+	DeckBoxes->UpdateLocations(OutCurrentHandSlotCounts);
 
 	TArray<FVector> OutDeckLocations;
 	DeckBoxes->GetDeckLocations(OutDeckLocations);
@@ -166,18 +170,36 @@ void UCardContainerManager::MoveAllCards()
 			}
 		}
 
-		FVector HandCardLocation = DeckLocation + HandFirstCardLocation;
-		TArray<ACardActor*> SelectedHands = CharacterCards->DeckPreviewHands.IsEmpty() ? CharacterCards->Hands : CharacterCards->DeckPreviewHands;
-		for (ACardActor* CardInHand : SelectedHands)
+		FVector HandSlotCardLocation = DeckLocation + HandSlotFirstCardLocation;
+		if (!CharacterCards->DeckPreviewCards.IsEmpty())
 		{
-			// 카드 사용 시 해당 위치가 nullptr로 대체되기 때문에, nullptr도 배열에 넣어주고 위치 벡터도 더해줍니다. 
-			CurrentHands.Add(CardInHand);
-			HandCardLocation += FVector(HandCardXOffset, 0.f, 0.f);
-			
-			if (CardInHand)
+			for (ACardActor* CardInPreview : CharacterCards->DeckPreviewCards)
 			{
-				CardInHand->SetActorLocation(HandCardLocation);
-				CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+				FHandSlot& PreviewHandSlot = CurrentHandSlots.AddDefaulted_GetRef();
+				PreviewHandSlot.SetCard(CardInPreview);
+				HandSlotCardLocation += FVector(HandSlotCardXOffset, 0.f, 0.f);
+
+				if (CardInPreview)
+				{
+					CardInPreview->SetActorLocation(HandSlotCardLocation);
+					CardInPreview->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+				}
+			}
+		}
+		else
+		{
+			for (const FHandSlot& HandSlot : CharacterCards->HandSlots)
+			{
+				// 카드를 사용해도 슬롯은 유지되므로, 비어 있는 슬롯도 CurrentHandSlots에 포함합니다.
+				CurrentHandSlots.Add(HandSlot);
+				HandSlotCardLocation += FVector(HandSlotCardXOffset, 0.f, 0.f);
+
+				if (!HandSlot.IsEmpty())
+				{
+					ACardActor* CardInHand = HandSlot.GetCard();
+					CardInHand->SetActorLocation(HandSlotCardLocation);
+					CardInHand->SetActorRotation(FRotator(0.f, 0.f, 0.f));
+				}
 			}
 		}
 
@@ -201,11 +223,11 @@ void UCardContainerManager::PreviewDeck(ULetheAbilitySystemComponent* DeckOwnerA
 		return;
 	}
 
-	// 카드 Id 순서대로(물리, 마법, 보조 순서) 보여주기 위해 핸드를 한 번 정렬합니다.
+	// 카드 Id 순서대로(물리, 마법, 보조 순서) 보여주기 위해 덱 미리보기 카드를 한 번 정렬합니다.
 	if (FCharacterCards* CharacterCards = ASCToCards.Find(DeckOwnerASC))
 	{
-		CharacterCards->DeckPreviewHands = CharacterCards->Deck;
-		CharacterCards->SortDeckPreviewHands();
+		CharacterCards->DeckPreviewCards = CharacterCards->Deck;
+		CharacterCards->SortDeckPreviewCards();
 	}
 	
 	MoveAllCards();
@@ -215,7 +237,7 @@ void UCardContainerManager::StopPreviewDeck(const bool bShouldMoveCards)
 {
 	for (auto& Cards : ASCToCards)
 	{
-		Cards.Value.DeckPreviewHands.Reset();
+		Cards.Value.DeckPreviewCards.Reset();
 	}
 
 	if (bShouldMoveCards)
@@ -253,25 +275,32 @@ bool UCardContainerManager::AreAllDecksEmpty() const
 	return true;
 }
 
-const TArray<TObjectPtr<ACardActor>>& UCardContainerManager::GetCurrentHands() const
+const TArray<FHandSlot>& UCardContainerManager::GetCurrentHandSlots() const
 {
-	return CurrentHands;
+	return CurrentHandSlots;
 }
 
-int32 UCardContainerManager::GetCurrentHandCount() const
+int32 UCardContainerManager::GetCurrentHandSlotCount() const
 {
-	return CurrentHands.Num();
+	return CurrentHandSlots.Num();
 }
 
-int32 UCardContainerManager::FindCurrentHandIndex(ACardActor* CardActor) const
+int32 UCardContainerManager::FindCurrentHandSlotIndex(const ACardActor* CardActor) const
 {
-	return CurrentHands.Find(CardActor);
+	for (int32 Index = 0; Index < CurrentHandSlots.Num(); ++Index)
+	{
+		if (CurrentHandSlots[Index].GetCard() == CardActor)
+		{
+			return Index;
+		}
+	}
+	return INDEX_NONE;
 }
 
-void UCardContainerManager::GetCurrentHandCounts(TArray<int32>& OutHandCounts)
+void UCardContainerManager::GetCurrentHandSlotCounts(TArray<int32>& OutHandSlotCounts)
 {
-	OutHandCounts.Reset();
-	OutHandCounts.Reserve(AbilitySystemComponents.Num());
+	OutHandSlotCounts.Reset();
+	OutHandSlotCounts.Reserve(AbilitySystemComponents.Num());
 
 	for (const auto& AbilitySystemComponent : AbilitySystemComponents)
 	{
@@ -281,8 +310,8 @@ void UCardContainerManager::GetCurrentHandCounts(TArray<int32>& OutHandCounts)
 			continue;
 		}
 
-		const int32 HandCount = CharacterCards->Hands.Num();
-		const int32 PreviewHandCount = CharacterCards->DeckPreviewHands.Num();
-		OutHandCounts.Add(HandCount + PreviewHandCount);
+		const int32 HandSlotCount = CharacterCards->HandSlots.Num();
+		const int32 PreviewCardCount = CharacterCards->DeckPreviewCards.Num();
+		OutHandSlotCounts.Add(HandSlotCount + PreviewCardCount);
 	}
 }

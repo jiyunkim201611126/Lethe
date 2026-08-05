@@ -113,11 +113,11 @@ void UCardPanelWidgetController::StartResolvePlayerMoves() const
 	}
 }
 
-void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
+void UCardPanelWidgetController::OnSelectCardRequested(const int32 HandSlotIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->OnSelectCardRequested(HandIndex, CardOwnerASC, AbilitySpecHandle);
+		LethePlayerController->OnSelectCardRequested(HandSlotIndex, CardOwnerASC, AbilitySpecHandle);
 	}
 }
 
@@ -138,17 +138,17 @@ bool UCardPanelWidgetController::IsCardSelected() const
 	return false;
 }
 
-void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex) const
+void UCardPanelWidgetController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandSlotIndex) const
 {
 	if (LethePlayerController)
 	{
-		LethePlayerController->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandIndex);
+		LethePlayerController->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandSlotIndex);
 	}
 }
 
-void UCardPanelWidgetController::OnSelectCard(const int32 HandIndex) const
+void UCardPanelWidgetController::OnSelectCard(const int32 HandSlotIndex) const
 {
-	OnCardSelectedDelegate.ExecuteIfBound(HandIndex);
+	OnCardSelectedDelegate.ExecuteIfBound(HandSlotIndex);
 }
 
 void UCardPanelWidgetController::OnCancelCardSelect() const
@@ -156,7 +156,7 @@ void UCardPanelWidgetController::OnCancelCardSelect() const
 	OnCardSelectCanceledDelegate.ExecuteIfBound();
 }
 
-void UCardPanelWidgetController::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
+void UCardPanelWidgetController::OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess) const
 {
-	OnUseCardResolvedDelegate.ExecuteIfBound(HandIndex, bSuccess);
+	OnUseCardResolvedDelegate.ExecuteIfBound(HandSlotIndex, bSuccess);
 }

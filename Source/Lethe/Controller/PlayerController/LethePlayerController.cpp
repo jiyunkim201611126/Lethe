@@ -226,7 +226,7 @@ void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 	}
 }
 
-void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle)
+void ALethePlayerController::OnSelectCardRequested(const int32 HandSlotIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle)
 {
 	if (!ArrowRenderer)
 	{
@@ -276,7 +276,7 @@ void ALethePlayerController::OnSelectCardRequested(const int32 HandIndex, ULethe
 			}
 		}
 
-		OnSelectCardDelegate.ExecuteIfBound(HandIndex);
+		OnSelectCardDelegate.ExecuteIfBound(HandSlotIndex);
 	}
 }
 
@@ -455,19 +455,19 @@ void ALethePlayerController::OnUpdatePreviewData(const FPreviewData& PreviewData
 	OnPreviewDataUpdatedDelegate.Broadcast(PreviewData);
 }
 
-void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandIndex)
+void ALethePlayerController::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 InHandSlotIndex)
 {
-	if (!PlayerAbilityRequestComponent->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandIndex))
+	if (!PlayerAbilityRequestComponent->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, InHandSlotIndex))
 	{
-		OnResolveUseCardDelegate.ExecuteIfBound(InHandIndex, false);
+		OnResolveUseCardDelegate.ExecuteIfBound(InHandSlotIndex, false);
 	}
 	// 사용 요청 결과에 관계 없이 선택했던 카드는 초기화합니다.
 	ResetSelectedCard();
 }
 
-void ALethePlayerController::OnCardUseResolved(const int32 HandIndex, const bool bSuccess) const
+void ALethePlayerController::OnCardUseResolved(const int32 HandSlotIndex, const bool bSuccess) const
 {
-	OnResolveUseCardDelegate.ExecuteIfBound(HandIndex, bSuccess);
+	OnResolveUseCardDelegate.ExecuteIfBound(HandSlotIndex, bSuccess);
 }
 
 bool ALethePlayerController::IsCardSelected() const

@@ -10,8 +10,44 @@ class ADeckBoxes;
 class ACardActor;
 class ULetheAbilitySystemComponent;
 
+/**
+ * 드로우하며 정렬된 덱과 카드들은 카드 사용 시점이 아닌 턴 종료 시에 위치가 재정렬됩니다.
+ * 따라서 사용한 후 카드가 무덤으로 이동했어도, Hand 배열의 해당 카드 위치였던 곳은 nullptr로 두어 위치를 잡는 로직의 일부로 사용해야 합니다.
+ * 하지만 Hand 배열 안에 nullptr가 들어있는 게 오류라고 오해할 여지가 있으므로, HandSlot 구조체를 통해 읽는이로 하여금 nullptr도 로직의 일부임을 분명하게 보여줍니다.
+ */
+USTRUCT()
+struct FHandSlot
+{
+	GENERATED_BODY()
+
+	bool IsEmpty() const
+	{
+		return !Card;
+	}
+
+	ACardActor* GetCard() const
+	{
+		return Card;
+	}
+
+	void SetCard(ACardActor* InCard)
+	{
+		Card = InCard;
+	}
+
+	void Clear()
+	{
+		Card = nullptr;
+	}
+
+private:
+	/** 카드가 사용되어도 슬롯 자체는 유지되며, 이 값만 nullptr이 될 수 있습니다. */
+	UPROPERTY()
+	TObjectPtr<ACardActor> Card = nullptr;
+};
+
 /** TMap 컨테이너 내부에 TArray를 사용할 수 없는 문제를 우회하기 위한 구조체입니다. */
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FCharacterCards
 {
 	GENERATED_BODY()
@@ -19,26 +55,26 @@ struct FCharacterCards
 	FCharacterCards()
 	{
 		Deck.Reserve(10);
-		Hands.Reserve(8);
-		DeckPreviewHands.Reserve(10);
+		HandSlots.Reserve(8);
+		DeckPreviewCards.Reserve(10);
 		Graveyard.Reserve(10);
 	}
 
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Deck;
 
-	/** 드로우한 카드 배열로, 카드 사용 시 해당 카드가 무덤으로 이동하며 그 위치에는 nullptr가 들어갑니다. */
+	/** 드로우한 카드가 배치된 슬롯 배열입니다. 카드 사용 시 슬롯은 유지되고 Card만 nullptr이 됩니다. */
 	UPROPERTY()
-	TArray<TObjectPtr<ACardActor>> Hands;
+	TArray<FHandSlot> HandSlots;
 
-	/** 비전투 중 덱 열람 시 사용됩니다. */
+	/** 비전투 중 덱 열람 시 표시할 카드 목록입니다. */
 	UPROPERTY()
-	TArray<TObjectPtr<ACardActor>> DeckPreviewHands;
+	TArray<TObjectPtr<ACardActor>> DeckPreviewCards;
 
 	UPROPERTY()
 	TArray<TObjectPtr<ACardActor>> Graveyard;
 
-	void SortDeckPreviewHands();
+	void SortDeckPreviewCards();
 };
 
 /**
@@ -56,10 +92,10 @@ public:
 	void AddCardToDeck(ACardActor* CardActor);
 	void ShuffleDeck();
 	ACardActor* GetTopCardFromDeck(ULetheAbilitySystemComponent* OwnerASC) const;
-	bool AddCardToHand(ULetheAbilitySystemComponent* OwnerASC);
+	bool AddCardToHandSlot(ULetheAbilitySystemComponent* OwnerASC);
 
 	void AddCardToGraveyard(ACardActor* CardActor);
-	void AddAllHandsToGraveyard();
+	void AddAllHandSlotsToGraveyard();
 
 	void RefillDeck();
 
@@ -71,12 +107,12 @@ public:
 	bool AreAllDecksFull() const;
 	bool AreAllDecksEmpty() const;
 
-	const TArray<TObjectPtr<ACardActor>>& GetCurrentHands() const;
-	int32 GetCurrentHandCount() const;
-	int32 FindCurrentHandIndex(ACardActor* CardActor) const;
+	const TArray<FHandSlot>& GetCurrentHandSlots() const;
+	int32 GetCurrentHandSlotCount() const;
+	int32 FindCurrentHandSlotIndex(const ACardActor* CardActor) const;
 
 private:
-	void GetCurrentHandCounts(TArray<int32>& OutHandCounts);
+	void GetCurrentHandSlotCounts(TArray<int32>& OutHandSlotCounts);
 
 private:
 	/** CardStage와 마찬가지로, 캐릭터 순서대로 접근하기 위해 AbilitySystemComponent 배열을 캐싱해둡니다. */
@@ -86,13 +122,13 @@ private:
 	TWeakObjectPtr<ADeckBoxes> DeckBoxes;
 
 	UPROPERTY()
-	TArray<TObjectPtr<ACardActor>> CurrentHands;
+	TArray<FHandSlot> CurrentHandSlots;
 
 	FVector DeckFirstCardLocation = FVector(-4.9f, 0.3f, 3.82f);
 	float DeckCardXOffset = 0.7f;
 
-	FVector HandFirstCardLocation = FVector(1.f, -2.80185f, 3.8543f);
-	float HandCardXOffset = 8.f;
+	FVector HandSlotFirstCardLocation = FVector(1.f, -2.80185f, 3.8543f);
+	float HandSlotCardXOffset = 8.f;
 
 	FVector GraveyardFirstCardLocation = FVector(0.f, -2.8f, 5.58038f);
 	FVector GraveyardCardOffset = FVector(0.f, -0.3f, 0.51962f);

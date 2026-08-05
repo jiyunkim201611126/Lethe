@@ -31,7 +31,7 @@ class LETHE_API ADeckBoxes : public AActor
 public:
 	ADeckBoxes();
 
-	void UpdateLocations(const TArray<int32>& HandCounts);
+	void UpdateLocations(const TArray<int32>& HandSlotCounts);
 	void GetDeckLocations(TArray<FVector>& OutDeckLocations) const;
 	FVector GetDeckLocation(const int32 DeckIndex) const;
 	int32 GetDeckIndex(const UBoxComponent* InDeckBoxCollision) const;
@@ -98,6 +98,6 @@ private:
 
 	float DefaultDeckBoxXLocation = 6.f;
 	float DeckBoxOffsetByDeckBox = 10.f;
-	float DeckBoxOffsetByHandCount = 8.f;
+	float DeckBoxOffsetByHandSlotCount = 8.f;
 	float DefaultRightCapXLocation = 42.f;
 };

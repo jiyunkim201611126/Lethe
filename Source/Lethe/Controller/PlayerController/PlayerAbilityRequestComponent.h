@@ -104,7 +104,7 @@ public:
 #pragma endregion Move API
 
 #pragma region Card
-	bool RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const;
+	bool RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandSlotIndex) const;
 #pragma endregion Card
 
 private:

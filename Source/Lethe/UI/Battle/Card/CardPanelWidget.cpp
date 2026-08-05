@@ -298,19 +298,19 @@ void UCardPanelWidget::HandleKeyboardEvent(const int32 Number) const
 	}
 }
 
-void UCardPanelWidget::OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
+void UCardPanelWidget::OnSelectCardRequested(const int32 HandSlotIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const
 {
 	if (CardPanelWidgetController)
 	{
-		CardPanelWidgetController->OnSelectCardRequested(HandIndex, CardOwnerASC, AbilitySpecHandle);
+		CardPanelWidgetController->OnSelectCardRequested(HandSlotIndex, CardOwnerASC, AbilitySpecHandle);
 	}
 }
 
-void UCardPanelWidget::OnCardSelected(const int32 HandIndex) const
+void UCardPanelWidget::OnCardSelected(const int32 HandSlotIndex) const
 {
 	if (CardStage)
 	{
-		CardStage->OnCardSelected(HandIndex);
+		CardStage->OnCardSelected(HandSlotIndex);
 	}
 }
 
@@ -322,11 +322,11 @@ void UCardPanelWidget::OnCancelSelectedCard() const
 	}
 }
 
-void UCardPanelWidget::OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const
+void UCardPanelWidget::OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess) const
 {
 	if (CardStage)
 	{
-		CardStage->OnResolveUseCard(HandIndex, bSuccess);
+		CardStage->OnResolveUseCard(HandSlotIndex, bSuccess);
 	}
 }
 
@@ -356,11 +356,11 @@ bool UCardPanelWidget::RequestTurnEnd() const
 	return CardPanelWidgetController && CardPanelWidgetController->RequestTurnEnd();
 }
 
-void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 HandIndex) const
+void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 HandSlotIndex) const
 {
 	if (CardPanelWidgetController)
 	{
-		CardPanelWidgetController->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, HandIndex);
+		CardPanelWidgetController->RequestUseCard(CardOwnerASC, AbilitySpecHandle, CardTag, HandSlotIndex);
 	}
 }
 

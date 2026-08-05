@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LetheGameState.h"
 
@@ -192,9 +192,9 @@ void ALetheGameState::EnqueuePlayerAbilityActivationContext(FAbilityActivationCo
 	AbilityResolverComponent->EnqueuePlayerAbilityActivationContext(MoveTemp(ActivationContext), bStartImmediately);
 }
 
-void ALetheGameState::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
+void ALetheGameState::OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess)
 {
-	OnCardUseResolved.ExecuteIfBound(HandIndex, bSuccess);
+	OnCardUseResolved.ExecuteIfBound(HandSlotIndex, bSuccess);
 
 	// PlayerMovePhase에 카드를 사용했고, 전투 중인 적이 하나라도 있다면 DrawPhase로 직행합니다.
 	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)

@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -16,7 +16,7 @@ class UAbilityResolverComponent;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldPhaseState */, const EPhaseState /* NewPhaseState */);
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
-DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityAttempt, AActor* /* Instigator */);
 
 UCLASS()
@@ -91,7 +91,7 @@ private:
 
 	bool HasAnyCombatEnemy() const;
 
-	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
+	void OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess);
 
 public:
 	FOnChangePhaseState OnChangePhaseState;

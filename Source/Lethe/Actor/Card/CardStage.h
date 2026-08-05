@@ -20,10 +20,10 @@ struct FGameplayAbilitySpecHandle;
 struct FKey;
 
 DECLARE_DELEGATE_OneParam(FOnViewCardDetailRequested, const ACardActor*);
-DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandIndex */, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&);
+DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandSlotIndex */, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&);
 DECLARE_DELEGATE(FOnGoPlayerTurnPhaseRequested);
 DECLARE_DELEGATE(FOnStartResolvePlayerMovesRequested);
-DECLARE_DELEGATE_FourParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&, const FGameplayTag&, int32);
+DECLARE_DELEGATE_FourParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&, const FGameplayTag&, int32 /* HandSlotIndex */);
 DECLARE_DELEGATE_RetVal(bool, FOnTurnEndRequested);
 
 UCLASS(Abstract)
@@ -33,11 +33,6 @@ class LETHE_API ACardStage : public AActor
 
 public:
 	ACardStage();
-
-	//~ Begin AActor Interface
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	//~ End of AActor Interface
 
 	void Initialize(const TArray<TObjectPtr<ULetheAbilitySystemComponent>>& InAbilitySystemComponents);
 
@@ -49,12 +44,18 @@ public:
 	bool HandleLeftMouseButtonClickedInWorldSection();
 	void HandleKeyboardEvent(int32 Number) const;
 
-	void OnCardSelected(const int32 HandIndex);
+	void OnCardSelected(const int32 HandSlotIndex);
 	void OnCancelSelectedCard();
-	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess);
+	void OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess);
 	bool TryViewDetail(const FVector2D& TargetUV) const;
 	void OnTurnEndButtonClicked() const;
 	void ResetSelectedDeckBox();
+
+protected:
+	//~ Begin AActor Interface
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//~ End of AActor Interface
 
 private:
 	/** 캡쳐된 이미지와 마우스를 기준으로 라인트레이스를 수행, CardActor를 검출합니다. */

@@ -666,7 +666,7 @@ void UPlayerAbilityRequestComponent::RequestMove(const AActor* SelectedCharacter
 	}
 }
 
-bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const
+bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandSlotIndex) const
 {
 	if (!ActorSelector.IsValid() || !CardOwnerASC || !AbilitySpecHandle.IsValid())
 	{
@@ -700,7 +700,7 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	TargetingIntent.ImpactPoint = OutTileHitResult.ImpactPoint;
 
 	FAbilityActivationContext AbilityActivationContext;
-	AbilityActivationContext.Index = InHandIndex;
+	AbilityActivationContext.Index = InHandSlotIndex;
 	AbilityActivationContext.AbilitySpecHandle = AbilitySpecHandle;
 	AbilityActivationContext.AbilityTag = CardTag;
 	AbilityActivationContext.AbilityOwnerASC = CardOwnerASC;

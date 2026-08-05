@@ -14,7 +14,7 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-	PlayerAbilityActivationContexts.Reserve(MAX_HAND_COUNT);
+	PlayerAbilityActivationContexts.Reserve(MAX_HAND_SLOT_COUNT);
 }
 
 void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)

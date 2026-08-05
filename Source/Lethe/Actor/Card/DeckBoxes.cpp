@@ -72,20 +72,20 @@ void ADeckBoxes::BeginPlay()
 	}
 }
 
-void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
+void ADeckBoxes::UpdateLocations(const TArray<int32>& HandSlotCounts)
 {
 	TArray<FVector> DeckBoxLocations;
-	DeckBoxLocations.Init(FVector(DefaultDeckBoxXLocation, 0.f, 0.f), HandCounts.Num());
+	DeckBoxLocations.Init(FVector(DefaultDeckBoxXLocation, 0.f, 0.f), HandSlotCounts.Num());
 
-	int32 AllHandCount = 0;
+	int32 AllHandSlotCount = 0;
 	
-	// 덱 박스는 (자신의 좌측 덱에서 뽑힌 핸드 수 * 8.f)만큼 우측으로 이동합니다.
-	for (int32 HandCountIndex = 0; HandCountIndex < HandCounts.Num(); ++HandCountIndex)
+	// 덱 박스는 (자신의 좌측 덱에서 뽑힌 핸드 슬롯 수 * 8.f)만큼 우측으로 이동합니다.
+	for (int32 HandSlotCountIndex = 0; HandSlotCountIndex < HandSlotCounts.Num(); ++HandSlotCountIndex)
 	{
-		AllHandCount += HandCounts[HandCountIndex];
-		for (int32 DeckBoxIndex = HandCountIndex + 1; DeckBoxIndex < DeckBoxLocations.Num(); ++DeckBoxIndex)
+		AllHandSlotCount += HandSlotCounts[HandSlotCountIndex];
+		for (int32 DeckBoxIndex = HandSlotCountIndex + 1; DeckBoxIndex < DeckBoxLocations.Num(); ++DeckBoxIndex)
 		{
-			DeckBoxLocations[DeckBoxIndex].X += HandCounts[HandCountIndex] * DeckBoxOffsetByHandCount;
+			DeckBoxLocations[DeckBoxIndex].X += HandSlotCounts[HandSlotCountIndex] * DeckBoxOffsetByHandSlotCount;
 		}
 	}
 
@@ -99,10 +99,10 @@ void ADeckBoxes::UpdateLocations(const TArray<int32>& HandCounts)
 		}
 	}
 
-	const FVector RightCapLocation = FVector(DefaultRightCapXLocation + AllHandCount * DeckBoxOffsetByHandCount, 0.f, 0.f);
+	const FVector RightCapLocation = FVector(DefaultRightCapXLocation + AllHandSlotCount * DeckBoxOffsetByHandSlotCount, 0.f, 0.f);
 	RightCap->SetRelativeLocation(RightCapLocation);
 
-	const FVector MiddleCapLocation = FVector(AllHandCount * (DeckBoxOffsetByHandCount / 2.f), 0.f, 0.f);
+	const FVector MiddleCapLocation = FVector(AllHandSlotCount * (DeckBoxOffsetByHandSlotCount / 2.f), 0.f, 0.f);
 	Middle->SetRelativeLocation(MiddleCapLocation);
 }
 

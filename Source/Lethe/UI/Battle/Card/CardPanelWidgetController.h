@@ -45,9 +45,9 @@ struct FCardInitParams
 
 DECLARE_DELEGATE_OneParam(FOnAbilityUpdated, const FCardInitParams&)
 DECLARE_DELEGATE(FOnAbilitySystemReferencesUpdated);
-DECLARE_DELEGATE_OneParam(FOnCardSelected, const int32 /* HandIndex */);
+DECLARE_DELEGATE_OneParam(FOnCardSelected, const int32 /* HandSlotIndex */);
 DECLARE_DELEGATE(FOnCardSelectCanceled);
-DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32, const bool);
+DECLARE_DELEGATE_TwoParams(FOnUseCardResolved, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
 
 UCLASS(Abstract, Blueprintable)
 class LETHE_API UCardPanelWidgetController : public ULetheWidgetController
@@ -73,17 +73,17 @@ public:
 	
 	void StartResolvePlayerMoves() const;
 	
-	void OnSelectCardRequested(const int32 HandIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
+	void OnSelectCardRequested(const int32 HandSlotIndex, ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle) const;
 	void ResetSelectedCard() const;
-	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandIndex) const;
+	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 InHandSlotIndex) const;
 	
 	bool IsCardSelected() const;
 
 private:
 	void OnGiveAbility(const FGrantedCardAbilityInfo& GrantedCardAbilityInfo) const;
-	void OnSelectCard(const int32 HandIndex) const;
+	void OnSelectCard(const int32 HandSlotIndex) const;
 	void OnCancelCardSelect() const;
-	void OnResolveUseCard(const int32 HandIndex, const bool bSuccess) const;
+	void OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess) const;
 
 public:
 	FOnAbilityUpdated OnAbilityUpdatedDelegate;

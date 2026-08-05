@@ -44,7 +44,7 @@ struct FAbilityActivationContext
 {
 	GENERATED_BODY()
 
-	/** Player는 HandIndex로 사용하고, Enemy는 Priority로 사용하는 변수입니다. */
+	/** Player는 HandSlotIndex로 사용하고, Enemy는 Priority로 사용하는 변수입니다. */
 	int32 Index = INDEX_NONE;
 
 	FGameplayAbilitySpecHandle AbilitySpecHandle;

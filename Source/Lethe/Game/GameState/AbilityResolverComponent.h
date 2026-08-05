@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -32,7 +32,7 @@ enum class ETryAbilityActivationResult : uint8
 	FailedNoMoveDestination,
 };
 
-DECLARE_DELEGATE_TwoParams(FOnResolveUseCard, const int32 /* HandIndex */, const bool /* bSuccess */);
+DECLARE_DELEGATE_TwoParams(FOnResolveUseCard, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
 DECLARE_DELEGATE_OneParam(FOnAttemptEnemyAbility, AActor* /* Instigator */);
 DECLARE_DELEGATE(FOnFinishActivationQueue);
 

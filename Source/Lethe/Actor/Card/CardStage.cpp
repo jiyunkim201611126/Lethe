@@ -47,7 +47,7 @@ void ACardStage::BeginPlay()
 	DeckBoxes = GetWorld()->SpawnActor<ADeckBoxes>(DeckBoxesClass);
 	DeckBoxes->SetActorTransform(GetActorTransform());
 	
-	UseRequestedCards.Reserve(MAX_HAND_COUNT);
+	UseRequestedCards.Reserve(MAX_HAND_SLOT_COUNT);
 
 	CaptureComponent->ShowOnlyActors.Add(DeckBoxes);
 }
@@ -194,15 +194,15 @@ bool ACardStage::HandleLeftMouseButtonClickedInWorldSection()
 		return false;
 	}
 
-	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CurrentSelectedCard);
-	if (HandIndex == INDEX_NONE)
+	const int32 HandSlotIndex = CardContainerManager->FindCurrentHandSlotIndex(CurrentSelectedCard);
+	if (HandSlotIndex == INDEX_NONE)
 	{
 		return false;
 	}
 
 	// 사용 요청된 카드임을 기록하고 콜백 함수를 호출합니다.
-	UseRequestedCards.Add(HandIndex, CurrentSelectedCard);
-	OnUseCardRequested.Execute(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetAbilitySpecHandle(), CurrentSelectedCard->GetSavedCard().CardTag, HandIndex);
+	UseRequestedCards.Add(HandSlotIndex, CurrentSelectedCard);
+	OnUseCardRequested.Execute(CurrentSelectedCard->GetOwnerASC(), CurrentSelectedCard->GetAbilitySpecHandle(), CurrentSelectedCard->GetSavedCard().CardTag, HandSlotIndex);
 	return true;
 }
 
@@ -248,7 +248,7 @@ void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPha
 			CardContainerManager->StopPreviewDeck();
 			CurrentSelectedDeckBox.Reset();
 			
-			CardContainerManager->AddAllHandsToGraveyard();
+			CardContainerManager->AddAllHandSlotsToGraveyard();
 			CardContainerManager->RefillDeck();
 			CardContainerManager->ShuffleDeck();
 			UpdateAllCardLocations();
@@ -258,12 +258,12 @@ void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPha
 	}
 }
 
-void ACardStage::OnCardSelected(const int32 HandIndex)
+void ACardStage::OnCardSelected(const int32 HandSlotIndex)
 {
-	const auto& Hands = CardContainerManager->GetCurrentHands();
-	if (Hands.IsValidIndex(HandIndex))
+	const TArray<FHandSlot>& HandSlots = CardContainerManager->GetCurrentHandSlots();
+	if (HandSlots.IsValidIndex(HandSlotIndex))
 	{
-		CurrentSelectedCard = Hands[HandIndex];
+		CurrentSelectedCard = HandSlots[HandSlotIndex].GetCard();
 		if (CurrentSelectedCard)
 		{
 			CurrentSelectedCard->SetCardContainer(ECardContainer::Selected);
@@ -280,9 +280,9 @@ void ACardStage::OnCancelSelectedCard()
 	}
 }
 
-void ACardStage::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
+void ACardStage::OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess)
 {
-	ACardActor* CardActor = UseRequestedCards.FindRef(HandIndex);
+	ACardActor* CardActor = UseRequestedCards.FindRef(HandSlotIndex);
 	if (!CardActor)
 	{
 		return;
@@ -308,7 +308,7 @@ void ACardStage::OnResolveUseCard(const int32 HandIndex, const bool bSuccess)
 		}
 	}
 
-	UseRequestedCards.Remove(HandIndex);
+	UseRequestedCards.Remove(HandSlotIndex);
 }
 
 bool ACardStage::TryViewDetail(const FVector2D& TargetUV) const
@@ -333,7 +333,7 @@ void ACardStage::OnTurnEndButtonClicked() const
 		{
 			if (CardContainerManager)
 			{
-				CardContainerManager->AddAllHandsToGraveyard();
+				CardContainerManager->AddAllHandSlotsToGraveyard();
 			}
 			UpdateAllCardLocations();
 
@@ -451,10 +451,10 @@ void ACardStage::OnKeyboardEventWhenPlayerPhase(const int32 Number) const
 		return;
 	}
 
-	const TArray<TObjectPtr<ACardActor>>& CurrentHands = CardContainerManager->GetCurrentHands();
-	if (CurrentHands.IsValidIndex(Number))
+	const TArray<FHandSlot>& CurrentHandSlots = CardContainerManager->GetCurrentHandSlots();
+	if (CurrentHandSlots.IsValidIndex(Number))
 	{
-		if (ACardActor* SelectingCard = CurrentHands[Number])
+		if (ACardActor* SelectingCard = CurrentHandSlots[Number].GetCard())
 		{
 			RequestSelectCard(SelectingCard);
 		}
@@ -476,7 +476,7 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const
 		return;
 	}
 
-	if (CardContainerManager->AddCardToHand(DeckOwnerASC))
+	if (CardContainerManager->AddCardToHandSlot(DeckOwnerASC))
 	{
 		UpdateAllCardLocations();
 
@@ -488,8 +488,8 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const
 			}
 		}
 
-		// 8장을 모두 드로우했다면 PlayerTurnPhase로 넘어갑니다.
-		if (CardContainerManager->GetCurrentHandCount() >= MAX_HAND_COUNT)
+		// 8개의 핸드 슬롯을 모두 채웠다면 PlayerTurnPhase로 넘어갑니다.
+		if (CardContainerManager->GetCurrentHandSlotCount() >= MAX_HAND_SLOT_COUNT)
 		{
 			OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
 		}
@@ -503,8 +503,8 @@ void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 		return;
 	}
 
-	const int32 HandIndex = CardContainerManager->FindCurrentHandIndex(CardActor);
-	if (UseRequestedCards.Contains(HandIndex))
+	const int32 HandSlotIndex = CardContainerManager->FindCurrentHandSlotIndex(CardActor);
+	if (UseRequestedCards.Contains(HandSlotIndex))
 	{
 		return;
 	}
@@ -514,7 +514,7 @@ void ACardStage::RequestSelectCard(ACardActor* CardActor) const
 		return;
 	}
 
-	OnSelectCardRequested.ExecuteIfBound(HandIndex, CardActor->GetOwnerASC(), CardActor->GetAbilitySpecHandle());
+	OnSelectCardRequested.ExecuteIfBound(HandSlotIndex, CardActor->GetOwnerASC(), CardActor->GetAbilitySpecHandle());
 }
 
 void ACardStage::OnDrawPhaseStarted() const

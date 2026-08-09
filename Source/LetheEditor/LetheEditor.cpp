@@ -2,6 +2,7 @@
 
 #include "Customization/BGMTransitionPointCustomization.h"
 #include "Customization/CubeCoordCustomization.h"
+#include "Customization/RoomRoleAssignmentRuleDataCustomization.h"
 #include "PropertyEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FLetheEditorModule"
@@ -15,6 +16,9 @@ void FLetheEditorModule::StartupModule()
 	PropertyEditorModule.RegisterCustomPropertyTypeLayout(
 		"CubeCoord",
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FCubeCoordCustomization::MakeInstance));
+	PropertyEditorModule.RegisterCustomClassLayout(
+		"RoomRoleAssignmentRuleData",
+		FOnGetDetailCustomizationInstance::CreateStatic(&FRoomRoleAssignmentRuleDataCustomization::MakeInstance));
 	PropertyEditorModule.NotifyCustomizationModuleChanged();
 }
 
@@ -25,6 +29,7 @@ void FLetheEditorModule::ShutdownModule()
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("BGMTransitionPoint");
 		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("CubeCoord");
+		PropertyEditorModule.UnregisterCustomClassLayout("RoomRoleAssignmentRuleData");
 		PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 }

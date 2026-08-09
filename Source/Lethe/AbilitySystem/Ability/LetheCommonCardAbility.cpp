@@ -1,6 +1,6 @@
 ﻿// Copyright JETBLU, Inc. All Rights Reserved.
 
-#include "LetheCommonAbility.h"
+#include "LetheCommonCardAbility.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -17,12 +17,12 @@ FEffectTargetMappingPolicy::FEffectTargetMappingPolicy()
 	TargetGroupTags.AddTag(FGameplayTag::RequestGameplayTag(FName("TargetGroup.Primary"), false));
 }
 
-ULetheCommonAbility::ULetheCommonAbility()
+ULetheCommonCardAbility::ULetheCommonCardAbility()
 {
 	EffectDelivery.InitializeAs<FEffectDelivery_Immediately>();
 }
 
-bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
+bool ULetheCommonCardAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const
 {
 	OutPreviewData.SourcePreviewData.Reset();
 	OutPreviewData.TargetPreviewData.Reset();
@@ -65,7 +65,7 @@ bool ULetheCommonAbility::TryGetEffectsForSourceAndTargetPreviewData(UAbilitySys
 	return !OutPreviewData.IsEmpty();
 }
 
-void ULetheCommonAbility::GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
+void ULetheCommonCardAbility::GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const
 {
 	OutDescription = FText();
 	
@@ -116,7 +116,7 @@ void ULetheCommonAbility::GetCardDescription(const UAbilitySystemComponent* Owne
 	OutDescription = FText::Join(INVTEXT("\n"), OutTexts);
 }
 
-void ULetheCommonAbility::RegisterAbilityEventTasks()
+void ULetheCommonCardAbility::RegisterAbilityEventTasks()
 {
 	// 갖고 있는 모든 EffectTargetMappingPolicy의 MontageEventTag로 WaitGameplayEvent Task를 생성합니다.
 	TSet<FGameplayTag> RegisteredEventTags;
@@ -141,7 +141,7 @@ void ULetheCommonAbility::RegisterAbilityEventTasks()
 	}
 }
 
-void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload)
+void ULetheCommonCardAbility::HandleAbilityEvent(const FGameplayEventData& InPayload)
 {
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 	if (!SourceASC)
@@ -183,7 +183,7 @@ void ULetheCommonAbility::HandleAbilityEvent(const FGameplayEventData& InPayload
 	}
 }
 
-void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FEffectTargetMappingResolveResult& OutResult) const
+void ULetheCommonCardAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FEffectTargetMappingResolveResult& OutResult) const
 {
 	OutResult.SourceSpecHandles.Reset();
 	OutResult.TargetSpecHandlesByActor.Reset();
@@ -254,7 +254,7 @@ void ULetheCommonAbility::ResolveEffectTargetMappingPolicy(const FEffectTargetMa
 	}
 }
 
-void ULetheCommonAbility::GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const
+void ULetheCommonCardAbility::GetEffectSpecBuildersByPolicy(const FEffectTargetMappingPolicy& EffectTargetMappingPolicy, TArray<const FGameplayEffectSpecBuilder*>& OutEffectSpecBuilders) const
 {
 	for (const auto& EffectSpecBuilder : EffectSpecBuilders)
 	{
@@ -271,7 +271,7 @@ void ULetheCommonAbility::GetEffectSpecBuildersByPolicy(const FEffectTargetMappi
 	}
 }
 
-void ULetheCommonAbility::StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const
+void ULetheCommonCardAbility::StartDeliveryEffects(AActor* TargetActor, const TArray<FGameplayEffectSpecHandle>& SpecHandles) const
 {
 	if (SpecHandles.IsEmpty())
 	{

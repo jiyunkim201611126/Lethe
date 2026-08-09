@@ -6,7 +6,7 @@
 #include "LetheCardAbility.h"
 #include "Lethe/AbilitySystem/EffectDelivery/GameplayEffectDelivery.h"
 #include "StructUtils/InstancedStruct.h"
-#include "LetheCommonAbility.generated.h"
+#include "LetheCommonCardAbility.generated.h"
 
 USTRUCT(BlueprintType)
 struct FEffectTargetMappingPolicy
@@ -48,12 +48,12 @@ struct FEffectTargetMappingResolveResult
  * 정책에 따라 TargetActors를 선정, 정책에 따라 EffectSpec 생성, 지정된 방식으로 TargetActors에게 EffectSpec을 적용하는 로직을 갖습니다.
  */
 UCLASS()
-class LETHE_API ULetheCommonAbility : public ULetheCardAbility
+class LETHE_API ULetheCommonCardAbility : public ULetheCardAbility
 {
 	GENERATED_BODY()
 
 public:
-	ULetheCommonAbility();
+	ULetheCommonCardAbility();
 
 	virtual bool TryGetEffectsForSourceAndTargetPreviewData(UAbilitySystemComponent* SourceASC, const TArray<FTargetSelectionResult>& TargetSelectionResults, FGameplayEffectPreviewData& OutPreviewData) const override;
 	virtual void GetCardDescription(const UAbilitySystemComponent* OwnerASC, const int32 InLevel, FText& OutDescription) const override;

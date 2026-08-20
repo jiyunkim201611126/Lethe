@@ -185,9 +185,9 @@ void ABattleGameMode::OnCharacterDefinitionDataLoaded(const TArray<UPrimaryDataA
 		}
 	}
 	
-	if (ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
+	if (const ALetheGameState* LetheGameState = GetGameState<ALetheGameState>())
 	{
-		LetheGameState->GoEnemyPlanPhase();
+		LetheGameState->StartTurnFlow();
 	}
 }
 

@@ -43,8 +43,9 @@ class LETHE_API UAbilityResolverComponent : public UActorComponent
 
 public:
 	UAbilityResolverComponent();
-
-	void SetDummyActor(AActor* InDummyActor);
+	
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately);
 	void StartActivatePlayerAbility();
@@ -86,6 +87,9 @@ public:
 	FOnResolveUseCard OnResolveUseCard;
 	FOnAttemptEnemyAbility OnAttemptEnemyAbility;
 	FOnFinishActivationQueue OnFinishActivationQueue;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> DummyActorClass;
 
 private:
 	UPROPERTY()

@@ -59,26 +59,20 @@ void UCardPanelWidgetController::BeginDestroy()
 	}
 }
 
-void UCardPanelWidgetController::GoPlayerTurnPhase() const
+void UCardPanelWidgetController::NotifyDrawPhaseCompleted() const
 {
 	if (LetheGameState.IsValid())
 	{
-		LetheGameState->GoPlayerTurnPhase();
+		LetheGameState->NotifyDrawPhaseCompleted();
 	}
 }
 
-bool UCardPanelWidgetController::RequestTurnEnd() const
+void UCardPanelWidgetController::RequestTurnEnd() const
 {
 	if (LetheGameState.IsValid())
 	{
-		// Ability 사용 중이 아닌 상태일 때만 턴을 종료할 수 있습니다.
-		if (!LetheGameState->IsResolvingPlayerAbility())
-		{
-			LetheGameState->GoEnemyTurnPhase();
-			return true;
-		}
+		LetheGameState->RequestEndPlayerTurn();
 	}
-	return false;
 }
 
 void UCardPanelWidgetController::UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const

@@ -17,9 +17,18 @@ UAbilityResolverComponent::UAbilityResolverComponent()
 	PlayerAbilityActivationContexts.Reserve(MAX_HAND_SLOT_COUNT);
 }
 
-void UAbilityResolverComponent::SetDummyActor(AActor* InDummyActor)
+void UAbilityResolverComponent::BeginPlay()
 {
-	DummyActor = InDummyActor;
+	Super::BeginPlay();
+
+	check(DummyActorClass);
+	DummyActor = GetWorld()->SpawnActor<AActor>(DummyActorClass);
+}
+
+void UAbilityResolverComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DummyActor = nullptr;
+	Super::EndPlay(EndPlayReason);
 }
 
 void UAbilityResolverComponent::EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately)

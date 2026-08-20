@@ -8,7 +8,6 @@
 #include "Lethe/LetheLog.h"
 #include "Lethe/AbilitySystem/Ability/LetheCardAbility.h"
 #include "Lethe/AbilitySystem/Ability/LetheGameplayAbility.h"
-#include "Lethe/AbilitySystem/EffectTargetTileSelector/EffectTargetTileSelector.h"
 #include "Lethe/Actor/ArrowRenderer/ArrowRenderer.h"
 #include "Lethe/Actor/Tile/Tile.h"
 #include "Lethe/Character/EnemyCharacterBase.h"
@@ -470,7 +469,7 @@ void ALetheAIController::StartCombat()
 	AEnemyCharacterBase* ControlledEnemy = GetPawn<AEnemyCharacterBase>();
 	const UTileManagerSubsystem* TileManagerSubsystem = GetWorld()->GetSubsystem<UTileManagerSubsystem>();
 	URoomManagerSubsystem* RoomManagerSubsystem = GetWorld()->GetSubsystem<URoomManagerSubsystem>();
-	ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
+	const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>();
 	if (!ControlledEnemy || !TileManagerSubsystem || !RoomManagerSubsystem || !LetheGameState)
 	{
 		return;

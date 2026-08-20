@@ -64,8 +64,8 @@ public:
 	virtual void BeginDestroy() override;
 	//~ End of UObject Interface
 
-	void GoPlayerTurnPhase() const;
-	bool RequestTurnEnd() const;
+	void NotifyDrawPhaseCompleted() const;
+	void RequestTurnEnd() const;
 	
 	void UpdateMouseInWorldSection(const bool bIsMouseInWorldSection) const;
 	void HandleLeftMouseButtonClickedInWorldSection() const;

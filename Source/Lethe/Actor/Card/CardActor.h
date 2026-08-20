@@ -57,7 +57,7 @@ enum class ECardAction : uint8
 };
 
 // ReSharper disable once CppUseOfUndeclaredClass
-DECLARE_DELEGATE_TwoParams(FOnCardActorMouseEventSignature, ACardActor*, const ECardAction);
+DECLARE_DELEGATE_TwoParams(FOnCardActorMouseEventSignature, const ACardActor*, const ECardAction);
 
 UCLASS(Abstract)
 class LETHE_API ACardActor : public AActor

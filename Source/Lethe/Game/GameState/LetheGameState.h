@@ -4,17 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "Lethe/Data/AbilityActivationData.h"
-#include "Lethe/Data/PhaseData.h"
+#include "TurnManagerComponent.h"
 #include "LetheGameState.generated.h"
 
-enum class ETeamSide : uint8;
 class AEnemyCharacterBase;
-class ATile;
-class ICombatInterface;
 class UAbilityResolverComponent;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldPhaseState */, const EPhaseState /* NewPhaseState */);
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
 DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityAttempt, AActor* /* Instigator */);
@@ -27,25 +22,21 @@ class LETHE_API ALetheGameState : public AGameStateBase
 public:
 	ALetheGameState();
 
-	void RegisterPlayerCharacter(AActor* PlayerCharacter);
-	void RegisterEnemy(AEnemyCharacterBase* Enemy);
-	void RegisterCombatEnemy(AEnemyCharacterBase* Enemy);
-	void UnregisterEnemy(AEnemyCharacterBase* Enemy);
+	void RegisterPlayerCharacter(AActor* PlayerCharacter) const;
+	void RegisterEnemy(AEnemyCharacterBase* Enemy) const;
+	void RegisterCombatEnemy(AEnemyCharacterBase* Enemy) const;
+	void UnregisterEnemy(AEnemyCharacterBase* Enemy) const;
 
-	void GoEnemyPlanPhase();
-	void GoPlayerMovePhase();
-	void GoDrawPhase();
-	void GoPlayerTurnPhase();
-	void GoEnemyTurnPhase();
-
-	void TryGoEnemyPlanPhase();
-
-	EPhaseState GetPhaseState() const;
+	/** 게임 시작 후 타일, 캐릭터 스폰, Ability 부여 등의 모든 사전 작업이 완료되면 호출해 본격적으로 턴제 흐름을 시작합니다. */
+	void StartTurnFlow() const;
+	void RequestEndPlayerMovePhase() const;
+	void NotifyDrawPhaseCompleted() const;
+	void RequestEndPlayerTurn() const;
 
 	void EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately = true) const;
 	/** PlayerMovePhase에만 사용하는 함수로, 모든 MoveAbility ActivationContext를 밀어넣은 후 호출합니다. */
 	void StartActivatePlayerMoveAbilities() const;
-	void EnqueueEnemyAbilityActivationContext(const FAbilityActivationContext& ActivationContext);
+	void EnqueueEnemyAbilityActivationContext(const FAbilityActivationContext& ActivationContext) const;
 	void ActivateAbility(FAbilityActivationContext& ActivationContext, const ETeamSide TeamSide) const;
 
 	void OnAttemptEnemyAbility(AActor* AbilityInstigator) const;
@@ -58,16 +49,14 @@ public:
 	void NotifyPlayerMoveResolved(AActor* MovedCharacter) const;
 
 	/**
-	 * STT_CommitPlan에서 호출하는 함수로, 현재는 '적은 한 번에 여러 Ability를 사용하지 않는다.'는 전제하에 정상 작동하는 상태입니다.
+	 * 현재는 '적은 한 번에 여러 Ability를 사용하지 않는다.'는 전제하에 정상 작동하는 상태입니다.
 	 * 만약 적이 MoveAbility를 연속으로 발동한다면 문제가 생길 수 있으나, 프로젝트 정책상 그럴 일이 없어 현재 해결해두지 않았습니다.
-	 * 그 외에 STT_MoveToRandomTile에서 경로 생성에 실패한 경우에도 호출하는데, 일반적으로 발생하지 않는 상황입니다.
+	 * 그 외에 경로 생성 실패나 AIController의 부재 등의 상황에서도 호출하는데, 일반적으로 발생하지 않는 상황입니다.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void NotifyEnemyPlanResolved();
+	void NotifyEnemyPlanResolved() const;
 
-	void OnPlanTimerEnded();
-
-	void SetShouldDeferEndPlayerMovePhase();
+	void NotifyPlayerMovePlanChanged() const;
 
 	UAbilityResolverComponent* GetAbilityResolverComponent() const;
 	bool IsResolvingPlayerAbility() const;
@@ -84,13 +73,7 @@ protected:
 	//~ End of AActor Interface
 
 private:
-	void SetPhase(const EPhaseState NewPhaseState);
-
-	void ProcessCurrentEnemyPlan();
-	void OnFinishActivationQueue();
-
-	bool HasAnyCombatEnemy() const;
-
+	void OnTurnPhaseChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const;
 	void OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess);
 
 public:
@@ -99,35 +82,10 @@ public:
 	FOnCardUseResolved OnCardUseResolved;
 	FOnEnemyAbilityAttempt OnEnemyAbilityAttempt;
 
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AActor> DummyActorClass;
-
-	UPROPERTY(EditDefaultsOnly)
-	float EnemyAbilityDelayTime = 0.5f;
-
 private:
-	EPhaseState CurrentPhaseState = EPhaseState::None;
-
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 
-	TArray<TScriptInterface<ICombatInterface>> PlayerCharacters;
-
-	/** 해당 변수가 true인 경우 PlayerMovePhase 종료 요청 시 한 번 보류합니다. */
-	uint8 bShouldDeferEndPlayerMovePhase : 1 = true;
-	
-	/** 우선순위대로 정렬되는 현재 스폰된 적들입니다. */
-	TArray<TWeakObjectPtr<AEnemyCharacterBase>> SpawnedEnemies;
-	int32 CurrentEnemyAbilityProcessIndex = 0;
-	
-	/**
-	 * 등록 후 거의 즉시 실행되는 PlayerAbility와는 달리, EnemyAbility는 예고 후 플레이어의 조작에 의해 취소되거나 조정될 수 있습니다.
-	 * 따라서 ResolverComponent로 즉시 넘기지 않고, 아래 배열에 들고 있다가 플레이어의 조작이 끝나면 한 번에 넘겨 사용합니다.
-	 */
-	TArray<FAbilityActivationContext> ReservedEnemyAbilityActivationContext;
-	FTimerHandle PlanTimerHandle;
-
-	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다. */
-	TSet<TWeakObjectPtr<AEnemyCharacterBase>> CurrentCombatEnemies;
+	UPROPERTY()
+	TObjectPtr<UTurnManagerComponent> TurnManagerComponent;
 };

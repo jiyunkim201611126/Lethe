@@ -21,10 +21,10 @@ struct FKey;
 
 DECLARE_DELEGATE_OneParam(FOnViewCardDetailRequested, const ACardActor*);
 DECLARE_DELEGATE_ThreeParams(FOnSelectCardRequested, const int32 /* HandSlotIndex */, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&);
-DECLARE_DELEGATE(FOnGoPlayerTurnPhaseRequested);
+DECLARE_DELEGATE(FOnDrawPhaseCompleted);
 DECLARE_DELEGATE(FOnStartResolvePlayerMovesRequested);
 DECLARE_DELEGATE_FourParams(FOnUseCardRequested, ULetheAbilitySystemComponent*, const FGameplayAbilitySpecHandle&, const FGameplayTag&, int32 /* HandSlotIndex */);
-DECLARE_DELEGATE_RetVal(bool, FOnTurnEndRequested);
+DECLARE_DELEGATE(FOnTurnEndRequested);
 
 UCLASS(Abstract)
 class LETHE_API ACardStage : public AActor
@@ -63,22 +63,22 @@ private:
 	UBoxComponent* GetDeckBoxCollisionAtUV(const FVector2D& TargetUV) const;
 	bool TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitResult& OutHitResult) const;
 
-	void OnCardMouseEvent(ACardActor* CardActor, ECardAction CardAction);
-	void OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction) const;
+	void OnCardMouseEvent(const ACardActor* CardActor, ECardAction CardAction) const;
+	void OnMouseEventWhenPlayerTurnPhase(const ACardActor* CardActor, const ECardAction CardAction) const;
 	void OnKeyboardEventWhenDrawPhase(const int32 Number) const;
 	void OnKeyboardEventWhenPlayerPhase(const int32 Number) const;
 
 	void UpdateAllCardLocations() const;
 
 	void TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const;
-	void RequestSelectCard(ACardActor* CardActor) const;
+	void RequestSelectCard(const ACardActor* CardActor) const;
 	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
 	void OnDrawPhaseStarted() const;
 
 public:
 	FOnViewCardDetailRequested OnViewCardDetailRequested;
 	FOnSelectCardRequested OnSelectCardRequested;
-	FOnGoPlayerTurnPhaseRequested OnGoPlayerTurnPhaseRequested;
+	FOnDrawPhaseCompleted OnDrawPhaseCompleted;
 	FOnStartResolvePlayerMovesRequested OnStartResolvePlayerMovesRequested;
 	FOnUseCardRequested OnUseCardRequested;
 	FOnTurnEndRequested OnTurnEndRequested;

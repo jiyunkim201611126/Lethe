@@ -63,7 +63,7 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			{
 				CardStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
 				CardStage->OnSelectCardRequested.BindUObject(this, &ThisClass::OnSelectCardRequested);
-				CardStage->OnGoPlayerTurnPhaseRequested.BindUObject(this, &ThisClass::GoPlayerTurnPhase);
+				CardStage->OnDrawPhaseCompleted.BindUObject(this, &ThisClass::NotifyDrawPhaseCompleted);
 				CardStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
 				CardStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
 				CardStage->OnTurnEndRequested.BindUObject(this, &ThisClass::RequestTurnEnd);
@@ -335,11 +335,11 @@ void UCardPanelWidget::StartViewCardDetail(const ACardActor* CardActor) const
 	OnStartViewCardDetail.ExecuteIfBound(CardActor);
 }
 
-void UCardPanelWidget::GoPlayerTurnPhase() const
+void UCardPanelWidget::NotifyDrawPhaseCompleted() const
 {
 	if (CardPanelWidgetController)
 	{
-		CardPanelWidgetController->GoPlayerTurnPhase();
+		CardPanelWidgetController->NotifyDrawPhaseCompleted();
 	}
 }
 
@@ -351,9 +351,12 @@ void UCardPanelWidget::StartResolvePlayerMoves() const
 	}
 }
 
-bool UCardPanelWidget::RequestTurnEnd() const
+void UCardPanelWidget::RequestTurnEnd() const
 {
-	return CardPanelWidgetController && CardPanelWidgetController->RequestTurnEnd();
+	if (CardPanelWidgetController)
+	{
+		CardPanelWidgetController->RequestTurnEnd();
+	}
 }
 
 void UCardPanelWidget::RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, const int32 HandSlotIndex) const

@@ -61,7 +61,7 @@ void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	
 	OnViewCardDetailRequested.Unbind();
 	OnSelectCardRequested.Unbind();
-	OnGoPlayerTurnPhaseRequested.Unbind();
+	OnDrawPhaseCompleted.Unbind();
 	OnStartResolvePlayerMovesRequested.Unbind();
 	OnTurnEndRequested.Unbind();
 	OnUseCardRequested.Unbind();
@@ -224,6 +224,23 @@ void ACardStage::HandleKeyboardEvent(const int32 Number) const
 
 void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
 {
+	if (OldPhaseState == EPhaseState::PlayerTurnPhase)
+	{
+		if (CardContainerManager)
+		{
+			CardContainerManager->AddAllHandSlotsToGraveyard();
+		}
+		UpdateAllCardLocations();
+
+		if (TurnEndSoundTag.IsValid())
+		{
+			if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
+			{
+				FXManagerSubsystem->AsyncPlaySound2D(TurnEndSoundTag, 1.f, 1.f);
+			}
+		}
+	}
+	
 	CurrentPhaseState = NewPhaseState;
 
 	if (CurrentPhaseState == EPhaseState::DrawPhase)
@@ -329,22 +346,7 @@ void ACardStage::OnTurnEndButtonClicked() const
 		OnStartResolvePlayerMovesRequested.ExecuteIfBound();
 		break;
 	case EPhaseState::PlayerTurnPhase:
-		if (OnTurnEndRequested.IsBound() && OnTurnEndRequested.Execute())
-		{
-			if (CardContainerManager)
-			{
-				CardContainerManager->AddAllHandSlotsToGraveyard();
-			}
-			UpdateAllCardLocations();
-
-			if (TurnEndSoundTag.IsValid())
-			{
-				if (UFXManagerSubsystem* FXManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFXManagerSubsystem>())
-				{
-					FXManagerSubsystem->AsyncPlaySound2D(TurnEndSoundTag, 1.f, 1.f);
-				}
-			}
-		}
+		OnTurnEndRequested.ExecuteIfBound();
 		break;
 	default:
 		break;
@@ -403,7 +405,7 @@ bool ACardStage::TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitRes
 	return false;
 }
 
-void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardAction)
+void ACardStage::OnCardMouseEvent(const ACardActor* CardActor, const ECardAction CardAction) const
 {
 	switch (CurrentPhaseState)
 	{
@@ -416,7 +418,7 @@ void ACardStage::OnCardMouseEvent(ACardActor* CardActor, const ECardAction CardA
 	}
 }
 
-void ACardStage::OnMouseEventWhenPlayerTurnPhase(ACardActor* CardActor, const ECardAction CardAction) const
+void ACardStage::OnMouseEventWhenPlayerTurnPhase(const ACardActor* CardActor, const ECardAction CardAction) const
 {
 	switch (CardAction)
 	{
@@ -491,12 +493,12 @@ void ACardStage::TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const
 		// 8개의 핸드 슬롯을 모두 채웠다면 PlayerTurnPhase로 넘어갑니다.
 		if (CardContainerManager->GetCurrentHandSlotCount() >= MAX_HAND_SLOT_COUNT)
 		{
-			OnGoPlayerTurnPhaseRequested.ExecuteIfBound();
+			OnDrawPhaseCompleted.ExecuteIfBound();
 		}
 	}
 }
 
-void ACardStage::RequestSelectCard(ACardActor* CardActor) const
+void ACardStage::RequestSelectCard(const ACardActor* CardActor) const
 {
 	if (!CardActor || !CardContainerManager)
 	{

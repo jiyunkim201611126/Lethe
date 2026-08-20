@@ -78,11 +78,6 @@ void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseS
 		OnPlanPhaseStarted();
 		ApplyTurnStartRecovery();
 	}
-
-	if (NewPhaseState == EPhaseState::DrawPhase)
-	{
-		ApplyTurnStartRecovery();
-	}
 	
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);

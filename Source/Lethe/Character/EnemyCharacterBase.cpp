@@ -22,6 +22,12 @@ void AEnemyCharacterBase::ProcessPlanPhase() const
 	if (const ALetheAIController* AIController = GetController<ALetheAIController>())
 	{
 		AIController->ProcessPlanPhase();
+		return;
+	}
+	
+	if (const ALetheGameState* GameState = GetWorld()->GetGameState<ALetheGameState>())
+	{
+		GameState->NotifyEnemyPlanResolved();
 	}
 }
 

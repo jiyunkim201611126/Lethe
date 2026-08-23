@@ -1,11 +1,11 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
-#include "Lethe/Data/PhaseData.h"
+#include "Lethe/Data/TurnPhaseState.h"
 #include "CardStage.generated.h"
 
 enum class ECardAction : uint8;
@@ -72,7 +72,7 @@ private:
 
 	void TryDraw(ULetheAbilitySystemComponent* DeckOwnerASC) const;
 	void RequestSelectCard(const ACardActor* CardActor) const;
-	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
+	void OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState);
 	void OnDrawPhaseStarted() const;
 
 public:
@@ -111,7 +111,7 @@ private:
 	
 	uint8 bInitialized : 1 = false;
 
-	EPhaseState CurrentPhaseState = EPhaseState::None;
+	ETurnPhaseState CurrentTurnPhaseState = ETurnPhaseState::None;
 
 	UPROPERTY()
 	TObjectPtr<ADeckBoxes> DeckBoxes;

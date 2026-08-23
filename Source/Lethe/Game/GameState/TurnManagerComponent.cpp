@@ -73,12 +73,12 @@ void UTurnManagerComponent::UnregisterEnemy(AEnemyCharacterBase* Enemy)
 
 void UTurnManagerComponent::StartTurnFlow()
 {
-	TryTransitionToPhase(EPhaseState::EnemyPlanPhase);
+	TryTransitionToTurnPhaseState(ETurnPhaseState::EnemyPlanPhase);
 }
 
 void UTurnManagerComponent::RequestEndPlayerMovePhase()
 {
-	if (CurrentPhaseState != EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState != ETurnPhaseState::PlayerMovePhase)
 	{
 		return;
 	}
@@ -89,12 +89,12 @@ void UTurnManagerComponent::RequestEndPlayerMovePhase()
 		return;
 	}
 
-	TryTransitionToPhase(EPhaseState::EnemyPlanPhase);
+	TryTransitionToTurnPhaseState(ETurnPhaseState::EnemyPlanPhase);
 }
 
 void UTurnManagerComponent::NotifyDrawPhaseCompleted()
 {
-	TryTransitionToPhase(EPhaseState::PlayerTurnPhase);
+	TryTransitionToTurnPhaseState(ETurnPhaseState::PlayerTurnPhase);
 }
 
 void UTurnManagerComponent::RequestEndPlayerTurn()
@@ -104,12 +104,12 @@ void UTurnManagerComponent::RequestEndPlayerTurn()
 		return;
 	}
 
-	TryTransitionToPhase(EPhaseState::EnemyTurnPhase);
+	TryTransitionToTurnPhaseState(ETurnPhaseState::EnemyTurnPhase);
 }
 
 void UTurnManagerComponent::NotifyAbilityQueueCompleted()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		for (const auto& PlayerCharacter : PlayerCharacters)
 		{
@@ -123,28 +123,28 @@ void UTurnManagerComponent::NotifyAbilityQueueCompleted()
 		}
 
 		bShouldDeferEndPlayerMovePhase = false;
-		TryTransitionToPhase(EPhaseState::EnemyPlanPhase);
+		TryTransitionToTurnPhaseState(ETurnPhaseState::EnemyPlanPhase);
 		return;
 	}
 
-	if (CurrentPhaseState == EPhaseState::EnemyTurnPhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::EnemyTurnPhase)
 	{
-		TryTransitionToPhase(EPhaseState::EnemyPlanPhase);
+		TryTransitionToTurnPhaseState(ETurnPhaseState::EnemyPlanPhase);
 	}
 }
 
 void UTurnManagerComponent::NotifyCardUseResolved()
 {
 	// PlayerMovePhase에 카드를 사용했고, 전투 중인 적이 하나라도 있다면 DrawPhase로 직행합니다.
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase && HasAnyCombatEnemy())
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase && HasAnyCombatEnemy())
 	{
-		TryTransitionToPhase(EPhaseState::DrawPhase);
+		TryTransitionToTurnPhaseState(ETurnPhaseState::DrawPhase);
 	}
 }
 
 void UTurnManagerComponent::NotifyEnemyPlanResolved()
 {
-	if (CurrentPhaseState != EPhaseState::EnemyPlanPhase)
+	if (CurrentTurnPhaseState != ETurnPhaseState::EnemyPlanPhase)
 	{
 		return;
 	}
@@ -161,7 +161,7 @@ void UTurnManagerComponent::NotifyEnemyPlanResolved()
 
 void UTurnManagerComponent::NotifyPlayerMovePlanChanged()
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		bShouldDeferEndPlayerMovePhase = true;
 	}
@@ -174,12 +174,12 @@ void UTurnManagerComponent::EnqueueEnemyAbilityActivationContext(const FAbilityA
 
 bool UTurnManagerComponent::IsBattlePhase() const
 {
-	if (CurrentPhaseState == EPhaseState::EnemyPlanPhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::EnemyPlanPhase)
 	{
 		return HasAnyCombatEnemy();
 	}
 
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		return false;
 	}
@@ -197,51 +197,51 @@ TArray<AActor*> UTurnManagerComponent::GetPlayerCharacters() const
 	return TempPlayerCharacters;
 }
 
-bool UTurnManagerComponent::TryTransitionToPhase(const EPhaseState NewPhaseState)
+bool UTurnManagerComponent::TryTransitionToTurnPhaseState(const ETurnPhaseState NewTurnPhaseState)
 {
-	const EPhaseState OldPhaseState = CurrentPhaseState;
-	if (!CanTransitionToPhase(NewPhaseState))
+	const ETurnPhaseState OldTurnPhaseState = CurrentTurnPhaseState;
+	if (!CanTransitionToTurnPhaseState(NewTurnPhaseState))
 	{
-		LETHE_LOG(LogLetheGameState, Warning, "Rejected Phase Transition: %s -> %s", *UEnum::GetValueAsString(OldPhaseState), *UEnum::GetValueAsString(NewPhaseState));
+		LETHE_LOG(LogLetheGameState, Warning, "Rejected Phase Transition: %s -> %s", *UEnum::GetValueAsString(OldTurnPhaseState), *UEnum::GetValueAsString(NewTurnPhaseState));
 		return false;
 	}
 
-	CurrentPhaseState = NewPhaseState;
-	OnChangePhaseState.Broadcast(OldPhaseState, CurrentPhaseState);
-	EnterPhase(CurrentPhaseState);
+	CurrentTurnPhaseState = NewTurnPhaseState;
+	OnTurnPhaseStateChanged.Broadcast(OldTurnPhaseState, CurrentTurnPhaseState);
+	EnterTurnPhaseState(CurrentTurnPhaseState);
 	return true;
 }
 
-bool UTurnManagerComponent::CanTransitionToPhase(const EPhaseState NewPhaseState) const
+bool UTurnManagerComponent::CanTransitionToTurnPhaseState(const ETurnPhaseState NewTurnPhaseState) const
 {
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::None:
-		return NewPhaseState == EPhaseState::EnemyPlanPhase;
-	case EPhaseState::EnemyPlanPhase:
-		return NewPhaseState == EPhaseState::PlayerMovePhase || NewPhaseState == EPhaseState::DrawPhase;
-	case EPhaseState::PlayerMovePhase:
-		return NewPhaseState == EPhaseState::EnemyPlanPhase || NewPhaseState == EPhaseState::DrawPhase;
-	case EPhaseState::DrawPhase:
-		return NewPhaseState == EPhaseState::PlayerTurnPhase;
-	case EPhaseState::PlayerTurnPhase:
-		return NewPhaseState == EPhaseState::EnemyTurnPhase;
-	case EPhaseState::EnemyTurnPhase:
-		return NewPhaseState == EPhaseState::EnemyPlanPhase;
+	case ETurnPhaseState::None:
+		return NewTurnPhaseState == ETurnPhaseState::EnemyPlanPhase;
+	case ETurnPhaseState::EnemyPlanPhase:
+		return NewTurnPhaseState == ETurnPhaseState::PlayerMovePhase || NewTurnPhaseState == ETurnPhaseState::DrawPhase;
+	case ETurnPhaseState::PlayerMovePhase:
+		return NewTurnPhaseState == ETurnPhaseState::EnemyPlanPhase || NewTurnPhaseState == ETurnPhaseState::DrawPhase;
+	case ETurnPhaseState::DrawPhase:
+		return NewTurnPhaseState == ETurnPhaseState::PlayerTurnPhase;
+	case ETurnPhaseState::PlayerTurnPhase:
+		return NewTurnPhaseState == ETurnPhaseState::EnemyTurnPhase;
+	case ETurnPhaseState::EnemyTurnPhase:
+		return NewTurnPhaseState == ETurnPhaseState::EnemyPlanPhase;
 	default:
 		return false;
 	}
 }
 
-void UTurnManagerComponent::EnterPhase(const EPhaseState PhaseState)
+void UTurnManagerComponent::EnterTurnPhaseState(const ETurnPhaseState TurnPhaseState)
 {
-	if (PhaseState == EPhaseState::EnemyPlanPhase)
+	if (TurnPhaseState == ETurnPhaseState::EnemyPlanPhase)
 	{
 		StartEnemyPlanPhase();
 		return;
 	}
 
-	if (PhaseState == EPhaseState::EnemyTurnPhase)
+	if (TurnPhaseState == ETurnPhaseState::EnemyTurnPhase)
 	{
 		StartEnemyTurnPhase();
 	}
@@ -278,7 +278,7 @@ void UTurnManagerComponent::ProcessCurrentEnemyPlan()
 	if (!SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex))
 	{
 		// 모든 Enemy AI가 Plan을 마친 경우 들어오는 분기입니다.
-		TryTransitionToPhase(HasAnyCombatEnemy() ? EPhaseState::DrawPhase : EPhaseState::PlayerMovePhase);
+		TryTransitionToTurnPhaseState(HasAnyCombatEnemy() ? ETurnPhaseState::DrawPhase : ETurnPhaseState::PlayerMovePhase);
 		return;
 	}
 
@@ -295,7 +295,7 @@ void UTurnManagerComponent::ProcessCurrentEnemyPlan()
 
 void UTurnManagerComponent::OnPlanTimerEnded()
 {
-	if (CurrentPhaseState != EPhaseState::EnemyPlanPhase)
+	if (CurrentTurnPhaseState != ETurnPhaseState::EnemyPlanPhase)
 	{
 		return;
 	}

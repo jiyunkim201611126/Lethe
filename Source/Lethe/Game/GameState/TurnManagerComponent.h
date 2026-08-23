@@ -5,14 +5,12 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Lethe/Data/AbilityActivationData.h"
-#include "Lethe/Data/PhaseData.h"
+#include "Lethe/Data/TurnPhaseState.h"
 #include "TurnManagerComponent.generated.h"
 
 class AEnemyCharacterBase;
 class ICombatInterface;
 class UAbilityResolverComponent;
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePhaseState, const EPhaseState /* OldPhaseState */, const EPhaseState /* NewPhaseState */);
 
 UCLASS()
 class LETHE_API UTurnManagerComponent : public UActorComponent
@@ -47,9 +45,9 @@ public:
 	TArray<AActor*> GetPlayerCharacters() const;
 
 private:
-	bool TryTransitionToPhase(const EPhaseState NewPhaseState);
-	bool CanTransitionToPhase(const EPhaseState NewPhaseState) const;
-	void EnterPhase(const EPhaseState PhaseState);
+	bool TryTransitionToTurnPhaseState(const ETurnPhaseState NewTurnPhaseState);
+	bool CanTransitionToTurnPhaseState(const ETurnPhaseState NewTurnPhaseState) const;
+	void EnterTurnPhaseState(const ETurnPhaseState TurnPhaseState);
 
 	void StartEnemyPlanPhase();
 	void StartEnemyTurnPhase();
@@ -59,7 +57,7 @@ private:
 	bool HasAnyCombatEnemy() const;
 
 public:
-	FOnChangePhaseState OnChangePhaseState;
+	FOnChangeTurnPhaseState OnTurnPhaseStateChanged;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Turn")
@@ -70,7 +68,7 @@ private:
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
 
 	UPROPERTY(VisibleInstanceOnly, Category = "Turn")
-	EPhaseState CurrentPhaseState = EPhaseState::None;
+	ETurnPhaseState CurrentTurnPhaseState = ETurnPhaseState::None;
 
 	TArray<TScriptInterface<ICombatInterface>> PlayerCharacters;
 
@@ -88,6 +86,6 @@ private:
 	TArray<FAbilityActivationContext> ReservedEnemyAbilityActivationContexts;
 	FTimerHandle PlanTimerHandle;
 
-	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, Phase 판별에 사용합니다. */
+	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, TurnPhaseState 판별에 사용합니다. */
 	TSet<TWeakObjectPtr<AEnemyCharacterBase>> CurrentCombatEnemies;
 };

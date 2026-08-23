@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "LetheAIController.h"
 
@@ -38,7 +38,7 @@ void ALetheAIController::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		OnAbilityAttemptDelegateHandle = LetheGameState->OnEnemyAbilityAttempt.AddUObject(this, &ThisClass::OnAbilityAttempt);
+		OnEnemyAbilityTriedActivateDelegateHandle = LetheGameState->OnEnemyAbilityTriedActivate.AddUObject(this, &ThisClass::OnEnemyAbilityTriedActivate);
 	}
 }
 
@@ -46,7 +46,7 @@ void ALetheAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnEnemyAbilityAttempt.Remove(OnAbilityAttemptDelegateHandle);
+		LetheGameState->OnEnemyAbilityTriedActivate.Remove(OnEnemyAbilityTriedActivateDelegateHandle);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -95,7 +95,7 @@ void ALetheAIController::DeactivateArrow() const
 	ArrowRenderer->DeactivateCardPreviewArrow();
 }
 
-void ALetheAIController::OnAbilityAttempt(AActor* AbilityInstigator) const
+void ALetheAIController::OnEnemyAbilityTriedActivate(AActor* AbilityInstigator) const
 {
 	if (AbilityInstigator == GetPawn())
 	{

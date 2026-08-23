@@ -70,7 +70,7 @@ protected:
 	//~ End of AAIController Interface
 
 private:
-	void OnAbilityAttempt(AActor* AbilityInstigator) const;
+	void OnEnemyAbilityTriedActivate(AActor* AbilityInstigator) const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
@@ -89,7 +89,7 @@ protected:
 	bool bIsInCombat = false;
 
 private:
-	FDelegateHandle OnAbilityAttemptDelegateHandle;
+	FDelegateHandle OnEnemyAbilityTriedActivateDelegateHandle;
 
 	FGameplayAbilitySpecHandle PlannedAbilitySpecHandle;
 	TWeakObjectPtr<ATile> PlannedTargetTile;

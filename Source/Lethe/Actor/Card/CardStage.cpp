@@ -40,7 +40,7 @@ void ACardStage::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnChangeTurnPhaseState.AddUObject(this, &ThisClass::OnTurnPhaseStateChanged);
 	}
 
 	CardContainerManager = NewObject<UCardContainerManager>(this);
@@ -56,7 +56,7 @@ void ACardStage::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.RemoveAll(this);
+		LetheGameState->OnChangeTurnPhaseState.RemoveAll(this);
 	}
 	
 	OnViewCardDetailRequested.Unbind();
@@ -158,11 +158,11 @@ bool ACardStage::HandleLeftMouseButtonClickedInCardStageSection(const FVector2D&
 
 		ULetheAbilitySystemComponent* ClickedDeckOwnerASC = AbilitySystemComponents[ClickedDeckIndex].Get();
 		
-		if (CurrentPhaseState == EPhaseState::DrawPhase)
+		if (CurrentTurnPhaseState == ETurnPhaseState::DrawPhase)
 		{
 			TryDraw(ClickedDeckOwnerASC);
 		}
-		else if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+		else if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 		{
 			// 비전투 중 덱 박스를 클릭했다면, 안에 있는 모든 카드를 밖으로 꺼내 보여줍니다.
 			CardContainerManager->StopPreviewDeck(false);
@@ -208,13 +208,13 @@ bool ACardStage::HandleLeftMouseButtonClickedInWorldSection()
 
 void ACardStage::HandleKeyboardEvent(const int32 Number) const
 {
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::DrawPhase:
+	case ETurnPhaseState::DrawPhase:
 		OnKeyboardEventWhenDrawPhase(Number);
 		break;
-	case EPhaseState::PlayerTurnPhase:
-	case EPhaseState::PlayerMovePhase:
+	case ETurnPhaseState::PlayerTurnPhase:
+	case ETurnPhaseState::PlayerMovePhase:
 		OnKeyboardEventWhenPlayerPhase(Number);
 		break;
 	default:
@@ -222,9 +222,9 @@ void ACardStage::HandleKeyboardEvent(const int32 Number) const
 	}
 }
 
-void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
+void ACardStage::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState)
 {
-	if (OldPhaseState == EPhaseState::PlayerTurnPhase)
+	if (OldTurnPhaseState == ETurnPhaseState::PlayerTurnPhase)
 	{
 		if (CardContainerManager)
 		{
@@ -241,9 +241,9 @@ void ACardStage::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPha
 		}
 	}
 	
-	CurrentPhaseState = NewPhaseState;
+	CurrentTurnPhaseState = NewTurnPhaseState;
 
-	if (CurrentPhaseState == EPhaseState::DrawPhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::DrawPhase)
 	{
 		OnDrawPhaseStarted();
 	}
@@ -305,11 +305,11 @@ void ACardStage::OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess
 		return;
 	}
 
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		CardActor->SetCardContainer(ECardContainer::Deck);
 	}
-	else if (CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	else if (CurrentTurnPhaseState == ETurnPhaseState::PlayerTurnPhase)
 	{
 		if (bSuccess)
 		{
@@ -340,12 +340,12 @@ bool ACardStage::TryViewDetail(const FVector2D& TargetUV) const
 
 void ACardStage::OnTurnEndButtonClicked() const
 {
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::PlayerMovePhase:
+	case ETurnPhaseState::PlayerMovePhase:
 		OnStartResolvePlayerMovesRequested.ExecuteIfBound();
 		break;
-	case EPhaseState::PlayerTurnPhase:
+	case ETurnPhaseState::PlayerTurnPhase:
 		OnTurnEndRequested.ExecuteIfBound();
 		break;
 	default:
@@ -355,7 +355,7 @@ void ACardStage::OnTurnEndButtonClicked() const
 
 void ACardStage::ResetSelectedDeckBox()
 {
-	if (CurrentSelectedDeckBox.IsValid() && CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentSelectedDeckBox.IsValid() && CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		DeckBoxes->SetAllOpenReason(EDeckBoxOpenReason::Pinned, false);
 		CardContainerManager->StopPreviewDeck();
@@ -407,10 +407,10 @@ bool ACardStage::TryGetHitResultByCardChannel(const FVector2D& TargetUV, FHitRes
 
 void ACardStage::OnCardMouseEvent(const ACardActor* CardActor, const ECardAction CardAction) const
 {
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::PlayerMovePhase:
-	case EPhaseState::PlayerTurnPhase:
+	case ETurnPhaseState::PlayerMovePhase:
+	case ETurnPhaseState::PlayerTurnPhase:
 		OnMouseEventWhenPlayerTurnPhase(CardActor, CardAction);
 		break;
 	default:

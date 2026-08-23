@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "LethePlayerControllerBase.h"
 #include "GameFramework/PlayerController.h"
-#include "Lethe/Data/PhaseData.h"
+#include "Lethe/Data/TurnPhaseState.h"
 #include "LethePlayerController.generated.h"
 
 class ATile;
@@ -64,7 +64,7 @@ protected:
 	//~ End of AActor Interface
 
 private:
-	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
+	void OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState);
 	
 	/** 카드 선택 상태에서 마우스를 움직여서 다른 Tile이 검출되면 호출되는 콜백 함수입니다. */
 	void OnOtherTileDetected() const;
@@ -93,8 +93,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UPlayerAbilityRequestComponent> PlayerAbilityRequestComponent;
 
-	EPhaseState CurrentPhaseState = EPhaseState::None;
-	FDelegateHandle OnPhaseStateChangedHandle;
+	ETurnPhaseState CurrentTurnPhaseState = ETurnPhaseState::None;
+	FDelegateHandle OnTurnPhaseStateChangedHandle;
 	
 	uint8 bMouseOnWorldSection : 1 = false;
 	

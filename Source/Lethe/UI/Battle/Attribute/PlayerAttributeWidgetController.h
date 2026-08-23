@@ -1,10 +1,10 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AttributeWidgetController.h"
-#include "Lethe/Data/PhaseData.h"
+#include "Lethe/Data/TurnPhaseState.h"
 #include "PlayerAttributeWidgetController.generated.h"
 
 class ULetheCardAbility;
@@ -33,7 +33,7 @@ private:
 	void BroadcastCostChanged() const;
 	
 	void OnMoveRangeChanged(const FOnAttributeChangeData& AttributeData);
-	void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState);
+	void OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState);
 	void BroadcastMarkerVisibilityChanged() const;
 
 public:
@@ -42,5 +42,5 @@ public:
 	
 private:
 	uint8 bHasRemainingMoveRange : 1 = false;
-	EPhaseState CurrentPhaseState = EPhaseState::None;
+	ETurnPhaseState CurrentTurnPhaseState = ETurnPhaseState::None;
 };

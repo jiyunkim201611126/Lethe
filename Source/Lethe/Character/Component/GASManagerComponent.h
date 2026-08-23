@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include "Lethe/Data/AbilityActivationData.h"
 #include "GASManagerComponent.generated.h"
 
-enum class EPhaseState : uint8;
+enum class ETurnPhaseState : uint8;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UAttributeUIFeature;
@@ -49,7 +49,7 @@ protected:
 	
 	void ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>& GameplayEffectClass, const float Level) const;
 	
-	virtual void OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const;
+	virtual void OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState) const;
 	
 	void OnPlanPhaseStarted() const;
 

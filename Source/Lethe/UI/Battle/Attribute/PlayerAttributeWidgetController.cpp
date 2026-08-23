@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "PlayerAttributeWidgetController.h"
 
@@ -23,7 +23,7 @@ void UPlayerAttributeWidgetController::BindCallbacks(ULetheAbilitySystemComponen
 	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMoveRangeAttribute()).AddUObject(this, &ThisClass::OnMoveRangeChanged);
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnChangeTurnPhaseState.AddUObject(this, &ThisClass::OnTurnPhaseStateChanged);
 	}
 }
 
@@ -87,15 +87,15 @@ void UPlayerAttributeWidgetController::OnMoveRangeChanged(const FOnAttributeChan
 	BroadcastMarkerVisibilityChanged();
 }
 
-void UPlayerAttributeWidgetController::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
+void UPlayerAttributeWidgetController::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState)
 {
-	CurrentPhaseState = NewPhaseState;
+	CurrentTurnPhaseState = NewTurnPhaseState;
 	BroadcastMarkerVisibilityChanged();
 }
 
 void UPlayerAttributeWidgetController::BroadcastMarkerVisibilityChanged() const
 {
-	const bool bShouldShow = CurrentPhaseState == EPhaseState::PlayerMovePhase && bHasRemainingMoveRange;
+	const bool bShouldShow = CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase && bHasRemainingMoveRange;
 	const ESlateVisibility Visibility = bShouldShow ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
 	OnMarkerVisibilityChanged.Broadcast(Visibility);
 }

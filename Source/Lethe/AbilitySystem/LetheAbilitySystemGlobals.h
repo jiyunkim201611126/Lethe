@@ -15,5 +15,6 @@ class LETHE_API ULetheAbilitySystemGlobals : public UAbilitySystemGlobals
 {
 	GENERATED_BODY()
 
+public:
 	virtual FGameplayEffectContext* AllocGameplayEffectContext() const override;
 };

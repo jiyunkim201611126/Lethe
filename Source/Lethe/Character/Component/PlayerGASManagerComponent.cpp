@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "PlayerGASManagerComponent.h"
 
@@ -8,7 +8,7 @@
 #include "Lethe/AbilitySystem/LetheAttributeSet.h"
 #include "Lethe/AbilitySystem/PlayerAttributeSet.h"
 #include "Lethe/Character/LetheCharacterBase.h"
-#include "Lethe/Data/PhaseData.h"
+#include "Lethe/Data/TurnPhaseState.h"
 #include "Lethe/Manager/DeckManagerSubsystem.h"
 #include "Lethe/Manager/LetheGameplayTags.h"
 #include "Lethe/UI/Framework/LetheUIManagerSubsystem.h"
@@ -71,9 +71,9 @@ void UPlayerGASManagerComponent::InitUI(const TArray<UUserWidget*>& AttributeWid
 	}
 }
 
-void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
+void UPlayerGASManagerComponent::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState) const
 {
-	if (NewPhaseState == EPhaseState::EnemyPlanPhase)
+	if (NewTurnPhaseState == ETurnPhaseState::EnemyPlanPhase)
 	{
 		OnPlanPhaseStarted();
 		ApplyTurnStartRecovery();
@@ -82,7 +82,7 @@ void UPlayerGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseS
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
 	
-	if (NewPhaseState == EPhaseState::PlayerMovePhase || NewPhaseState == EPhaseState::PlayerTurnPhase)
+	if (NewTurnPhaseState == ETurnPhaseState::PlayerMovePhase || NewTurnPhaseState == ETurnPhaseState::PlayerTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

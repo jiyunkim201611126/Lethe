@@ -8,7 +8,6 @@
 #include "Lethe/UI/Framework/LetheWidgetController.h"
 #include "CardPanelWidgetController.generated.h"
 
-enum class EPhaseState : uint8;
 class ALethePlayerController;
 class ALetheGameState;
 class UCardDefinitionData;

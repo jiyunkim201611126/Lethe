@@ -1,4 +1,4 @@
-﻿// Copyright JETBLU, Inc. All Rights Reserved.
+// Copyright JETBLU, Inc. All Rights Reserved.
 
 #include "GASManagerComponent.h"
 
@@ -24,7 +24,7 @@ void UGASManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 		{
-			LetheGameState->OnChangePhaseState.RemoveAll(this);
+			LetheGameState->OnChangeTurnPhaseState.RemoveAll(this);
 		}
 	}
 	
@@ -63,7 +63,7 @@ void UGASManagerComponent::InitAbilityActorInfo(const TArray<UUserWidget*>& Attr
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		LetheGameState->OnChangeTurnPhaseState.AddUObject(this, &ThisClass::OnTurnPhaseStateChanged);
 	}
 }
 
@@ -132,9 +132,9 @@ void UGASManagerComponent::ApplyEffectToSelf(const TSubclassOf<UGameplayEffect>&
 	AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), AbilitySystemComponent);
 }
 
-void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState) const
+void UGASManagerComponent::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState) const
 {
-	if (NewPhaseState == EPhaseState::EnemyPlanPhase)
+	if (NewTurnPhaseState == ETurnPhaseState::EnemyPlanPhase)
 	{
 		OnPlanPhaseStarted();
 	}
@@ -142,7 +142,7 @@ void UGASManagerComponent::OnPhaseStateChanged(const EPhaseState OldPhaseState, 
 	const FLetheGameplayTags& LetheGameplayTags = FLetheGameplayTags::Get();
 	AbilitySystemComponent->SetLooseGameplayTagCount(LetheGameplayTags.State_Character_CanAct, 0);
 	
-	if (NewPhaseState == EPhaseState::EnemyTurnPhase)
+	if (NewTurnPhaseState == ETurnPhaseState::EnemyTurnPhase)
 	{
 		AbilitySystemComponent->AddLooseGameplayTag(LetheGameplayTags.State_Character_CanAct);
 	}

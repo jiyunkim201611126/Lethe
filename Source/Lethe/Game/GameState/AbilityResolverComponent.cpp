@@ -166,7 +166,7 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateNextEnemyAbili
 	const ETryAbilityActivationResult Result = TryActivateAbility(ActivationContext);
 	if (ActivationContext && ActivationContext->AbilityOwnerASC.IsValid())
 	{
-		OnAttemptEnemyAbility.ExecuteIfBound(ActivationContext->AbilityOwnerASC.Get()->GetAvatarActor());
+		OnTryActivateEnemyAbility.ExecuteIfBound(ActivationContext->AbilityOwnerASC.Get()->GetAvatarActor());
 	}
 	EnemyAbilityActivationContexts.RemoveAt(0);
 	return Result;

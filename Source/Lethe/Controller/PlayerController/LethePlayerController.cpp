@@ -39,7 +39,7 @@ void ALethePlayerController::BeginPlay()
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		OnPhaseStateChangedHandle = LetheGameState->OnChangePhaseState.AddUObject(this, &ThisClass::OnPhaseStateChanged);
+		OnTurnPhaseStateChangedHandle = LetheGameState->OnChangeTurnPhaseState.AddUObject(this, &ThisClass::OnTurnPhaseStateChanged);
 		LetheGameState->OnPlayerMoveResolved.BindUObject(this, &ThisClass::OnPlayerMovedResolved);
 		LetheGameState->OnCardUseResolved.BindUObject(this, &ThisClass::OnCardUseResolved);
 	}
@@ -54,7 +54,7 @@ void ALethePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
-		LetheGameState->OnChangePhaseState.Remove(OnPhaseStateChangedHandle);
+		LetheGameState->OnChangeTurnPhaseState.Remove(OnTurnPhaseStateChangedHandle);
 		LetheGameState->OnPlayerMoveResolved.Unbind();
 		LetheGameState->OnCardUseResolved.Unbind();
 	}
@@ -77,7 +77,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		return;
 	}
 
-	if (CurrentPhaseState != EPhaseState::PlayerMovePhase && CurrentPhaseState != EPhaseState::PlayerTurnPhase)
+	if (CurrentTurnPhaseState != ETurnPhaseState::PlayerMovePhase && CurrentTurnPhaseState != ETurnPhaseState::PlayerTurnPhase)
 	{
 		// 플레이어의 턴이 아니라면 얼리리턴합니다.
 		return;
@@ -101,7 +101,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 	if (SelectedCharacter.IsValid() && SelectedCharacter == OutTileHitResult.ActorOnTile)
 	{
 		// 선택했던 캐릭터가 서있던 타일을 선택한 경우(제자리 클릭) 들어오는 분기입니다.
-		if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+		if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 		{
 			PlayerAbilityRequestComponent->RemoveReservedMove(SelectedCharacter.Get());
 			RefreshMovePreview();
@@ -136,9 +136,9 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 		return;
 	}
 
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::PlayerMovePhase:
+	case ETurnPhaseState::PlayerMovePhase:
 		if (!bIsSelectingCharacter)
 		{
 			// 이동 타일을 예약합니다.
@@ -147,7 +147,7 @@ void ALethePlayerController::HandleLeftMouseButtonClickedInWorldSection()
 			RefreshMovePreview();
 		}
 		break;
-	case EPhaseState::PlayerTurnPhase:
+	case ETurnPhaseState::PlayerTurnPhase:
 		{
 			// 이동 가능한 타일을 모두 가져옵니다.
 			TArray<ATile*> OutMovableTiles;
@@ -219,7 +219,7 @@ void ALethePlayerController::StartResolvePlayerMoves() const
 
 void ALethePlayerController::OnPlayerMovedResolved(AActor* MovedCharacter) const
 {
-	if (CurrentPhaseState == EPhaseState::PlayerMovePhase)
+	if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
 	{
 		PlayerAbilityRequestComponent->OnPlayerReservedMoveResolved(MovedCharacter);
 		RefreshMovePreview();
@@ -299,20 +299,20 @@ void ALethePlayerController::SetMouseOnWorldSection(const bool bInMouseOnWorldSe
 	bMouseOnWorldSection = bInMouseOnWorldSection;
 }
 
-void ALethePlayerController::OnPhaseStateChanged(const EPhaseState OldPhaseState, const EPhaseState NewPhaseState)
+void ALethePlayerController::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState)
 {
-	CurrentPhaseState = NewPhaseState;
+	CurrentTurnPhaseState = NewTurnPhaseState;
 
 	ResetSelectedCharacter();
 	ResetSelectedCard();
 	
-	switch (CurrentPhaseState)
+	switch (CurrentTurnPhaseState)
 	{
-	case EPhaseState::EnemyPlanPhase:
+	case ETurnPhaseState::EnemyPlanPhase:
 		// 비전투 페이즈로 진입 시, 예약해뒀던 모든 이동이 큐에 들어갈 수 있도록 상태를 활성화합니다.
 		PlayerAbilityRequestComponent->SetAllReservedMovesWaitingForQueue();
 		break;
-	case EPhaseState::DrawPhase:
+	case ETurnPhaseState::DrawPhase:
 		// 전투 페이즈로 진입 시, 예약해뒀던 모든 이동을 초기화합니다.
 		PlayerAbilityRequestComponent->ResetReservedMoveData();
 		if (bIsReservedMovePreviewingMode)
@@ -396,7 +396,7 @@ void ALethePlayerController::PlayerTick(float DeltaTime)
 		}
 	}
 
-	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnWorldSection && CurrentPhaseState == EPhaseState::PlayerTurnPhase)
+	if (!SelectedCardAbility.IsValid() && !SelectedCharacter.IsValid() && bMouseOnWorldSection && CurrentTurnPhaseState == ETurnPhaseState::PlayerTurnPhase)
 	{
 		// 선택된 카드도 캐릭터도 없을 때, PlayerTurnPhase면 들어오는 분기입니다.
 		ActorSelector->ClearHighlightedActors(EHighlightReason::TargetCandidate);

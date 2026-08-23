@@ -123,7 +123,7 @@ void UPlayerAbilityRequestComponent::ReserveMove(AActor* SelectedCharacter, UAbi
 	}
 
 	// 이동 예약을 수정했으므로, 턴 종료 버튼 클릭 시 잔여 행동력 여부를 한 번 점검해야 합니다.
-	if (ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
+	if (const ALetheGameState* LetheGameState = GetWorld()->GetGameState<ALetheGameState>())
 	{
 		LetheGameState->NotifyPlayerMovePlanChanged();
 	}

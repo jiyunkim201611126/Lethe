@@ -3,6 +3,7 @@
 #include "LetheGameState.h"
 
 #include "AbilityResolverComponent.h"
+#include "Lethe/LetheLog.h"
 #include "TurnManagerComponent.h"
 
 ALetheGameState::ALetheGameState()
@@ -143,3 +144,39 @@ bool ALetheGameState::IsBattlePhase() const
 {
 	return TurnManagerComponent->IsBattlePhase();
 }
+
+#if WITH_EDITOR
+void ALetheGameState::DumpTurnDebugInfo() const
+{
+	TStringBuilder<32768> Builder;
+	const UWorld* World = GetWorld();
+
+	Builder.Append(TEXT("LETHE 턴 디버그 스냅샷\n"));
+	Builder.Append(TEXT("============================================================\n"));
+	Builder.Appendf(TEXT("GameState = %s, World = %s, Frame = %llu, GameTime = %.3f초, RealTime = %.3f초\n"),
+		*GetNameSafe(this), *GetNameSafe(World), GFrameCounter,
+		World ? World->GetTimeSeconds() : 0.0,
+		World ? World->GetRealTimeSeconds() : 0.0);
+
+	if (TurnManagerComponent)
+	{
+		TurnManagerComponent->AppendDebugSnapshot(Builder);
+	}
+	else
+	{
+		Builder.Append(TEXT("\n[TurnManagerComponent]\n  [!] nullptr\n"));
+	}
+
+	if (AbilityResolverComponent)
+	{
+		AbilityResolverComponent->AppendDebugSnapshot(Builder);
+	}
+	else
+	{
+		Builder.Append(TEXT("\n[AbilityResolverComponent]\n  [!] nullptr\n"));
+	}
+
+	Builder.Append(TEXT("============================================================\n"));
+	UE_LOG(LogLetheGameState, Warning, TEXT("%s"), Builder.ToString());
+}
+#endif

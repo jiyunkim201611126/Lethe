@@ -88,4 +88,9 @@ private:
 
 	/** 현재 전투에 참여 중인 적을 기록하는 TSet으로, TurnPhaseState 판별에 사용합니다. */
 	TSet<TWeakObjectPtr<AEnemyCharacterBase>> CurrentCombatEnemies;
+
+#if WITH_EDITOR
+public:
+	void AppendDebugSnapshot(FStringBuilderBase& Builder) const;
+#endif
 };

@@ -209,7 +209,6 @@ void UAbilityResolverComponent::ActivateAbility(FAbilityActivationContext& Activ
 	// Queue와 관계 없이 Ability를 즉시 발동하려는 경우 호출되는 함수기 때문에, 반환값에 따른 별도의 처리는 하지 않습니다.
 	bIsHandlingAbilityActivation = true;
 	const ETryAbilityActivationResult Result = TryActivateAbility(&ActivationContext);
-	LETHE_LOG(LogAbilityResolver, Log, "Ability Activate Result: %s", *LogHelper::EnumToString(Result));
 	bIsHandlingAbilityActivation = false;
 	if (Result == ETryAbilityActivationResult::FailedLogicError)
 	{
@@ -237,7 +236,6 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 		return ETryAbilityActivationResult::FailedFatal;
 	}
 	ActivationContext->Payload.Instigator = AvatarActor;
-	LETHE_LOG(LogAbilityResolver, Log, "Ability Instigator: %s", *AvatarActor->GetName());
 
 	if (IsMovementAbility(ActivationContext->AbilityTag))
 	{
@@ -341,15 +339,16 @@ ETryAbilityActivationResult UAbilityResolverComponent::TryActivateAbility(FAbili
 
 	// ASC를 캐싱하고 콜백을 붙여둡니다.
 	CurrentActivatorASC = AbilityOwnerASC;
-	OnAbilityEndedDelegate = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
+	OnAbilityEndedDelegateHandle = AbilityOwnerASC->OnAbilityEnded.AddUObject(this, &ThisClass::OnAbilityEnded);
 
 	const bool bSuccess = AbilityOwnerASC->TriggerAbilityFromGameplayEvent(ActivationContext->AbilitySpecHandle, AbilityOwnerASC->AbilityActorInfo.Get(), ActivationContext->AbilityTag, &ActivationContext->Payload, *AbilityOwnerASC);
 	if (!bSuccess)
 	{
 		if (CurrentActivatorASC.IsValid())
 		{
-			CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+			CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegateHandle);
 			CurrentActivatorASC.Reset();
+			OnAbilityEndedDelegateHandle.Reset();
 		}
 
 		if (CurrentActivatorTeamSide == ETeamSide::Player)
@@ -377,8 +376,9 @@ void UAbilityResolverComponent::OnAbilityEnded(const FAbilityEndedData& AbilityE
 	// 턴제 게임인 프로젝트 특성상 Ability 발동 도중 Cancel되는 경우는 존재하지 않습니다.
 	if (CurrentActivatorASC.IsValid())
 	{
-		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegateHandle);
 		CurrentActivatorASC.Reset();
+		OnAbilityEndedDelegateHandle.Reset();
 	}
 
 	if (bIsHandlingAbilityActivation)
@@ -446,8 +446,9 @@ void UAbilityResolverComponent::OnAbilityActivationFailed()
 	// Ability를 발동했으나, 내부 로직에 의해 실패한 경우(코스트 부족 등) 이곳으로 들어옵니다.
 	if (CurrentActivatorASC.IsValid())
 	{
-		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegate);
+		CurrentActivatorASC->OnAbilityEnded.Remove(OnAbilityEndedDelegateHandle);
 		CurrentActivatorASC.Reset();
+		OnAbilityEndedDelegateHandle.Reset();
 	}
 
 	if (bIsHandlingAbilityActivation)
@@ -482,3 +483,131 @@ bool UAbilityResolverComponent::IsResolvingPlayerAbility() const
 {
 	return bIsResolvingPlayerAbility;
 }
+
+#if WITH_EDITOR
+void UAbilityResolverComponent::AppendDebugSnapshot(FStringBuilderBase& Builder) const
+{
+	const UAbilitySystemComponent* ActivatorASC = CurrentActivatorASC.Get();
+	const AActor* ActivatorAvatar = ActivatorASC ? ActivatorASC->GetAvatarActor() : nullptr;
+
+	int32 ActiveAbilitySpecCount = 0;
+	if (ActivatorASC)
+	{
+		for (const FGameplayAbilitySpec& Spec : ActivatorASC->GetActivatableAbilities())
+		{
+			ActiveAbilitySpecCount += Spec.IsActive() ? 1 : 0;
+		}
+	}
+
+	Builder.Append(TEXT("\n[AbilityResolverComponent]\n"));
+	Builder.Appendf(TEXT("  TeamSide = %s, IsResolvingPlayerAbility = %s\n"),
+		*LogHelper::EnumToString(CurrentActivatorTeamSide), bIsResolvingPlayerAbility ? TEXT("true") : TEXT("false"));
+	Builder.Appendf(TEXT("  CurrentActivatorASC = %s, Avatar = %s, AbilityEndedDelegateHandleValid = %s, ActiveAbilitySpecs = %d\n"),
+		ActivatorASC ? *GetNameSafe(ActivatorASC) : TEXT("nullptr"),
+		ActivatorAvatar ? *GetNameSafe(ActivatorAvatar) : TEXT("nullptr"),
+		OnAbilityEndedDelegateHandle.IsValid() ? TEXT("true") : TEXT("false"), ActiveAbilitySpecCount);
+	Builder.Appendf(TEXT("  PlayerAbilityQueue = %d, EnemyAbilityQueue = %d\n"),
+		PlayerAbilityActivationContexts.Num(), EnemyAbilityActivationContexts.Num());
+
+	if (ActivatorASC)
+	{
+		Builder.Appendf(TEXT("  InferredProgress = Ability 종료 대기 (%s)\n"),
+			ActivatorAvatar ? *GetNameSafe(ActivatorAvatar) : TEXT("nullptr"));
+	}
+	else if (bIsResolvingPlayerAbility)
+	{
+		Builder.Append(TEXT("  InferredProgress = 현재 ASC 없이 Player Ability 처리 중\n"));
+	}
+	else if (!EnemyAbilityActivationContexts.IsEmpty())
+	{
+		Builder.Append(TEXT("  InferredProgress = Enemy Ability 처리 대기\n"));
+	}
+	else if (!PlayerAbilityActivationContexts.IsEmpty())
+	{
+		Builder.Append(TEXT("  InferredProgress = Player Ability 시작 대기\n"));
+	}
+	else
+	{
+		Builder.Append(TEXT("  InferredProgress = None\n"));
+	}
+
+	if (ActivatorASC)
+	{
+		for (const FGameplayAbilitySpec& Spec : ActivatorASC->GetActivatableAbilities())
+		{
+			if (!Spec.IsActive())
+			{
+				continue;
+			}
+
+			Builder.Appendf(TEXT("    ActiveAbility = %s\n"), *GetNameSafe(Spec.Ability.Get()));
+		}
+	}
+
+	for (int32 Index = 0; Index < PlayerAbilityActivationContexts.Num(); ++Index)
+	{
+		const FAbilityActivationContext& Context = PlayerAbilityActivationContexts[Index];
+		const UAbilitySystemComponent* OwnerASC = Context.AbilityOwnerASC.Get();
+		Builder.Appendf(TEXT("    PlayerAbility[%d]: HandSlot = %d, Tag = %s, SpecValid = %s, OwnerASC = %s, Avatar = %s, TargetResults = %d, PathTiles = %d\n"),
+			Index, Context.Index, *Context.AbilityTag.ToString(),
+			Context.AbilitySpecHandle.IsValid() ? TEXT("true") : TEXT("false"),
+			OwnerASC ? *GetNameSafe(OwnerASC) : TEXT("nullptr"),
+			OwnerASC && OwnerASC->GetAvatarActor() ? *GetNameSafe(OwnerASC->GetAvatarActor()) : TEXT("nullptr"),
+			Context.TargetSelectionResults.Num(), Context.PathTiles.Num());
+	}
+
+	for (int32 Index = 0; Index < EnemyAbilityActivationContexts.Num(); ++Index)
+	{
+		const FAbilityActivationContext& Context = EnemyAbilityActivationContexts[Index];
+		const UAbilitySystemComponent* OwnerASC = Context.AbilityOwnerASC.Get();
+		Builder.Appendf(TEXT("    EnemyAbility[%d]: Priority = %d, Tag = %s, SpecValid = %s, OwnerASC = %s, Avatar = %s, TargetResults = %d, PathTiles = %d\n"),
+			Index, Context.Index, *Context.AbilityTag.ToString(),
+			Context.AbilitySpecHandle.IsValid() ? TEXT("true") : TEXT("false"),
+			OwnerASC ? *GetNameSafe(OwnerASC) : TEXT("nullptr"),
+			OwnerASC && OwnerASC->GetAvatarActor() ? *GetNameSafe(OwnerASC->GetAvatarActor()) : TEXT("nullptr"),
+			Context.TargetSelectionResults.Num(), Context.PathTiles.Num());
+	}
+
+	Builder.Append(TEXT("  검증 결과:\n"));
+	int32 IssueCount = 0;
+	auto AppendIssue = [&Builder, &IssueCount](const TCHAR* Issue)
+	{
+		++IssueCount;
+		Builder.Appendf(TEXT("    [!] %s\n"), Issue);
+	};
+
+	if (bIsResolvingPlayerAbility && PlayerAbilityActivationContexts.IsEmpty())
+	{
+		AppendIssue(TEXT("Player Ability를 처리 중인데 PlayerAbilityActivationContexts가 비어 있습니다."));
+	}
+	if (bIsResolvingPlayerAbility && CurrentActivatorTeamSide != ETeamSide::Player)
+	{
+		AppendIssue(TEXT("Player Ability를 처리 중인데 CurrentActivatorTeamSide가 플레이어가 아닙니다."));
+	}
+	if (CurrentActivatorASC.IsValid() && !OnAbilityEndedDelegateHandle.IsValid())
+	{
+		AppendIssue(TEXT("CurrentActivatorASC는 유효하지만 OnAbilityEndedDelegateHandle은 유효하지 않습니다."));
+	}
+	if (!CurrentActivatorASC.IsValid() && OnAbilityEndedDelegateHandle.IsValid())
+	{
+		AppendIssue(TEXT("CurrentActivatorASC가 없는데 OnAbilityEndedDelegateHandle이 유효합니다."));
+	}
+	if (CurrentActivatorASC.IsValid() && CurrentActivatorTeamSide == ETeamSide::None)
+	{
+		AppendIssue(TEXT("CurrentActivatorASC가 유효한데 CurrentActivatorTeamSide 값이 None입니다."));
+	}
+	if (CurrentActivatorASC.IsValid() && ActiveAbilitySpecCount == 0)
+	{
+		AppendIssue(TEXT("CurrentActivatorASC가 유효하지만 활성화된 AbilitySpec이 없습니다."));
+	}
+	if (bIsResolvingPlayerAbility && !CurrentActivatorASC.IsValid())
+	{
+		AppendIssue(TEXT("Player Ability를 처리 중인데 CurrentActivatorASC가 없습니다."));
+	}
+
+	if (IssueCount == 0)
+	{
+		Builder.Append(TEXT("    명백한 상태 불일치를 찾지 못했습니다.\n"));
+	}
+}
+#endif

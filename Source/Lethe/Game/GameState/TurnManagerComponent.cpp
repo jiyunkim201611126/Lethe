@@ -7,6 +7,7 @@
 #include "Lethe/Character/EnemyCharacterBase.h"
 #include "Lethe/Interface/CombatInterface.h"
 #include "TimerManager.h"
+#include "Lethe/Util.h"
 
 UTurnManagerComponent::UTurnManagerComponent()
 {
@@ -315,3 +316,134 @@ bool UTurnManagerComponent::HasAnyCombatEnemy() const
 	}
 	return false;
 }
+
+#if WITH_EDITOR
+void UTurnManagerComponent::AppendDebugSnapshot(FStringBuilderBase& Builder) const
+{
+	int32 ValidPlayerCount = 0;
+	for (const TScriptInterface<ICombatInterface>& PlayerCharacter : PlayerCharacters)
+	{
+		ValidPlayerCount += IsValid(PlayerCharacter.GetObject()) ? 1 : 0;
+	}
+
+	int32 ValidEnemyCount = 0;
+	for (const TWeakObjectPtr<AEnemyCharacterBase>& Enemy : SpawnedEnemies)
+	{
+		ValidEnemyCount += Enemy.IsValid() ? 1 : 0;
+	}
+
+	int32 ValidCombatEnemyCount = 0;
+	for (const TWeakObjectPtr<AEnemyCharacterBase>& Enemy : CurrentCombatEnemies)
+	{
+		ValidCombatEnemyCount += Enemy.IsValid() ? 1 : 0;
+	}
+
+	const AEnemyCharacterBase* CurrentEnemy = SpawnedEnemies.IsValidIndex(CurrentEnemyAbilityProcessIndex)
+		? SpawnedEnemies[CurrentEnemyAbilityProcessIndex].Get()
+		: nullptr;
+	const UWorld* World = GetWorld();
+	const bool bPlanTimerActive = World && World->GetTimerManager().IsTimerActive(PlanTimerHandle);
+	const float PlanTimerRemaining = bPlanTimerActive ? World->GetTimerManager().GetTimerRemaining(PlanTimerHandle) : -1.f;
+
+	Builder.Append(TEXT("\n[TurnManagerComponent]\n"));
+	Builder.Appendf(TEXT("  TurnPhaseState = %s\n"), *LogHelper::EnumToString(CurrentTurnPhaseState));
+	Builder.Appendf(TEXT("  Players = %d/%d, SpawnedEnemies = %d/%d, CombatEnemies = %d/%d\n"),
+		ValidPlayerCount, PlayerCharacters.Num(),
+		ValidEnemyCount, SpawnedEnemies.Num(),
+		ValidCombatEnemyCount, CurrentCombatEnemies.Num());
+	Builder.Appendf(TEXT("  EnemyPlanIndex = %d/%d, CurrentEnemy = %s, AIController = %s\n"),
+		CurrentEnemyAbilityProcessIndex, SpawnedEnemies.Num(),
+		CurrentEnemy ? *GetNameSafe(CurrentEnemy) : TEXT("nullptr"),
+		CurrentEnemy && CurrentEnemy->GetController() ? *GetNameSafe(CurrentEnemy->GetController()) : TEXT("nullptr"));
+	Builder.Appendf(TEXT("  PlanTimerActive = %s, PlanTimerRemaining = %.3f초\n"),
+		bPlanTimerActive ? TEXT("true") : TEXT("false"), PlanTimerRemaining);
+	Builder.Appendf(TEXT("  ReservedEnemyAbilities = %d, DeferPlayerMoveEnd = %s\n"),
+		ReservedEnemyAbilityActivationContexts.Num(), bShouldDeferEndPlayerMovePhase ? TEXT("true") : TEXT("false"));
+
+	if (CurrentTurnPhaseState == ETurnPhaseState::EnemyPlanPhase)
+	{
+		if (bPlanTimerActive)
+		{
+			Builder.Append(TEXT("  InferredProgress = 적 계획 지연 타이머 대기\n"));
+		}
+		else if (CurrentEnemy)
+		{
+			Builder.Appendf(TEXT("  InferredProgress = 적 계획 완료 대기 (%s)\n"), *GetNameSafe(CurrentEnemy));
+		}
+		else
+		{
+			Builder.Append(TEXT("  InferredProgress = 현재 처리할 적 포인터가 nullptr인 상태\n"));
+		}
+	}
+	else if (CurrentTurnPhaseState == ETurnPhaseState::EnemyTurnPhase)
+	{
+		Builder.Append(TEXT("  InferredProgress = Enemy Ability 완료 대기\n"));
+	}
+	else if (CurrentTurnPhaseState == ETurnPhaseState::DrawPhase)
+	{
+		Builder.Append(TEXT("  InferredProgress = Draw 완료 대기\n"));
+	}
+	else if (CurrentTurnPhaseState == ETurnPhaseState::PlayerTurnPhase)
+	{
+		Builder.Append(TEXT("  InferredProgress = 플레이어 턴 종료 또는 Ability 완료 대기\n"));
+	}
+	else if (CurrentTurnPhaseState == ETurnPhaseState::PlayerMovePhase)
+	{
+		Builder.Append(AbilityResolverComponent && AbilityResolverComponent->IsResolvingPlayerAbility()
+			? TEXT("  InferredProgress = 플레이어 MoveAbility 완료 대기\n")
+			: TEXT("  InferredProgress = 플레이어 Move 입력 또는 종료 요청 대기\n"));
+	}
+	else
+	{
+		Builder.Append(TEXT("  InferredProgress = 턴 흐름 시작 전\n"));
+	}
+
+	for (int32 Index = 0; Index < ReservedEnemyAbilityActivationContexts.Num(); ++Index)
+	{
+		const FAbilityActivationContext& Context = ReservedEnemyAbilityActivationContexts[Index];
+		Builder.Appendf(TEXT("    ReservedAbility[%d]: Priority = %d, Tag = %s, SpecValid = %s, OwnerASCValid = %s, TargetResults = %d, PathTiles = %d\n"),
+			Index, Context.Index, *Context.AbilityTag.ToString(),
+			Context.AbilitySpecHandle.IsValid() ? TEXT("true") : TEXT("false"),
+			Context.AbilityOwnerASC.IsValid() ? TEXT("true") : TEXT("false"),
+			Context.TargetSelectionResults.Num(), Context.PathTiles.Num());
+	}
+
+	Builder.Append(TEXT("  검증 결과:\n"));
+	int32 IssueCount = 0;
+	auto AppendIssue = [&Builder, &IssueCount](const TCHAR* Issue)
+	{
+		++IssueCount;
+		Builder.Appendf(TEXT("    [!] %s\n"), Issue);
+	};
+
+	if (ValidPlayerCount != PlayerCharacters.Num())
+	{
+		AppendIssue(TEXT("PlayerCharacters에 유효하지 않은 항목이 있습니다."));
+	}
+	if (ValidEnemyCount != SpawnedEnemies.Num())
+	{
+		AppendIssue(TEXT("SpawnedEnemies에 유효하지 않은 항목이 있습니다."));
+	}
+	if (ValidCombatEnemyCount != CurrentCombatEnemies.Num())
+	{
+		AppendIssue(TEXT("CurrentCombatEnemies에 유효하지 않은 항목이 있습니다."));
+	}
+	if (CurrentTurnPhaseState == ETurnPhaseState::EnemyPlanPhase && !bPlanTimerActive && !CurrentEnemy)
+	{
+		AppendIssue(TEXT("EnemyPlanPhase인데 현재 처리할 적도, 작동 중인 계획 지연 타이머도 없습니다."));
+	}
+	if (CurrentTurnPhaseState != ETurnPhaseState::EnemyPlanPhase && bPlanTimerActive)
+	{
+		AppendIssue(TEXT("EnemyPlanPhase가 아닌데 적 계획 타이머가 작동 중입니다."));
+	}
+	if (CurrentTurnPhaseState == ETurnPhaseState::EnemyTurnPhase && !ReservedEnemyAbilityActivationContexts.IsEmpty())
+	{
+		AppendIssue(TEXT("EnemyTurnPhase인데 TurnManager에 예약된 Enemy Ability가 남아 있습니다."));
+	}
+
+	if (IssueCount == 0)
+	{
+		Builder.Append(TEXT("    명백한 상태 불일치를 찾지 못했습니다.\n"));
+	}
+}
+#endif

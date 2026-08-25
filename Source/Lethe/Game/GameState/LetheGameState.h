@@ -8,9 +8,9 @@
 #include "LetheGameState.generated.h"
 
 enum class ETeamSide : uint8;
-class UTurnManagerComponent;
 class AEnemyCharacterBase;
 class UAbilityResolverComponent;
+class UTurnManagerComponent;
 struct FAbilityActivationContext;
 
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
@@ -105,4 +105,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Debug | Turn", meta = (DevelopmentOnly))
+	void DumpTurnDebugInfo() const;
 };

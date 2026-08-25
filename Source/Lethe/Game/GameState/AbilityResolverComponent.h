@@ -107,5 +107,10 @@ private:
 	uint8 bPendingAbilitySucceeded : 1 = false;
 	uint8 bPendingAbilityFailed : 1 = false;
 
-	FDelegateHandle OnAbilityEndedDelegate;
+	FDelegateHandle OnAbilityEndedDelegateHandle;
+
+#if WITH_EDITOR
+public:
+	void AppendDebugSnapshot(FStringBuilderBase& Builder) const;
+#endif
 };

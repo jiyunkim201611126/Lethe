@@ -101,6 +101,16 @@ void ACardActor::ApplyCardVisuals() const
 	LeftTagMaterialInstance->SetVectorParameterValue(FrameColorParamName, CardTypeColor);
 }
 
+void ACardActor::SetInstanceId(const int32 InInstanceId)
+{
+	InstanceId = InInstanceId;
+}
+
+int32 ACardActor::GetInstanceId() const
+{
+	return InstanceId;
+}
+
 void ACardActor::SetCardContainer(const ECardContainer InCardContainer)
 {
 	if (CurrentCardContainer == InCardContainer)

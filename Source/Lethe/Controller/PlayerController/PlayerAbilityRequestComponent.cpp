@@ -709,6 +709,15 @@ bool UPlayerAbilityRequestComponent::RequestUseCard(ULetheAbilitySystemComponent
 	Context.AvatarActor = CardOwner;
 	Context.TargetingIntent = TargetingIntent;
 
+	// 클릭한 타일이 사용 범위 안인지 먼저 확인합니다.
+	// PlayerTick에서 타겟 후보(빨간색)를 표시하는 조건과 동일한 기준을 사용해야, 화면에 보이는 것과 실제 사용 가능 여부가 일치합니다.
+	FEffectTargetTileSelectorResult CandidateResult;
+	CardAbility->GetCandidateTiles(Context, CandidateResult);
+	if (CandidateResult.OutTargetCandidates.IsEmpty())
+	{
+		return false;
+	}
+
 	FEffectTargetTileSelectorResult Result;
 	CardAbility->GetTargetTiles(Context, Result);
 

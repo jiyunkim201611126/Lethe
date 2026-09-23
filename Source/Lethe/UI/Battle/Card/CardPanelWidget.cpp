@@ -63,7 +63,6 @@ void UCardPanelWidget::WidgetControllerSet_Implementation()
 			{
 				CardStage->OnViewCardDetailRequested.BindUObject(this, &ThisClass::StartViewCardDetail);
 				CardStage->OnSelectCardRequested.BindUObject(this, &ThisClass::OnSelectCardRequested);
-				CardStage->OnDrawPhaseCompleted.BindUObject(this, &ThisClass::NotifyDrawPhaseCompleted);
 				CardStage->OnStartResolvePlayerMovesRequested.BindUObject(this, &ThisClass::StartResolvePlayerMoves);
 				CardStage->OnUseCardRequested.BindUObject(this, &ThisClass::RequestUseCard);
 				CardStage->OnTurnEndRequested.BindUObject(this, &ThisClass::RequestTurnEnd);
@@ -333,14 +332,6 @@ void UCardPanelWidget::OnResolveUseCard(const int32 HandSlotIndex, const bool bS
 void UCardPanelWidget::StartViewCardDetail(const ACardActor* CardActor) const
 {
 	OnStartViewCardDetail.ExecuteIfBound(CardActor);
-}
-
-void UCardPanelWidget::NotifyDrawPhaseCompleted() const
-{
-	if (CardPanelWidgetController)
-	{
-		CardPanelWidgetController->NotifyDrawPhaseCompleted();
-	}
 }
 
 void UCardPanelWidget::StartResolvePlayerMoves() const

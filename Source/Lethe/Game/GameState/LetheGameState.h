@@ -4,14 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameplayTagContainer.h"
 #include "Lethe/Data/TurnPhaseState.h"
 #include "LetheGameState.generated.h"
 
 enum class ETeamSide : uint8;
 class AEnemyCharacterBase;
 class UAbilityResolverComponent;
+class UCardContainerComponent;
 class UTurnManagerComponent;
 struct FAbilityActivationContext;
+struct FSavedCharacterDeck;
 
 DECLARE_DELEGATE_OneParam(FOnPlayerMoveResolved, AActor* /* MovedCharacter */);
 DECLARE_DELEGATE_TwoParams(FOnCardUseResolved, const int32 /* HandSlotIndex */, const bool /* bSuccess */);
@@ -33,6 +36,10 @@ public:
 	/** 게임 시작 후 타일, 캐릭터 스폰, Ability 부여 등의 모든 사전 작업이 완료되면 호출해 본격적으로 턴제 흐름을 시작합니다. */
 	void StartTurnFlow() const;
 
+	/** 플레이어 캐릭터 스폰이 끝난 뒤 장착 덱을 기준으로 카드 컨테이너(Deck/Hand/Graveyard 모델)를 초기화합니다. */
+	void InitializeCardContainer(const TArray<FGameplayTag>& CharacterOrder, const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks, const int32 ShuffleSeed) const;
+	UCardContainerComponent* GetCardContainerComponent() const;
+
 	/**
 	 * 아래 함수들은 특정 페이즈로의 강제 전환이 아니라, 턴 진행 과정에서 발생한 요청이나 완료 사실을 TurnManager에 전달합니다.
 	 * 실제 전환은 전환 가능 여부를 턴 상태 기준으로 TurnManager 내부에서 결정해 진행합니다.
@@ -40,8 +47,6 @@ public:
 	//~ Begin Turn Control
 	/** 플레이어의 이동 페이즈를 종료를 요청합니다. */
 	void RequestEndPlayerMovePhase() const;
-	/** 카드 드로우 처리가 완료되었음을 알립니다. */
-	void NotifyDrawPhaseCompleted() const;
 	/** 플레이어 턴의 종료를 요청합니다. */
 	void RequestEndPlayerTurn() const;
 	//~ End of Turn Control
@@ -90,6 +95,8 @@ protected:
 
 private:
 	void OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState) const;
+	/** 핸드가 모두 채워지면 카드 컨테이너가 호출하며, 드로우 페이즈 완료를 TurnManager에 알립니다. */
+	void OnHandFull() const;
 	void OnResolveUseCard(const int32 HandSlotIndex, const bool bSuccess) const;
 	void OnTryActivateEnemyAbility(AActor* AbilityInstigator) const;
 
@@ -105,6 +112,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilityResolverComponent> AbilityResolverComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UCardContainerComponent> CardContainerComponent;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Debug | Turn", meta = (DevelopmentOnly))

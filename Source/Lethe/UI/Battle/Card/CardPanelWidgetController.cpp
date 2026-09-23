@@ -59,14 +59,6 @@ void UCardPanelWidgetController::BeginDestroy()
 	}
 }
 
-void UCardPanelWidgetController::NotifyDrawPhaseCompleted() const
-{
-	if (LetheGameState.IsValid())
-	{
-		LetheGameState->NotifyDrawPhaseCompleted();
-	}
-}
-
 void UCardPanelWidgetController::RequestTurnEnd() const
 {
 	if (LetheGameState.IsValid())

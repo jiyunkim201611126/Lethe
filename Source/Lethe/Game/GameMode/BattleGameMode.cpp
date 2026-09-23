@@ -208,6 +208,22 @@ void ABattleGameMode::InitRoomRoles(const TArray<UPrimaryDataAsset*>& CharacterD
 		return;
 	}
 
+	// 카드 컨테이너(Deck/Hand/Graveyard 모델)는 카드 액터 생성보다 먼저 준비되어야 하므로, 캐릭터 스폰 전에 초기화합니다.
+	// 캐릭터 순서는 CharacterDefinitions의 순서(= PlayerOrderIndex)를 따릅니다.
+	if (UDeckManagerSubsystem* DeckManagerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDeckManagerSubsystem>())
+	{
+		TArray<FGameplayTag> CharacterOrder;
+		CharacterOrder.Reserve(CharacterDefinitions.Num());
+		for (const UPrimaryDataAsset* DataAsset : CharacterDefinitions)
+		{
+			if (const UCharacterDefinitionData* CharacterDefinition = Cast<UCharacterDefinitionData>(DataAsset))
+			{
+				CharacterOrder.Add(CharacterDefinition->CharacterTag);
+			}
+		}
+		LetheGameState->InitializeCardContainer(CharacterOrder, DeckManagerSubsystem->GetEquippedDecks(), FMath::Rand());
+	}
+
 	FCubeCoord LastPlayerCharacterSpawnedCoord;
 	int32 EnemyPriority = 0;
 	FRoomRoleSelectionContext RoomRoleSelectionContext;

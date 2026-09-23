@@ -71,6 +71,10 @@ public:
 
 	void SetCardContainer(ECardContainer InCardContainer);
 
+	/** 카드 컨테이너 모델의 FCardInstance와 이 액터를 연결합니다. */
+	void SetInstanceId(const int32 InInstanceId);
+	int32 GetInstanceId() const;
+
 	/** SceneCapture 화면 좌표에서 LineTrace로 검출한 카드에 대해 외부 입력 라우터가 호출하는 함수입니다. */
 	void HandleCardMouseEvent(ECardMouseEvent InMouseEvent);
 	
@@ -144,4 +148,7 @@ private:
 	ECardContainer CurrentCardContainer = ECardContainer::Deck;
 
 	TWeakObjectPtr<ULetheAbilitySystemComponent> OwnerASC;
+
+	/** 카드 컨테이너 모델 내 인스턴스 Id입니다. */
+	int32 InstanceId = INDEX_NONE;
 };

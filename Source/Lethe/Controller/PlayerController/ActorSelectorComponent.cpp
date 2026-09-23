@@ -15,10 +15,8 @@ UActorSelectorComponent::UActorSelectorComponent()
 
 void UActorSelectorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	for (auto It = CurrentHighlightedActorsByReason.CreateConstIterator(); It; ++It)
-	{
-		ClearHighlightedActors(It.Key());
-	}
+	// 순회 중에 맵에서 제거하지 않도록, 키를 먼저 복사한 뒤 해제하는 함수를 사용합니다.
+	ClearAllHighlightedActors();
 	
 	Super::EndPlay(EndPlayReason);
 }

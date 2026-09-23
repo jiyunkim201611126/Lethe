@@ -3,6 +3,7 @@
 #include "LetheGameState.h"
 
 #include "AbilityResolverComponent.h"
+#include "CardContainerComponent.h"
 #include "Lethe/LetheLog.h"
 #include "TurnManagerComponent.h"
 
@@ -10,6 +11,7 @@ ALetheGameState::ALetheGameState()
 {
 	TurnManagerComponent = CreateDefaultSubobject<UTurnManagerComponent>("TurnManagerComponent");
 	AbilityResolverComponent = CreateDefaultSubobject<UAbilityResolverComponent>("AbilityResolverComponent");
+	CardContainerComponent = CreateDefaultSubobject<UCardContainerComponent>("CardContainerComponent");
 }
 
 void ALetheGameState::BeginPlay()
@@ -21,6 +23,8 @@ void ALetheGameState::BeginPlay()
 
 	AbilityResolverComponent->OnTryActivateEnemyAbility.BindUObject(this, &ThisClass::OnTryActivateEnemyAbility);
 	AbilityResolverComponent->OnResolveUseCard.BindUObject(this, &ThisClass::OnResolveUseCard);
+
+	CardContainerComponent->OnHandFull.AddUObject(this, &ThisClass::OnHandFull);
 }
 
 void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -30,6 +34,8 @@ void ALetheGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	AbilityResolverComponent->OnTryActivateEnemyAbility.Unbind();
 	AbilityResolverComponent->OnResolveUseCard.Unbind();
+
+	CardContainerComponent->OnHandFull.RemoveAll(this);
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -59,14 +65,19 @@ void ALetheGameState::StartTurnFlow() const
 	TurnManagerComponent->StartTurnFlow();
 }
 
+void ALetheGameState::InitializeCardContainer(const TArray<FGameplayTag>& CharacterOrder, const TMap<FGameplayTag, FSavedCharacterDeck>& EquippedDecks, const int32 ShuffleSeed) const
+{
+	CardContainerComponent->Initialize(CharacterOrder, EquippedDecks, ShuffleSeed);
+}
+
+UCardContainerComponent* ALetheGameState::GetCardContainerComponent() const
+{
+	return CardContainerComponent;
+}
+
 void ALetheGameState::RequestEndPlayerMovePhase() const
 {
 	TurnManagerComponent->RequestEndPlayerMovePhase();
-}
-
-void ALetheGameState::NotifyDrawPhaseCompleted() const
-{
-	TurnManagerComponent->NotifyDrawPhaseCompleted();
 }
 
 void ALetheGameState::RequestEndPlayerTurn() const
@@ -76,7 +87,14 @@ void ALetheGameState::RequestEndPlayerTurn() const
 
 void ALetheGameState::OnTurnPhaseStateChanged(const ETurnPhaseState OldTurnPhaseState, const ETurnPhaseState NewTurnPhaseState) const
 {
+	// 뷰(CardStage 등)가 갱신된 컨테이너 상태를 보고 반응할 수 있도록, 외부 브로드캐스트보다 먼저 모델을 갱신합니다.
+	CardContainerComponent->HandleTurnPhaseStateChanged(OldTurnPhaseState, NewTurnPhaseState, TurnManagerComponent->IsBattlePhase());
 	OnChangeTurnPhaseState.Broadcast(OldTurnPhaseState, NewTurnPhaseState);
+}
+
+void ALetheGameState::OnHandFull() const
+{
+	TurnManagerComponent->NotifyDrawPhaseCompleted();
 }
 
 void ALetheGameState::EnqueuePlayerAbilityActivationContext(FAbilityActivationContext&& ActivationContext, const bool bStartImmediately) const

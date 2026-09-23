@@ -64,7 +64,6 @@ private:
 	void OnCancelSelectedCard() const;
 	void OnResolveUseCard(int32 HandSlotIndex, bool bSuccess) const;
 	void StartViewCardDetail(const ACardActor* CardActor) const;
-	void NotifyDrawPhaseCompleted() const;
 	void StartResolvePlayerMoves() const;
 	void RequestUseCard(ULetheAbilitySystemComponent* CardOwnerASC, const FGameplayAbilitySpecHandle& AbilitySpecHandle, const FGameplayTag& CardTag, int32 HandSlotIndex) const;
 	void RequestTurnEnd() const;

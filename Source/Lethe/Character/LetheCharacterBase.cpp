@@ -72,6 +72,7 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 				ITileVisionAffectedInterface::Execute_UpdateHiddenByTile(this, TargetTile);
 			}
 		}
+		FinishMove();
 		return;
 	}
 
@@ -83,6 +84,29 @@ void ALetheCharacterBase::MoveToTile(TArray<ATile*>& PathTiles, const bool bTele
 			MovePath.Add(PathTile);
 		}
 	}
+
+	// 걸을 경로가 없다면 Tick에서 아무 일도 일어나지 않으므로, 여기서 바로 이동을 끝냅니다.
+	if (!IsMoving())
+	{
+		FinishMove();
+	}
+}
+
+bool ALetheCharacterBase::IsMoving() const
+{
+	return MovePath.Num() >= 2;
+}
+
+void ALetheCharacterBase::SetMoveSpeedMultiplier(const float InMultiplier)
+{
+	MoveSpeedMultiplier = FMath::Max(InMultiplier, KINDA_SMALL_NUMBER);
+}
+
+void ALetheCharacterBase::FinishMove()
+{
+	MovePath.Reset();
+	MoveSpeedMultiplier = 1.f;
+	OnMoveFinished.Broadcast();
 }
 
 int32 ALetheCharacterBase::GetMoveRange() const
@@ -154,7 +178,7 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 		const auto& CurrentTargetTile = MovePath[1];
 		if (!CurrentTargetTile.IsValid())
 		{
-			MovePath.Empty();
+			FinishMove();
 			return;
 		}
 
@@ -164,7 +188,7 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 		CurrentTargetLocation.Z += ZOffset;
 
 		// 이번 프레임 위치를 계산합니다.
-		const float Speed = GetCharacterMovement()->MaxWalkSpeed;
+		const float Speed = GetCharacterMovement()->MaxWalkSpeed * MoveSpeedMultiplier;
 		const FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), CurrentTargetLocation, DeltaSeconds, Speed);
 
 		// 현재 위치와 목표 위치간 차이가 얼마나 되는지 계산합니다.
@@ -187,10 +211,10 @@ void ALetheCharacterBase::Tick(float DeltaSeconds)
 			SetActorLocation(CurrentTargetLocation);
 			MovePath.RemoveAt(0);
 
-			// 경로에 1개만 남아있다면 목적지에 도착한 상태이므로, 내용물을 비웁니다.
+			// 경로에 1개만 남아있다면 목적지에 도착한 상태이므로, 이동을 끝냅니다.
 			if (MovePath.Num() == 1)
 			{
-				MovePath.Reset();
+				FinishMove();
 			}
 		}
 		else

@@ -42,6 +42,11 @@ class LETHE_API UBGMManagerSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
+	//~ Begin USubsystem Interface
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+	//~ End of USubsystem Interface
+
 	UFUNCTION(BlueprintCallable, meta = (ToolTip = "StageType 테마의 BGM으로 크로스페이드합니다. 이미 전환 중이라면 해당 전환이 끝난 뒤 시작합니다."))
 	void RequestPlayBGM(const EStageType StageType);
 
@@ -59,6 +64,14 @@ private:
 	/** 재생 중인 슬롯에 프리셋을 적용합니다. 이미 재생 중인 슬롯이라 페이드가 적용됩니다. */
 	void ApplyMixPresetToSlot(const FBGMPlaybackSlot& Slot, const FName PresetName) const;
 	static void SetStemVolumes(UAudioComponent* Component, const FBGMTheme& Theme, const FBGMMixPreset* Preset, const float FadeTime);
+
+#if WITH_EDITOR
+	/** PIE 중 DA가 수정되면 현재 프리셋을 재생 중인 슬롯에 다시 적용해, 작곡가가 들으면서 볼륨을 조절할 수 있게 합니다. */
+	void HandleThemeEdited(const UBGMThemeDataAsset* EditedAsset) const;
+	void RefreshSlotVolumes(const FBGMPlaybackSlot& Slot) const;
+
+	FDelegateHandle ThemeEditedHandle;
+#endif
 
 private:
 	UPROPERTY(Config)

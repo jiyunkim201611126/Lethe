@@ -18,6 +18,8 @@ const FBGMTheme* UBGMThemeDataAsset::GetTheme(const EStageType StageType) const
 }
 
 #if WITH_EDITOR
+UBGMThemeDataAsset::FOnThemeEdited UBGMThemeDataAsset::OnThemeEdited;
+
 void UBGMThemeDataAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -37,5 +39,8 @@ void UBGMThemeDataAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 			}
 		}
 	}
+
+	// 배열 크기를 맞춘 뒤에 알려야 구독자가 정리된 값을 읽습니다.
+	OnThemeEdited.Broadcast(this);
 }
 #endif

@@ -84,6 +84,16 @@ class LETHE_API UBGMThemeDataAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
+#if WITH_EDITOR
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnThemeEdited, const UBGMThemeDataAsset* /*EditedAsset*/);
+
+	/**
+	 * 에디터에서 값이 바뀔 때마다 호출됩니다. PIE 중인 BGMManagerSubsystem이 구독해 재생 중인 곡에 즉시 반영합니다.
+	 * 런타임 모듈이 에디터 모듈에 의존하지 않도록 에셋 쪽에서 알리는 방식을 사용합니다.
+	 */
+	static FOnThemeEdited OnThemeEdited;
+#endif
+
 	const FBGMTheme* GetTheme(const EStageType StageType) const;
 	USoundBase* GetStemPlayerMetaSound() const { return StemPlayerMetaSound; }
 

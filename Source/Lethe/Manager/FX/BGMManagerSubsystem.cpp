@@ -25,6 +25,33 @@ namespace BGMStemParam
 		static const FName Name(TEXT("FadeTime"));
 		return Name;
 	}
+
+#if WITH_EDITOR
+	/**
+	 * 에디터에서 볼륨을 바꿨을 때의 반영 시간(초)입니다.
+	 * 0이면 값이 계단식으로 바뀌어 클릭 노이즈가 날 수 있고, 테마의 FadeDuration을 쓰면 조절 결과가 늦게 들려 짧게 둡니다.
+	 */
+	static constexpr float EditorRefreshFadeTime = 0.1f;
+#endif
+}
+
+void UBGMManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+#if WITH_EDITOR
+	ThemeEditedHandle = UBGMThemeDataAsset::OnThemeEdited.AddUObject(this, &ThisClass::HandleThemeEdited);
+#endif
+}
+
+void UBGMManagerSubsystem::Deinitialize()
+{
+#if WITH_EDITOR
+	UBGMThemeDataAsset::OnThemeEdited.Remove(ThemeEditedHandle);
+	ThemeEditedHandle.Reset();
+#endif
+
+	Super::Deinitialize();
 }
 
 void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType)
@@ -232,3 +259,35 @@ void UBGMManagerSubsystem::SetStemVolumes(UAudioComponent* Component, const FBGM
 		Component->SetFloatParameter(BGMStemParam::GetVolumeName(StemIndex), Volume);
 	}
 }
+
+#if WITH_EDITOR
+void UBGMManagerSubsystem::HandleThemeEdited(const UBGMThemeDataAsset* EditedAsset) const
+{
+	// 다른 DA를 수정했거나 아직 아무 곡도 재생하지 않았다면 반영할 대상이 없습니다.
+	if (!EditedAsset || EditedAsset != BGMDataAsset)
+	{
+		return;
+	}
+
+	RefreshSlotVolumes(Current);
+	RefreshSlotVolumes(Transition);
+}
+
+void UBGMManagerSubsystem::RefreshSlotVolumes(const FBGMPlaybackSlot& Slot) const
+{
+	if (!Slot.Component)
+	{
+		return;
+	}
+
+	const FBGMTheme* Theme = BGMDataAsset->GetTheme(Slot.StageType);
+	if (!Theme)
+	{
+		return;
+	}
+
+	// 볼륨만 다시 보냅니다. 스템 Wave나 개수 변경은 재생 중인 MetaSound에 반영되지 않으므로 PIE를 다시 시작해야 합니다.
+	// 곡 시작(PrepareSlot)과 같은 기준으로 프리셋을 고르므로, 아직 프리셋 요청이 없어도 DefaultMixPreset 편집이 들립니다.
+	SetStemVolumes(Slot.Component, *Theme, Theme->FindMixPreset(RequestedMixPreset, true), BGMStemParam::EditorRefreshFadeTime);
+}
+#endif

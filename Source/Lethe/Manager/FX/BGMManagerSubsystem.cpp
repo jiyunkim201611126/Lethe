@@ -7,19 +7,38 @@
 #include "Lethe/LetheLog.h"
 #include "Lethe/Util.h"
 
-void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FName TrackType, const bool bPlayImmediately)
+namespace BGMStemParam
 {
-	const FBGMTheme* BGMTheme = nullptr;
-	const FBGMTracks* BGMTrack = nullptr;
-	if (!LoadBGM(StageType, TrackType, BGMTheme, BGMTrack))
+	// StemPlayerMetaSound 그래프의 입력 이름과 일치해야 합니다.
+	static FName GetWaveName(const int32 StemIndex)
+	{
+		return FName(*FString::Printf(TEXT("Stem%d_Wave"), StemIndex));
+	}
+
+	static FName GetVolumeName(const int32 StemIndex)
+	{
+		return FName(*FString::Printf(TEXT("Stem%d_Volume"), StemIndex));
+	}
+
+	static FName GetFadeTimeName()
+	{
+		static const FName Name(TEXT("FadeTime"));
+		return Name;
+	}
+}
+
+void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType)
+{
+	const FBGMTheme* Theme = LoadTheme(StageType);
+	if (!Theme)
 	{
 		return;
 	}
 
-	// 아무것도 재생하고 있지 않은 상태라면 Current 슬롯에 넣어 재생합니다.
+	// 아무것도 재생하고 있지 않은 상태라면 Current 슬롯에 넣어 바로 재생합니다.
 	if (PlaybackState == EBGMPlaybackState::Stopped)
 	{
-		PrepareSlot(Current, StageType, TrackType, *BGMTrack, 0.f);
+		PrepareSlot(Current, StageType, *Theme);
 		if (Current.Component)
 		{
 			Current.Component->Play(0.f);
@@ -28,95 +47,37 @@ void UBGMManagerSubsystem::RequestPlayBGM(const EStageType StageType, const FNam
 		return;
 	}
 
-	// 이미 동일한 BGM을 재생하고 있는 경우 들어가는 분기입니다.
-	if (Current.StageType == StageType && Current.TrackType == TrackType)
-	{
-		// 아직 Transition이 시작되지 않았다면 대기 상태인 모든 BGM을 취소합니다.
-		if (PlaybackState == EBGMPlaybackState::TransitionScheduled)
-		{
-			GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
-			StopSlot(Transition);
-			PlaybackState = EBGMPlaybackState::Playing;
-			bIsPendingImmediately = false;
-			PendingStageType = EStageType::None;
-			PendingTrackType = NAME_None;
-			return;
-		}
-
-		// 일반 재생 상태라면 요청을 무시합니다.
-		if (PlaybackState == EBGMPlaybackState::Playing)
-		{
-			return;
-		}
-	}
-
-	if (bPlayImmediately)
-	{
-		if (PlaybackState != EBGMPlaybackState::Transitioning)
-		{
-			// Transition 중이 아니라면 모든 예약 상태를 파기하고 즉시 Transition을 시작합니다.
-			bIsPendingImmediately = false;
-			PendingStageType = EStageType::None;
-			PendingTrackType = NAME_None;
-			ScheduleTransition(StageType, TrackType, *BGMTrack, 0.f, 0.f);
-			return;
-		}
-		
-		// Transition 중일 때, Transition 예약 대기 상태와 다른 BGM인 경우일 때만 예약 대기로 걸어둡니다.
-		bIsPendingImmediately = true;
-		if (PendingStageType != StageType || PendingTrackType != TrackType)
-		{
-			PendingStageType = StageType;
-			PendingTrackType = TrackType;
-		}
-		return;
-	}
-
-	// Transition 예약이 걸려있는 상태에서, Transition 대상 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
-	if (PlaybackState == EBGMPlaybackState::TransitionScheduled && Transition.StageType == StageType && Transition.TrackType == TrackType)
-	{
-		return;
-	}
-
-	// Transition 중일 때 Transition 대상 BGM과 동일한 BGM 재생 요청이라면, Pending을 초기화합니다.
-	if (PlaybackState == EBGMPlaybackState::Transitioning && Transition.StageType == StageType && Transition.TrackType == TrackType)
-	{
-		bIsPendingImmediately = false;
-		PendingStageType = EStageType::None;
-		PendingTrackType = NAME_None;
-		return;
-	}
-
-	// 예약 대기 상태인 BGM과 동일한 BGM 재생 요청이라면 무시합니다.
-	if (PendingStageType == StageType && PendingTrackType == TrackType)
-	{
-		return;
-	}
-
-	// Transition 중이라면 예약 대기 상태에 걸어놓습니다.
+	// 전환 중이라면 전환이 끝난 뒤 처리합니다. 전환 대상과 같은 BGM이라면 대기 중인 요청만 지웁니다.
 	if (PlaybackState == EBGMPlaybackState::Transitioning)
 	{
-		bIsPendingImmediately = false;
-		PendingStageType = StageType;
-		PendingTrackType = TrackType;
+		PendingStageType = Transition.StageType == StageType ? EStageType::None : StageType;
 		return;
 	}
 
-	// 그 외의 경우 Transition 예약이 필요하므로 아래 로직을 수행합니다.
-	float TransitionDelay = 0.f;
-	float TargetTrackTime = 0.f;
+	// 이미 같은 BGM을 재생 중이라면 무시합니다.
 	if (Current.StageType == StageType)
 	{
-		if (!BGMDataAsset->GetNextTransitionInfo(StageType, Current.TrackType, TrackType, GetCurrentTrackTime(), TransitionDelay, TargetTrackTime))
-		{
-			LETHE_LOG(LogBGMManager, Warning, "%s Stage의 %s -> %s TransitionPoint가 없습니다. 즉시 전환합니다.", *LogHelper::EnumToString(StageType), *Current.TrackType.ToString(), *TrackType.ToString());
-		}
+		return;
 	}
 
-	ScheduleTransition(StageType, TrackType, *BGMTrack, TransitionDelay, TargetTrackTime);
+	StartTransition(StageType, *Theme);
 }
 
-bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName TrackType, const FBGMTheme*& OutTheme, const FBGMTracks*& OutTrack)
+void UBGMManagerSubsystem::RequestBGMMixPreset(const FName PresetName)
+{
+	if (PresetName == RequestedMixPreset)
+	{
+		return;
+	}
+
+	RequestedMixPreset = PresetName;
+
+	// 전환 중이라면 사라질 곡과 새로 들어오는 곡 모두에 적용합니다.
+	ApplyMixPresetToSlot(Current, PresetName);
+	ApplyMixPresetToSlot(Transition, PresetName);
+}
+
+const FBGMTheme* UBGMManagerSubsystem::LoadTheme(const EStageType StageType)
 {
 	if (!BGMDataAsset)
 	{
@@ -126,40 +87,59 @@ bool UBGMManagerSubsystem::LoadBGM(const EStageType StageType, const FName Track
 	if (!BGMDataAsset)
 	{
 		LETHE_LOG(LogBGMManager, Error, "BGMDataAssetPath가 설정되지 않았습니다.");
-		return false;
+		return nullptr;
 	}
 
-	OutTheme = BGMDataAsset->GetTheme(StageType);
-	if (!OutTheme)
+	if (!BGMDataAsset->GetStemPlayerMetaSound())
+	{
+		LETHE_LOG(LogBGMManager, Error, "StemPlayerMetaSound가 설정되지 않았습니다.");
+		return nullptr;
+	}
+
+	const FBGMTheme* Theme = BGMDataAsset->GetTheme(StageType);
+	if (!Theme)
 	{
 		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Theme가 없습니다.", *LogHelper::EnumToString(StageType));
-		return false;
+		return nullptr;
 	}
 
-	OutTrack = BGMDataAsset->GetTrack(StageType, TrackType);
-	if (!OutTrack || !OutTrack->Wave || !OutTrack->LoopMetaSound)
+	if (Theme->Stems.IsEmpty() || Theme->Stems.Num() > BGM::MaxStemCount)
 	{
-		LETHE_LOG(LogBGMManager, Error, "%s에 해당하는 Track이 없습니다.", *TrackType.ToString());
-		return false;
+		LETHE_LOG(LogBGMManager, Error, "%s Theme의 스템 수(%d)가 유효하지 않습니다. (1 ~ %d)", *LogHelper::EnumToString(StageType), Theme->Stems.Num(), BGM::MaxStemCount);
+		return nullptr;
 	}
 
-	return true;
+	for (const FBGMStem& Stem : Theme->Stems)
+	{
+		if (!Stem.Wave)
+		{
+			LETHE_LOG(LogBGMManager, Error, "%s Theme의 %s 스템에 Wave가 없습니다.", *LogHelper::EnumToString(StageType), *Stem.StemName.ToString());
+			return nullptr;
+		}
+	}
+
+	return Theme;
 }
 
-void UBGMManagerSubsystem::PrepareSlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float StartTime) const
+void UBGMManagerSubsystem::PrepareSlot(FBGMPlaybackSlot& Slot, const EStageType StageType, const FBGMTheme& Theme) const
 {
-	// 사운드를 생성해두기만 하고, 실제 재생은 StartTransition에서 수행합니다.
-	Slot.Component = UGameplayStatics::CreateSound2D(this, Track.LoopMetaSound, 1.f, 1.f, 0.f, nullptr, true, false);
+	// 사운드를 생성해두기만 하고, 실제 재생은 호출한 쪽에서 수행합니다.
+	Slot.Component = UGameplayStatics::CreateSound2D(this, BGMDataAsset->GetStemPlayerMetaSound(), 1.f, 1.f, 0.f, nullptr, true, false);
 	if (!Slot.Component)
 	{
 		return;
 	}
 
+	// 파라미터는 재생 전에 설정해두면 재생 시작과 동시에 적용됩니다.
+	for (int32 StemIndex = 0; StemIndex < Theme.Stems.Num(); ++StemIndex)
+	{
+		Slot.Component->SetObjectParameter(BGMStemParam::GetWaveName(StemIndex), Theme.Stems[StemIndex].Wave);
+	}
+
+	// 시작 볼륨은 보간 없이 바로 프리셋 값으로 맞춥니다. 곡 전체의 페이드인은 AudioComponent의 FadeIn이 담당합니다.
+	SetStemVolumes(Slot.Component, Theme, Theme.FindMixPreset(RequestedMixPreset, true), 0.f);
+
 	Slot.StageType = StageType;
-	Slot.TrackType = TrackType;
-	Slot.Duration = Track.Wave->GetDuration();
-	Slot.TrackStartTime = StartTime;
-	Slot.PlaybackStartTime = FApp::GetCurrentTime() - StartTime;
 }
 
 void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
@@ -173,43 +153,12 @@ void UBGMManagerSubsystem::StopSlot(FBGMPlaybackSlot& Slot) const
 	Slot.Reset();
 }
 
-void UBGMManagerSubsystem::ScheduleTransition(const EStageType StageType, const FName TrackType, const FBGMTracks& Track, const float TransitionDelay, const float StartTime)
+void UBGMManagerSubsystem::StartTransition(const EStageType StageType, const FBGMTheme& Theme)
 {
-	// 기존 Transition 예약을 파기하고 새로운 Transition을 예약합니다.
-	GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
-	GetGameInstance()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
-	StopSlot(Transition);
-
-	Transition.StageType = StageType;
-	Transition.TrackType = TrackType;
-	Transition.Duration = Track.Wave->GetDuration();
-	Transition.TrackStartTime = StartTime;
-
-	if (TransitionDelay <= 0.f)
-	{
-		StartTransition();
-		return;
-	}
-
-	PlaybackState = EBGMPlaybackState::TransitionScheduled;
-	const FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::StartTransition);
-	GetGameInstance()->GetTimerManager().SetTimer(TransitionStartTimerHandle, TimerDelegate, TransitionDelay, false);
-}
-
-void UBGMManagerSubsystem::StartTransition()
-{
-	const FBGMTheme* BGMTheme = nullptr;
-	const FBGMTracks* BGMTrack = nullptr;
-	if (!LoadBGM(Transition.StageType, Transition.TrackType, BGMTheme, BGMTrack) || !Current.Component)
-	{
-		AbortTransition();
-		return;
-	}
-
-	PrepareSlot(Transition, Transition.StageType, Transition.TrackType, *BGMTrack, Transition.TrackStartTime);
+	PrepareSlot(Transition, StageType, Theme);
 	if (!Transition.Component)
 	{
-		AbortTransition();
+		StopSlot(Transition);
 		return;
 	}
 
@@ -217,16 +166,19 @@ void UBGMManagerSubsystem::StartTransition()
 	PlaybackState = EBGMPlaybackState::Transitioning;
 	if (Current.Component)
 	{
-		Current.Component->FadeOut(BGMTheme->FadeDuration, 0.f);
+		Current.Component->FadeOut(Theme.FadeDuration, 0.f);
 	}
+	Transition.Component->FadeIn(Theme.FadeDuration, 1.f, 0.f);
 
-	if (Transition.Component)
+	// 타이머는 0초로 설정하면 실행되지 않으므로, 페이드가 없으면 바로 마무리합니다.
+	if (Theme.FadeDuration <= 0.f)
 	{
-		Transition.Component->FadeIn(BGMTheme->FadeDuration, 1.f, Transition.TrackStartTime);
+		FinishTransition();
+		return;
 	}
 
 	const FTimerDelegate FinishDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::FinishTransition);
-	GetGameInstance()->GetTimerManager().SetTimer(TransitionFinishTimerHandle, FinishDelegate, BGMTheme->FadeDuration, false);
+	GetGameInstance()->GetTimerManager().SetTimer(TransitionFinishTimerHandle, FinishDelegate, Theme.FadeDuration, false);
 }
 
 void UBGMManagerSubsystem::FinishTransition()
@@ -238,44 +190,45 @@ void UBGMManagerSubsystem::FinishTransition()
 
 	PlaybackState = EBGMPlaybackState::Playing;
 
-	if (PendingTrackType != NAME_None)
+	if (PendingStageType != EStageType::None)
 	{
-		const bool bImmediately = bIsPendingImmediately;
 		const EStageType RequestedStageType = PendingStageType;
-		const FName RequestedTrackType = PendingTrackType;
-		bIsPendingImmediately = false;
 		PendingStageType = EStageType::None;
-		PendingTrackType = NAME_None;
-		RequestPlayBGM(RequestedStageType, RequestedTrackType, bImmediately);
+		RequestPlayBGM(RequestedStageType);
 	}
 }
 
-void UBGMManagerSubsystem::AbortTransition()
+void UBGMManagerSubsystem::ApplyMixPresetToSlot(const FBGMPlaybackSlot& Slot, const FName PresetName) const
 {
-	GetGameInstance()->GetTimerManager().ClearTimer(TransitionStartTimerHandle);
-	GetGameInstance()->GetTimerManager().ClearTimer(TransitionFinishTimerHandle);
-	StopSlot(Transition);
-
-	PlaybackState = Current.Component ? EBGMPlaybackState::Playing : EBGMPlaybackState::Stopped;
-
-	if (PendingTrackType != NAME_None)
+	if (!Slot.Component || !BGMDataAsset)
 	{
-		const bool bImmediately = bIsPendingImmediately;
-		const EStageType RequestedStageType = PendingStageType;
-		const FName RequestedTrackType = PendingTrackType;
-		bIsPendingImmediately = false;
-		PendingStageType = EStageType::None;
-		PendingTrackType = NAME_None;
-		RequestPlayBGM(RequestedStageType, RequestedTrackType, bImmediately);
+		return;
 	}
+
+	const FBGMTheme* Theme = BGMDataAsset->GetTheme(Slot.StageType);
+	if (!Theme)
+	{
+		return;
+	}
+
+	// 재생 중인 곡에 없는 프리셋이면 기본 프리셋으로 되돌리지 않고 현재 볼륨을 유지합니다.
+	const FBGMMixPreset* Preset = Theme->FindMixPreset(PresetName, false);
+	if (!Preset)
+	{
+		LETHE_LOG(LogBGMManager, Warning, "%s Theme에 %s 프리셋이 없습니다.", *LogHelper::EnumToString(Slot.StageType), *PresetName.ToString());
+		return;
+	}
+
+	SetStemVolumes(Slot.Component, *Theme, Preset, Theme->FadeDuration);
 }
 
-float UBGMManagerSubsystem::GetCurrentTrackTime() const
+void UBGMManagerSubsystem::SetStemVolumes(UAudioComponent* Component, const FBGMTheme& Theme, const FBGMMixPreset* Preset, const float FadeTime)
 {
-	if (Current.Duration <= 0.f || Current.Duration == INDEFINITELY_LOOPING_DURATION)
+	// FadeTime을 볼륨보다 먼저 보내야 MetaSound가 새 볼륨으로 보간할 때 이 시간을 사용합니다.
+	Component->SetFloatParameter(BGMStemParam::GetFadeTimeName(), FadeTime);
+	for (int32 StemIndex = 0; StemIndex < Theme.Stems.Num(); ++StemIndex)
 	{
-		LETHE_LOG(LogBGMManager, Error, "Stage: %s, Track: %s의 Duration이 유효하지 않습니다. Duration: %f", *LogHelper::EnumToString(Current.StageType), *Current.TrackType.ToString(), Current.Duration);
-		return 0.f;
+		const float Volume = Preset ? Preset->GetStemVolume(StemIndex) : 1.f;
+		Component->SetFloatParameter(BGMStemParam::GetVolumeName(StemIndex), Volume);
 	}
-	return FMath::Fmod(FApp::GetCurrentTime() - Current.PlaybackStartTime, Current.Duration);
 }
